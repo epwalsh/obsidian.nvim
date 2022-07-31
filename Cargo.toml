@@ -7,4 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-nvim-oxi = "0.1"
+nvim-oxi = { git = "https://github.com/noib3/nvim-oxi" }
+serde = { version = "1.0", features = ["derive"] }
+serde_path_to_error = "0.1"
+thiserror = "1.0"
