@@ -5,14 +5,14 @@ use crate::{Error, Result};
 #[derive(PartialEq, Eq, Debug)]
 pub struct NoteRef {
     pub id: String,
-    pub tag: Option<String>,
+    pub alias: Option<String>,
 }
 
 impl NoteRef {
-    pub fn new(id: &str, tag: Option<&str>) -> Self {
+    pub fn new(id: &str, alias: Option<&str>) -> Self {
         NoteRef {
             id: id.to_string(),
-            tag: tag.map(|s| s.to_string()),
+            alias: alias.map(|s| s.to_string()),
         }
     }
 
@@ -44,12 +44,12 @@ impl TryFrom<&str> for NoteRef {
         if let Some((prefix, suffix)) = bare_value.split_once('|') {
             Ok(Self {
                 id: prefix.to_string(),
-                tag: Some(suffix.to_string()),
+                alias: Some(suffix.to_string()),
             })
         } else {
             Ok(Self {
                 id: bare_value.to_string(),
-                tag: None,
+                alias: None,
             })
         }
     }
@@ -57,8 +57,8 @@ impl TryFrom<&str> for NoteRef {
 
 impl fmt::Display for NoteRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(tag) = &self.tag {
-            write!(f, "[[{}|{}]]", self.id, tag)
+        if let Some(alias) = &self.alias {
+            write!(f, "[[{}|{}]]", self.id, alias)
         } else {
             write!(f, "[[{}]]", self.id)
         }
@@ -73,13 +73,13 @@ mod tests {
     fn test_note_ref() {
         let note_ref = NoteRef::try_from("[[12345-ZXYD|foo]]").unwrap();
         assert_eq!(note_ref.id, "12345-ZXYD");
-        assert_eq!(note_ref.tag, Some("foo".to_string()));
+        assert_eq!(note_ref.alias, Some("foo".to_string()));
     }
 
     #[test]
-    fn test_note_ref_no_tag() {
+    fn test_note_ref_no_alias() {
         let note_ref = NoteRef::try_from("[[12345-ZXYD]]").unwrap();
         assert_eq!(note_ref.id, "12345-ZXYD");
-        assert_eq!(note_ref.tag, None);
+        assert_eq!(note_ref.alias, None);
     }
 }

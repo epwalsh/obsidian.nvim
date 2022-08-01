@@ -1,4 +1,5 @@
 use nvim_oxi as oxi;
+use serde_yaml;
 
 /// Alias for a `Result` with error type [`obsidian::Error`](Error).
 pub type Result<T> = std::result::Result<T, Error>;
@@ -28,6 +29,9 @@ pub enum Error {
 
     #[error(transparent)]
     NvimError(#[from] oxi::Error),
+
+    #[error(transparent)]
+    SerdeError(#[from] serde_yaml::Error),
 }
 
 impl From<serde_path_to_error::Error<oxi::Error>> for Error {
