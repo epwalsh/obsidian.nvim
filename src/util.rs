@@ -21,6 +21,10 @@ impl NoteRef {
             tag: tag.map(|s| s.to_string()),
         }
     }
+
+    pub fn filename(&self) -> String {
+        format!("{}.md", self.id)
+    }
 }
 
 impl TryFrom<&str> for NoteRef {

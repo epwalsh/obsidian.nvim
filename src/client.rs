@@ -6,6 +6,7 @@ use std::rc::Rc;
 use crate::config::Config;
 use crate::messages;
 use crate::setup;
+use crate::util::NoteRef;
 use crate::Error;
 
 #[derive(Default)]
@@ -41,8 +42,21 @@ impl From<&Rc<RefCell<State>>> for Client {
 
 impl Client {
     #[inline]
+    pub(crate) fn notes_dir(&self) -> PathBuf {
+        self.0.borrow().notes_dir.clone()
+    }
+
+    #[inline]
     pub(crate) fn already_setup(&self) -> bool {
         self.0.borrow().did_setup
+    }
+
+    #[inline]
+    pub(crate) fn path_for(&self, note_ref: &NoteRef) -> PathBuf {
+        let fname = note_ref.filename();
+        let mut path = self.notes_dir();
+        path.push(fname);
+        path
     }
 
     #[inline]

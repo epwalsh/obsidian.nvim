@@ -23,6 +23,9 @@ pub enum Error {
     #[error("cursor is not on a reference")]
     NoReference,
 
+    #[error("file '{file}' not found")]
+    FileNotFound { file: String },
+
     #[error(transparent)]
     NvimError(#[from] oxi::Error),
 }
