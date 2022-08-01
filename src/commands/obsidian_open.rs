@@ -7,7 +7,7 @@ use crate::{Error, Result};
 
 pub(super) fn obsidian_open(client: &Client, bang: bool, paths: Vec<String>) -> Result<()> {
     let note_ref = if paths.is_empty() {
-        util::get_ref_under_cursor()?.ok_or_else(|| Error::NoReference)?
+        util::get_ref_under_cursor()?.ok_or(Error::NoReference)?
     } else {
         let ref_id = &paths[0];
         util::NoteRef::new(ref_id, None)

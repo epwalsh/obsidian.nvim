@@ -43,16 +43,16 @@ impl TryFrom<&str> for NoteRef {
                 why: "Bad NoteRef string".to_string(),
             })?;
 
-        if let Some((prefix, suffix)) = bare_value.split_once("|") {
-            return Ok(Self {
+        if let Some((prefix, suffix)) = bare_value.split_once('|') {
+            Ok(Self {
                 id: prefix.to_string(),
                 tag: Some(suffix.to_string()),
-            });
+            })
         } else {
-            return Ok(Self {
+            Ok(Self {
                 id: bare_value.to_string(),
                 tag: None,
-            });
+            })
         }
     }
 }
@@ -70,7 +70,7 @@ impl fmt::Display for NoteRef {
 pub(crate) fn get_ref_under_cursor() -> Result<Option<NoteRef>> {
     let (_, pos) = oxi::api::get_current_win().get_position()?;
     let line = oxi::api::get_current_line()?;
-    return Ok(find_ref(&line, pos)?);
+    find_ref(&line, pos)
 }
 
 fn find_ref(line: &str, pos: usize) -> Result<Option<NoteRef>> {
@@ -84,13 +84,13 @@ fn find_ref(line: &str, pos: usize) -> Result<Option<NoteRef>> {
     let graphemes = line.graphemes(true).collect::<Vec<&str>>();
     let pos_in_bytes: usize = graphemes[0..pos].iter().map(|s| s.len()).sum();
 
-    for m in RE.find(line) {
+    for m in RE.find_iter(line) {
         if m.start() <= pos_in_bytes && pos_in_bytes <= m.end() {
             return Ok(Some(NoteRef::try_from(m.as_str())?));
         }
     }
 
-    return Ok(None);
+    Ok(None)
 }
 
 #[cfg(test)]
