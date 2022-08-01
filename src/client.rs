@@ -11,12 +11,26 @@ use crate::Error;
 #[derive(Default)]
 pub struct Client(Rc<RefCell<State>>);
 
-#[derive(Default)]
 struct State {
     // Whether setup function has been called.
     did_setup: bool,
 
     notes_dir: PathBuf,
+}
+
+impl State {
+    fn new() -> Self {
+        State {
+            did_setup: false,
+            notes_dir: PathBuf::from("./"),
+        }
+    }
+}
+
+impl Default for State {
+    fn default() -> Self {
+        State::new()
+    }
 }
 
 impl From<&Rc<RefCell<State>>> for Client {

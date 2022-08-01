@@ -7,6 +7,7 @@ mod error;
 mod hlgroups;
 mod messages;
 mod setup;
+mod util;
 
 pub use client::Client;
 pub use error::{Error, Result};

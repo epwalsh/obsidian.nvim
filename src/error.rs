@@ -14,6 +14,15 @@ pub enum Error {
         why: String,
     },
 
+    #[error("invalid arguments to command `{command}`: {why}")]
+    InvalidArguments { command: String, why: String },
+
+    #[error("internal error: {why}")]
+    InternalError { why: String },
+
+    #[error("cursor is not on a reference")]
+    NoReference,
+
     #[error(transparent)]
     NvimError(#[from] oxi::Error),
 }
