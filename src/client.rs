@@ -3,11 +3,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-use crate::config::Config;
-use crate::messages;
-use crate::setup;
-use crate::util::NoteRef;
-use crate::Error;
+use crate::{config::Config, messages, setup, Error, NoteRef};
 
 #[derive(Default)]
 pub struct Client(Rc<RefCell<State>>);

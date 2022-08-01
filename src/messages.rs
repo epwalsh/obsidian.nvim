@@ -35,7 +35,7 @@ macro_rules! echowarn {
 
 pub(crate) use echoerr;
 pub(crate) use echoinfo;
-pub(crate) use echowarn;
+// pub(crate) use echowarn;
 
 pub(crate) fn echo(msg: String, tag_hlgroup: &'static str) {
     let chunks = [(MSG_TAG, Some(tag_hlgroup)), (" ", None), (&msg, None)];
