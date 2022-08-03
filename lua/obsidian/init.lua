@@ -11,7 +11,7 @@ obsidian.util = require "obsidian.util"
 ---@field cache obsidian.Cache
 local client = {}
 
---[[ 
+--[[
 -- Options classes:
 --]]
 
