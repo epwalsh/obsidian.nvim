@@ -183,14 +183,12 @@ cache.set = function(self, note)
 
     -- Insert aliases.
     for _, alias in pairs(note.aliases) do
-      -- TODO: wrap this in pcall to avoid race condition crashes.
-      self.db.aliases:insert { name = alias, note = note.id }
+      self.db.aliases:insert({ name = alias, note = note.id })
     end
 
     -- Insert tags.
     for _, tag in pairs(note.tags) do
-      -- TODO: wrap this in pcall to avoid race condition crashes.
-      self.db.tags:insert { name = tag, note = note.id }
+      self.db.tags:insert({ name = tag, note = note.id })
     end
   end
 end
