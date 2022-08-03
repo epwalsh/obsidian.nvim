@@ -36,13 +36,15 @@ jobs:
               make test
 
           - name: Lint
+            prepare: |
+              sudo luarocks install luacheck
             run: |
               make lint
 
         include:
           - os: ubuntu-latest
             nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
-            packages: sqlite3 libsqlite3-dev
+            packages: sqlite3 libsqlite3-dev luarocks
             manager: sudo apt-get
 
     steps:
@@ -58,11 +60,11 @@ jobs:
             _neovim
           key: ${{ runner.os }}-${{ hashFiles('todays-date') }}
 
-      - name: Packages
+      - name: Install packages
         if: ${{ matrix.packages }}
         run: ${{ matrix.manager }} install ${{ matrix.packages }}
 
-      - name: Prepare
+      - name: Install neovim
         run: |
           mkdir -p ${{ env.runtime }}
           test -d _neovim || {
@@ -73,5 +75,13 @@ jobs:
           git clone --depth 1 ${{ env.sqlite-git }} ${{ env.sqlite-path }}
           ln -s $(pwd) ${{ env.runtime }}
 
+      - name: Prepare
+        if: ${{ matrix.task.prepare }}
+        run: ${{ matrix.task.prepare }}
+
       - name: ${{ matrix.task.name }}
-        run: ${{ matrix.task.run }}
+        run: |
+          export PATH="${PWD}/_neovim/bin:${PATH}"
+          export VIM="${PWD}/_neovim/share/nvim/runtime"
+          nvim --version
+          ${{ matrix.task.run }}
