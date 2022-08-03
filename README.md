@@ -16,6 +16,15 @@ Obsidian.nvim also integrates directly with [`nvim-cmp`](https://github.com/hrsh
 Note that you do *not* need to specify this plugin an `nvim-cmp` "source".
 Obsidian.nvim will set itself up as a source automatically when you enter a markdown buffer within your vault directory.
 
+```lua
+require("cmp").setup({
+  sources = {
+    { name = "obsidian" }, -- WRONG! Don't put this here
+  },
+})
+
+```
+
 ## Configuration
 
 For a minimal configuration, just add:

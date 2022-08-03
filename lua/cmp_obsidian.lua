@@ -17,6 +17,7 @@ source.complete = function(self, request, callback)
   local input = string.sub(request.context.cursor_before_line, request.offset - 2)
   local suffix = string.sub(request.context.cursor_after_line, 1, 2)
 
+  -- TODO: make this work without auto closing brackets.
   if vim.startswith(input, "[[") and suffix == "]]" then
     local items = {}
     table.insert(items, {
