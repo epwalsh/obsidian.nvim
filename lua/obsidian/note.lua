@@ -1,6 +1,6 @@
-local Pathlib = require('plenary.path')
-local util = require("obsidian.util")
-local yaml = require("deps.lua_yaml.yaml")
+local Pathlib = require "plenary.path"
+local util = require "obsidian.util"
+local yaml = require "deps.lua_yaml.yaml"
 
 ---@class obsidian.Note
 ---@field id string
@@ -77,11 +77,11 @@ end
 ---@return integer
 note.frontmatter = function(path)
   if path == nil then
-    error("note path cannot be nil")
+    error "note path cannot be nil"
   end
   local f = io.open(tostring(path))
   if f == nil then
-    error("failed to read file")
+    error "failed to read file"
   end
 
   local lines = {}
@@ -89,17 +89,17 @@ note.frontmatter = function(path)
   for line in f:lines() do
     if not in_frontmatter then
       start_idx = start_idx + 1
-      if line:match("^---$") then
+      if line:match "^---$" then
         in_frontmatter = true
       end
-    elseif line:match("^---$") then
+    elseif line:match "^---$" then
       f:close()
       return lines, start_idx
     else
       table.insert(lines, line)
     end
   end
-  error("Failed to parse frontmatter")
+  error "Failed to parse frontmatter"
 end
 
 ---Save note to file.
@@ -107,27 +107,27 @@ end
 ---@param path string|Path|?
 note.save = function(self, path)
   if self.path == nil then
-    error("note path cannot be nil")
+    error "note path cannot be nil"
   end
   local self_f = io.open(tostring(self.path))
   if self_f == nil then
-    error("failed to read file")
+    error "failed to read file"
   end
 
   --Read lines.
   local lines = {}
   local in_frontmatter, frontmatter_done, start_idx, end_idx = false, false, 0, 0
-  local contents = self_f:read("*a")
+  local contents = self_f:read "*a"
   for _, line in pairs(vim.split(contents, "\n")) do
     table.insert(lines, line .. "\n")
     if not frontmatter_done then
       if not in_frontmatter then
         start_idx = start_idx + 1
         end_idx = end_idx + 1
-        if line:match("^---$") then
+        if line:match "^---$" then
           in_frontmatter = true
         end
-      elseif line:match("^---$") then
+      elseif line:match "^---$" then
         end_idx = end_idx + 1
         frontmatter_done = true
       else
@@ -170,7 +170,7 @@ note.save = function(self, path)
   assert(save_path ~= nil)
   local save_f = io.open(tostring(save_path), "w")
   if save_f == nil then
-    error("failed to write file")
+    error "failed to write file"
   end
   for _, line in pairs(new_lines) do
     save_f:write(line)

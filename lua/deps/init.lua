@@ -1,4 +1,4 @@
-local yaml = require("deps.lua_yaml.yaml")
+local yaml = require "deps.lua_yaml.yaml"
 
 local deps = {}
 

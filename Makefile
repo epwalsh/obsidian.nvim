@@ -8,4 +8,8 @@ test :
 
 .PHONY : lint
 lint :
-	luacheck lua --exclude-files='lua/deps/lua_yaml/*'
+	luacheck after lua --exclude-files='lua/deps/lua_yaml/*'
+
+.PHONY : style
+style :
+	stylua --check lua/ after/ test/
