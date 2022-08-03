@@ -31,13 +31,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         task:
-          name: Test
-          run: |
-            make test
+          - name: Test
+            run: |
+              make test
 
-          name: Lint
-          run: |
-            make lint
+          - name: Lint
+            run: |
+              make lint
 
         include:
           - os: ubuntu-latest
