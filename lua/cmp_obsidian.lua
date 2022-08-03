@@ -9,7 +9,7 @@ source.get_trigger_characters = function()
 end
 
 source.complete = function(self, request, callback)
-  local dir = self:option(request).dir
+  -- local dir = self:option(request).dir
   local input = string.sub(request.context.cursor_before_line, request.offset - 2)
   local suffix = string.sub(request.context.cursor_after_line, 1, 2)
 
