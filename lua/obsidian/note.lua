@@ -1,3 +1,4 @@
+local Pathlib = require('plenary.path')
 local util = require("obsidian.util")
 local yaml = require("deps.lua_yaml.yaml")
 
@@ -5,7 +6,7 @@ local yaml = require("deps.lua_yaml.yaml")
 ---@field id string
 ---@field aliases string[]
 ---@field tags string[]
----@field path string|?
+---@field path Path|?
 local note = {}
 
 ---Create new note.
@@ -13,20 +14,20 @@ local note = {}
 ---@param id string
 ---@param aliases string[]
 ---@param tags string[]
----@param path string|?
+---@param path string|Path|?
 ---@return obsidian.Note
 note.new = function(id, aliases, tags, path)
   local self = setmetatable({}, { __index = note })
   self.id = id
   self.aliases = aliases and aliases or {}
   self.tags = tags and tags or {}
-  self.path = path
+  self.path = path and Pathlib:new(path) or nil
   return self
 end
 
 ---Initialize a note from a file.
 ---
----@param path string
+---@param path string|Path
 ---@return obsidian.Note
 note.from_file = function(path)
   local frontmatter_lines, _ = note.frontmatter(path)
@@ -71,14 +72,14 @@ end
 
 ---Get the frontmatter lines.
 ---
----@param path string
+---@param path string|Path
 ---@return string[]
 ---@return integer
 note.frontmatter = function(path)
   if path == nil then
     error("note path cannot be nil")
   end
-  local f = io.open(path)
+  local f = io.open(tostring(path))
   if f == nil then
     error("failed to read file")
   end
@@ -103,12 +104,12 @@ end
 
 ---Save note to file.
 ---
----@param path string|?
+---@param path string|Path|?
 note.save = function(self, path)
   if self.path == nil then
     error("note path cannot be nil")
   end
-  local self_f = io.open(self.path)
+  local self_f = io.open(tostring(self.path))
   if self_f == nil then
     error("failed to read file")
   end
@@ -167,7 +168,7 @@ note.save = function(self, path)
   --Write new lines.
   local save_path = path and path or self.path
   assert(save_path ~= nil)
-  local save_f = io.open(save_path, "w")
+  local save_f = io.open(tostring(save_path), "w")
   if save_f == nil then
     error("failed to write file")
   end

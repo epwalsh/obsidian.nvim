@@ -12,13 +12,16 @@ local cache = {}
 
 ---Initialize a new cache.
 ---
----@param dir string
+---@param dir Path
 cache.new = function(dir)
   local self = setmetatable({}, { __index = cache })
 
+  dir:mkdir({ parents = true, exits_ok = true })
+  local db_uri = tostring(dir / ".obsidian.sqlite")
+
   -- Setup cache database.
   self.db = sqlite {
-    uri = dir .. "/.obsidian_db",
+    uri = db_uri,
     notes = {
       id = { "text", required = true, unique = true, primary = true },
       aliases = "luatable",
@@ -179,7 +182,7 @@ cache.set = function(self, note)
 
   else
     -- Insert new note.
-    self.db.notes:insert(note)
+    self.db.notes:insert({ id = note.id, aliases = note.aliases, tags = note.tags })
 
     -- Insert aliases.
     for _, alias in pairs(note.aliases) do

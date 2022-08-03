@@ -1,32 +1,15 @@
+------------------------------
+-- Testing the Client cache --
+------------------------------
+
 local obsidian = require("obsidian")
-
--- Testing the Note class.
---------------------------
-
--- Test note.new():
-local n1 = obsidian.note.new("FOO", { "foo", "foos" }, { "bar" })
-assert(n1.id == "FOO")
-assert(n1.aliases[1] == "foo")
-
--- Test note.from_file():
-local n2 = obsidian.note.from_file("test_fixtures/notes/foo.md")
-assert(n2.id == "foo")
-assert(n2.aliases[1] == "foo")
-assert(n2.aliases[2] == "Foo")
-assert(#n2.tags == 0)
-
--- Add an alias and update the file:
-n2:add_alias("Foo Bar")
-n2:save("test_fixtures/notes/foo_bar.md")
-
--- Testing the Client cache.
-----------------------------
 
 -- Test obsidian.setup():
 local client = obsidian.setup({ dir = "/tmp/notes" })
 client.cache:clear()
 
 -- Test client.cache:set():
+local n1 = obsidian.note.new("FOO", { "foo", "foos" }, { "bar" })
 client.cache:set(n1)
 assert(client.cache:size() == 1)
 assert(client.cache.db.aliases:count() == 2)
@@ -63,11 +46,11 @@ local s1 = client.cache:search_alias("foo")
 assert(#s1 == 1)
 assert(s1[1].id == "FOO")
 
--- -- Search by alias with multiple hits.
+-- Search by alias with multiple hits.
 client.cache:set(obsidian.note.new("FOOBAR", { "foobar" }, {}))
 local s2 = client.cache:search_alias("foo")
 assert(#s2 == 2)
 
--- -- Search by tags.
+-- Search by tags.
 local s3 = client.cache:search_tag("bartag")
 assert(#s3 == 2, #s3)

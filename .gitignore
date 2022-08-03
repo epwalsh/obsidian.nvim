@@ -2,3 +2,4 @@
 /Cargo.lock
 /lua/*.so
 tmp.*
+*.sqlite

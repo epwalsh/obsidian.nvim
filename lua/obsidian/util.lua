@@ -1,3 +1,4 @@
+local scan = require('plenary.scandir')
 local util = {}
 
 ---Check if a table (list) contains a value.
@@ -12,6 +13,18 @@ util.contains = function(table, val)
     end
   end
   return false
+end
+
+---Find all markdown files in a directory.
+---
+---@param dir string|Path
+---@return string[]
+util.find_markdown_files = function(dir)
+  return scan.scan_dir(vim.fs.normalize(tostring(dir)), {
+    hidden = false,
+    add_dirs = false,
+    search_pattern = ".*%.md",
+  })
 end
 
 return util
