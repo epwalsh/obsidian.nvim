@@ -1,10 +1,10 @@
-local Pathlib = require('plenary.path')
+local Pathlib = require "plenary.path"
 
 local obsidian = {}
 
-obsidian.note = require("obsidian.note")
-obsidian.cache = require("obsidian.cache")
-obsidian.util = require("obsidian.util")
+obsidian.note = require "obsidian.note"
+obsidian.cache = require "obsidian.cache"
+obsidian.util = require "obsidian.util"
 
 ---@class obsidian.Client
 ---@field dir Path
@@ -22,7 +22,7 @@ obsidian.setup = function(params)
   self.cache = obsidian.cache.new(self.dir)
 
   -- Ensure directory exists.
-  self.dir:mkdir({ parents = true, exits_ok = true })
+  self.dir:mkdir { parents = true, exits_ok = true }
 
   return self
 end

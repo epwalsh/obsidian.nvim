@@ -1,5 +1,5 @@
-local sqlite = require("sqlite.db")
-local util = require("obsidian.util")
+local sqlite = require "sqlite.db"
+local util = require "obsidian.util"
 
 ---@class CacheDatabase: sqlite_db
 ---@field notes sqlite_tbl
@@ -16,7 +16,7 @@ local cache = {}
 cache.new = function(dir)
   local self = setmetatable({}, { __index = cache })
 
-  dir:mkdir({ parents = true, exits_ok = true })
+  dir:mkdir { parents = true, exits_ok = true }
   local db_uri = tostring(dir / ".obsidian.sqlite")
 
   -- Setup cache database.
@@ -41,8 +41,8 @@ cache.new = function(dir)
 
   -- Create indices on 'aliases' and 'tags' for fast glob searches.
   self.db:with_open(function()
-    self.db:eval("CREATE INDEX IF NOT EXISTS aliases_idx ON aliases (name)")
-    self.db:eval("CREATE INDEX IF NOT EXISTS tags_idx ON tags (name)")
+    self.db:eval "CREATE INDEX IF NOT EXISTS aliases_idx ON aliases (name)"
+    self.db:eval "CREATE INDEX IF NOT EXISTS tags_idx ON tags (name)"
   end)
 
   return self
@@ -93,7 +93,7 @@ end
 cache.get = function(self, id)
   local entries = self.db.notes:get {
     where = { id = id },
-    select = { "id", "aliases", "tags" }
+    select = { "id", "aliases", "tags" },
   }
   if #entries > 0 then
     return entries[1]
@@ -145,23 +145,23 @@ end
 cache.set = function(self, note)
   if self:contains(note.id) then
     -- Update existing note.
-    self.db.notes:update({
+    self.db.notes:update {
       where = { id = note.id },
       set = { aliases = note.aliases, tags = note.tags },
-    })
+    }
 
     -- Remove aliases that are no longer tied to the note.
     local cached_aliases = self:cached_aliases(note.id)
     for _, alias in pairs(cached_aliases) do
       if not note:has_alias(alias) then
-        self.db.aliases:remove({ name = alias, note = note.id })
+        self.db.aliases:remove { name = alias, note = note.id }
       end
     end
 
     -- Insert new aliases.
     for _, alias in pairs(note.aliases) do
       if not util.contains(cached_aliases, alias) then
-        self.db.aliases:insert({ name = alias, note = note.id })
+        self.db.aliases:insert { name = alias, note = note.id }
       end
     end
 
@@ -169,29 +169,28 @@ cache.set = function(self, note)
     local cached_tags = self:cached_tags(note.id)
     for _, tag in pairs(cached_tags) do
       if not note:has_tag(tag) then
-        self.db.tags:remove({ name = tag, note = note.id })
+        self.db.tags:remove { name = tag, note = note.id }
       end
     end
 
     -- Insert new tags.
     for _, tag in pairs(note.tags) do
       if not util.contains(cached_tags, tag) then
-        self.db.tags:insert({ name = tag, note = note.id })
+        self.db.tags:insert { name = tag, note = note.id }
       end
     end
-
   else
     -- Insert new note.
-    self.db.notes:insert({ id = note.id, aliases = note.aliases, tags = note.tags })
+    self.db.notes:insert { id = note.id, aliases = note.aliases, tags = note.tags }
 
     -- Insert aliases.
     for _, alias in pairs(note.aliases) do
-      self.db.aliases:insert({ name = alias, note = note.id })
+      self.db.aliases:insert { name = alias, note = note.id }
     end
 
     -- Insert tags.
     for _, tag in pairs(note.tags) do
-      self.db.tags:insert({ name = tag, note = note.id })
+      self.db.tags:insert { name = tag, note = note.id }
     end
   end
 end
@@ -200,9 +199,9 @@ end
 ---
 ---@param id string
 cache.remove = function(self, id)
-  self.db.notes:remove({ id = id })
-  self.db.aliases:remove({ note = id })
-  self.db.tags:remove({ note = id })
+  self.db.notes:remove { id = id }
+  self.db.aliases:remove { note = id }
+  self.db.tags:remove { note = id }
 end
 
 ---Clear the cache.
