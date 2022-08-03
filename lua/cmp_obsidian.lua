@@ -9,7 +9,11 @@ source.get_trigger_characters = function()
 end
 
 source.complete = function(self, request, callback)
-  -- local dir = self:option(request).dir
+  local client = self:option(request).client
+  if client == nil then
+    error("Obsidian completion has not been setup correctly!")
+  end
+
   local input = string.sub(request.context.cursor_before_line, request.offset - 2)
   local suffix = string.sub(request.context.cursor_after_line, 1, 2)
 

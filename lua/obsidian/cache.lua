@@ -39,13 +39,16 @@ cache.new = function(dir)
     },
   }
 
-  -- Create indices on 'aliases' and 'tags' for fast glob searches.
+  return self
+end
+
+---Create indices on 'aliases' and 'tags' for fast glob searches.
+---
+cache.ensure_indices = function(self)
   self.db:with_open(function()
     self.db:eval "CREATE INDEX IF NOT EXISTS aliases_idx ON aliases (name)"
     self.db:eval "CREATE INDEX IF NOT EXISTS tags_idx ON tags (name)"
   end)
-
-  return self
 end
 
 ---Check if the cache contains a note.
@@ -121,6 +124,7 @@ end
 ---
 ---@return obsidian.Note[]
 cache.search_alias = function(self, alias)
+  self:ensure_indices()
   local entries = self.db.aliases:get {
     contains = { name = alias .. "*" },
     select = { "name", "note" },
@@ -132,6 +136,7 @@ end
 ---
 ---@return obsidian.Note[]
 cache.search_tag = function(self, tag)
+  self:ensure_indices()
   local entries = self.db.tags:get {
     contains = { name = tag .. "*" },
     select = { "name", "note" },
