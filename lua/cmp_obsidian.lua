@@ -11,7 +11,7 @@ end
 source.complete = function(self, request, callback)
   local client = self:option(request).client
   if client == nil then
-    error("Obsidian completion has not been setup correctly!")
+    error "Obsidian completion has not been setup correctly!"
   end
 
   local input = string.sub(request.context.cursor_before_line, request.offset - 2)
