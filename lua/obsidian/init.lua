@@ -77,6 +77,15 @@ obsidian.setup = function(opts)
   return self
 end
 
+---Search for notes.
+---
+---
+---@param search string
+---@return obsidian.Note[]
+client.search = function(self, search)
+  return self.cache:search_alias(search)
+end
+
 ---Load cache.
 ---
 ---@param refresh boolean|?
