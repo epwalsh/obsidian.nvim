@@ -38,7 +38,6 @@ source.complete = function(self, request, callback)
   local input = source._find_search_start(request.context.cursor_before_line)
   local suffix = string.sub(request.context.cursor_after_line, 1, 2)
   local search = string.sub(input, 3)
-  print("Input:", input)
 
   if string.len(search) > 0 and vim.startswith(input, "[[") then
     local insert_end_offset = suffix == "]]" and 1 or -1
