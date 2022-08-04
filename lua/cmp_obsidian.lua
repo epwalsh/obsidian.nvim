@@ -13,7 +13,8 @@ source.get_keyword_pattern = obsidian.completion.get_keyword_pattern
 source.complete = function(self, request, callback)
   local dir = self:option(request).dir
   if dir == nil then
-    error "Obsidian completion has not been setup correctly!"
+    obsidian.echo.fail "completion has not been setup correctly!"
+    error()
   end
 
   local client = obsidian.new(dir)

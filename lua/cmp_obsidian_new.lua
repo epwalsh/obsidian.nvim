@@ -14,7 +14,7 @@ source.get_keyword_pattern = obsidian.completion.get_keyword_pattern
 source.complete = function(self, request, callback)
   local dir = self:option(request).dir
   if dir == nil then
-    error "Obsidian completion has not been setup correctly!"
+    obsidian.echo.fail "completion has not been setup correctly!"
   end
 
   local can_complete, search, insert_start, insert_end = obsidian.completion.can_complete(request)
@@ -61,7 +61,7 @@ source.execute = function(self, item, callback)
   local path = Path:new(data.dir) / (data.id .. ".md")
   local note = obsidian.note.new(data.id, { data.title }, {}, path)
   note:save()
-  print("[Obsidian] Created note", note.id, "at", note.path)
+  obsidian.echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   return callback
 end
 

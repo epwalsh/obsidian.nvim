@@ -5,6 +5,7 @@ local obsidian = {}
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
+obsidian.echo = require "obsidian.echo"
 
 --[[
 -- Options classes:
@@ -28,6 +29,10 @@ local client = {}
 obsidian.new = function(dir)
   local self = setmetatable({}, { __index = client })
   self.dir = Path:new(vim.fs.normalize(dir and dir or "./"))
+
+  -- Setup highlight groups.
+  obsidian.echo.setup()
+
   return self
 end
 
@@ -48,7 +53,7 @@ obsidian.setup = function(opts)
     if completion.nvim_cmp then
       -- Check for ripgrep.
       if os.execute "rg --help" > 0 then
-        error "[Obsidian] Can't find 'rg' command! Did you forget to install ripgrep?"
+        obsidian.echo.err "Can't find 'rg' command! Did you forget to install ripgrep?"
       end
 
       -- Add source.
@@ -88,6 +93,42 @@ client.search = function(self, search)
     else
       return obsidian.note.from_file(path, self.dir)
     end
+  end
+end
+
+---Check directory for notes with missing/invalid frontmatter.
+---
+client.validate = function(self)
+  local scan = require "plenary.scandir"
+
+  local count = 0
+  local err_count = 0
+  local warn_count = 0
+
+  scan.scan_dir(vim.fs.normalize(tostring(self.dir)), {
+    hidden = false,
+    add_dirs = false,
+    respect_gitignore = true,
+    search_pattern = ".*%.md",
+    on_insert = function(entry)
+      count = count + 1
+      local ok, note = pcall(obsidian.note.from_file, entry, self.dir)
+      if not ok then
+        err_count = err_count + 1
+        obsidian.echo.err("Failed to parse note at " .. entry)
+      elseif note.has_frontmatter == false then
+        warn_count = warn_count + 1
+        obsidian.echo.warn(tostring(entry) .. " is missing frontmatter")
+      end
+    end,
+  })
+
+  obsidian.echo.info("Found " .. tostring(count) .. " notes total")
+  if warn_count > 0 then
+    obsidian.echo.warn("There were " .. tostring(warn_count) .. " warnings")
+  end
+  if err_count > 0 then
+    obsidian.echo.err("There were " .. tostring(err_count) .. " errors")
   end
 end
 

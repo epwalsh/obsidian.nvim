@@ -1,12 +1,14 @@
 local Path = require "plenary.path"
 local util = require "obsidian.util"
 local yaml = require "deps.lua_yaml.yaml"
+local echo = require "obsidian.echo"
 
 ---@class obsidian.Note
 ---@field id string
 ---@field aliases string[]
 ---@field tags string[]
 ---@field path Path|?
+---@field has_frontmatter boolean|?
 local note = {}
 
 ---Create new note.
@@ -66,11 +68,13 @@ end
 ---@return obsidian.Note
 note.from_file = function(path, root)
   if path == nil then
-    error "note path cannot be nil"
+    echo.fail "note path cannot be nil"
+    error()
   end
   local f = io.open(vim.fs.normalize(tostring(path)))
   if f == nil then
-    error "failed to read file"
+    echo.fail("failed to read file at " .. tostring(path))
+    error()
   end
 
   local cwd = tostring(root and root or "./")
@@ -140,7 +144,9 @@ note.from_file = function(path, root)
     id = relative_path
   end
 
-  return note.new(id, aliases, tags, path)
+  local n = note.new(id, aliases, tags, path)
+  n.has_frontmatter = has_frontmatter
+  return n
 end
 
 ---Check if a line matches a frontmatter boundary.
@@ -164,7 +170,8 @@ end
 ---@param path string|Path|?
 note.save = function(self, path)
   if self.path == nil then
-    error "note path cannot be nil"
+    echo.fail "note path cannot be nil"
+    error()
   end
 
   local lines = {}
@@ -234,7 +241,8 @@ note.save = function(self, path)
   assert(save_path ~= nil)
   local save_f = io.open(tostring(save_path), "w")
   if save_f == nil then
-    error "failed to write file"
+    echo.fail("failed to write file at " .. tostring(save_path))
+    error()
   end
   for _, line in pairs(new_lines) do
     save_f:write(line)

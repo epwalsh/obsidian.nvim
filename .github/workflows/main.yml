@@ -17,8 +17,6 @@ on:
 env:
   plenary-git: https://github.com/nvim-lua/plenary.nvim
   plenary-path: ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
-  sqlite-git: https://github.com/kkharji/sqlite.lua
-  sqlite-path: ~/.local/share/nvim/site/pack/vendor/start/sqlite.lua
   runtime: ~/.local/share/nvim/site/pack/vendor/start
 
 jobs:
@@ -58,7 +56,7 @@ jobs:
         include:
           - os: ubuntu-latest
             nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
-            packages: sqlite3 libsqlite3-dev luarocks
+            packages: luarocks ripgrep
             manager: sudo apt-get
 
     steps:
@@ -88,7 +86,6 @@ jobs:
             curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
           }
           git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
-          git clone --depth 1 ${{ env.sqlite-git }} ${{ env.sqlite-path }}
           ln -s $(pwd) ${{ env.runtime }}
 
       - name: Prepare
