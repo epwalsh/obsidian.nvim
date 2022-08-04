@@ -55,9 +55,11 @@ source.complete = function(self, request, callback)
   end
 end
 
+---@diagnostic disable-next-line: unused-local
 source.execute = function(self, item, callback)
   local data = item.data
   ---@type Path
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local path = Path:new(data.dir) / (data.id .. ".md")
   local note = obsidian.note.new(data.id, { data.title }, {}, path)
   note:save()

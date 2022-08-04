@@ -27,11 +27,11 @@ local client = {}
 ---@param dir string
 ---@return obsidian.Client
 obsidian.new = function(dir)
-  local self = setmetatable({}, { __index = client })
-  self.dir = Path:new(vim.fs.normalize(dir and dir or "./"))
-
   -- Setup highlight groups.
   obsidian.echo.setup()
+
+  local self = setmetatable({}, { __index = client })
+  self.dir = Path:new(vim.fs.normalize(dir and dir or "./"))
 
   return self
 end
@@ -49,6 +49,16 @@ obsidian.setup = function(opts)
 
   -- Complete the lazy setup only when entering a buffer in the vault.
   local lazy_setup = function()
+    -- Add commands.
+    vim.api.nvim_create_user_command(
+      "ObsidianCheck",
+      ---@diagnostic disable-next-line: unused-local
+      function(data)
+        self:validate()
+      end,
+      {}
+    )
+
     -- Configure nvim-cmp completion?
     if completion.nvim_cmp then
       -- Check for ripgrep.
@@ -71,11 +81,29 @@ obsidian.setup = function(opts)
     end
   end
 
+  -- Autocommands...
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
+
+  -- Complete lazy setup on BufEnter
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,
     pattern = tostring(self.dir) .. "/**.md",
     callback = lazy_setup,
+  })
+
+  -- Add missing frontmatter on BufWritePre
+  vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+    group = group,
+    pattern = tostring(self.dir) .. "/**.md",
+    callback = function()
+      local bufnr = vim.api.nvim_get_current_buf()
+      local note = obsidian.note.from_buffer(bufnr, self.dir)
+      if not note.has_frontmatter then
+        local lines = note:frontmatter_lines()
+        vim.api.nvim_buf_set_lines(bufnr, 0, 0, true, lines)
+        obsidian.echo.info "Updated frontmatter"
+      end
+    end,
   })
 
   return self
@@ -112,6 +140,7 @@ client.validate = function(self)
     search_pattern = ".*%.md",
     on_insert = function(entry)
       count = count + 1
+      obsidian.note.from_file(entry, self.dir)
       local ok, note = pcall(obsidian.note.from_file, entry, self.dir)
       if not ok then
         err_count = err_count + 1

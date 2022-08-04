@@ -76,7 +76,46 @@ note.from_file = function(path, root)
     echo.fail("failed to read file at " .. tostring(path))
     error()
   end
+  local n = note.from_lines(function()
+    return f:lines()
+  end, path, root)
+  f:close()
+  return n
+end
 
+---Initialize a note from a buffer.
+---
+---@param bufnr integer|?
+---@param root string|Path|?
+---@return obsidian.Note
+note.from_buffer = function(bufnr, root)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  local lines_iter = function()
+    local i = 0
+    local n = #lines
+    return function()
+      i = i + 1
+      if i <= n then
+        return lines[i]
+      else
+        return nil
+      end
+    end
+  end
+
+  return note.from_lines(lines_iter, path, root)
+end
+
+---Initialize a note from an iterator of lines.
+---
+---@param lines function
+---@param path string|Path
+---@param root string|Path|?
+---@return obsidian.Note
+note.from_lines = function(lines, path, root)
   local cwd = tostring(root and root or "./")
   local relative_path = tostring(Path:new(path):make_relative(cwd))
 
@@ -89,7 +128,7 @@ note.from_file = function(path, root)
   local frontmatter_lines = {}
   local has_frontmatter, in_frontmatter = false, false
   local line_idx = 0
-  for line in f:lines() do
+  for line in lines() do
     line_idx = line_idx + 1
     if line_idx == 1 then
       if note._is_frontmatter_boundary(line) then
@@ -165,6 +204,46 @@ note._parse_header = function(line)
   return line:match "^#+ (.+)$"
 end
 
+---Get frontmatter lines that can be written to a buffer.
+---
+---@param eol boolean|?
+---@return string[]
+note.frontmatter_lines = function(self, eol)
+  local new_lines = { "---", ("id: %q"):format(self.id) }
+
+  if #self.aliases > 0 then
+    table.insert(new_lines, "aliases:")
+  else
+    table.insert(new_lines, "aliases: []")
+  end
+  for _, alias in pairs(self.aliases) do
+    table.insert(new_lines, (" - %q"):format(alias))
+  end
+
+  if #self.tags > 0 then
+    table.insert(new_lines, "tags:")
+  else
+    table.insert(new_lines, "tags: []")
+  end
+  for _, tag in pairs(self.tags) do
+    table.insert(new_lines, (" - %q"):format(tag))
+  end
+
+  table.insert(new_lines, "---")
+  if not self.has_frontmatter then
+    -- Make sure there's an empty line between end of the frontmatter and the contents.
+    table.insert(new_lines, "")
+  end
+
+  if eol then
+    return vim.tbl_map(function(l)
+      return l .. "\n"
+    end, new_lines)
+  else
+    return new_lines
+  end
+end
+
 ---Save note to file.
 ---
 ---@param path string|Path|?
@@ -205,31 +284,7 @@ note.save = function(self, path)
   end
 
   -- Replace frontmatter.
-  local new_lines = { "---\n", ("id: %q\n"):format(self.id) }
-
-  if #self.aliases > 0 then
-    table.insert(new_lines, "aliases:\n")
-  else
-    table.insert(new_lines, "aliases: []\n")
-  end
-  for _, alias in pairs(self.aliases) do
-    table.insert(new_lines, (" - %q\n"):format(alias))
-  end
-
-  if #self.tags > 0 then
-    table.insert(new_lines, "tags:\n")
-  else
-    table.insert(new_lines, "tags: []\n")
-  end
-  for _, tag in pairs(self.tags) do
-    table.insert(new_lines, (" - %q\n"):format(tag))
-  end
-
-  table.insert(new_lines, "---\n")
-  if not has_frontmatter then
-    -- Make sure there's an empty line between end of the frontmatter and the contents.
-    table.insert(new_lines, "\n")
-  end
+  local new_lines = self:frontmatter_lines(true)
 
   -- Add remaining original lines.
   for i = end_idx + 1, #lines do

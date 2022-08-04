@@ -16,7 +16,7 @@ end
 ---@param msg any
 ---@param group string
 echo.echo = function(msg, group)
-  vim.api.nvim_echo({ { "[Obsidian] ", group }, { tostring(msg), nil } }, true, {})
+  vim.api.nvim_echo({ { "[Obsidian]", group }, { " " .. tostring(msg), nil } }, true, {})
 end
 
 echo.info = function(msg)

@@ -10,6 +10,16 @@ A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 
 - [ ] Command for getting backlinks to current buffer
 
+## Usage
+
+### Completion
+
+Trigger autocompletion to other notes when you type `[[`
+
+### Commands
+
+- **:ObsidianCheck** - Validate notes in your vault for proper frontmatter.
+
 ## Setup
 
 ### Requirements
