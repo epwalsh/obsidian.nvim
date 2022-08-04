@@ -7,6 +7,7 @@ local util = require "obsidian.util"
 ---@field tags sqlite_tbl
 
 ---@class obsidian.Cache
+---@field db_uri string
 ---@field db CacheDatabase
 local cache = {}
 
@@ -17,11 +18,11 @@ cache.new = function(dir)
   local self = setmetatable({}, { __index = cache })
 
   dir:mkdir { parents = true, exits_ok = true }
-  local db_uri = tostring(dir / ".obsidian.sqlite")
+  self.db_uri = tostring(dir / ".obsidian.sqlite")
 
   -- Setup cache database.
   self.db = sqlite {
-    uri = db_uri,
+    uri = self.db_uri,
     notes = {
       id = { "text", required = true, unique = true, primary = true },
       aliases = "luatable",

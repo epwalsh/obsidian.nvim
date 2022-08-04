@@ -28,12 +28,22 @@ end
 ---Initialize a note from a file.
 ---
 ---@param path string|Path
+---@param root string|Path|?
 ---@return obsidian.Note
-note.from_file = function(path)
-  local frontmatter_lines, _ = note.frontmatter(path)
-  local frontmatter = table.concat(frontmatter_lines, "\n")
-  local data = yaml.eval(frontmatter)
-  return note.new(data.id, data.aliases, data.tags, path)
+note.from_file = function(path, root)
+  local cwd = tostring(root and root or "./")
+  local ok, frontmatter_lines, _ = pcall(note.frontmatter, path)
+  if ok then
+    local frontmatter = table.concat(frontmatter_lines, "\n")
+    local data = yaml.eval(frontmatter)
+    if data.id == nil then
+      data.id = tostring(Pathlib:new(path):make_relative(cwd))
+    end
+    return note.new(data.id, data.aliases, data.tags, path)
+  else
+    local id = tostring(Pathlib:new(path):make_relative(cwd))
+    return note.new(id, {}, {}, path)
+  end
 end
 
 ---Check if a note has a given alias.
@@ -79,7 +89,7 @@ note.frontmatter = function(path)
   if path == nil then
     error "note path cannot be nil"
   end
-  local f = io.open(tostring(path))
+  local f = io.open(vim.fs.normalize(tostring(path)))
   if f == nil then
     error "failed to read file"
   end
@@ -89,10 +99,10 @@ note.frontmatter = function(path)
   for line in f:lines() do
     if not in_frontmatter then
       start_idx = start_idx + 1
-      if line:match "^---$" then
+      if line:match "^---$" then -- TODO: Make these matches more robust
         in_frontmatter = true
       end
-    elseif line:match "^---$" then
+    elseif line:match "^---$" then -- TODO: Make these matches more robust
       f:close()
       return lines, start_idx
     else
@@ -114,7 +124,8 @@ note.save = function(self, path)
     error "failed to read file"
   end
 
-  --Read lines.
+  -- Read lines.
+  -- TODO: make sue this works when there is no existing frontmatter.
   local lines = {}
   local in_frontmatter, frontmatter_done, start_idx, end_idx = false, false, 0, 0
   local contents = self_f:read "*a"
@@ -124,10 +135,10 @@ note.save = function(self, path)
       if not in_frontmatter then
         start_idx = start_idx + 1
         end_idx = end_idx + 1
-        if line:match "^---$" then
+        if line:match "^---$" then -- TODO: Make these matches more robust
           in_frontmatter = true
         end
-      elseif line:match "^---$" then
+      elseif line:match "^---$" then -- TODO: Make these matches more robust
         end_idx = end_idx + 1
         frontmatter_done = true
       else

@@ -13,6 +13,12 @@ describe("Note", function()
     assert(note.aliases[2] == "Foo")
     assert(#note.tags == 0)
   end)
+  it("should be able to be initialized from a file without fronmatter", function()
+    local note = obsidian.note.from_file "README.md"
+    assert(note.id == "README.md")
+    assert(#note.aliases == 0)
+    assert(#note.tags == 0)
+  end)
   it("should be able to add an alias", function()
     local note = obsidian.note.from_file "test_fixtures/notes/foo.md"
     assert(#note.aliases == 2)

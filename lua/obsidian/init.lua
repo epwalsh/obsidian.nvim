@@ -22,27 +22,40 @@ local client = {}
 ---@class obsidian.CompletionOpts
 ---@field nvim_cmp boolean
 
+---Create a new Obsidian client without additional setup.
+---
+---@param dir string
+---@return obsidian.Client
+obsidian.new = function(dir)
+  local self = setmetatable({}, { __index = client })
+  self.dir = Pathlib:new(vim.fs.normalize(dir and dir or "./"))
+  self.cache = obsidian.cache.new(self.dir)
+  return self
+end
+
 ---Setup a new Obsidian client.
 ---
 ---@param opts obsidian.Opts
 ---@return obsidian.Client
 obsidian.setup = function(opts)
-  local self = setmetatable({}, { __index = client })
-
-  self.dir = Pathlib:new(vim.fs.normalize(opts.dir and opts.dir or "./"))
+  local self = obsidian.new(opts.dir)
   -- Ensure directory exists.
   self.dir:mkdir { parents = true, exits_ok = true }
-  self.cache = obsidian.cache.new(self.dir)
 
   local completion = opts.completion and opts.completion or {}
 
   -- Complete the lazy setup only when entering a buffer in the vault.
   local lazy_setup = function()
+    -- Load cache if needed.
+    if self.cache:size() == 0 then
+      self:load_cache()
+    end
+
     -- Configure nvim-cmp completion?
     if completion.nvim_cmp then
       local cmp = require "cmp"
       local sources = {
-        { name = "obsidian", option = { client = self } },
+        { name = "obsidian", option = { dir = tostring(self.dir) } },
       }
       for _, source in pairs(cmp.get_config().sources) do
         if source.name ~= "obsidian" then
@@ -57,7 +70,7 @@ obsidian.setup = function(opts)
   end
 
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
-    pattern = tostring(self.dir) .. "/**/*.md",
+    pattern = tostring(self.dir) .. "/**.md",
     callback = lazy_setup,
   })
 
@@ -74,7 +87,7 @@ client.load_cache = function(self, refresh)
   for _, fname in pairs(obsidian.util.find_markdown_files(self.dir)) do
     local path = Pathlib:new(fname)
     if path:is_file() then
-      local note = obsidian.note.from_file(path)
+      local note = obsidian.note.from_file(path, self.dir)
       self.cache:set(note)
     end
   end
