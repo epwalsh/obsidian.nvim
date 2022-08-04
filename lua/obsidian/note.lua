@@ -172,25 +172,24 @@ note.save = function(self, path)
   end
 
   -- Read lines.
-  -- TODO: make sue this works when there is no existing frontmatter.
   local lines = {}
-  local in_frontmatter, frontmatter_done, start_idx, end_idx = false, false, 0, 0
+  local has_frontmatter, in_frontmatter = false, false
+  local end_idx = 0
   local contents = self_f:read "*a"
-  for _, line in pairs(vim.split(contents, "\n")) do
+  for idx, line in pairs(vim.split(contents, "\n")) do
     table.insert(lines, line .. "\n")
-    if not frontmatter_done then
-      if not in_frontmatter then
-        start_idx = start_idx + 1
-        end_idx = end_idx + 1
-        if line:match "^---$" then -- TODO: Make these matches more robust
-          in_frontmatter = true
-        end
-      elseif line:match "^---$" then -- TODO: Make these matches more robust
-        end_idx = end_idx + 1
-        frontmatter_done = true
-      else
-        end_idx = end_idx + 1
+    if idx == 1 then
+      if note._is_frontmatter_boundary(line) then
+        has_frontmatter = true
+        in_frontmatter = true
       end
+    elseif has_frontmatter and in_frontmatter then
+      if note._is_frontmatter_boundary(line) then
+        end_idx = idx
+        in_frontmatter = false
+      end
+    else
+      break
     end
   end
   self_f:close()
@@ -217,6 +216,10 @@ note.save = function(self, path)
   end
 
   table.insert(new_lines, "---\n")
+  if not has_frontmatter then
+    -- Make sure there's an empty line between end of the frontmatter and the contents.
+    table.insert(new_lines, "\n")
+  end
 
   -- Add remaining original lines.
   for i = end_idx + 1, #lines do

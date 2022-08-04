@@ -38,6 +38,10 @@ describe("Note", function()
     note:add_alias "Foo Bar"
     note:save "./test_fixtures/notes/foo_bar.md"
   end)
+  it("should be able to save note w/o frontmatter to file", function()
+    local note = Note.from_file "test_fixtures/notes/note_without_frontmatter.md"
+    note:save "./test_fixtures/notes/note_without_frontmatter_saved.md"
+  end)
   it("should be able to parse a markdown header", function()
     assert.equals(Note._parse_header "## Hey there", "Hey there")
   end)
