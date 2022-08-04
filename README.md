@@ -4,21 +4,13 @@ A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 
 ## Features
 
-- ▶️ Completion via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+- ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
+- 🏃 Go to a note buffer with `gf` when cursor is on a reference
+- 💅 Additional markdown syntax highlighting and concealing for references
 
 ### In-progress
 
 - [ ] Command for getting backlinks to current buffer
-
-## Usage
-
-### Completion
-
-Trigger autocompletion to other notes when you type `[[`
-
-### Commands
-
-- **:ObsidianCheck** - Validate notes in your vault for proper frontmatter.
 
 ## Setup
 
