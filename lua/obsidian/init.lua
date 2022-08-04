@@ -2,12 +2,9 @@ local Path = require "plenary.path"
 
 local obsidian = {}
 
+obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
-
----@class obsidian.Client
----@field dir Path
-local client = {}
 
 --[[
 -- Options classes:
@@ -19,6 +16,10 @@ local client = {}
 
 ---@class obsidian.CompletionOpts
 ---@field nvim_cmp boolean
+
+---@class obsidian.Client
+---@field dir Path
+local client = {}
 
 ---Create a new Obsidian client without additional setup.
 ---
@@ -50,23 +51,24 @@ obsidian.setup = function(opts)
         error "[Obsidian] Can't find 'rg' command! Did you forget to install ripgrep?"
       end
 
+      -- Add source.
       local cmp = require "cmp"
       local sources = {
         { name = "obsidian", option = { dir = tostring(self.dir) } },
+        { name = "obsidian_new", option = { dir = tostring(self.dir) } },
       }
       for _, source in pairs(cmp.get_config().sources) do
-        if source.name ~= "obsidian" then
+        if source.name ~= "obsidian" and source.name ~= "obsidian_new" then
           table.insert(sources, source)
         end
       end
       cmp.setup.buffer { sources = sources }
     end
-
-    -- All good!
-    print "[Obsidian] loaded!"
   end
 
+  local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    group = group,
     pattern = tostring(self.dir) .. "/**.md",
     callback = lazy_setup,
   })

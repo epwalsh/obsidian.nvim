@@ -1,4 +1,4 @@
-local Pathlib = require "plenary.path"
+local Path = require "plenary.path"
 local util = require "obsidian.util"
 local yaml = require "deps.lua_yaml.yaml"
 
@@ -21,7 +21,7 @@ note.new = function(id, aliases, tags, path)
   self.id = id
   self.aliases = aliases and aliases or {}
   self.tags = tags and tags or {}
-  self.path = path and Pathlib:new(path) or nil
+  self.path = path and Path:new(path) or nil
   return self
 end
 
@@ -74,7 +74,7 @@ note.from_file = function(path, root)
   end
 
   local cwd = tostring(root and root or "./")
-  local relative_path = tostring(Pathlib:new(path):make_relative(cwd))
+  local relative_path = tostring(Path:new(path):make_relative(cwd))
 
   local id = nil
   local title = nil
@@ -166,36 +166,39 @@ note.save = function(self, path)
   if self.path == nil then
     error "note path cannot be nil"
   end
-  local self_f = io.open(tostring(self.path))
-  if self_f == nil then
-    error "failed to read file"
-  end
 
-  -- Read lines.
   local lines = {}
   local has_frontmatter, in_frontmatter = false, false
   local end_idx = 0
-  local contents = self_f:read "*a"
-  for idx, line in pairs(vim.split(contents, "\n")) do
-    table.insert(lines, line .. "\n")
-    if idx == 1 then
-      if note._is_frontmatter_boundary(line) then
-        has_frontmatter = true
-        in_frontmatter = true
+
+  -- Read lines from existing file, if there is one.
+  local self_f = io.open(tostring(self.path))
+  if self_f ~= nil then
+    local contents = self_f:read "*a"
+    for idx, line in pairs(vim.split(contents, "\n")) do
+      table.insert(lines, line .. "\n")
+      if idx == 1 then
+        if note._is_frontmatter_boundary(line) then
+          has_frontmatter = true
+          in_frontmatter = true
+        end
+      elseif has_frontmatter and in_frontmatter then
+        if note._is_frontmatter_boundary(line) then
+          end_idx = idx
+          in_frontmatter = false
+        end
+      else
+        break
       end
-    elseif has_frontmatter and in_frontmatter then
-      if note._is_frontmatter_boundary(line) then
-        end_idx = idx
-        in_frontmatter = false
-      end
-    else
-      break
     end
+    self_f:close()
+  elseif #self.aliases > 0 then
+    -- Add a header.
+    table.insert(lines, "# " .. self.aliases[1])
   end
-  self_f:close()
 
   -- Replace frontmatter.
-  local new_lines = { "---\n", "id: " .. self.id .. "\n" }
+  local new_lines = { "---\n", ("id: %q\n"):format(self.id) }
 
   if #self.aliases > 0 then
     table.insert(new_lines, "aliases:\n")
@@ -203,7 +206,7 @@ note.save = function(self, path)
     table.insert(new_lines, "aliases: []\n")
   end
   for _, alias in pairs(self.aliases) do
-    table.insert(new_lines, " - " .. alias .. "\n")
+    table.insert(new_lines, (" - %q\n"):format(alias))
   end
 
   if #self.tags > 0 then
@@ -212,7 +215,7 @@ note.save = function(self, path)
     table.insert(new_lines, "tags: []\n")
   end
   for _, tag in pairs(self.tags) do
-    table.insert(new_lines, " - " .. tag .. "\n")
+    table.insert(new_lines, (" - %q\n"):format(tag))
   end
 
   table.insert(new_lines, "---\n")

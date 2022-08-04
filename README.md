@@ -6,6 +6,10 @@ A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 
 - ▶️ Completion via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
 
+## In-progress
+
+- [ ] Command for getting backlinks to current buffer
+
 ## Requirements
 
 The plugin [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) is required, and if you want completion features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.

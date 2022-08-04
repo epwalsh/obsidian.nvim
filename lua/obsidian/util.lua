@@ -74,4 +74,15 @@ util.search = function(dir, term)
   end
 end
 
+---Create a new unique Zettel ID.
+---
+---@return string
+util.zettel_id = function()
+  local suffix = ""
+  for _ = 1, 4 do
+    suffix = suffix .. string.char(math.random(65, 90))
+  end
+  return tostring(os.time()) .. "-" .. suffix
+end
+
 return util
