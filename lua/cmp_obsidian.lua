@@ -40,8 +40,8 @@ source.complete = function(self, request, callback)
   local search = string.sub(input, 3)
   print("Input:", input)
 
-  -- TODO: make this work without auto closing brackets.
-  if string.len(search) > 0 and vim.startswith(input, "[[") and suffix == "]]" then
+  if string.len(search) > 0 and vim.startswith(input, "[[") then
+    local insert_end_offset = suffix == "]]" and 1 or -1
     local items = {}
     for _, note in pairs(client.cache:search_alias(search)) do
       for _, alias in pairs(note.aliases) do
@@ -60,7 +60,7 @@ source.complete = function(self, request, callback)
               },
               ["end"] = {
                 line = request.context.cursor.row - 1,
-                character = request.context.cursor.col + 1,
+                character = request.context.cursor.col + insert_end_offset,
               },
             },
           },
