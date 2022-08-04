@@ -9,8 +9,10 @@ source.get_trigger_characters = function()
 end
 
 source.get_keyword_pattern = function()
-  -- TODO: figure out wtf is going on here
-  return [=[\%(\s\|^\)\zs\[\[.*]=]
+  -- See ':help pattern'
+  -- Note that the enclosing [=[ ... ]=] is just a way to mark the boundary of a
+  -- string in Lua.
+  return [=[\%(\s\|^\)\zs\[\{2}[^\]]\+\]\{,2}]=]
 end
 
 ---Backtrack through a string to find the first occurence of '[['.
@@ -36,22 +38,22 @@ source.complete = function(self, request, callback)
   local input = source._find_search_start(request.context.cursor_before_line)
   local suffix = string.sub(request.context.cursor_after_line, 1, 2)
   local search = string.sub(input, 3)
+  print("Input:", input)
 
   -- TODO: make this work without auto closing brackets.
-  -- TODO: suggest most recently used references when 'search' is empty.
-
   if string.len(search) > 0 and vim.startswith(input, "[[") and suffix == "]]" then
     local items = {}
     for _, note in pairs(client.cache:search_alias(search)) do
       for _, alias in pairs(note.aliases) do
         table.insert(items, {
-          -- filterText = alias,
+          -- filterText = "[[" .. alias,
+          sortText = "[[" .. alias,
           -- insertText = "[[" .. note.id .. "|" .. alias .. "]]",
           label = "[[" .. note.id .. "|" .. alias .. "]]",
           kind = 18,
           textEdit = {
             newText = "[[" .. note.id .. "|" .. alias .. "]]",
-            range = {
+            insert = {
               start = {
                 line = request.context.cursor.row - 1,
                 character = request.context.cursor.col - 1 - #input,

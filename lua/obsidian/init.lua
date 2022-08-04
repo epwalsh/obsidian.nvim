@@ -1,4 +1,4 @@
-local Pathlib = require "plenary.path"
+local Path = require "plenary.path"
 
 local obsidian = {}
 
@@ -28,7 +28,7 @@ local client = {}
 ---@return obsidian.Client
 obsidian.new = function(dir)
   local self = setmetatable({}, { __index = client })
-  self.dir = Pathlib:new(vim.fs.normalize(dir and dir or "./"))
+  self.dir = Path:new(vim.fs.normalize(dir and dir or "./"))
   self.cache = obsidian.cache.new(self.dir)
   return self
 end
@@ -85,7 +85,7 @@ client.load_cache = function(self, refresh)
     self.cache:clear()
   end
   for _, fname in pairs(obsidian.util.find_markdown_files(self.dir)) do
-    local path = Pathlib:new(fname)
+    local path = Path:new(fname)
     if path:is_file() then
       local note = obsidian.note.from_file(path, self.dir)
       self.cache:set(note)

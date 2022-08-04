@@ -1,3 +1,6 @@
+.PHONY : all
+all : style lint test
+
 .PHONY : test
 test :
 	nvim \

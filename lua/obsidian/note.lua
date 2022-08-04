@@ -25,27 +25,6 @@ note.new = function(id, aliases, tags, path)
   return self
 end
 
----Initialize a note from a file.
----
----@param path string|Path
----@param root string|Path|?
----@return obsidian.Note
-note.from_file = function(path, root)
-  local cwd = tostring(root and root or "./")
-  local ok, frontmatter_lines, _ = pcall(note.frontmatter, path)
-  if ok then
-    local frontmatter = table.concat(frontmatter_lines, "\n")
-    local data = yaml.eval(frontmatter)
-    if data.id == nil then
-      data.id = tostring(Pathlib:new(path):make_relative(cwd))
-    end
-    return note.new(data.id, data.aliases, data.tags, path)
-  else
-    local id = tostring(Pathlib:new(path):make_relative(cwd))
-    return note.new(id, {}, {}, path)
-  end
-end
-
 ---Check if a note has a given alias.
 ---
 ---@param alias string
@@ -80,12 +59,12 @@ note.add_tag = function(self, tag)
   end
 end
 
----Get the frontmatter lines.
+---Initialize a note from a file.
 ---
 ---@param path string|Path
----@return string[]
----@return integer
-note.frontmatter = function(path)
+---@param root string|Path|?
+---@return obsidian.Note
+note.from_file = function(path, root)
   if path == nil then
     error "note path cannot be nil"
   end
@@ -94,22 +73,90 @@ note.frontmatter = function(path)
     error "failed to read file"
   end
 
-  local lines = {}
-  local in_frontmatter, start_idx = false, 0
+  local cwd = tostring(root and root or "./")
+  local relative_path = tostring(Pathlib:new(path):make_relative(cwd))
+
+  local id = nil
+  local title = nil
+  local aliases = {}
+  local tags = {}
+
+  -- Iterate over lines in the file, collecting frontmatter and parsing the title.
+  local frontmatter_lines = {}
+  local has_frontmatter, in_frontmatter = false, false
+  local line_idx = 0
   for line in f:lines() do
-    if not in_frontmatter then
-      start_idx = start_idx + 1
-      if line:match "^---$" then -- TODO: Make these matches more robust
+    line_idx = line_idx + 1
+    if line_idx == 1 then
+      if note._is_frontmatter_boundary(line) then
+        has_frontmatter = true
         in_frontmatter = true
+      else
+        local maybe_title = note._parse_header(line)
+        if maybe_title then
+          title = maybe_title
+          break
+        end
       end
-    elseif line:match "^---$" then -- TODO: Make these matches more robust
-      f:close()
-      return lines, start_idx
+    elseif has_frontmatter and in_frontmatter then
+      if note._is_frontmatter_boundary(line) then
+        in_frontmatter = false
+      else
+        table.insert(frontmatter_lines, line)
+      end
     else
-      table.insert(lines, line)
+      local maybe_title = note._parse_header(line)
+      if maybe_title then
+        title = maybe_title
+        break
+      end
     end
   end
-  error "Failed to parse frontmatter"
+
+  -- Parse the frontmatter YAML.
+  if #frontmatter_lines > 0 then
+    local frontmatter = table.concat(frontmatter_lines, "\n")
+    local ok, data = pcall(yaml.eval, frontmatter)
+    if ok then
+      if data.id then
+        id = data.id
+      end
+      if data.aliases then
+        aliases = data.aliases
+      end
+      if data.tags then
+        tags = data.tags
+      end
+    end
+  end
+
+  -- Use title as an alias.
+  if title ~= nil and not util.contains(aliases, title) then
+    table.insert(aliases, title)
+  end
+
+  -- Fall back to using the relative path as the ID.
+  if id == nil then
+    id = relative_path
+  end
+
+  return note.new(id, aliases, tags, path)
+end
+
+---Check if a line matches a frontmatter boundary.
+---
+---@param line string
+---@return boolean
+note._is_frontmatter_boundary = function(line)
+  return line:match "^---+$" ~= nil
+end
+
+---Try parsing a header from a line.
+---
+---@param line string
+---@return string|?
+note._parse_header = function(line)
+  return line:match "^#+ (.+)$"
 end
 
 ---Save note to file.
