@@ -2,27 +2,23 @@
 
 A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 
+## Features
+
+- ▶️ Completion via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+
+## Requirements
+
+The plugin [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) is required, and if you want completion features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
+See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
+
 ## Install
 
 Using `vim-plug`, for example:
 
 ```vim
-Plug 'nvim-lua/plenary.nvim'  " required dependency
-Plug 'kkharji/sqlite.lua'     " required dependency (you'll also need sqlite3 installed)
+Plug 'nvim-lua/plenary.nvim'  " required
+Plug 'hrsh7th/nvim-cmp'       " optional (for completion)
 Plug 'epwalsh/obsidian.nvim'
-```
-
-Obsidian.nvim also integrates directly with [`nvim-cmp`](https://github.com/hrsh7th/nvim-cmp) for completion.
-Note that you do *not* need to specify this plugin an `nvim-cmp` "source".
-Obsidian.nvim will set itself up as a source automatically when you enter a markdown buffer within your vault directory.
-
-```lua
-require("cmp").setup({
-  sources = {
-    { name = "obsidian" }, -- WRONG! Don't put this here
-  },
-})
-
 ```
 
 ## Configuration
@@ -33,7 +29,18 @@ For a minimal configuration, just add:
 require("obsidian").setup({
   dir = "~/my-vault",
   completion = {
-    nvim_cmp = true, -- if using nvim-cmp, other set to false
+    nvim_cmp = true, -- if using nvim-cmp, otherwise set to false
   }
+})
+```
+
+:exclamation: Note that you do **not** need to specify this plugin as an `nvim-cmp` "source".
+Obsidian.nvim will set itself up as a source automatically when you enter a markdown buffer within your vault directory.
+
+```lua
+require("cmp").setup({
+  sources = {
+    { name = "obsidian" }, -- WRONG! Don't put this here. Obsidian configures itself for nvim-cmp
+  },
 })
 ```

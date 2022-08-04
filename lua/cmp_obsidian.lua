@@ -43,7 +43,7 @@ source.complete = function(self, request, callback)
   if string.len(search) > 0 and vim.startswith(input, "[[") then
     local insert_end_offset = suffix == "]]" and 1 or -1
     local items = {}
-    for _, note in pairs(client:search(search)) do
+    for note in client:search(search) do
       for _, alias in pairs(note.aliases) do
         table.insert(items, {
           -- filterText = "[[" .. alias,

@@ -3,12 +3,10 @@ local Path = require "plenary.path"
 local obsidian = {}
 
 obsidian.note = require "obsidian.note"
-obsidian.cache = require "obsidian.cache"
 obsidian.util = require "obsidian.util"
 
 ---@class obsidian.Client
 ---@field dir Path
----@field cache obsidian.Cache
 local client = {}
 
 --[[
@@ -29,7 +27,6 @@ local client = {}
 obsidian.new = function(dir)
   local self = setmetatable({}, { __index = client })
   self.dir = Path:new(vim.fs.normalize(dir and dir or "./"))
-  self.cache = obsidian.cache.new(self.dir)
   return self
 end
 
@@ -46,13 +43,9 @@ obsidian.setup = function(opts)
 
   -- Complete the lazy setup only when entering a buffer in the vault.
   local lazy_setup = function()
-    -- Load cache if needed.
-    if self.cache:size() == 0 then
-      self:load_cache()
-    end
-
     -- Configure nvim-cmp completion?
     if completion.nvim_cmp then
+      -- TODO: Check for ripgrep
       local cmp = require "cmp"
       local sources = {
         { name = "obsidian", option = { dir = tostring(self.dir) } },
@@ -77,27 +70,17 @@ obsidian.setup = function(opts)
   return self
 end
 
----Search for notes.
----
+---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
----@return obsidian.Note[]
 client.search = function(self, search)
-  return self.cache:search_alias(search)
-end
-
----Load cache.
----
----@param refresh boolean|?
-client.load_cache = function(self, refresh)
-  if refresh then
-    self.cache:clear()
-  end
-  for _, fname in pairs(obsidian.util.find_markdown_files(self.dir)) do
-    local path = Path:new(fname)
-    if path:is_file() then
-      local note = obsidian.note.from_file(path, self.dir)
-      self.cache:set(note)
+  local search_results = obsidian.util.search(self.dir, search)
+  return function()
+    local path = search_results()
+    if path == nil then
+      return nil
+    else
+      return obsidian.note.from_file(path, self.dir)
     end
   end
 end
