@@ -2,6 +2,8 @@
 
 A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 
+This is for people who love the concept of Obsidian -- a simple, markdown-based notes app -- but love Neovim too much to stand typing characters into anything else.
+
 ## Features
 
 - ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
@@ -11,11 +13,7 @@ A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 ### Commands
 
 - `:ObsidianToday` to create a new daily note
-
-### In-progress
-
-- [ ] Command for getting backlinks to current buffer
-- [ ] Command for creating daily notes
+- `:ObsidianOpen` to open a note in the Obsidian app (only works on MacOS for now)
 
 ## Setup
 
@@ -49,7 +47,7 @@ require("obsidian").setup({
 })
 ```
 
-:exclamation: Note that you do **not** need to specify this plugin as an `nvim-cmp` "source".
+❗ Note that you do **not** need to specify this plugin as an `nvim-cmp` "source".
 Obsidian.nvim will set itself up as a source automatically when you enter a markdown buffer within your vault directory.
 
 ```lua

@@ -38,6 +38,7 @@ local UNSAFE_CHARS = "[^A-Za-z0-9_@%%+=:,./-]"
 ---@param str string
 ---@return string
 util.quote = function(str)
+  -- TODO: use vim.fn.shellescape instead
   local quoted_str = tostring(str)
   if str == nil or quoted_str == nil or #quoted_str == 0 then
     return "''"
@@ -48,6 +49,22 @@ util.quote = function(str)
   end
 
   return "'" .. string.gsub(quoted_str, "'", "'\"'\"'") .. "'"
+end
+
+local char_to_hex = function(c)
+  return string.format("%%%02X", string.byte(c))
+end
+
+---Encode a string into URL-safe version.
+---
+---@param str string
+---@return string
+util.urlencode = function(str)
+  local url = str
+  url = url:gsub("\n", "\r\n")
+  url = url:gsub("([^%w _%%%-%.~])", char_to_hex)
+  url = url:gsub(" ", "+")
+  return url
 end
 
 local SEARCH_CMD = "rg --no-config -S -F --json -m 1 --type md "

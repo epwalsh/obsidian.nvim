@@ -66,6 +66,41 @@ obsidian.setup = function(opts)
       {}
     )
 
+    -- ':ObsidianOpen'
+    vim.api.nvim_create_user_command(
+      "ObsidianOpen",
+      ---@diagnostic disable-next-line: unused-local
+      function(data)
+        local vault = self:vault()
+        if vault == nil then
+          obsidian.echo.err "couldn't find an Obsidian vault"
+          return
+        end
+        local vault_name = vim.fs.basename(vault)
+
+        local path
+        if data.args:len() > 0 then
+          path = Path:new(data.args):make_relative(vault)
+        else
+          local bufname = vim.api.nvim_buf_get_name(0)
+          path = Path:new(bufname):make_relative(vault)
+        end
+
+        local encoded_vault = obsidian.util.urlencode(vault_name)
+        local encoded_path = obsidian.util.urlencode(tostring(path))
+
+        -- TODO: make this work on Linux
+        os.execute(
+          "open -a /Applications/Obsidian.app --background 'obsidian://open?vault="
+            .. encoded_vault
+            .. "&file="
+            .. encoded_path
+            .. "'"
+        )
+      end,
+      {}
+    )
+
     -- Configure completion...
     if opts.completion.nvim_cmp then
       -- Check for ripgrep.
@@ -114,6 +149,24 @@ obsidian.setup = function(opts)
   })
 
   return self
+end
+
+---Find the path to the actual Obsidian vault (it may be in a parent of 'self.dir').
+---
+---@return string|?
+client.vault = function(self)
+  local vault_indicator_folder = ".obsidian"
+  local dirs = self.dir:parents()
+  table.insert(dirs, self.dir:absolute())
+  for _, parent in pairs(self.dir:parents()) do
+    ---@type Path
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local maybe_vault = Path:new(parent) / vault_indicator_folder
+    if maybe_vault:is_dir() then
+      return parent
+    end
+  end
+  return nil
 end
 
 ---Search for notes. Returns an iterator over matching notes.
