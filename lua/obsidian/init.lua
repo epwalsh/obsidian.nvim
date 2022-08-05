@@ -3,20 +3,10 @@ local Path = require "plenary.path"
 local obsidian = {}
 
 obsidian.completion = require "obsidian.completion"
+obsidian.config = require "obsidian.config"
+obsidian.echo = require "obsidian.echo"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
-obsidian.echo = require "obsidian.echo"
-
---[[
--- Options classes:
---]]
-
----@class obsidian.Opts
----@field dir string
----@field completion obsidian.CompletionOpts
-
----@class obsidian.CompletionOpts
----@field nvim_cmp boolean
 
 ---@class obsidian.Client
 ---@field dir Path
@@ -24,28 +14,28 @@ local client = {}
 
 ---Create a new Obsidian client without additional setup.
 ---
----@param dir string
+---@param dir string|Path
 ---@return obsidian.Client
 obsidian.new = function(dir)
   -- Setup highlight groups.
   obsidian.echo.setup()
 
   local self = setmetatable({}, { __index = client })
-  self.dir = Path:new(vim.fs.normalize(dir and dir or "./"))
+  self.dir = Path:new(vim.fs.normalize(tostring(dir and dir or "./")))
 
   return self
 end
 
 ---Setup a new Obsidian client.
 ---
----@param opts obsidian.Opts
+---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 obsidian.setup = function(opts)
+  opts = obsidian.config.ClientOpts.normalize(opts)
   local self = obsidian.new(opts.dir)
+
   -- Ensure directory exists.
   self.dir:mkdir { parents = true, exits_ok = true }
-
-  local completion = opts.completion and opts.completion or {}
 
   -- Complete the lazy setup only when entering a buffer in the vault.
   local lazy_setup = function()
@@ -60,7 +50,7 @@ obsidian.setup = function(opts)
     )
 
     -- Configure nvim-cmp completion?
-    if completion.nvim_cmp then
+    if opts.completion.nvim_cmp then
       -- Check for ripgrep.
       if os.execute "rg --help" > 0 then
         obsidian.echo.err "Can't find 'rg' command! Did you forget to install ripgrep?"
@@ -69,8 +59,8 @@ obsidian.setup = function(opts)
       -- Add source.
       local cmp = require "cmp"
       local sources = {
-        { name = "obsidian", option = { dir = tostring(self.dir) } },
-        { name = "obsidian_new", option = { dir = tostring(self.dir) } },
+        { name = "obsidian", option = opts },
+        { name = "obsidian_new", option = opts },
       }
       for _, source in pairs(cmp.get_config().sources) do
         if source.name ~= "obsidian" and source.name ~= "obsidian_new" then

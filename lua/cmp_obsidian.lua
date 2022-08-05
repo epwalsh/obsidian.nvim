@@ -11,24 +11,16 @@ source.get_trigger_characters = obsidian.completion.get_trigger_characters
 source.get_keyword_pattern = obsidian.completion.get_keyword_pattern
 
 source.complete = function(self, request, callback)
-  local dir = self:option(request).dir
-  if dir == nil then
-    obsidian.echo.fail "completion has not been setup correctly!"
-    error()
-  end
-
-  local client = obsidian.new(dir)
+  local opts = self:option(request)
+  local client = obsidian.new(opts.dir)
   local can_complete, search, insert_start, insert_end = obsidian.completion.can_complete(request)
 
-  if can_complete then
-    assert(search ~= nil)
+  if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local items = {}
     for note in client:search(search) do
       for _, alias in pairs(note.aliases) do
         table.insert(items, {
-          -- filterText = "[[" .. alias,
           sortText = "[[" .. alias,
-          -- insertText = "[[" .. note.id .. "|" .. alias .. "]]",
           label = "[[" .. note.id .. "|" .. alias .. "]]",
           kind = 18,
           textEdit = {
@@ -56,10 +48,11 @@ source.complete = function(self, request, callback)
   end
 end
 
+---Get opts.
+---
+---@return obsidian.config.ClientOpts
 source.option = function(_, params)
-  return vim.tbl_extend("force", {
-    dir = "./",
-  }, params.option)
+  return obsidian.config.ClientOpts.normalize(params.option)
 end
 
 return source

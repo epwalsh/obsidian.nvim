@@ -12,15 +12,10 @@ source.get_trigger_characters = obsidian.completion.get_trigger_characters
 source.get_keyword_pattern = obsidian.completion.get_keyword_pattern
 
 source.complete = function(self, request, callback)
-  local dir = self:option(request).dir
-  if dir == nil then
-    obsidian.echo.fail "completion has not been setup correctly!"
-  end
-
+  local opts = self:option(request)
   local can_complete, search, insert_start, insert_end = obsidian.completion.can_complete(request)
 
-  if can_complete then
-    assert(search ~= nil)
+  if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local new_id = obsidian.util.zettel_id()
     local items = {}
     table.insert(items, {
@@ -41,7 +36,7 @@ source.complete = function(self, request, callback)
         },
       },
       data = {
-        dir = dir,
+        dir = opts.dir,
         id = new_id,
         title = search,
       },
@@ -67,10 +62,11 @@ source.execute = function(self, item, callback)
   return callback
 end
 
+---Get opts.
+---
+---@return obsidian.config.ClientOpts
 source.option = function(_, params)
-  return vim.tbl_extend("force", {
-    dir = "./",
-  }, params.option)
+  return obsidian.config.ClientOpts.normalize(params.option)
 end
 
 return source
