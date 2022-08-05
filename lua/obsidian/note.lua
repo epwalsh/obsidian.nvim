@@ -3,6 +3,8 @@ local util = require "obsidian.util"
 local yaml = require "deps.lua_yaml.yaml"
 local echo = require "obsidian.echo"
 
+local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
+
 ---@class obsidian.Note
 ---@field id string
 ---@field aliases string[]
@@ -25,6 +27,22 @@ note.new = function(id, aliases, tags, path)
   self.tags = tags and tags or {}
   self.path = path and Path:new(path) or nil
   return self
+end
+
+---Get the filename associated with the note.
+---
+---@return string|?
+note.fname = function(self)
+  if self.path == nil then
+    return nil
+  else
+    return vim.fs.basename(tostring(self.path))
+  end
+end
+
+note.should_save_frontmatter = function(self)
+  local fname = self:fname()
+  return (fname ~= nil and not util.contains(SKIP_UPDATING_FRONTMATTER, fname) and not self.has_frontmatter)
 end
 
 ---Check if a note has a given alias.

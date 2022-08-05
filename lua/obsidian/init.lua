@@ -98,7 +98,7 @@ obsidian.setup = function(opts)
     callback = function()
       local bufnr = vim.api.nvim_get_current_buf()
       local note = obsidian.note.from_buffer(bufnr, self.dir)
-      if not note.has_frontmatter then
+      if note:should_save_frontmatter() then
         local lines = note:frontmatter_lines()
         vim.api.nvim_buf_set_lines(bufnr, 0, 0, true, lines)
         obsidian.echo.info "Updated frontmatter"
