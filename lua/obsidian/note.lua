@@ -29,6 +29,29 @@ note.new = function(id, aliases, tags, path)
   return self
 end
 
+---Create a new daily note for today.
+---
+---@param dir string|Path
+---@return obsidian.Note
+note.today = function(dir)
+  ---@type string
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local id = os.date "%Y-%m-%d"
+  local alias = os.date "%B %-d, %Y"
+  ---@type Path
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local path = Path:new(dir) / (id .. ".md")
+  return note.new(id, { alias }, { "daily-notes" }, path)
+end
+
+---Check if the note exists on the file system.
+---
+---@return boolean
+note.exists = function(self)
+  ---@diagnostic disable-next-line: return-type-mismatch
+  return self.path ~= nil and self.path:is_file()
+end
+
 ---Get the filename associated with the note.
 ---
 ---@return string|?

@@ -8,6 +8,10 @@ A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 - 🏃 Go to a note buffer with `gf` when cursor is on a reference
 - 💅 Additional markdown syntax highlighting and concealing for references
 
+### Commands
+
+- `:ObsidianToday` to create a new daily note
+
 ### In-progress
 
 - [ ] Command for getting backlinks to current buffer

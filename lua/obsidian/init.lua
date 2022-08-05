@@ -39,7 +39,8 @@ obsidian.setup = function(opts)
 
   -- Complete the lazy setup only when entering a buffer in the vault.
   local lazy_setup = function()
-    -- Add commands.
+    -- Add commands...
+    -- ':ObsidianCheck'
     vim.api.nvim_create_user_command(
       "ObsidianCheck",
       ---@diagnostic disable-next-line: unused-local
@@ -49,7 +50,22 @@ obsidian.setup = function(opts)
       {}
     )
 
-    -- Configure nvim-cmp completion?
+    -- ':ObsidianToday'
+    vim.api.nvim_create_user_command(
+      "ObsidianToday",
+      ---@diagnostic disable-next-line: unused-local
+      function(data)
+        local note = obsidian.note.today(self.dir)
+        if not note:exists() then
+          note:save()
+        end
+        vim.api.nvim_command "w"
+        vim.api.nvim_command("e " .. tostring(note.path))
+      end,
+      {}
+    )
+
+    -- Configure completion...
     if opts.completion.nvim_cmp then
       -- Check for ripgrep.
       if os.execute "rg --help" > 0 then
@@ -102,8 +118,11 @@ end
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
+---@return function
 client.search = function(self, search)
   local search_results = obsidian.util.search(self.dir, search)
+
+  ---@return obsidian.Note|?
   return function()
     local path = search_results()
     if path == nil then
