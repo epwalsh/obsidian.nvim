@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ubuntu-latest
+        os: [ubuntu-latest]
         task:
           - name: Test
             run: |
