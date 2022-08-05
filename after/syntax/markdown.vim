@@ -1,13 +1,17 @@
-" In headers.
+" Vim syntax file.
+" Language:	Markdown
+" Remark:	Meant to complement existing Markdown syntax files, not replace.
+
+" In headers:
 "
-" Zettel date links '[[xxxx-xx-xx]]'
+" Zettel date links '[[xxxx-xx-xx]]':
 syntax region ZettelDateHeader matchgroup=ZettelDateDelim start="\v\[\[" skip="\v[0-9]{4}-[0-9]{2}-[0-9]{2}" end="\v\]\]" oneline concealends
 highlight ZettelDateHeader cterm=bold ctermfg=166
-" Zettel links '[[link|name]]'
+" Zettel links '[[link|name]]':
 syntax region ZettelLinkHeader matchgroup=ZettelLinkDelim start="\v\[\[[^\|\]]+\|" end="\v\]\]" oneline concealends
 highlight ZettelLinkHeader cterm=bold ctermfg=166
 
-" Same things, but not in headers.
+" Same things, but not in headers:
 "
 syntax region ZettelDate matchgroup=ZettelDateDelim start="\v\[\[" skip="\v[0-9]{4}-[0-9]{2}-[0-9]{2}" end="\v\]\]" oneline concealends
 highlight ZettelDate ctermfg=blue

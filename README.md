@@ -11,6 +11,7 @@ A Neovim plugin for [Obsidian](https://obsidian.md), written in Lua.
 ### In-progress
 
 - [ ] Command for getting backlinks to current buffer
+- [ ] Command for creating daily notes
 
 ## Setup
 
@@ -25,7 +26,9 @@ Using `vim-plug`, for example:
 
 ```vim
 Plug 'nvim-lua/plenary.nvim'  " required
-Plug 'hrsh7th/nvim-cmp'       " optional (for completion)
+Plug 'hrsh7th/nvim-cmp'       " optional, for completion
+Plug 'godlygeek/tabular'      " optional, needed for 'preservim/vim-markdown'
+Plug 'preservim/vim-markdown' " optional, recommended for syntax highlighting, folding, etc.
 Plug 'epwalsh/obsidian.nvim'
 ```
 
