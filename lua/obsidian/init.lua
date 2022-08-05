@@ -2,6 +2,7 @@ local Path = require "plenary.path"
 
 local obsidian = {}
 
+obsidian.VERSION = "0.1.0"
 obsidian.completion = require "obsidian.completion"
 obsidian.config = require "obsidian.config"
 obsidian.echo = require "obsidian.echo"

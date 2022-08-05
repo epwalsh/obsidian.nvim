@@ -16,3 +16,7 @@ lint :
 .PHONY : style
 style :
 	stylua --check lua/ after/ test/
+
+.PHONY : version
+version :
+	@nvim --headless -c 'lua print(require("obsidian").VERSION)' -c q
