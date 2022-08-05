@@ -19,4 +19,4 @@ style :
 
 .PHONY : version
 version :
-	@nvim --headless -c 'lua print(require("obsidian").VERSION)' -c q
+	@nvim --headless -c 'lua print("v" .. require("obsidian").VERSION)' -c q 2>&1

@@ -2,7 +2,7 @@
 
 set -e
 
-TAG=$(python -c 'from my_package.version import VERSION; print("v" + VERSION)')
+export TAG=$(make version)
 
 read -p "Creating new release for $TAG. Do you want to continue? [Y/n] " prompt
 
