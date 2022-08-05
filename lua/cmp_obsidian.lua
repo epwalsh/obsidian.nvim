@@ -1,4 +1,6 @@
+local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
+local config = require "obsidian.config"
 
 local source = {}
 
@@ -6,14 +8,14 @@ source.new = function()
   return setmetatable({}, { __index = source })
 end
 
-source.get_trigger_characters = obsidian.completion.get_trigger_characters
+source.get_trigger_characters = completion.get_trigger_characters
 
-source.get_keyword_pattern = obsidian.completion.get_keyword_pattern
+source.get_keyword_pattern = completion.get_keyword_pattern
 
 source.complete = function(self, request, callback)
   local opts = self:option(request)
   local client = obsidian.new(opts.dir)
-  local can_complete, search, insert_start, insert_end = obsidian.completion.can_complete(request)
+  local can_complete, search, insert_start, insert_end = completion.can_complete(request)
 
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local items = {}
@@ -52,7 +54,7 @@ end
 ---
 ---@return obsidian.config.ClientOpts
 source.option = function(_, params)
-  return obsidian.config.ClientOpts.normalize(params.option)
+  return config.ClientOpts.normalize(params.option)
 end
 
 return source

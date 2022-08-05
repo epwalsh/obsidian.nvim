@@ -1,5 +1,10 @@
-local obsidian = require "obsidian"
 local Path = require "plenary.path"
+
+local completion = require "obsidian.completion"
+local config = require "obsidian.config"
+local echo = require "obsidian.echo"
+local Note = require "obsidian.note"
+local util = require "obsidian.util"
 
 local source = {}
 
@@ -7,16 +12,16 @@ source.new = function()
   return setmetatable({}, { __index = source })
 end
 
-source.get_trigger_characters = obsidian.completion.get_trigger_characters
+source.get_trigger_characters = completion.get_trigger_characters
 
-source.get_keyword_pattern = obsidian.completion.get_keyword_pattern
+source.get_keyword_pattern = completion.get_keyword_pattern
 
 source.complete = function(self, request, callback)
   local opts = self:option(request)
-  local can_complete, search, insert_start, insert_end = obsidian.completion.can_complete(request)
+  local can_complete, search, insert_start, insert_end = completion.can_complete(request)
 
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
-    local new_id = obsidian.util.zettel_id()
+    local new_id = util.zettel_id()
     local items = {}
     table.insert(items, {
       sortText = "[[" .. search,
@@ -56,9 +61,9 @@ source.execute = function(self, item, callback)
   ---@type Path
   ---@diagnostic disable-next-line: assign-type-mismatch
   local path = Path:new(data.dir) / (data.id .. ".md")
-  local note = obsidian.note.new(data.id, { data.title }, {}, path)
+  local note = Note.new(data.id, { data.title }, {}, path)
   note:save()
-  obsidian.echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   return callback
 end
 
@@ -66,7 +71,7 @@ end
 ---
 ---@return obsidian.config.ClientOpts
 source.option = function(_, params)
-  return obsidian.config.ClientOpts.normalize(params.option)
+  return config.ClientOpts.normalize(params.option)
 end
 
 return source

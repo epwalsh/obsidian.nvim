@@ -27,9 +27,6 @@ util.find_markdown_files = function(dir)
   })
 end
 
--- Characters that need shell escaping.
-local UNSAFE_CHARS = "[^A-Za-z0-9_@%%+=:,./-]"
-
 ---Quote a string for safe command-line usage.
 ---
 ---Adapted from lua-shell-games.
@@ -38,17 +35,7 @@ local UNSAFE_CHARS = "[^A-Za-z0-9_@%%+=:,./-]"
 ---@param str string
 ---@return string
 util.quote = function(str)
-  -- TODO: use vim.fn.shellescape instead
-  local quoted_str = tostring(str)
-  if str == nil or quoted_str == nil or #quoted_str == 0 then
-    return "''"
-  end
-
-  if not string.match(quoted_str, UNSAFE_CHARS) then
-    return quoted_str
-  end
-
-  return "'" .. string.gsub(quoted_str, "'", "'\"'\"'") .. "'"
+  return vim.fn.shellescape(str)
 end
 
 local char_to_hex = function(c)
