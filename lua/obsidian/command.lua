@@ -81,14 +81,13 @@ command.open = function(client, data)
   local encoded_vault = util.urlencode(vault_name)
   local encoded_path = util.urlencode(tostring(path))
 
-  -- TODO: make this work on Linux
-  os.execute(
-    "open -a /Applications/Obsidian.app --background 'obsidian://open?vault="
-      .. encoded_vault
-      .. "&file="
-      .. encoded_path
-      .. "'"
-  )
+  local app = "/Applications/Obsidian.app"
+  if Path:new(app):exists() then
+    local cmd = ("open -a %s --background 'obsidian://open?vault=%s&file=%s'"):format(app, encoded_vault, encoded_path)
+    os.execute(cmd)
+  else
+    echo.err "could not detect Obsidian application"
+  end
 end
 
 local commands = {
