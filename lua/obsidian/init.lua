@@ -4,7 +4,7 @@ local echo = require "obsidian.echo"
 
 local obsidian = {}
 
-obsidian.VERSION = "0.1.0"
+obsidian.VERSION = "1.0.0"
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"

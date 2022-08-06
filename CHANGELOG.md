@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.0.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.0.0) - 2022-08-05
+
 ### Added
 
 - Added `:ObsidianOpen` command for opening a note in Obsidian (only works on MacOS for now).
