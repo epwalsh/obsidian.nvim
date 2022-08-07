@@ -50,7 +50,7 @@ completion.get_keyword_pattern = function()
   -- See ':help pattern'
   -- Note that the enclosing [=[ ... ]=] is just a way to mark the boundary of a
   -- string in Lua.
-  return [=[\%(\s\|^\)\zs\[\{2}[^\]]\+\]\{,2}]=]
+  return [=[\%(\s\|^\|#\)\zs\[\{2}[^\]]\+\]\{,2}]=]
 end
 
 return completion
