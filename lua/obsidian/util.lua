@@ -75,25 +75,25 @@ local SEARCH_CMD = "rg --no-config -S -F --json --type md "
 ---@field submatches SubMatch[]
 
 ---Search markdown files in a directory for a given term. Return an iterator
----over `(path, line_num, line)` tuples.
----
----Use `opts` to set a `match_callback` to filter out false-positives. This should be
----a function that takes `MatchData` as input and returns a `boolean`.
+---over `MatchData`.
 ---
 ---@param dir string|Path
 ---@param term string
----@param opts table
+---@param opts string|?
 ---@return function
 util.search = function(dir, term, opts)
   local norm_dir = vim.fs.normalize(tostring(dir))
   local cmd = SEARCH_CMD
-  if opts == nil or not opts.allow_multiple then
-    cmd = cmd .. "-m 1 " .. util.quote(term) .. " " .. util.quote(norm_dir)
+  if opts ~= nil then
+    cmd = cmd .. opts .. " "
   end
   cmd = cmd .. util.quote(term) .. " " .. util.quote(norm_dir)
 
-  local match_callback = opts ~= nil and opts.match_callback or nil
   local handle = assert(io.popen(cmd, "r"))
+
+  ---Iterator over matches.
+  ---
+  ---@return MatchData|?
   return function()
     while true do
       local line = handle:read "*l"
@@ -103,9 +103,7 @@ util.search = function(dir, term, opts)
       local data = vim.json.decode(line)
       if data["type"] == "match" then
         local match_data = data.data
-        if match_callback == nil or match_callback(match_data) then
-          return match_data.path.text, match_data.line_number, match_data.lines.text
-        end
+        return match_data
       end
     end
   end

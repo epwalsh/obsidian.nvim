@@ -114,16 +114,20 @@ command.backlinks = function(client, _)
 
   local backlinks = {}
   local last_path = nil
-  for path, line_num, line in
-    util.search(client.dir, "[[" .. note.id, { match_callback = is_valid_backlink, allow_multiple = true })
-  do
-    local rel_path = Path:new(path):make_relative(bufdir)
-    if path ~= last_path then
-      local src_note = Note.from_file(path, client.dir)
-      table.insert(backlinks, ("notes/%s:%s:%s"):format(rel_path, 0, src_note:display_name()))
+  --@type MatchData
+  for match in util.search(client.dir, "[[" .. note.id) do
+    if match == nil then
+      break
+    elseif is_valid_backlink(match) then
+      local path = match.path.text
+      local rel_path = Path:new(path):make_relative(bufdir)
+      if path ~= last_path then
+        local src_note = Note.from_file(path, client.dir)
+        table.insert(backlinks, ("notes/%s:%s:%s"):format(rel_path, 0, src_note:display_name()))
+      end
+      table.insert(backlinks, ("notes/%s:%s:%s"):format(rel_path, match.line_number, match.lines.text))
+      last_path = path
     end
-    table.insert(backlinks, ("notes/%s:%s:%s"):format(rel_path, line_num, line))
-    last_path = path
   end
   vim.fn.setloclist(0, {}, " ", { lines = backlinks, title = "Backlinks" })
   vim.cmd "lop"

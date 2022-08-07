@@ -118,15 +118,15 @@ end
 ---@param search string
 ---@return function
 client.search = function(self, search)
-  local search_results = obsidian.util.search(self.dir, search)
+  local search_results = obsidian.util.search(self.dir, search, "-m 1")
 
   ---@return obsidian.Note|?
   return function()
-    local path = search_results()
-    if path == nil then
+    local match = search_results()
+    if match == nil then
       return nil
     else
-      return obsidian.note.from_file(path, self.dir)
+      return obsidian.note.from_file(match.path.text, self.dir)
     end
   end
 end
