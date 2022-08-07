@@ -54,15 +54,45 @@ util.urlencode = function(str)
   return url
 end
 
-local SEARCH_CMD = "rg --no-config -S -F --json -m 1 --type md "
+local SEARCH_CMD = "rg --no-config -S -F --json --type md "
 
----Search markdown files in a directory for a given term.
+---@class MatchPath
+---@field text string
+
+---@class MatchText
+---@field text string
+
+---@class SubMatch
+---@field match MatchText
+---@field start integer
+---@field end integer
+
+---@class MatchData
+---@field path MatchPath
+---@field lines MatchText
+---@field line_number integer
+---@field absolute_offset integer
+---@field submatches SubMatch[]
+
+---Search markdown files in a directory for a given term. Return an iterator
+---over `(path, line_num, line)` tuples.
+---
+---Use `opts` to set a `match_callback` to filter out false-positives. This should be
+---a function that takes `MatchData` as input and returns a `boolean`.
 ---
 ---@param dir string|Path
 ---@param term string
-util.search = function(dir, term)
+---@param opts table
+---@return function
+util.search = function(dir, term, opts)
   local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = SEARCH_CMD .. util.quote(term) .. " " .. util.quote(norm_dir)
+  local cmd = SEARCH_CMD
+  if opts == nil or not opts.allow_multiple then
+    cmd = cmd .. "-m 1 " .. util.quote(term) .. " " .. util.quote(norm_dir)
+  end
+  cmd = cmd .. util.quote(term) .. " " .. util.quote(norm_dir)
+
+  local match_callback = opts ~= nil and opts.match_callback or nil
   local handle = assert(io.popen(cmd, "r"))
   return function()
     while true do
@@ -72,7 +102,10 @@ util.search = function(dir, term)
       end
       local data = vim.json.decode(line)
       if data["type"] == "match" then
-        return data.data.path.text
+        local match_data = data.data
+        if match_callback == nil or match_callback(match_data) then
+          return match_data.path.text, match_data.line_number, match_data.lines.text
+        end
       end
     end
   end

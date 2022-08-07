@@ -150,6 +150,16 @@ note.from_buffer = function(bufnr, root)
   return note.from_lines(lines_iter, path, root)
 end
 
+---Get the display name for note.
+---
+---@return string
+note.display_name = function(self)
+  if #self.aliases > 0 then
+    return self.aliases[#self.aliases]
+  end
+  return self.id
+end
+
 ---Initialize a note from an iterator of lines.
 ---
 ---@param lines function

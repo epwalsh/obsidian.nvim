@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `:ObsidianBacklinks` command for getting a location list of references to the current note.
+
 ### Fixed
 
 - Fixed issue where completion wouldn't be triggered for "hashtag" form of a reference: `#[[...`

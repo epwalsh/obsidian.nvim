@@ -12,6 +12,7 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 
 ### Commands
 
+- `:ObsidianBacklinks` for getting a location list of references to the current buffer
 - `:ObsidianToday` to create a new daily note
 - `:ObsidianOpen` to open a note in the Obsidian app (only works on MacOS for now)
 
