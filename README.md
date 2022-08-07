@@ -35,6 +35,14 @@ Plug 'preservim/vim-markdown' " optional, recommended for syntax highlighting, f
 Plug 'epwalsh/obsidian.nvim'
 ```
 
+To avoid unexpected breaking changes, you can also pin `Obsidian.nvim` to a specific release like this:
+
+```vim 
+Plug 'epwalsh/obsidian.nvim', { 'tag': 'v1.*' }
+```
+
+Always check the [CHANGELOG](./CHANGELOG.md) when upgrading.
+
 ### Configuration
 
 For a minimal configuration, just add:
