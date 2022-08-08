@@ -33,7 +33,7 @@ Using `vim-plug`, for example:
 Plug 'nvim-lua/plenary.nvim'  " required
 Plug 'hrsh7th/nvim-cmp'       " optional, for completion
 Plug 'godlygeek/tabular'      " optional, needed for 'preservim/vim-markdown'
-Plug 'preservim/vim-markdown' " optional, recommended for syntax highlighting, folding, etc.
+Plug 'preservim/vim-markdown' " optional, recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter
 Plug 'epwalsh/obsidian.nvim'
 ```
 
@@ -58,13 +58,25 @@ require("obsidian").setup({
 })
 ```
 
-❗ Note that you do **not** need to specify this plugin as an `nvim-cmp` "source".
+❗ Note: you do **not** need to specify this plugin as an `nvim-cmp` "source".
 Obsidian.nvim will set itself up as a source automatically when you enter a markdown buffer within your vault directory.
 
 ```lua
 require("cmp").setup({
   sources = {
     { name = "obsidian" }, -- WRONG! Don't put this here. Obsidian configures itself for nvim-cmp
+  },
+})
+```
+
+❗ Note: if you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:
+
+```lua 
+require("nvim-treesitter.configs").setup({
+  ensure_installed = { "markdown", "markdown_inline", ... },
+  highlight = {
+    enable = true,
+    additional_vim_regex_highlighting = { "markdown" },
   },
 })
 ```
