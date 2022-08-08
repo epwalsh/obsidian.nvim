@@ -343,11 +343,11 @@ note.save = function(self, path)
   end
 
   --Write new lines.
-  local save_path = path and path or self.path
+  local save_path = vim.fs.normalize(tostring(path and path or self.path))
   assert(save_path ~= nil)
-  local save_f = io.open(tostring(save_path), "w")
+  local save_f = io.open(save_path, "w")
   if save_f == nil then
-    echo.fail("failed to write file at " .. tostring(save_path))
+    echo.fail("failed to write file at " .. save_path)
     error()
   end
   for _, line in pairs(new_lines) do
