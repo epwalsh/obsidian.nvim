@@ -20,7 +20,9 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 
 ### Requirements
 
-The plugin [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) is required, and if you want completion features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
+- A nightly build of NeoVim (this plugin uses `vim.fs`).
+- The [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) plugin.
+- If you want completion features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
 ### Install
