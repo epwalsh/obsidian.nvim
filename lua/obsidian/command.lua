@@ -54,7 +54,7 @@ command.today = function(client, _)
   if not note:exists() then
     note:save()
   end
-  vim.api.nvim_command "w"
+  pcall(vim.api.nvim_command, "w")
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
