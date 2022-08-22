@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.1.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.1.1) - 2022-08-22
+
 ### Fixed
 
 - Fixed bug when creating new notes. Sometimes this would fail if `~/` wasn't expanded.
