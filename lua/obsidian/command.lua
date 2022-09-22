@@ -50,10 +50,7 @@ end
 ---@param client obsidian.Client
 ---@param _ table
 command.today = function(client, _)
-  local note = Note.today(client.dir)
-  if not note:exists() then
-    note:save()
-  end
+  local note = client:today()
   pcall(vim.api.nvim_command, "w")
   vim.api.nvim_command("e " .. tostring(note.path))
 end
@@ -63,29 +60,15 @@ end
 ---@param client obsidian.Client
 ---@param data table
 command.new = function(client, data)
-  local new_id
+  ---@type obsidian.Note
+  local note
   if data.args:len() > 0 then
-    new_id = client:new_note_id(data.args)
+    note = client:new_note(data.args)
   else
-    new_id = client:new_note_id(data.args)
+    note = client:new_note()
   end
 
-  ---@type Path
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local path = Path:new(client.dir) / (new_id .. ".md")
-
-  local aliases
-  if data.args:len() > 0 then
-    aliases = { data.args }
-  else
-    aliases = {}
-  end
-
-  local note = Note.new(new_id, aliases, {}, path)
-
-  note:save()
-  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
-
+  pcall(vim.api.nvim_command, "w")
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 

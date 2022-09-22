@@ -3,7 +3,6 @@
 ----------------------------
 
 local obsidian = require "obsidian"
-local Path = require "plenary.path"
 
 -- Test note.new():
 local n1 = obsidian.note.new("FOO", { "foo", "foos" }, { "bar" })
