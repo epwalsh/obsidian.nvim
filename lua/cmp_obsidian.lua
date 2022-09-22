@@ -14,7 +14,7 @@ source.get_keyword_pattern = completion.get_keyword_pattern
 
 source.complete = function(self, request, callback)
   local opts = self:option(request)
-  local client = obsidian.new(opts.dir)
+  local client = obsidian.new(opts)
   local can_complete, search, insert_start, insert_end = completion.can_complete(request)
 
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
