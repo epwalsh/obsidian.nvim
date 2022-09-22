@@ -46,9 +46,7 @@ Plug 'epwalsh/obsidian.nvim', { 'tag': 'v1.*' }
 
 Always check the [CHANGELOG](./CHANGELOG.md) when upgrading.
 
-### Configuration
-
-#### Minimal configuration
+### Minimal configuration
 
 For a minimal configuration, just add:
 
@@ -72,9 +70,9 @@ require("cmp").setup({
 })
 ```
 
-#### Advanced configuration
+### Advanced configuration
 
-##### Customizing note paths and IDs
+#### Customizing note paths and IDs
 
 If you want to customize how the paths / unique IDs for new notes are created, set the configuration option `note_id_func` to your own function that takes an optional string (the title of the note) as input and returns a string representing a unique ID or path (relative to your vault directory).
 
@@ -100,7 +98,7 @@ require("obsidian").setup({
 })
 ```
 
-##### Using nvim-treesitter
+#### Using nvim-treesitter
 
 If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:
 
