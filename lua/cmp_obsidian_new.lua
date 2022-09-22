@@ -1,10 +1,10 @@
 local Path = require "plenary.path"
 
 local completion = require "obsidian.completion"
+local obsidian = require "obsidian"
 local config = require "obsidian.config"
 local echo = require "obsidian.echo"
 local Note = require "obsidian.note"
-local util = require "obsidian.util"
 
 local source = {}
 
@@ -18,10 +18,11 @@ source.get_keyword_pattern = completion.get_keyword_pattern
 
 source.complete = function(self, request, callback)
   local opts = self:option(request)
+  local client = obsidian.new(opts)
   local can_complete, search, insert_start, insert_end = completion.can_complete(request)
 
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
-    local new_id = util.zettel_id()
+    local new_id = client:new_note_id(search)
     local items = {}
     table.insert(items, {
       sortText = "[[" .. search,

@@ -58,6 +58,37 @@ command.today = function(client, _)
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
+---Create a new note.
+---
+---@param client obsidian.Client
+---@param data table
+command.new = function(client, data)
+  local new_id
+  if data.args:len() > 0 then
+    new_id = client:new_note_id(data.args)
+  else
+    new_id = client:new_note_id(data.args)
+  end
+
+  ---@type Path
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local path = Path:new(client.dir) / (new_id .. ".md")
+
+  local aliases
+  if data.args:len() > 0 then
+    aliases = { data.args }
+  else
+    aliases = {}
+  end
+
+  local note = Note.new(new_id, aliases, {}, path)
+
+  note:save()
+  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+
+  vim.api.nvim_command("e " .. tostring(note.path))
+end
+
 ---Open a note in the Obsidian app.
 ---
 ---@param client obsidian.Client
@@ -134,21 +165,22 @@ command.backlinks = function(client, _)
 end
 
 local commands = {
-  ObsidianCheck = command.check,
-  ObsidianToday = command.today,
-  ObsidianOpen = command.open,
-  ObsidianBacklinks = command.backlinks,
+  ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
+  ObsidianToday = { func = command.today, opts = { nargs = 0 } },
+  ObsidianOpen = { func = command.open, opts = { nargs = "?" } },
+  ObsidianNew = { func = command.new, opts = { nargs = "?" } },
+  ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
 }
 
 ---Register all commands.
 ---
 ---@param client obsidian.Client
 command.register_all = function(client)
-  for command_name, command_func in pairs(commands) do
+  for command_name, command_config in pairs(commands) do
     local func = function(data)
-      command_func(client, data)
+      command_config.func(client, data)
     end
-    vim.api.nvim_create_user_command(command_name, func, {})
+    vim.api.nvim_create_user_command(command_name, func, command_config.opts)
   end
 end
 

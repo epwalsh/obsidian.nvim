@@ -4,6 +4,7 @@ local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field dir string
+---@field note_id_func function|?
 ---@field completion obsidian.config.CompletionOpts
 config.ClientOpts = {}
 
@@ -12,6 +13,7 @@ config.ClientOpts = {}
 config.ClientOpts.default = function()
   return {
     dir = vim.fs.normalize "./",
+    note_id_func = nil,
     completion = config.CompletionOpts.default(),
   }
 end

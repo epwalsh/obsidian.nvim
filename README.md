@@ -15,6 +15,7 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer
 - `:ObsidianToday` to create a new daily note
 - `:ObsidianOpen` to open a note in the Obsidian app (only works on MacOS for now - [#4](https://github.com/epwalsh/obsidian.nvim/issues/4))
+- `:ObsidianNew` to create a new note with a given title.
 
 ## Setup
 
@@ -47,6 +48,8 @@ Always check the [CHANGELOG](./CHANGELOG.md) when upgrading.
 
 ### Configuration
 
+#### Minimal configuration
+
 For a minimal configuration, just add:
 
 ```lua
@@ -69,7 +72,37 @@ require("cmp").setup({
 })
 ```
 
-❗ Note: if you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:
+#### Advanced configuration
+
+##### Customizing note paths and IDs
+
+If you want to customize how the paths / unique IDs for new notes are created, set the configuration option `note_id_func` to your own function that takes an optional string (the title of the note) as input and returns a string representing a unique ID or path (relative to your vault directory).
+
+For example:
+
+```lua
+require("obsidian").setup({
+  dir = "~/my-vault",
+  note_id_func = function(title)
+    -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
+    local suffix = ""
+    if title ~= nil then
+      -- If title is given, transform it into valid file name.
+      suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
+    else
+      -- If title is nil, just add 4 random uppercase letters to the suffix.
+      for _ in 1, 4 do
+        suffix = suffix .. string.char(math.random(65, 90))
+      end
+    end
+    return tostring(os.time()) .. "-" .. suffix
+  end
+})
+```
+
+##### Using nvim-treesitter
+
+If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:
 
 ```lua 
 require("nvim-treesitter.configs").setup({
