@@ -49,13 +49,16 @@ obsidian.setup = function(opts)
   local self = obsidian.new(opts)
 
   -- Ensure directory exists.
-  self.dir:mkdir { parents = true, exits_ok = true }
+  self.dir:mkdir { parents = true, exists_ok = true }
+  if self.opts.notes_subdir ~= nil then
+    (self.dir / self.opts.notes_subdir):mkdir { parents = true, exists_ok = true }
+  end
+
+  -- Register commands.
+  require("obsidian.command").register_all(self)
 
   -- Complete the lazy setup only when entering a buffer in the vault.
   local lazy_setup = function()
-    -- Register commands.
-    require("obsidian.command").register_all(self)
-
     -- Configure completion...
     if opts.completion.nvim_cmp then
       -- Check for ripgrep.
@@ -168,8 +171,15 @@ client.new_note = function(self, title, id)
 
   -- Get path.
   ---@type Path
+  local path = Path:new(self.dir)
+  if self.opts.notes_subdir ~= nil then
+    ---@type Path
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    path = path / self.opts.notes_subdir
+  end
+  ---@type Path
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local path = Path:new(self.dir) / (new_id .. ".md")
+  path = path / (new_id .. ".md")
 
   -- Add title as an alias.
   local aliases
@@ -183,6 +193,35 @@ client.new_note = function(self, title, id)
   local note = obsidian.note.new(new_id, aliases, {}, path)
   note:save()
   echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+
+  return note
+end
+
+---Create a new daily note for today.
+---
+---@return obsidian.Note
+client.today = function(self)
+  ---@type string
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local id = os.date "%Y-%m-%d"
+  local alias = os.date "%B %-d, %Y"
+  ---@type Path
+  local path = Path:new(self.dir)
+  if self.opts.notes_subdir ~= nil then
+    ---@type Path
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    path = path / self.opts.notes_subdir
+  end
+  ---@type Path
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  path = path / (id .. ".md")
+
+  -- Create Note object and save if it doesn't already exist.
+  local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
+  if not note:exists() then
+    note:save()
+    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  end
 
   return note
 end

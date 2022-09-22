@@ -61,8 +61,4 @@ describe("Note", function()
     assert.is_true(Note._is_frontmatter_boundary "---")
     assert.is_true(Note._is_frontmatter_boundary "----")
   end)
-  it("should be able to initialize a daily note", function()
-    local note = Note.today "./"
-    assert.is_true(note.path ~= nil)
-  end)
 end)

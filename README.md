@@ -98,6 +98,15 @@ require("obsidian").setup({
 })
 ```
 
+If you always want to put new notes in particular subdirectory of your vault, set the option `notes_subdir`:
+
+```lua
+require("obsidian").setup({
+  dir = "~/my-vault",
+  notes_subdir = "notes",
+})
+```
+
 #### Using nvim-treesitter
 
 If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:

@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `:ObsidianNew` command for creating a new note with a given title.
 - Added setup configuration option `note_id_func`, which can be set to a custom function for generating new note IDs. The function should take a single optional string argument, a title of the note, and return a string. The default method for generating new note IDs is to generate a Zettelkasten-like ID using a timestamp and some random letters.
+- Added setup configuration option `notes_subdir`. Use this if you want new notes to be put in a specific subdirectory of your vault.
+
+### Changed
+
+- Commands are no-longer setup lazily on `BufEnter` to a markdown file in your vault. Now they'll always be available.
 
 ## [v1.1.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.1.1) - 2022-08-22
 
