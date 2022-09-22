@@ -1,6 +1,7 @@
 local Path = require "plenary.path"
 
 local echo = require "obsidian.echo"
+local config = require "obsidian.config"
 
 local obsidian = {}
 
@@ -29,13 +30,21 @@ obsidian.new = function(opts)
   return self
 end
 
+---Create a new Obsidian client in a given vault directory.
+---
+---@param dir string
+---@return obsidian.Client
+obsidian.new_from_dir = function(dir)
+  local opts = config.ClientOpts.default()
+  opts.dir = vim.fs.normalize(dir)
+  return obsidian.new(opts)
+end
+
 ---Setup a new Obsidian client.
 ---
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 obsidian.setup = function(opts)
-  local config = require "obsidian.config"
-
   opts = config.ClientOpts.normalize(opts)
   local self = obsidian.new(opts)
 
@@ -174,6 +183,7 @@ client.new_note = function(self, title, id)
   local note = obsidian.note.new(new_id, aliases, {}, path)
   note:save()
   echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+
   return note
 end
 

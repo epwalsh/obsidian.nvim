@@ -1,10 +1,6 @@
-local Path = require "plenary.path"
-
 local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
-local echo = require "obsidian.echo"
-local Note = require "obsidian.note"
 
 local source = {}
 
@@ -56,15 +52,10 @@ source.complete = function(self, request, callback)
   end
 end
 
----@diagnostic disable-next-line: unused-local
-source.execute = function(self, item, callback)
+source.execute = function(_, item, callback)
   local data = item.data
-  ---@type Path
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local path = Path:new(data.dir) / (data.id .. ".md")
-  local note = Note.new(data.id, { data.title }, {}, path)
-  note:save()
-  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  local client = obsidian.new_from_dir(data.dir)
+  client:new_note(data.title, data.id)
   return callback
 end
 
