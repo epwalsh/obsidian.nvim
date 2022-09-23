@@ -74,7 +74,7 @@ require("cmp").setup({
 
 #### Customizing note paths and IDs
 
-If you want to customize how the paths / unique IDs for new notes are created, set the configuration option `note_id_func` to your own function that takes an optional string (the title of the note) as input and returns a string representing a unique ID or path (relative to your vault directory).
+If you want to customize how the file names / unique IDs for new notes are created, set the configuration option `note_id_func` to your own function that takes an optional string (the title of the note) as input and returns a string representing a unique ID or file name / path (relative to your vault directory).
 
 For example:
 
@@ -98,7 +98,8 @@ require("obsidian").setup({
 })
 ```
 
-If you always want to put new notes in particular subdirectory of your vault, set the option `notes_subdir`:
+In this case a note with the title "My new note" will given an ID that looks something like `1657296016-my-new-note`, and therefore the file name `1657296016-my-new-note.md`.
+If you always want to put new notes in particular subdirectory of your vault, use the option `notes_subdir`:
 
 ```lua
 require("obsidian").setup({
@@ -106,6 +107,8 @@ require("obsidian").setup({
   notes_subdir = "notes",
 })
 ```
+
+The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both.
 
 #### Using nvim-treesitter
 
