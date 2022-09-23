@@ -22,7 +22,6 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 ### Requirements
 
 - A nightly build of NeoVim (this plugin uses `vim.fs`).
-- The [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) plugin.
 - If you want completion features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
@@ -31,7 +30,6 @@ See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install op
 Using `vim-plug`, for example:
 
 ```vim
-Plug 'nvim-lua/plenary.nvim'  " required
 Plug 'hrsh7th/nvim-cmp'       " optional, for completion
 Plug 'godlygeek/tabular'      " optional, needed for 'preservim/vim-markdown'
 Plug 'preservim/vim-markdown' " optional, recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter
