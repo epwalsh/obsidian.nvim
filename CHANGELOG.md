@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.2.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.2.1) - 2022-09-23
+
 ### Added
 
 - Added setup configuration option `notes_subdir`. Use this if you want new notes to be put in a specific subdirectory of your vault.
