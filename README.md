@@ -99,7 +99,7 @@ require("obsidian").setup({
 ```
 
 In this case a note with the title "My new note" will given an ID that looks something like `1657296016-my-new-note`, and therefore the file name `1657296016-my-new-note.md`.
-If you always want to put new notes in particular subdirectory of your vault, use the option `notes_subdir`:
+If you always want to put new notes in a particular subdirectory of your vault, use the option `notes_subdir`:
 
 ```lua
 require("obsidian").setup({
@@ -108,7 +108,7 @@ require("obsidian").setup({
 })
 ```
 
-The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both.
+The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
 
 #### Using nvim-treesitter
 
