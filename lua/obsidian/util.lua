@@ -1,4 +1,5 @@
 local scan = require "plenary.scandir"
+
 local util = {}
 
 ---Check if a table (list) contains a value.

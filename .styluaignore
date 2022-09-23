@@ -1,1 +1,3 @@
-lua/deps/lua_yaml
+lua/deps/
+lua/plenary/
+lua/yaml.lua
