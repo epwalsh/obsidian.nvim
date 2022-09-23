@@ -1,5 +1,4 @@
 set rtp+=.
-set rtp+=~/.config/nvim/plugged/plenary.nvim
-set rtp+=~/.config/nvim/plugged/sqlite.lua
+set rtp+=./lua/deps/plenary
 
 runtime! plugin/plenary.vim

@@ -1,5 +1,4 @@
 local Path = require "plenary.path"
-
 local Note = require "obsidian.note"
 local echo = require "obsidian.echo"
 local util = require "obsidian.util"

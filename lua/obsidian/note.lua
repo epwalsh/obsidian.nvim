@@ -1,6 +1,6 @@
 local Path = require "plenary.path"
+local yaml = require "yaml"
 local util = require "obsidian.util"
-local yaml = require "deps.lua_yaml.yaml"
 local echo = require "obsidian.echo"
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }

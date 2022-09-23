@@ -1,3 +1,5 @@
+TEST = test/obsidian
+
 .PHONY : all
 all : style lint test
 
@@ -7,11 +9,14 @@ test :
 		--headless \
 		--noplugin \
 		-u test/minimal_init.vim \
-		-c "PlenaryBustedDirectory test/obsidian/ { minimal_init = './test/minimal_init.vim' }"
+		-c "PlenaryBustedDirectory $(TEST) { minimal_init = './test/minimal_init.vim' }"
 
 .PHONY : lint
 lint :
-	luacheck after lua --exclude-files='lua/deps/lua_yaml/*'
+	luacheck after lua \
+		--exclude-files='lua/deps/*' \
+		--exclude-files='lua/plenary/*' \
+		--exclude-files='lua/yaml.lua'
 
 .PHONY : style
 style :
