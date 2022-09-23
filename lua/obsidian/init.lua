@@ -87,14 +87,14 @@ obsidian.setup = function(opts)
   -- Complete lazy setup on BufEnter
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,
-    pattern = tostring(self.dir) .. "/**.md",
+    pattern = tostring(self.dir / "**.md"),
     callback = lazy_setup,
   })
 
   -- Add missing frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = group,
-    pattern = tostring(self.dir) .. "/**.md",
+    pattern = tostring(self.dir / "**.md"),
     callback = function()
       local bufnr = vim.api.nvim_get_current_buf()
       local note = obsidian.note.from_buffer(bufnr, self.dir)
