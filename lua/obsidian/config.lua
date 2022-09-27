@@ -5,6 +5,7 @@ local config = {}
 ---@class obsidian.config.ClientOpts
 ---@field dir string
 ---@field notes_subdir string|?
+---@field dailies_subdir string|?
 ---@field note_id_func function|?
 ---@field completion obsidian.config.CompletionOpts
 config.ClientOpts = {}
@@ -15,6 +16,7 @@ config.ClientOpts.default = function()
   return {
     dir = vim.fs.normalize "./",
     notes_subdir = nil,
+    dailies_subdir = nil,
     note_id_func = nil,
     completion = config.CompletionOpts.default(),
   }
