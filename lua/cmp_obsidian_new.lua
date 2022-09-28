@@ -38,7 +38,7 @@ source.complete = function(self, request, callback)
         },
       },
       data = {
-        dir = opts.dir,
+        opts = opts,
         id = new_id,
         title = search,
       },
@@ -54,7 +54,7 @@ end
 
 source.execute = function(_, item, callback)
   local data = item.data
-  local client = obsidian.new_from_dir(data.dir)
+  local client = obsidian.new(data.opts)
   client:new_note(data.title, data.id)
   return callback
 end
