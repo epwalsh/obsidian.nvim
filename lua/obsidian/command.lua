@@ -133,12 +133,11 @@ command.backlinks = function(client, _)
       break
     elseif is_valid_backlink(match) then
       local path = match.path.text
-      local rel_path = Path:new(path):make_relative(bufdir)
       if path ~= last_path then
         local src_note = Note.from_file(path, client.dir)
-        table.insert(backlinks, ("notes/%s:%s:%s"):format(rel_path, 0, src_note:display_name()))
+        table.insert(backlinks, ("%s:%s:%s"):format(path, 0, src_note:display_name()))
       end
-      table.insert(backlinks, ("notes/%s:%s:%s"):format(rel_path, match.line_number, match.lines.text))
+      table.insert(backlinks, ("%s:%s:%s"):format(path, match.line_number, match.lines.text))
       last_path = path
     end
   end
