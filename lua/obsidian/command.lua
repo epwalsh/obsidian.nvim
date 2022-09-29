@@ -108,7 +108,6 @@ end
 ---@param client obsidian.Client
 command.backlinks = function(client, _)
   local bufname = vim.api.nvim_buf_get_name(0)
-  local bufdir = tostring(Path:new(bufname):parent())
   local note = Note.from_file(bufname, client.dir)
 
   ---@param match_data MatchData
