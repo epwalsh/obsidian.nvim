@@ -5,9 +5,9 @@ local config = {}
 ---@class obsidian.config.ClientOpts
 ---@field dir string
 ---@field notes_subdir string|?
----@field dailies_subdir string|?
 ---@field note_id_func function|?
 ---@field completion obsidian.config.CompletionOpts
+---@field daily_notes obsidian.config.DailyNotesOpts
 config.ClientOpts = {}
 
 ---Get defaults.
@@ -16,9 +16,9 @@ config.ClientOpts.default = function()
   return {
     dir = vim.fs.normalize "./",
     notes_subdir = nil,
-    dailies_subdir = nil,
     note_id_func = nil,
     completion = config.CompletionOpts.default(),
+    daily_notes = config.DailyNotesOpts.default()
   }
 end
 
@@ -29,6 +29,7 @@ end
 config.ClientOpts.normalize = function(opts)
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
+  opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   return opts
 end
 
@@ -44,6 +45,18 @@ config.CompletionOpts.default = function()
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
+  }
+end
+
+---@class obsidian.config.DailyNotesOpts
+---@field folder string|?
+config.DailyNotesOpts = {}
+
+---Get defaults.
+---@return obsidian.config.DailyNotesOpts
+config.DailyNotesOpts.default = function()
+  return {
+    folder = nil
   }
 end
 

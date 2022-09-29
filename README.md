@@ -110,16 +110,18 @@ The `notes_subdir` and `note_id_func` options are not mutually exclusive. You ca
 
 #### Customizing daily notes path
 
-If you want to customize where the daily notes are being stored, just set the `dailies_subdir` option:
+If you want to customize where the daily notes are being stored, just set the `daily_notes.folder` option:
 
 ```lua
 require("obsidian").setup({
   dir = "~/my-vault",
-  dailies_subdir = "dailies",
+  daily_notes = {
+    folder = "dailies",
+  }
 })
 ```
 
-This option isn't mutually exclusive with the `notes_subdir` function; the `dailies_subdir` path won't be appended to `notes_subdir`, so both paths will need to be relative to `dir`.
+This option isn't mutually exclusive with the `notes_subdir` function; the `daily_notes.folder` path won't be appended to `notes_subdir`, so both paths will need to be relative to `dir`.
 
 E.g., if you have your vault at `~/my-vault`, and want to save your notes under `~/my-vault/notes`, and your dailies under `~/my-vault/notes/dailies`, this is the right config:
 
@@ -127,7 +129,9 @@ E.g., if you have your vault at `~/my-vault`, and want to save your notes under 
 require("obsidian").setup({
   dir = "~/my-vault",
   notes_subdir = "notes",
-  dailies_subdir = "notes/dailies",
+  daily_notes = {
+    folder = "notes/dailies",
+  }
 })
 ```
 

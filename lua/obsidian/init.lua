@@ -55,8 +55,8 @@ obsidian.setup = function(opts)
     (self.dir / self.opts.notes_subdir):mkdir { parents = true, exists_ok = true }
   end
 
-  if self.opts.dailies_subdir ~= nil then
-    (self.dir / self.opts.dailies_subdir):mkdir { parents = true, exists_ok = true }
+  if self.opts.daily_notes.folder ~= nil then
+    (self.dir / self.opts.daily_notes.folder):mkdir { parents = true, exists_ok = true }
   end
 
   -- Register commands.
@@ -213,10 +213,10 @@ client.today = function(self)
   ---@type Path
   local path = Path:new(self.dir)
 
-  if self.opts.dailies_subdir ~= nil then
+  if self.opts.daily_notes.folder ~= nil then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
-    path = path / self.opts.dailies_subdir
+    path = path / self.opts.daily_notes.folder
   elseif self.opts.notes_subdir ~= nil then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
