@@ -18,7 +18,7 @@ config.ClientOpts.default = function()
     notes_subdir = nil,
     note_id_func = nil,
     completion = config.CompletionOpts.default(),
-    daily_notes = config.DailyNotesOpts.default()
+    daily_notes = config.DailyNotesOpts.default(),
   }
 end
 
@@ -56,7 +56,7 @@ config.DailyNotesOpts = {}
 ---@return obsidian.config.DailyNotesOpts
 config.DailyNotesOpts.default = function()
   return {
-    folder = nil
+    folder = nil,
   }
 end
 
