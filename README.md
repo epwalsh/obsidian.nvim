@@ -21,7 +21,7 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 
 ### Requirements
 
-- A nightly build of NeoVim (this plugin uses `vim.fs`).
+- NeoVim >= 0.8.0 (this plugin uses `vim.fs`).
 - If you want completion features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
