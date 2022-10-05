@@ -120,7 +120,7 @@ end
 client.vault = function(self)
   local vault_indicator_folder = ".obsidian"
   local dirs = self.dir:parents()
-  table.insert(dirs, self.dir:absolute())
+  table.insert(dirs, 0, self.dir:absolute())
   for _, dir in pairs(dirs) do
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
