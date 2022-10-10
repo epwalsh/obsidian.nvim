@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.1.0
 
       - name: Style
         uses: JohnnyMorganz/stylua-action@v1
@@ -60,7 +60,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.1.0
         with:
           submodules: true
 
@@ -103,7 +103,7 @@ jobs:
     needs: [checks, style]
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3.1.0
 
       - name: Setup Python
         uses: actions/setup-python@v4
