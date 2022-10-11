@@ -16,7 +16,7 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 - `:ObsidianToday` to create a new daily note
 - `:ObsidianOpen` to open a note in the Obsidian app (only works on MacOS for now - [#4](https://github.com/epwalsh/obsidian.nvim/issues/4))
 - `:ObsidianNew` to create a new note with a given title.
-- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [`fzf.vim`](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ## Setup
 
@@ -26,7 +26,7 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 - If you want completion and search features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
-Search functionality via the `:ObsidianSearch` command also requires either [`fzf.vim`](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+Search functionality via the `:ObsidianSearch` command also requires either [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ### Install
 
