@@ -16,23 +16,39 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 - `:ObsidianToday` to create a new daily note
 - `:ObsidianOpen` to open a note in the Obsidian app (only works on MacOS for now - [#4](https://github.com/epwalsh/obsidian.nvim/issues/4))
 - `:ObsidianNew` to create a new note with a given title.
+- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [`fzf.vim`](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ## Setup
 
 ### Requirements
 
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs`).
-- If you want completion features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
+- If you want completion and search features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
+
+Search functionality via the `:ObsidianSearch` command also requires either [`fzf.vim`](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ### Install
 
 Using `vim-plug`, for example:
 
 ```vim
-Plug 'hrsh7th/nvim-cmp'       " optional, for completion
-Plug 'godlygeek/tabular'      " optional, needed for 'preservim/vim-markdown'
-Plug 'preservim/vim-markdown' " optional, recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter
+" (optional) for completion:
+Plug 'hrsh7th/nvim-cmp'
+
+" (optional) for :ObsidianSearch command unless you use telescope:
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+" (optional) for :ObsidianSearch command if you prefer this over fzf.vim:
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+
+" (optional) recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter:
+Plug 'preservim/vim-markdown'
+Plug 'godlygeek/tabular'  " needed by 'preservim/vim-markdown'
+
+" (required)
 Plug 'epwalsh/obsidian.nvim'
 ```
 
