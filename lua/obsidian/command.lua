@@ -165,8 +165,11 @@ command.search = function(client, data)
     else
       telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
     end
-  elseif vim.fn.exists "*fzf#vim#grep" and vim.fn.exists "*fzf#vim#with_preview" then
-    -- Search with fzf.vim
+    return
+  end
+
+  -- Fall back to trying with fzf.vim
+  local has_fzf, _ = pcall(function()
     local grep_cmd =
       vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
 
@@ -176,8 +179,10 @@ command.search = function(client, data)
       vim.api.nvim_call_function("fzf#vim#with_preview", {}),
       false,
     })
-  else
-    echo.err "Either fzf.vim or telescope.nvim is required for :ObsidianSearch command"
+  end)
+
+  if not has_fzf then
+    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianSearch command"
   end
 end
 
