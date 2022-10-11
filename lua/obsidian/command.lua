@@ -151,7 +151,7 @@ end
 command.search = function(client, data)
   local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--column", "--line-number", "--no-heading" } }
 
-  if vim.fn.exists "*fzf#vim#grep" then
+  if vim.fn.exists "*fzf#vim#grep" and vim.fn.exists "*fzf#vim#with_preview" then
     -- Search with fzf.vim
     local grep_cmd =
       vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
