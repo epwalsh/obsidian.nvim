@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `daily_notes` configuration options.
+- Added `:ObsidianSearch` command (requires `fzf.vim` or `telescope.nvim`).
 
 ### Fixed
 

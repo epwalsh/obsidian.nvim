@@ -55,7 +55,7 @@ util.urlencode = function(str)
   return url
 end
 
-local SEARCH_CMD = "rg --no-config -S -F --json --type md "
+util.SEARCH_CMD = { "rg", "--no-config", "--smart-case", "--fixed-strings", "--type=md" }
 
 ---@class MatchPath
 ---@field text string
@@ -84,7 +84,7 @@ local SEARCH_CMD = "rg --no-config -S -F --json --type md "
 ---@return function
 util.search = function(dir, term, opts)
   local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = SEARCH_CMD
+  local cmd = table.concat(util.SEARCH_CMD, " ") .. " --json "
   if opts ~= nil then
     cmd = cmd .. opts .. " "
   end

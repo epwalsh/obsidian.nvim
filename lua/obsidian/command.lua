@@ -144,12 +144,50 @@ command.backlinks = function(client, _)
   vim.cmd "lop"
 end
 
+---Search notes.
+---
+---@param client obsidian.Client
+---@param data table
+command.search = function(client, data)
+  local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--column", "--line-number", "--no-heading" } }
+
+  if vim.fn.exists "*fzf#vim#grep" then
+    -- Search with fzf.vim
+    local grep_cmd =
+      vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
+
+    vim.api.nvim_call_function("fzf#vim#grep", {
+      table.concat(grep_cmd, " "),
+      true,
+      vim.api.nvim_call_function("fzf#vim#with_preview", {}),
+      false,
+    })
+  elseif vim.fn.exists ":Telescope" then
+    -- Search with telescope.nvim
+    local builtin = require "telescope.builtin"
+
+    local vimgrep_arguments = vim.tbl_flatten { base_cmd, {
+      "--with-filename",
+      "--color=never",
+    } }
+
+    if data.args:len() > 0 then
+      builtin.grep_string { cwd = tostring(client.dir), search = data.args, vimgrep_arguments = vimgrep_arguments }
+    else
+      builtin.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
+    end
+  else
+    echo.err "Either fzf.vim or telescope.nvim is required for :ObsidianSearch command"
+  end
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" } },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
+  ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
 }
 
 ---Register all commands.
