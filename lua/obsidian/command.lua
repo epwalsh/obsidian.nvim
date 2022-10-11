@@ -151,7 +151,21 @@ end
 command.search = function(client, data)
   local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--column", "--line-number", "--no-heading" } }
 
-  if vim.fn.exists "*fzf#vim#grep" and vim.fn.exists "*fzf#vim#with_preview" then
+  local has_telescope, telescope = pcall(require, "telescope.builtin")
+
+  if has_telescope then
+    -- Search with telescope.nvim
+    local vimgrep_arguments = vim.tbl_flatten { base_cmd, {
+      "--with-filename",
+      "--color=never",
+    } }
+
+    if data.args:len() > 0 then
+      telescope.grep_string { cwd = tostring(client.dir), search = data.args, vimgrep_arguments = vimgrep_arguments }
+    else
+      telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
+    end
+  elseif vim.fn.exists "*fzf#vim#grep" and vim.fn.exists "*fzf#vim#with_preview" then
     -- Search with fzf.vim
     local grep_cmd =
       vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
@@ -162,20 +176,6 @@ command.search = function(client, data)
       vim.api.nvim_call_function("fzf#vim#with_preview", {}),
       false,
     })
-  elseif vim.fn.exists ":Telescope" then
-    -- Search with telescope.nvim
-    local builtin = require "telescope.builtin"
-
-    local vimgrep_arguments = vim.tbl_flatten { base_cmd, {
-      "--with-filename",
-      "--color=never",
-    } }
-
-    if data.args:len() > 0 then
-      builtin.grep_string { cwd = tostring(client.dir), search = data.args, vimgrep_arguments = vimgrep_arguments }
-    else
-      builtin.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
-    end
   else
     echo.err "Either fzf.vim or telescope.nvim is required for :ObsidianSearch command"
   end
