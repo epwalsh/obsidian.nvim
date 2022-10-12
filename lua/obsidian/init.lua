@@ -13,6 +13,7 @@ obsidian.util = require "obsidian.util"
 ---@class obsidian.Client
 ---@field dir Path
 ---@field opts obsidian.config.ClientOpts
+---@field backlinks_namespace integer
 local client = {}
 
 ---Create a new Obsidian client without additional setup.
@@ -26,6 +27,7 @@ obsidian.new = function(opts)
   local self = setmetatable({}, { __index = client })
   self.dir = Path:new(vim.fs.normalize(tostring(opts.dir and opts.dir or "./")))
   self.opts = opts
+  self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
 
   return self
 end
