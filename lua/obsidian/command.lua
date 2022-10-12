@@ -50,7 +50,6 @@ end
 ---@param _ table
 command.today = function(client, _)
   local note = client:today()
-  pcall(vim.api.nvim_command, "w")
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
@@ -66,8 +65,6 @@ command.new = function(client, data)
   else
     note = client:new_note()
   end
-
-  pcall(vim.api.nvim_command, "w")
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
