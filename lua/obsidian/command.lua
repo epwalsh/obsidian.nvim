@@ -107,41 +107,14 @@ end
 ---
 ---@param client obsidian.Client
 command.backlinks = function(client, _)
-  local bufname = vim.api.nvim_buf_get_name(0)
-  local note = Note.from_file(bufname, client.dir)
-
-  ---@param match_data MatchData
-  ---@return boolean
-  local is_valid_backlink = function(match_data)
-    local line = match_data.lines.text
-    for _, submatch in pairs(match_data.submatches) do
-      if string.sub(line, submatch["end"] + 1, submatch["end"] + 2) == "]]" then
-        return true
-      elseif string.sub(line, submatch["end"] + 1, submatch["end"] + 1) == "|" then
-        return true
-      end
-    end
-    return false
+  local ok, backlinks = pcall(function()
+    return require("obsidian.backlinks").new(client)
+  end)
+  if ok then
+    backlinks:view()
+  else
+    echo.err "Backlinks command can only be used from a valid note"
   end
-
-  local backlinks = {}
-  local last_path = nil
-  --@type MatchData
-  for match in util.search(client.dir, "[[" .. note.id) do
-    if match == nil then
-      break
-    elseif is_valid_backlink(match) then
-      local path = match.path.text
-      if path ~= last_path then
-        local src_note = Note.from_file(path, client.dir)
-        table.insert(backlinks, ("%s:%s:%s"):format(path, 0, src_note:display_name()))
-      end
-      table.insert(backlinks, ("%s:%s:%s"):format(path, match.line_number, match.lines.text))
-      last_path = path
-    end
-  end
-  vim.fn.setloclist(0, {}, " ", { lines = backlinks, title = "Backlinks" })
-  vim.cmd "lop"
 end
 
 ---Search notes.
