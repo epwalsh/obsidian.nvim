@@ -137,9 +137,11 @@ end
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
+---@param opts string
 ---@return function
-client.search = function(self, search)
-  local search_results = obsidian.util.search(self.dir, search, "-m 1")
+client.search = function(self, search, opts)
+  opts = opts and (opts .. " ") or ""
+  local search_results = obsidian.util.search(self.dir, search, opts .. "-m 1")
 
   ---@return obsidian.Note|?
   return function()

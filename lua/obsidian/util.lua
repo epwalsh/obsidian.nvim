@@ -55,7 +55,7 @@ util.urlencode = function(str)
   return url
 end
 
-util.SEARCH_CMD = { "rg", "--no-config", "--smart-case", "--fixed-strings", "--type=md" }
+util.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
 
 ---@class MatchPath
 ---@field text string
@@ -119,6 +119,27 @@ util.zettel_id = function()
     suffix = suffix .. string.char(math.random(65, 90))
   end
   return tostring(os.time()) .. "-" .. suffix
+end
+
+---Match the case of 'key' to the given 'prefix' of the key.
+---
+---@param prefix string
+---@param key string
+---@return string|?
+util.match_case = function(prefix, key)
+  local out_chars = {}
+  for i = 1, string.len(key) do
+    local c_key = string.sub(key, i, i)
+    local c_pre = string.sub(prefix, i, i)
+    if c_pre:lower() == c_key:lower() then
+      table.insert(out_chars, c_pre)
+    elseif c_pre:len() > 0 then
+      return nil
+    else
+      table.insert(out_chars, c_key)
+    end
+  end
+  return table.concat(out_chars, "")
 end
 
 return util
