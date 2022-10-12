@@ -14,7 +14,7 @@ This is for people who love the concept of Obsidian -- a simple, markdown-based 
 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer
 - `:ObsidianToday` to create a new daily note
-- `:ObsidianOpen` to open a note in the Obsidian app (only works on MacOS for now - [#4](https://github.com/epwalsh/obsidian.nvim/issues/4))
+- `:ObsidianOpen` to open a note in the Obsidian app
 - `:ObsidianNew` to create a new note with a given title.
 - `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
