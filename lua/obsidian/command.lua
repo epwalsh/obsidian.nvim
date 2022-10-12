@@ -97,7 +97,7 @@ command.open = function(client, data)
   local app = "/Applications/Obsidian.app"
   local sysname = vim.loop.os_uname().sysname
   if sysname == "Linux" then
-    local cmd = ("obsidian --vault=%s --file=%s"):format(encoded_vault, encoded_path)
+    local cmd = ("xdg-open 'obsidian://open?vault=%s&file=%s'"):format(encoded_vault, encoded_path)
     vim.fn.jobstart(cmd)
   elseif Path:new(app):exists() then
     local cmd = ("open -a %s --background 'obsidian://open?vault=%s&file=%s'"):format(app, encoded_vault, encoded_path)
