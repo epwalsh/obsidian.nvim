@@ -99,7 +99,7 @@ command.open = function(client, data)
   if sysname == "Linux" then
     local cmd = ("xdg-open 'obsidian://open?vault=%s&file=%s'"):format(encoded_vault, encoded_path)
     vim.fn.jobstart(cmd)
-  elseif Path:new(app):exists() then
+  elseif sysname == "Darwin" and Path:new(app):exists() then
     local cmd = ("open -a %s --background 'obsidian://open?vault=%s&file=%s'"):format(app, encoded_vault, encoded_path)
     os.execute(cmd)
   else
