@@ -121,4 +121,23 @@ util.zettel_id = function()
   return tostring(os.time()) .. "-" .. suffix
 end
 
+---Match the case of 'key' to the given 'prefix' of the key.
+---
+---@param prefix string
+---@param key string
+---@return string
+util.match_case = function(prefix, key)
+  local out_chars = {}
+  for i = 1, string.len(key) do
+    local c_key = string.sub(key, i, i)
+    local c_pre = string.sub(prefix, i, i)
+    if c_pre:lower() == c_key:lower() then
+      table.insert(out_chars, c_pre)
+    else
+      table.insert(out_chars, c_key)
+    end
+  end
+  return table.concat(out_chars, "")
+end
+
 return util
