@@ -20,13 +20,21 @@ source.complete = function(self, request, callback)
 
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local items = {}
-    for note in client:search(search) do
+    for note in client:search(search, "--ignore-case") do
       for _, alias in pairs(note.aliases) do
-        local options = { alias }
+        local options = {}
+
         local alias_case_matched = util.match_case(search, alias)
-        if alias_case_matched ~= alias and not util.contains(note.aliases, alias_case_matched) then
+        if
+          alias_case_matched ~= nil
+          and alias_case_matched ~= alias
+          and not util.contains(note.aliases, alias_case_matched)
+        then
           table.insert(options, alias_case_matched)
         end
+
+        table.insert(options, alias)
+
         for _, option in pairs(options) do
           table.insert(items, {
             sortText = "[[" .. option,

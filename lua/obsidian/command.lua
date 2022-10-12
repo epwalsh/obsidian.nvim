@@ -131,7 +131,7 @@ end
 ---@param client obsidian.Client
 ---@param data table
 command.search = function(client, data)
-  local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--column", "--line-number", "--no-heading" } }
+  local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--smart-case", "--column", "--line-number", "--no-heading" } }
 
   local has_telescope, telescope = pcall(require, "telescope.builtin")
 
