@@ -170,9 +170,10 @@ backlinks.view = function(self)
     -- Header for note.
     if match.note.path ~= last_path then
       if last_path ~= nil then
-        table.insert(folds, { range = { #view_lines - matches_for_note - 1, #view_lines } })
+        table.insert(folds, { range = { #view_lines - matches_for_note, #view_lines } })
         table.insert(view_lines, "")
       end
+      matches_for_note = 0
       table.insert(view_lines, (" %s"):format(match.note:display_name()))
       table.insert(highlights, { group = "CursorLineNr", line = #view_lines - 1, col_start = 0, col_end = 1 })
       table.insert(highlights, { group = "Directory", line = #view_lines - 1, col_start = 2, col_end = -1 })
@@ -188,8 +189,9 @@ backlinks.view = function(self)
       col_end = 4 + display_path:len() + tostring(match.line):len(),
     })
     last_path = match.note.path
+    matches_for_note = matches_for_note + 1
   end
-  table.insert(folds, { range = { #view_lines - matches_for_note - 1, #view_lines } })
+  table.insert(folds, { range = { #view_lines - matches_for_note, #view_lines } })
 
   vim.api.nvim_buf_set_lines(0, 0, -1, false, view_lines)
 
