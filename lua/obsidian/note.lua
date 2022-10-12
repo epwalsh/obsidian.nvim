@@ -192,6 +192,12 @@ note.from_lines = function(lines, path, root)
     end
   end
 
+  if title ~= nil then
+    -- Remove references and links from title
+    title = title:gsub("%[%[[^%|]+%|([^%]]+)%]%]", "%1")
+    title = title:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
+  end
+
   -- Parse the frontmatter YAML.
   if #frontmatter_lines > 0 then
     local frontmatter = table.concat(frontmatter_lines, "\n")
