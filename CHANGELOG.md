@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Added folding and custom highlighting to backlinks window.
+
 ### Fixed
 
 - Fixed autocomplete functionality to be less sensitive to case.

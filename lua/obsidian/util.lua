@@ -142,4 +142,90 @@ util.match_case = function(prefix, key)
   return table.concat(out_chars, "")
 end
 
+---Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
+---
+---@param s string
+---@return string
+util.replace_refs = function(s)
+  local out, _ = string.gsub(s, "%[%[[^%|%]]+%|([^%]]+)%]%]", "%1")
+  out, _ = out:gsub("%[%[([^%]]+)%]%]", "%1")
+  out, _ = out:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
+  return out
+end
+
+---Find refs and URLs.
+---
+---@param s string
+---@param patterns string[]|?
+---@return table
+util.find_refs = function(s, patterns)
+  patterns = patterns and patterns
+    or {
+      "%[%[[^%|%]]+%|[^%]]+%]%]", -- [[xxx|xxx]]
+      "%[%[[^%]%|]+%]%]", -- [[xxx]]
+      "%[[^%]]+%]%([^%)]+%)", -- [xxx](xxx)
+    }
+
+  local matches = {}
+
+  for _, pattern in pairs(patterns) do
+    local search_start = 1
+    while search_start < #s do
+      local m_start, m_end = string.find(s, pattern, search_start)
+      if m_start ~= nil and m_end ~= nil then
+        table.insert(matches, { m_start, m_end })
+        search_start = m_end
+      else
+        break
+      end
+    end
+  end
+
+  table.sort(matches, function(a, b)
+    return a[1] < b[1]
+  end)
+
+  return matches
+end
+
+---Find all refs and replace with their titles.
+---
+---@param s string
+---@param patterns string[]|?
+--
+---@return string
+---@return table
+---@return string[]
+util.find_and_replace_refs = function(s, patterns)
+  local pieces = {}
+  local refs = {}
+  local is_ref = {}
+  local matches = util.find_refs(s, patterns)
+  local last_end = 1
+  for _, match in pairs(matches) do
+    local m_start, m_end = unpack(match)
+    if last_end < m_start then
+      table.insert(pieces, string.sub(s, last_end, m_start - 1))
+      table.insert(is_ref, false)
+    end
+    local ref_str = string.sub(s, m_start, m_end)
+    table.insert(pieces, util.replace_refs(ref_str))
+    table.insert(refs, ref_str)
+    table.insert(is_ref, true)
+    last_end = m_end + 1
+  end
+
+  local indices = {}
+  local length = 0
+  for i, piece in ipairs(pieces) do
+    local i_end = length + string.len(piece)
+    if is_ref[i] then
+      table.insert(indices, { length + 1, i_end })
+    end
+    length = i_end
+  end
+
+  return table.concat(pieces, ""), indices, refs
+end
+
 return util
