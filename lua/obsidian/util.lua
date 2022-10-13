@@ -147,10 +147,10 @@ end
 ---@param s string
 ---@return string
 util.replace_refs = function(s)
-  s, _ = s:gsub("%[%[[^%|%]]+%|([^%]]+)%]%]", "%1")
-  s, _ = s:gsub("%[%[([^%]]+)%]%]", "%1")
-  s, _ = s:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
-  return s
+  local out, _ = string.gsub(s, "%[%[[^%|%]]+%|([^%]]+)%]%]", "%1")
+  out, _ = out:gsub("%[%[([^%]]+)%]%]", "%1")
+  out, _ = out:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
+  return out
 end
 
 ---Find refs and URLs.
