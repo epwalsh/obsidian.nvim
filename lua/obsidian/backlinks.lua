@@ -181,13 +181,31 @@ backlinks.view = function(self)
 
     -- Line for backlink within note.
     local display_path = match.note.path:make_relative(tostring(self.client.dir))
-    table.insert(view_lines, ("  %s:%s:%s"):format(display_path, match.line, match.text))
+    local text, ref_indices, ref_strs = util.find_and_replace_refs(match.text)
+    local text_start = 4 + display_path:len() + tostring(match.line):len()
+    table.insert(view_lines, ("  %s:%s:%s"):format(display_path, match.line, text))
+
+    -- Add highlights for all refs in the text.
+    for i, ref_idx in ipairs(ref_indices) do
+      local ref_str = ref_strs[i]
+      if string.find(ref_str, self.note.id, 1, true) ~= nil then
+        table.insert(highlights, {
+          group = "Search",
+          line = #view_lines - 1,
+          col_start = text_start + ref_idx[1] - 1,
+          col_end = text_start + ref_idx[2],
+        })
+      end
+    end
+
+    -- Add highlight for path and line number
     table.insert(highlights, {
       group = "Comment",
       line = #view_lines - 1,
       col_start = 2,
-      col_end = 4 + display_path:len() + tostring(match.line):len(),
+      col_end = text_start,
     })
+
     last_path = match.note.path
     matches_for_note = matches_for_note + 1
   end

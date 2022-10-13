@@ -194,8 +194,7 @@ note.from_lines = function(lines, path, root)
 
   if title ~= nil then
     -- Remove references and links from title
-    title = title:gsub("%[%[[^%|]+%|([^%]]+)%]%]", "%1")
-    title = title:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
+    title = util.replace_refs(title)
   end
 
   -- Parse the frontmatter YAML.
