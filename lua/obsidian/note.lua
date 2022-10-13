@@ -299,6 +299,7 @@ note.save = function(self, path)
   local end_idx = 0
 
   -- Read lines from existing file, if there is one.
+  -- TODO: check for open buffer.
   local self_f = io.open(tostring(self.path))
   if self_f ~= nil then
     local contents = self_f:read "*a"
