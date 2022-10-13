@@ -107,7 +107,7 @@ obsidian.setup = function(opts)
       local note = obsidian.note.from_buffer(bufnr, self.dir)
       if note:should_save_frontmatter() then
         local lines = note:frontmatter_lines()
-        vim.api.nvim_buf_set_lines(bufnr, 0, 0, true, lines)
+        vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
         echo.info "Updated frontmatter"
       end
     end,

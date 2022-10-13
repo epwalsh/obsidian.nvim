@@ -10,7 +10,9 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 ---@field aliases string[]
 ---@field tags string[]
 ---@field path Path|?
+---@field metadata table|?
 ---@field has_frontmatter boolean|?
+---@field frontmatter_end_line integer|?
 local note = {}
 
 ---Create new note.
@@ -26,6 +28,9 @@ note.new = function(id, aliases, tags, path)
   self.aliases = aliases and aliases or {}
   self.tags = tags and tags or {}
   self.path = path and Path:new(path) or nil
+  self.metadata = nil
+  self.has_frontmatter = nil
+  self.frontmatter_end_line = nil
   return self
 end
 
@@ -50,7 +55,7 @@ end
 
 note.should_save_frontmatter = function(self)
   local fname = self:fname()
-  return (fname ~= nil and not util.contains(SKIP_UPDATING_FRONTMATTER, fname) and not self.has_frontmatter)
+  return (fname ~= nil and not util.contains(SKIP_UPDATING_FRONTMATTER, fname))
 end
 
 ---Check if a note has a given alias.
@@ -163,6 +168,7 @@ note.from_lines = function(lines, path, root)
   -- Iterate over lines in the file, collecting frontmatter and parsing the title.
   local frontmatter_lines = {}
   local has_frontmatter, in_frontmatter = false, false
+  local frontmatter_end_line = nil
   local line_idx = 0
   for line in lines() do
     line_idx = line_idx + 1
@@ -180,6 +186,7 @@ note.from_lines = function(lines, path, root)
     elseif has_frontmatter and in_frontmatter then
       if note._is_frontmatter_boundary(line) then
         in_frontmatter = false
+        frontmatter_end_line = line_idx
       else
         table.insert(frontmatter_lines, line)
       end
@@ -198,18 +205,24 @@ note.from_lines = function(lines, path, root)
   end
 
   -- Parse the frontmatter YAML.
+  local metadata = nil
   if #frontmatter_lines > 0 then
     local frontmatter = table.concat(frontmatter_lines, "\n")
     local ok, data = pcall(yaml.eval, frontmatter)
     if ok then
-      if data.id then
-        id = data.id
-      end
-      if data.aliases then
-        aliases = data.aliases
-      end
-      if data.tags then
-        tags = data.tags
+      for k, v in pairs(data) do
+        if k == "id" then
+          id = v
+        elseif k == "aliases" then
+          aliases = v
+        elseif k == "tags" then
+          tags = v
+        else
+          if metadata == nil then
+            metadata = {}
+          end
+          metadata[k] = v
+        end
       end
     end
   end
@@ -225,7 +238,9 @@ note.from_lines = function(lines, path, root)
   end
 
   local n = note.new(id, aliases, tags, path)
+  n.metadata = metadata
   n.has_frontmatter = has_frontmatter
+  n.frontmatter_end_line = frontmatter_end_line
   return n
 end
 
