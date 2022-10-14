@@ -59,7 +59,7 @@ dumps = function(x, indent, order)
         else
           local item_lines = dumps(v, indent + 2)
           table.insert(out, indent_str .. tostring(k) .. ":")
-          for _, line in pairs(item_lines) do
+          for _, line in ipairs(item_lines) do
             table.insert(out, line)
           end
         end
@@ -72,12 +72,20 @@ dumps = function(x, indent, order)
   error("Can't convert object with type " .. type(x) .. " to YAML")
 end
 
-yaml.dumps_lines = function(x)
-  return dumps(x, 0)
+---Dump an object to YAML lines.
+---@param x any
+---@param order function
+---@return string[]
+yaml.dumps_lines = function(x, order)
+  return dumps(x, 0, order)
 end
 
-yaml.dumps = function(x)
-  return table.concat(dumps(x, 0), "\n")
+---Dump an object to a YAML string.
+---@param x any
+---@param order function
+---@return string
+yaml.dumps = function(x, order)
+  return table.concat(dumps(x, 0, order), "\n")
 end
 
 return yaml

@@ -6,6 +6,7 @@ local config = {}
 ---@field dir string
 ---@field notes_subdir string|?
 ---@field note_id_func function|?
+---@field note_frontmatter_func function|?
 ---@field completion obsidian.config.CompletionOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 config.ClientOpts = {}
@@ -17,6 +18,7 @@ config.ClientOpts.default = function()
     dir = vim.fs.normalize "./",
     notes_subdir = nil,
     note_id_func = nil,
+    note_frontmatter_func = nil,
     completion = config.CompletionOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
   }

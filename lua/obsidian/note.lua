@@ -260,29 +260,51 @@ note._parse_header = function(line)
   return line:match "^#+ (.+)$"
 end
 
+---Get the frontmatter table to save.
+---@return table
+note.frontmatter = function(self)
+  local out = { id = self.id, aliases = self.aliases, tags = self.tags }
+  if self.metadata ~= nil and util.table_length(self.metadata) > 0 then
+    for k, v in pairs(self.metadata) do
+      out[k] = v
+    end
+  end
+  return out
+end
+
 ---Get frontmatter lines that can be written to a buffer.
 ---
 ---@param eol boolean|?
+---@param frontmatter table|?
 ---@return string[]
-note.frontmatter_lines = function(self, eol)
+note.frontmatter_lines = function(self, eol, frontmatter)
   local new_lines = { "---" }
 
-  for _, line in ipairs(yaml.dumps_lines { id = self.id }) do
+  local frontmatter_ = frontmatter and frontmatter or self:frontmatter()
+  for _, line in
+    ipairs(yaml.dumps_lines(frontmatter_, function(a, b)
+      local a_idx = nil
+      local b_idx = nil
+      for i, k in ipairs { "id", "aliases", "tags" } do
+        if a == k then
+          a_idx = i
+        end
+        if b == k then
+          b_idx = i
+        end
+      end
+      if a_idx ~= nil and b_idx ~= nil then
+        return a_idx < b_idx
+      elseif a_idx ~= nil then
+        return true
+      elseif b_idx ~= nil then
+        return false
+      else
+        return a < b
+      end
+    end))
+  do
     table.insert(new_lines, line)
-  end
-
-  for _, line in ipairs(yaml.dumps_lines { aliases = self.aliases }) do
-    table.insert(new_lines, line)
-  end
-
-  for _, line in ipairs(yaml.dumps_lines { tags = self.tags }) do
-    table.insert(new_lines, line)
-  end
-
-  if self.metadata ~= nil and util.table_length(self.metadata) > 0 then
-    for _, line in ipairs(yaml.dumps_lines(self.metadata)) do
-      table.insert(new_lines, line)
-    end
   end
 
   table.insert(new_lines, "---")

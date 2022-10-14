@@ -166,3 +166,24 @@ require("nvim-treesitter.configs").setup({
   },
 })
 ```
+
+#### Customizing the automatically generated YAML frontmatter
+
+By default the auto-generated YAML frontmatter will just contain `id`, `aliases`, and `tags`, as well as any other fields you add manually. If you want to customize this behavior, set the configuration option `note_frontmatter_func` to a function that takes an `obsidian.Note` object and returns a table.
+
+For example, you can emulate the default functionality like this:
+
+```lua
+require("obsidian").setup({
+  dir = "~/my-vault",
+  note_frontmatter_func = function(note)
+    local out = { id = note.id, aliases = note.aliases, tags = note.tags }
+    if note.metadata ~= nil and util.table_length(note.metadata) > 0 then
+      for k, v in pairs(note.metadata) do
+        out[k] = v
+      end
+    end
+    return out
+  end,
+})
+```
