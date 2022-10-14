@@ -3,3 +3,4 @@
 /lua/*.so
 tmp.*
 *.sqlite
+doc/tags
