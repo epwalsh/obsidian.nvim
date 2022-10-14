@@ -17,6 +17,9 @@ jobs:
     name: pandoc to vimdoc
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_PAT }}
+
       - name: panvimdoc
         uses: kdheepak/panvimdoc@main
         with:
@@ -26,6 +29,7 @@ jobs:
           toc: true
           version: NVIM v0.8.0
           demojify: false
+
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_user_name: github-actions[bot]
