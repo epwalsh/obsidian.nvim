@@ -35,4 +35,3 @@ jobs:
           commit_user_name: github-actions[bot]
           commit_message: 'chore: auto generate docs'
           branch: ${{ github.head_ref }}
-          push_options: --force
