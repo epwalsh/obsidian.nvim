@@ -1,5 +1,5 @@
 local Path = require "plenary.path"
-local yaml = require "yaml"
+local yaml = require "obsidian.yaml"
 local util = require "obsidian.util"
 local echo = require "obsidian.echo"
 
@@ -208,7 +208,7 @@ note.from_lines = function(lines, path, root)
   local metadata = nil
   if #frontmatter_lines > 0 then
     local frontmatter = table.concat(frontmatter_lines, "\n")
-    local ok, data = pcall(yaml.eval, frontmatter)
+    local ok, data = pcall(yaml.loads, frontmatter)
     if ok then
       for k, v in pairs(data) do
         if k == "id" then
@@ -265,24 +265,24 @@ end
 ---@param eol boolean|?
 ---@return string[]
 note.frontmatter_lines = function(self, eol)
-  local new_lines = { "---", ("id: %q"):format(self.id) }
+  local new_lines = { "---" }
 
-  if #self.aliases > 0 then
-    table.insert(new_lines, "aliases:")
-  else
-    table.insert(new_lines, "aliases: []")
-  end
-  for _, alias in pairs(self.aliases) do
-    table.insert(new_lines, (" - %q"):format(alias))
+  for _, line in ipairs(yaml.dumps_lines { id = self.id }) do
+    table.insert(new_lines, line)
   end
 
-  if #self.tags > 0 then
-    table.insert(new_lines, "tags:")
-  else
-    table.insert(new_lines, "tags: []")
+  for _, line in ipairs(yaml.dumps_lines { aliases = self.aliases }) do
+    table.insert(new_lines, line)
   end
-  for _, tag in pairs(self.tags) do
-    table.insert(new_lines, (" - %q"):format(tag))
+
+  for _, line in ipairs(yaml.dumps_lines { tags = self.tags }) do
+    table.insert(new_lines, line)
+  end
+
+  if self.metadata ~= nil and util.table_length(self.metadata) > 0 then
+    for _, line in ipairs(yaml.dumps_lines(self.metadata)) do
+      table.insert(new_lines, line)
+    end
   end
 
   table.insert(new_lines, "---")
@@ -318,7 +318,7 @@ note.save = function(self, path)
   local self_f = io.open(tostring(self.path))
   if self_f ~= nil then
     local contents = self_f:read "*a"
-    for idx, line in pairs(vim.split(contents, "\n")) do
+    for idx, line in ipairs(vim.split(contents, "\n")) do
       table.insert(lines, line .. "\n")
       if idx == 1 then
         if note._is_frontmatter_boundary(line) then
@@ -330,8 +330,6 @@ note.save = function(self, path)
           end_idx = idx
           in_frontmatter = false
         end
-      else
-        break
       end
     end
     self_f:close()

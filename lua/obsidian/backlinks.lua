@@ -130,6 +130,7 @@ backlinks.view = function(self)
   -- Configure buffer.
   vim.cmd "setlocal nonu"
   vim.cmd "setlocal nornu"
+  vim.cmd "setlocal winfixheight"
   vim.api.nvim_buf_set_option(0, "filetype", "ObsidianBacklinks")
   vim.api.nvim_buf_set_option(0, "buftype", "nofile")
   vim.api.nvim_buf_set_option(0, "swapfile", false)
