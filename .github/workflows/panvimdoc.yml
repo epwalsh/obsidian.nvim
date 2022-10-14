@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - README.md
+      - .github/workflows/panvimdoc.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   docs:
