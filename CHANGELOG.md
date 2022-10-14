@@ -7,13 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added support for arbitrary fields in YAML frontmatter.
+- Added configuration option `note_frontmatter_func` for customizing the YAML frontmatter of your notes. This can be set to a function that takes a single argument - an `obsidian.Note` object - and returns a YAML-serializable table.
+
 ### Changed
 
-- Added folding and custom highlighting to backlinks window.
+- Added folding and custom highlighting to backlinks window, and fixed window height.
+- When the title of a note is changed, the title will automatically be added to note's aliases in the frontmatter on save.
 
 ### Fixed
 
 - Fixed autocomplete functionality to be less sensitive to case.
+- Made YAML frontmatter dumping functionality more robust.
 
 ## [v1.5.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.5.0) - 2022-10-12
 

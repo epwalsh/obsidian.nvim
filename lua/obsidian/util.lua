@@ -228,4 +228,42 @@ util.find_and_replace_refs = function(s, patterns)
   return table.concat(pieces, ""), indices, refs
 end
 
+util.is_array = function(t)
+  if type(t) ~= "table" then
+    return false
+  end
+
+  --check if all the table keys are numerical and count their number
+  local count = 0
+  for k, _ in pairs(t) do
+    if type(k) ~= "number" then
+      return false
+    else
+      count = count + 1
+    end
+  end
+
+  --all keys are numerical. now let's see if they are sequential and start with 1
+  for i = 1, count do
+    --Hint: the VALUE might be "nil", in that case "not t[i]" isn't enough, that's why we check the type
+    if not t[i] and type(t[i]) ~= "nil" then
+      return false
+    end
+  end
+  return true
+end
+
+util.strip = function(s)
+  local out = string.gsub(s, "^%s+", "")
+  return out
+end
+
+util.table_length = function(x)
+  local n = 0
+  for _ in pairs(x) do
+    n = n + 1
+  end
+  return n
+end
+
 return util

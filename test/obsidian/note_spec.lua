@@ -61,4 +61,23 @@ describe("Note", function()
     assert.is_true(Note._is_frontmatter_boundary "---")
     assert.is_true(Note._is_frontmatter_boundary "----")
   end)
+  it("should be able to be initialize and save a note with additional frontmatter metadata", function()
+    local note = Note.from_file "test_fixtures/notes/note_with_additional_metadata.md"
+    assert.equals(note.id, "note_with_additional_metadata")
+    assert.is_not(note.metadata, nil)
+    assert.equals(note.metadata.foo, "bar")
+    assert.equals(
+      table.concat(note:frontmatter_lines(), "\n"),
+      table.concat({
+        "---",
+        "id: note_with_additional_metadata",
+        "aliases:",
+        "  - Note with additional metadata",
+        "tags: []",
+        "foo: bar",
+        "---",
+      }, "\n")
+    )
+    note:save "./test_fixtures/notes/note_with_additional_metadata_saved.md"
+  end)
 end)
