@@ -174,6 +174,7 @@ command.search = function(client, data)
   end
 end
 
+<<<<<<< HEAD
 command.link_new = function(client, data)
   local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
   local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
@@ -292,6 +293,38 @@ command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
   end
 
   return completions
+=======
+--- Follow link under cursor.
+---
+---@param client obsidian.Client
+command.follow = function(client, _)
+  local open, close = util.cursor_on_markdown_link()
+  local current_line = vim.api.nvim_get_current_line()
+
+  if open == nil or close == nil then
+      return nil
+  end
+
+  local note_name = current_line:sub(open + 2, close - 1)
+  local path = client.dir
+  
+  if not note_name:match("%.md") then
+    note_name = note_name .. ".md"
+  end
+  
+  if note_name:match("|[^%]]*") then
+    note_name = note_name:sub(1, note_name:find('|'))
+  end
+
+  if note_name:match("/") then
+
+  elseif client.opts.notes_subdir ~= nil then
+    path = path / client.opts.notes_subdir
+  end
+
+  path = path / note_name
+  vim.api.nvim_command("e " .. tostring(path))
+>>>>>>> 375867b (Custom implementation for following links)
 end
 
 local commands = {
@@ -301,8 +334,12 @@ local commands = {
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
+<<<<<<< HEAD
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
+=======
+  ObsidianFollowLink = {func = command.follow, opts = {nargs = 0 } },
+>>>>>>> 375867b (Custom implementation for following links)
 }
 
 ---Register all commands.
