@@ -298,11 +298,13 @@ command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
+  local scan = require "plenary.scandir"
+
   local open, close = util.cursor_on_markdown_link()
   local current_line = vim.api.nvim_get_current_line()
 
   if open == nil or close == nil then
-      return nil
+    return nil
   end
 
   local note_name = current_line:sub(open + 2, close - 1)
@@ -316,15 +318,45 @@ command.follow = function(client, _)
     note_name = note_name:sub(1, note_name:find('|'))
   end
 
-  if note_name:match("/") then
+  local notes = {}
+  local count = 1
 
-  elseif client.opts.notes_subdir ~= nil then
-    path = path / client.opts.notes_subdir
+  if not note_name:match("/") then
+    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
+      hidden = false,
+      add_dirs = false,
+      respect_gitignore = true,
+      search_pattern = ".*%.md",
+      on_insert = function(entry)
+        Note.from_file(entry, client.dir)
+        local ok, note = pcall(Note.from_file, entry, client.dir)
+
+        if ok and note:fname() == note_name then
+          notes[count] = entry
+          count = count + 1
+        end
+      end,
+    })
   end
 
+<<<<<<< HEAD
   path = path / note_name
   vim.api.nvim_command("e " .. tostring(path))
 >>>>>>> 375867b (Custom implementation for following links)
+=======
+
+  if table.getn(notes) < 1 then
+    path = path / note_name
+    vim.api.nvim_command("e " .. tostring(path))
+  elseif table.getn(notes) == 1 then
+    path = notes[1]
+    vim.api.nvim_command("e " .. tostring(path))
+  else
+    echo.err("Multiple notes with this name exist")
+    return
+  end
+    
+>>>>>>> 2875a23 (Follow link now matches against existing files)
 end
 
 local commands = {
