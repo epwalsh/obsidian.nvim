@@ -270,9 +270,10 @@ end
 -- @return integer, integer
 util.cursor_on_markdown_link = function()
   local current_line = vim.api.nvim_get_current_line()
-  local cur_row, cur_col = vim.api.nvim_win_get_cursor(0)
+  local cur_row, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
   local current_line_lh = current_line:sub(1, cur_col)
   
+    print(cur_row, cur_col)
   local open = current_line_lh:find("%[%[[^%[]") 
   local close = current_line:find("%]%]", cur_col)
 
