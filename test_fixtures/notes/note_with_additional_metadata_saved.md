@@ -1,9 +1,9 @@
 ---
-id: note_with_additional_metadata
+id: "note_with_additional_metadata"
 aliases:
-  - Note with additional metadata
+  - "Note with additional metadata"
 tags: []
-foo: bar
+foo: "bar"
 ---
 
 # Note with additional metadata

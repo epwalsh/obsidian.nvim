@@ -6,22 +6,14 @@ local yaml = {}
 ---Deserialize a YAML string.
 yaml.loads = _yaml.eval
 
-local should_quote = function(s)
-  local found = string.find(s, [[']], 1, true)
-  return found ~= nil
-end
-
 ---@return string[]
 local dumps
 dumps = function(x, indent, order)
   local indent_str = string.rep(" ", indent)
 
   if type(x) == "string" then
-    if should_quote(x) then
-      return { indent_str .. [["]] .. x .. [["]] }
-    else
-      return { indent_str .. x }
-    end
+    -- TODO: handle double quotes in x
+    return { indent_str .. [["]] .. x .. [["]] }
   end
 
   if type(x) == "boolean" then
@@ -82,7 +74,7 @@ end
 
 ---Dump an object to a YAML string.
 ---@param x any
----@param order function
+---@param order function|?
 ---@return string
 yaml.dumps = function(x, order)
   return table.concat(dumps(x, 0, order), "\n")

@@ -1,7 +1,7 @@
 ---
-id: test_fixtures/notes/note_without_frontmatter.md
+id: "test_fixtures/notes/note_without_frontmatter.md"
 aliases:
-  - Hey there
+  - "Hey there"
 tags: []
 ---
 
