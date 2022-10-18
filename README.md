@@ -21,7 +21,6 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - `:ObsidianNew` to create a new note.
   This command has one optional argument: the title of the new note.
 - `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
-  This command takes a single argument, a search query.
   This command has one optional argument: a search query to start with.
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
   This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
