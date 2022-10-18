@@ -146,7 +146,7 @@ end
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
----@param opts string
+---@param opts string|?
 ---@return function
 client.search = function(self, search, opts)
   opts = opts and (opts .. " ") or ""
@@ -247,6 +247,40 @@ client.today = function(self)
   end
 
   return note
+end
+
+---@return obsidian.Note|?
+client.resolve_note = function(self, query)
+  local note_path, count = string.gsub(query, "^.*  ", "")
+  if count > 0 then
+    ---@type Path
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local full_path = self.dir / note_path
+    return obsidian.note.from_file(full_path, self.dir)
+  end
+
+  if Path:new(query):is_file() then
+    local ok, note = pcall(obsidian.note.from_file, query)
+    if ok then
+      return note
+    end
+  end
+
+  local note_full_path = self.dir / query
+  if note_full_path:is_file() then
+    local ok, note = pcall(obsidian.note.from_file, note_full_path)
+    if ok then
+      return note
+    end
+  end
+
+  for note in self:search(query) do
+    if query == note.id or query == note:display_name() or obsidian.util.contains(note.aliases, query) then
+      return note
+    end
+  end
+
+  return nil
 end
 
 return obsidian
