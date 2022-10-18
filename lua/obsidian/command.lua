@@ -82,7 +82,13 @@ command.open = function(client, data)
 
   local path
   if data.args:len() > 0 then
-    path = Path:new(data.args):make_relative(vault)
+    local note = client:resolve_note(data.args)
+    if note ~= nil then
+      path = note.path:make_relative(vault)
+    else
+      echo.err "Could not resolve arguments to a note ID, path, or alias"
+      return
+    end
   else
     local bufname = vim.api.nvim_buf_get_name(0)
     path = Path:new(bufname):make_relative(vault)
@@ -168,13 +174,135 @@ command.search = function(client, data)
   end
 end
 
+command.link_new = function(client, data)
+  local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
+  local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
+
+  if data.line1 ~= csrow or data.line2 ~= cerow then
+    echo.err "ObsidianLink must be called with visual selection"
+    return
+  end
+
+  local lines = vim.fn.getline(csrow, cerow)
+  if #lines ~= 1 then
+    echo.err "Only in-line visual selections allowed"
+    return
+  end
+
+  local line = lines[1]
+
+  local title
+  if string.len(data.args) > 0 then
+    title = data.args
+  else
+    title = string.sub(line, cscol, cecol)
+  end
+  local note = client:new_note(title)
+
+  line = string.sub(line, 1, cscol - 1)
+    .. "[["
+    .. note.id
+    .. "|"
+    .. string.sub(line, cscol, cecol)
+    .. "]]"
+    .. string.sub(line, cecol + 1)
+  vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
+end
+
+command.link = function(client, data)
+  local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
+  local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
+
+  if data.line1 ~= csrow or data.line2 ~= cerow then
+    echo.err "ObsidianLink must be called with visual selection"
+    return
+  end
+
+  local lines = vim.fn.getline(csrow, cerow)
+  if #lines ~= 1 then
+    echo.err "Only in-line visual selections allowed"
+    return
+  end
+
+  local line = lines[1]
+
+  ---@type obsidian.Note|?
+  local note
+  if string.len(data.args) > 0 then
+    note = client:resolve_note(data.args)
+  else
+    note = client:resolve_note(string.sub(line, cscol, cecol))
+  end
+
+  if note == nil then
+    echo.err "Could not resolve argument to a note ID, alias, or path"
+    return
+  end
+
+  line = string.sub(line, 1, cscol - 1)
+    .. "[["
+    .. note.id
+    .. "|"
+    .. string.sub(line, cscol, cecol)
+    .. "]]"
+    .. string.sub(line, cecol + 1)
+  vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
+end
+
+command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
+  local search
+  local cmd_arg, _ = util.strip(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
+  if string.len(cmd_arg) > 0 then
+    if string.find(cmd_arg, "|", 1, true) then
+      return {}
+    else
+      search = cmd_arg
+    end
+  else
+    local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
+    local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
+    local lines = vim.fn.getline(csrow, cerow)
+
+    if #lines > 1 then
+      lines[1] = string.sub(lines[1], cscol)
+      lines[#lines] = string.sub(lines[#lines], 1, cecol)
+    elseif #lines == 1 then
+      lines[1] = string.sub(lines[1], cscol, cecol)
+    else
+      return {}
+    end
+
+    search = table.concat(lines, " ")
+  end
+
+  local completions = {}
+  local search_lwr = string.lower(search)
+  for note in client:search(search) do
+    local note_path = tostring(note.path:make_relative(tostring(client.dir)))
+    if string.find(note:display_name(), search_lwr, 1, true) then
+      table.insert(completions, note:display_name() .. "  " .. note_path)
+    else
+      for _, alias in pairs(note.aliases) do
+        if string.find(string.lower(alias), search_lwr, 1, true) then
+          table.insert(completions, alias .. "  " .. note_path)
+          break
+        end
+      end
+    end
+  end
+
+  return completions
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
-  ObsidianOpen = { func = command.open, opts = { nargs = "?" } },
+  ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
+  ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
+  ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
 }
 
 ---Register all commands.
@@ -185,6 +313,13 @@ command.register_all = function(client)
     local func = function(data)
       command_config.func(client, data)
     end
+
+    if command_config.complete ~= nil then
+      command_config.opts.complete = function(arg_lead, cmd_line, cursor_pos)
+        return command_config.complete(client, arg_lead, cmd_line, cursor_pos)
+      end
+    end
+
     vim.api.nvim_create_user_command(command_name, func, command_config.opts)
   end
 end
