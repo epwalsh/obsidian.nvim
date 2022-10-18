@@ -249,8 +249,12 @@ client.today = function(self)
   return note
 end
 
+---Resolve the query to a single note.
+---
+---@param query string
 ---@return obsidian.Note|?
 client.resolve_note = function(self, query)
+  -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
   if count > 0 then
     ---@type Path
@@ -259,25 +263,42 @@ client.resolve_note = function(self, query)
     return obsidian.note.from_file(full_path, self.dir)
   end
 
-  if Path:new(query):is_file() then
-    local ok, note = pcall(obsidian.note.from_file, query)
-    if ok then
-      return note
+  -- Query might be a path.
+  local paths_to_check = { Path:new(query), self.dir / query }
+  if self.opts.notes_subdir ~= nil then
+    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / query)
+  end
+  if self.opts.daily_notes.folder ~= nil then
+    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / query)
+  end
+  for _, path in pairs(paths_to_check) do
+    if path:is_file() then
+      local ok, note = pcall(obsidian.note.from_file, path)
+      if ok then
+        return note
+      end
     end
   end
 
-  local note_full_path = self.dir / query
-  if note_full_path:is_file() then
-    local ok, note = pcall(obsidian.note.from_file, note_full_path)
-    if ok then
-      return note
-    end
-  end
-
+  local query_lwr = string.lower(query)
+  local maybe_matches = {}
   for note in self:search(query) do
     if query == note.id or query == note:display_name() or obsidian.util.contains(note.aliases, query) then
+      -- Exact match! We're done!
       return note
     end
+
+    for _, alias in pairs(note.aliases) do
+      if query_lwr == string.lower(alias) then
+        -- Lower case match, save this one for later.
+        table.insert(maybe_matches, note)
+        break
+      end
+    end
+  end
+
+  if #maybe_matches > 0 then
+    return maybe_matches[1]
   end
 
   return nil
