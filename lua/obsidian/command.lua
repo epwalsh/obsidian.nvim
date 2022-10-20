@@ -330,8 +330,10 @@ command.follow = function(client, _)
       on_insert = function(entry)
         note_dir = Path:new(entry .. "/" .. note_name)
         if note_dir:is_dir() then
-          local _, note = pcall(Note.from_file, entry .. "/" .. note_name, client.dir)
-          table.insert(notes, note.path)
+          local ok, note = pcall(Note.from_file, entry .. "/" .. note_name, client.dir)
+          if ok then
+            table.insert(notes, note.path)
+          end
         end
       end
     })
