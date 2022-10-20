@@ -26,7 +26,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
-- `:ObsidianFollowLink` to open a note or create a new note in your vault
+- `:ObsidianFollowLink` to follow a note reference under the cursor.
 
 ## Setup
 
