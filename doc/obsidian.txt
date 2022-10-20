@@ -273,20 +273,29 @@ For example, you can emulate the default functionality like this:
 <
 
 
-                        *obsidian-Mapping-ObsidianFollowLink-with-passthrough*
+             *obsidian-Mapping-`:ObsidianFollowLink`-to-`gf`-with-passthrough*
+
+Mapping `:ObsidianFollowLink` to `gf` with passthrough If you have notes in
+                                       subdirectories of your vault, Neovim’s
+                                       default `gf` mapping might not be able
+                                       to find the note corresponding to the
+                                       reference under your cursor. If that’s
+                                       the case you can map `gf` to the
+                                       `:ObsidianFollowLink` command like this:
+
 
 >
     vim.keymap.set(
-        "n",
-        "gf",
-        function()
-            if require('obsidian').util.cursor_on_markdown_link() then
-                return "<cmd>ObsidianFollowLink<CR>"
-            else
-                return "gf"
-            end
-        end,
-        { noremap = false, expr = true}
+      "n",
+      "gf",
+      function()
+        if require('obsidian').util.cursor_on_markdown_link() then
+          return "<cmd>ObsidianFollowLink<CR>"
+        else
+          return "gf"
+        end
+      end,
+      { noremap = false, expr = true}
     )
 <
 
