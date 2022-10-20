@@ -309,36 +309,34 @@ command.follow = function(client, _)
 
   local note_name = current_line:sub(open + 2, close - 1)
   local path = client.dir
-  
-  if note_name:match("|[^%]]*") then
-    note_name = note_name:sub(1, note_name:find('|'))
+
+  if note_name:match "|[^%]]*" then
+    note_name = note_name:sub(1, note_name:find "|")
   end
 
-  if not note_name:match("%.md") then
+  if not note_name:match "%.md" then
     note_name = note_name .. ".md"
   end
-  
 
   local notes = {}
 
-  if not note_name:match("/") then
+  if not note_name:match "/" then
     scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
       hidden = false,
       add_dirs = false,
       only_dirs = true,
       respect_gitignore = true,
       on_insert = function(entry)
-        note_dir = Path:new(entry .. "/" .. note_name)
+        local note_dir = Path:new(entry .. "/" .. note_name)
         if note_dir:is_dir() then
           local ok, note = pcall(Note.from_file, entry .. "/" .. note_name, client.dir)
           if ok then
             table.insert(notes, note.path)
           end
         end
-      end
+      end,
     })
   end
-
 
   if #notes < 1 then
     path = path / note_name
@@ -347,7 +345,7 @@ command.follow = function(client, _)
     path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
   else
-    echo.err("Multiple notes with this name exist")
+    echo.err "Multiple notes with this name exist"
     return
   end
 end
@@ -361,7 +359,7 @@ local commands = {
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
-  ObsidianFollowLink = {func = command.follow, opts = {nargs = 0 } },
+  ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
 }
 
 ---Register all commands.
