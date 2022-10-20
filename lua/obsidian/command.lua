@@ -328,13 +328,12 @@ command.follow = function(client, _)
       only_dirs = true,
       respect_gitignore = true,
       on_insert = function(entry)
-          note_dir = entry .. "/" .. note_name
-          ok, _ = os.rename(note_dir, note_dir)
-          if ok then
-            local _, note = pcall(Note.from_file, entry .. "/" .. note_name, client.dir)
-            table.insert(notes, note.path)
-          end
+        note_dir = Path:new(entry .. "/" .. note_name)
+        if note_dir:is_dir() then
+          local _, note = pcall(Note.from_file, entry .. "/" .. note_name, client.dir)
+          table.insert(notes, note.path)
         end
+      end
     })
   end
 
