@@ -304,7 +304,8 @@ command.follow = function(client, _)
   local current_line = vim.api.nvim_get_current_line()
 
   if open == nil or close == nil then
-    return nil
+    echo.err "Cursor is not on a reference!"
+    return
   end
 
   local note_name = current_line:sub(open + 2, close - 1)
