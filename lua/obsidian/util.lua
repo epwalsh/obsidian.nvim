@@ -266,4 +266,24 @@ util.table_length = function(x)
   return n
 end
 
+-- Determines if cursor is currently inside markdown link
+-- @return integer, integer
+util.cursor_on_markdown_link = function()
+  local current_line = vim.api.nvim_get_current_line()
+  local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
+
+  local current_line_lh = current_line:sub(0, cur_col + 2)
+
+  -- Search for two open brackets followed by any number of non-open bracket
+  -- characters nor close bracket characters
+  local open = current_line_lh:find "%[%[[^%[%]]*%]?%]?$"
+  local close = current_line:find("%]%]", cur_col)
+
+  if open == nil or close == nil then
+    return nil, nil
+  else
+    return open, close
+  end
+end
+
 return util

@@ -294,6 +294,63 @@ command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
   return completions
 end
 
+--- Follow link under cursor.
+---
+---@param client obsidian.Client
+command.follow = function(client, _)
+  local scan = require "plenary.scandir"
+
+  local open, close = util.cursor_on_markdown_link()
+  local current_line = vim.api.nvim_get_current_line()
+
+  if open == nil or close == nil then
+    echo.err "Cursor is not on a reference!"
+    return
+  end
+
+  local note_name = current_line:sub(open + 2, close - 1)
+  local path = client.dir
+
+  if note_name:match "|[^%]]*" then
+    note_name = note_name:sub(1, note_name:find "|" - 1)
+  end
+
+  if not note_name:match "%.md" then
+    note_name = note_name .. ".md"
+  end
+
+  local notes = {}
+
+  if not note_name:match "/" then
+    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
+      hidden = false,
+      add_dirs = false,
+      only_dirs = true,
+      respect_gitignore = true,
+      on_insert = function(entry)
+        local note_path = Path:new(entry .. "/" .. note_name)
+        if note_path:is_file() then
+          local ok, _ = pcall(Note.from_file, note_path, client.dir)
+          if ok then
+            table.insert(notes, note_path)
+          end
+        end
+      end,
+    })
+  end
+
+  if #notes < 1 then
+    path = path / note_name
+    vim.api.nvim_command("e " .. tostring(path))
+  elseif #notes == 1 then
+    path = notes[1]
+    vim.api.nvim_command("e " .. tostring(path))
+  else
+    echo.err "Multiple notes with this name exist"
+    return
+  end
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
@@ -303,6 +360,7 @@ local commands = {
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
+  ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
 }
 
 ---Register all commands.
