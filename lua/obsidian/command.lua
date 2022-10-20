@@ -292,6 +292,7 @@ command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
   end
 
   return completions
+end
 
 --- Follow link under cursor.
 ---
@@ -319,7 +320,6 @@ command.follow = function(client, _)
   
 
   local notes = {}
-  local count = 1
 
   if not note_name:match("/") then
     scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
@@ -331,7 +331,8 @@ command.follow = function(client, _)
           note_dir = entry .. "/" .. note_name
           ok, _ = os.rename(note_dir, note_dir)
           if ok then
-            table.insert(notes, note_dir)
+            local _, note = pcall(Note.from_file, entry .. "/" .. note_name, client.dir)
+            table.insert(notes, note.path)
           end
         end
     })
@@ -342,21 +343,6 @@ command.follow = function(client, _)
     path = path / note_name
     vim.api.nvim_command("e " .. tostring(path))
   elseif #notes == 1 then
-    path = notes[1]
-    vim.api.nvim_command("e " .. tostring(path))
-  else
-    echo.err("Multiple notes with this name exist")
-    return
-  end
-end
-
-  path = path / note_name
-  vim.api.nvim_command("e " .. tostring(path))
-
-  if table.getn(notes) < 1 then
-    path = path / note_name
-    vim.api.nvim_command("e " .. tostring(path))
-  elseif table.getn(notes) == 1 then
     path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
   else
