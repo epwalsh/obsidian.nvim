@@ -174,7 +174,6 @@ command.search = function(client, data)
   end
 end
 
-<<<<<<< HEAD
 command.link_new = function(client, data)
   local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
   local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
@@ -293,7 +292,6 @@ command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
   end
 
   return completions
-=======
 --- Follow link under cursor.
 ---
 ---@param client obsidian.Client
@@ -339,11 +337,8 @@ command.follow = function(client, _)
     })
   end
 
-<<<<<<< HEAD
   path = path / note_name
   vim.api.nvim_command("e " .. tostring(path))
->>>>>>> 375867b (Custom implementation for following links)
-=======
 
   if table.getn(notes) < 1 then
     path = path / note_name
@@ -355,8 +350,6 @@ command.follow = function(client, _)
     echo.err("Multiple notes with this name exist")
     return
   end
-    
->>>>>>> 2875a23 (Follow link now matches against existing files)
 end
 
 local commands = {
@@ -366,12 +359,9 @@ local commands = {
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
-<<<<<<< HEAD
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
-=======
   ObsidianFollowLink = {func = command.follow, opts = {nargs = 0 } },
->>>>>>> 375867b (Custom implementation for following links)
 }
 
 ---Register all commands.
