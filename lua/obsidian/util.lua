@@ -272,12 +272,7 @@ util.cursor_on_markdown_link = function()
   local current_line = vim.api.nvim_get_current_line()
   local cur_row, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
   
-  -- This fixes an issue where the link was unfollowable while the cursor
-  -- was on the first bracket and at the beginning of the line
-  local current_line_lh = current_line
-  if cur_col - 2 >= 2 then
-    local current_line_lh = current_line:sub(1, cur_col)
-  end
+  local current_line_lh = current_line:sub(0, cur_col + 2)
   
   -- Search for two open brackets followed by any number of non-open bracket
   -- characters nor close bracket characters
