@@ -292,6 +292,7 @@ command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
   end
 
   return completions
+
 --- Follow link under cursor.
 ---
 ---@param client obsidian.Client
@@ -308,13 +309,14 @@ command.follow = function(client, _)
   local note_name = current_line:sub(open + 2, close - 1)
   local path = client.dir
   
+  if note_name:match("|[^%]]*") then
+    note_name = note_name:sub(1, note_name:find('|'))
+  end
+
   if not note_name:match("%.md") then
     note_name = note_name .. ".md"
   end
   
-  if note_name:match("|[^%]]*") then
-    note_name = note_name:sub(1, note_name:find('|'))
-  end
 
   local notes = {}
   local count = 1
@@ -323,19 +325,30 @@ command.follow = function(client, _)
     scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
       hidden = false,
       add_dirs = false,
+      only_dirs = true,
       respect_gitignore = true,
-      search_pattern = ".*%.md",
       on_insert = function(entry)
-        Note.from_file(entry, client.dir)
-        local ok, note = pcall(Note.from_file, entry, client.dir)
-
-        if ok and note:fname() == note_name then
-          notes[count] = entry
-          count = count + 1
+          note_dir = entry .. "/" .. note_name
+          ok, _ = os.rename(note_dir, note_dir)
+          if ok then
+            table.insert(notes, note_dir)
+          end
         end
-      end,
     })
   end
+
+
+  if #notes < 1 then
+    path = path / note_name
+    vim.api.nvim_command("e " .. tostring(path))
+  elseif #notes == 1 then
+    path = notes[1]
+    vim.api.nvim_command("e " .. tostring(path))
+  else
+    echo.err("Multiple notes with this name exist")
+    return
+  end
+end
 
   path = path / note_name
   vim.api.nvim_command("e " .. tostring(path))
