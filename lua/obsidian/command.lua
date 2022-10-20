@@ -311,7 +311,7 @@ command.follow = function(client, _)
   local path = client.dir
 
   if note_name:match "|[^%]]*" then
-    note_name = note_name:sub(1, note_name:find "|")
+    note_name = note_name:sub(1, note_name:find "|" - 1)
   end
 
   if not note_name:match "%.md" then
