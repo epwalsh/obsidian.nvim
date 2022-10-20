@@ -6,10 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-- Added `:ObsidianFollowLink` and companion function `util.cursor_on_markdown_link`
 
 ### Added
 
+- Added `:ObsidianFollowLink` and companion function `util.cursor_on_markdown_link`
 - Added `:ObsidianLink` and `:ObsidianLinkNew` commands.
 
 ## [v1.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.6.1) - 2022-10-17
