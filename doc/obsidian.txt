@@ -46,6 +46,7 @@ COMMANDS ~
     This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
     This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
+- `:ObsidianFollowLink` to follow a note reference under the cursor.
 
 
 SETUP                                                         *obsidian-setup*
@@ -269,6 +270,24 @@ For example, you can emulate the default functionality like this:
         return out
       end,
     })
+<
+
+
+                        *obsidian-Mapping-ObsidianFollowLink-with-passthrough*
+
+>
+    vim.keymap.set(
+        "n",
+        "gf",
+        function()
+            if require('obsidian').util.cursor_on_markdown_link() then
+                return "<cmd>ObsidianFollowLink<CR>"
+            else
+                return "gf"
+            end
+        end,
+        { noremap = false, expr = true}
+    )
 <
 
 
