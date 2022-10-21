@@ -9,7 +9,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 ## Features
 
 - ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
-- 🏃 Go to a note buffer with `gf` when cursor is on a reference
+- 🏃 Go to a note buffer with `gf` when cursor is on a reference (see: [Mapping `:ObsidianFollowLink` to `gf` with follow through](#mapping-obsidianfollowlink-to-gf-with-passthrough) for an even better `gf`)
 - 💅 Additional markdown syntax highlighting and concealing for references
 
 ### Commands
@@ -217,3 +217,5 @@ vim.keymap.set(
   { noremap = false, expr = true}
 )
 ```
+
+The other benefit of doing this is that it will now work even if your cursor is on the enclosing brackets (`[[` or `]]`) or the alias part of a reference (the part after `|`).
