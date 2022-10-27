@@ -294,7 +294,7 @@ command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
   return completions
 end
 
---- Follow link under cursor.
+---Follow link under cursor.
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
@@ -328,7 +328,8 @@ command.follow = function(client, _)
       only_dirs = true,
       respect_gitignore = true,
       on_insert = function(entry)
-        local note_path = Path:new(entry .. "/" .. note_name)
+        ---@type Path
+        local note_path = Path:new(entry) / note_name
         if note_path:is_file() then
           local ok, _ = pcall(Note.from_file, note_path, client.dir)
           if ok then
@@ -340,6 +341,7 @@ command.follow = function(client, _)
   end
 
   if #notes < 1 then
+    ---@diagnostic disable-next-line: cast-local-type
     path = path / note_name
     vim.api.nvim_command("e " .. tostring(path))
   elseif #notes == 1 then

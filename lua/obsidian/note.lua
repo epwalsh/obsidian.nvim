@@ -158,7 +158,7 @@ end
 ---@return obsidian.Note
 note.from_lines = function(lines, path, root)
   local cwd = tostring(root and root or "./")
-  local relative_path = tostring(Path:new(path):make_relative(cwd))
+  local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
 
   local id = nil
   local title = nil
