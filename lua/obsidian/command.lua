@@ -249,7 +249,7 @@ command.link = function(client, data)
   vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
 end
 
-command.complete_args = function(client, arg_lead, cmd_line, cursor_pos)
+command.complete_args = function(client, _, cmd_line, _)
   local search
   local cmd_arg, _ = util.strip(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
   if string.len(cmd_arg) > 0 then
@@ -329,6 +329,7 @@ command.follow = function(client, _)
       respect_gitignore = true,
       on_insert = function(entry)
         ---@type Path
+        ---@diagnostic disable-next-line: assign-type-mismatch
         local note_path = Path:new(entry) / note_name
         if note_path:is_file() then
           local ok, _ = pcall(Note.from_file, note_path, client.dir)

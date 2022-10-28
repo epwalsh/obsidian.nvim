@@ -168,7 +168,15 @@ end
 ---@param title string|?
 ---@return string
 client.new_note_id = function(self, title)
-  if self.opts.note_id_func ~= nil then
+  local today_id = tostring(os.date "%Y-%m-%d")
+  if
+    title ~= nil
+    and string.len(title) >= 5
+    and string.find(today_id, title, 1, true) == 1
+    and not self:daily_note_path(today_id):is_file()
+  then
+    return today_id
+  elseif self.opts.note_id_func ~= nil then
     local new_id = self.opts.note_id_func(title)
     -- Remote '.md' suffix if it's there (we add that later).
     new_id = new_id:gsub("%.md$", "", 1)
@@ -184,8 +192,11 @@ end
 ---@param id string|?
 ---@return obsidian.Note
 client.new_note = function(self, title, id)
-  -- Generate new ID.
+  -- Generate new ID if needed.
   local new_id = id and id or self:new_note_id(title)
+  if new_id == tostring(os.date "%Y-%m-%d") then
+    return self:today()
+  end
 
   -- Get path.
   ---@type Path
@@ -215,14 +226,11 @@ client.new_note = function(self, title, id)
   return note
 end
 
----Create a new daily note for today.
+---Get the path to a daily note.
 ---
----@return obsidian.Note
-client.today = function(self)
-  ---@type string
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local id = os.date "%Y-%m-%d"
-  local alias = os.date "%B %-d, %Y"
+---@param id string
+---@return Path
+client.daily_note_path = function(self, id)
   ---@type Path
   local path = Path:new(self.dir)
 
@@ -238,6 +246,18 @@ client.today = function(self)
   ---@type Path
   ---@diagnostic disable-next-line: assign-type-mismatch
   path = path / (id .. ".md")
+  return path
+end
+
+---Create a new daily note for today.
+---
+---@return obsidian.Note
+client.today = function(self)
+  ---@type string
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local id = os.date "%Y-%m-%d"
+  local alias = os.date "%B %-d, %Y"
+  local path = self:daily_note_path(id)
 
   -- Create Note object and save if it doesn't already exist.
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
