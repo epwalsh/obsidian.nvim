@@ -250,7 +250,9 @@ Customizing the automatically generated YAML frontmatter By default the
                                        this behavior, set the configuration
                                        option `note_frontmatter_func` to a
                                        function that takes an `obsidian.Note`
-                                       object and returns a table.
+                                       object and returns a table. Or if you
+                                       want to disable this feature, just set
+                                       `disable_frontmatter = true`.
 
 
 For example, you can emulate the default functionality like this:
