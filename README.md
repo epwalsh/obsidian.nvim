@@ -176,6 +176,21 @@ require("obsidian").setup({
 })
 ```
 
+#### Customizing daily notes' date format
+
+You can customize the file name of your daily notes by providing a date format:
+
+```lua
+require("obsidian").setup({
+  dir = "~/my-vault",
+  daily_notes = {
+    date_format = function()
+      return os.date("%Y%m%d")  -- format: year, month and date
+    end,
+  }
+})
+```
+
 #### Templates support
 
 To insert a template, run the command `:ObsidianTemplate`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported. 
