@@ -4,3 +4,4 @@
 tmp.*
 *.sqlite
 doc/tags
+.luarc.json
