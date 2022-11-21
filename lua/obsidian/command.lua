@@ -1,4 +1,5 @@
 local Path = require "plenary.path"
+local Job = require "plenary.job"
 local Note = require "obsidian.note"
 local echo = require "obsidian.echo"
 local util = require "obsidian.util"
@@ -97,24 +98,31 @@ command.open = function(client, data)
   local encoded_vault = util.urlencode(vault_name)
   local encoded_path = util.urlencode(tostring(path))
   local cmd = nil
+  local url = ("obsidian://open?vault=%s&file=%s"):format(encoded_vault, encoded_path)
+  local args = {}
   local sysname = vim.loop.os_uname().sysname
   if sysname == "Linux" then
-    cmd = ("xdg-open 'obsidian://open?vault=%s&file=%s'"):format(encoded_vault, encoded_path)
+    cmd = "xdg-open"
+    args = { url }
   elseif sysname == "Darwin" then
-    cmd = ("open -a /Applications/Obsidian.app --background 'obsidian://open?vault=%s&file=%s'"):format(
-      encoded_vault,
-      encoded_path
-    )
-  else
-    echo.err "open command does not support this OS yet"
+    cmd = "open"
+    args = { "-a", "/Applications/Obsidian.app", "--background", url }
   end
 
-  if cmd ~= nil then
-    local return_code = os.execute(cmd)
-    if return_code > 0 then
-      echo.err "failed opening Obsidian app to note"
-    end
+  if cmd == nil then
+    echo.err "open command does not support this OS yet"
+    return
   end
+
+  Job:new({
+    command = cmd,
+    args = args,
+    on_exit = vim.schedule_wrap(function(_, return_code)
+      if return_code > 0 then
+        echo.err "failed opening Obsidian app to note"
+      end
+    end),
+  }):start()
 end
 
 ---Get backlinks to a note.
