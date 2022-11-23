@@ -51,7 +51,6 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
 " (optional) for :ObsidianSearch command if you prefer this over fzf.vim:
-Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 
 " (optional) recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter:
