@@ -51,7 +51,6 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
 " (optional) for :ObsidianSearch command if you prefer this over fzf.vim:
-Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 
 " (optional) recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter:
@@ -113,7 +112,7 @@ require("obsidian").setup({
       suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
     else
       -- If title is nil, just add 4 random uppercase letters to the suffix.
-      for _ in 1, 4 do
+      for _ = 1, 4 do
         suffix = suffix .. string.char(math.random(65, 90))
       end
     end
