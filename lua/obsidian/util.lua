@@ -51,7 +51,12 @@ util.urlencode = function(str)
   local url = str
   url = url:gsub("\n", "\r\n")
   url = url:gsub("([^%w _%%%-%.~])", char_to_hex)
-  url = url:gsub(" ", "+")
+
+  -- Spaces in URLs are always safely encoded with `%20`, but not always safe
+  -- with `+`. For example, `+` in a query param's value will be interpreted
+  -- as a literal plus-sign if the decoder is using JavaScript's `decodeURI`
+  -- function.
+  url = url:gsub(" ", "%%20")
   return url
 end
 

@@ -97,16 +97,24 @@ command.open = function(client, data)
 
   local encoded_vault = util.urlencode(vault_name)
   local encoded_path = util.urlencode(tostring(path))
+
+  local uri
+  if client.opts.use_advanced_uri then
+    local line = vim.api.nvim_win_get_cursor(0)[1] or 1
+    uri = ("obsidian://advanced-uri?vault=%s&filepath=%s&line=%i"):format(encoded_vault, encoded_path, line)
+  else
+    uri = ("obsidian://open?vault=%s&file=%s"):format(encoded_vault, encoded_path)
+  end
+
   local cmd = nil
-  local url = ("obsidian://open?vault=%s&file=%s"):format(encoded_vault, encoded_path)
   local args = {}
   local sysname = vim.loop.os_uname().sysname
   if sysname == "Linux" then
     cmd = "xdg-open"
-    args = { url }
+    args = { uri }
   elseif sysname == "Darwin" then
     cmd = "open"
-    args = { "-a", "/Applications/Obsidian.app", "--background", url }
+    args = { "-a", "/Applications/Obsidian.app", "--background", uri }
   end
 
   if cmd == nil then

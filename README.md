@@ -218,3 +218,17 @@ vim.keymap.set(
 ```
 
 The other benefit of doing this is that it will now work even if your cursor is on the enclosing brackets (`[[` or `]]`) or the alias part of a reference (the part after `|`).
+
+#### Navigate to the current line when using `:ObsidianOpen`
+
+If you have the [Obsidian Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin enabled, the Obsidian editor can automatically navigate to the same line in the current NeoVim buffer. For files that are already open, it will update the cursor position within Obsidian's editor. To enable this feature, add `use_advanced_uri = true` to the setup options. For example:
+```lua
+require("obsidian").setup({
+  dir = "~/my-vault",
+  notes_subdir = "notes",
+  daily_notes = {
+    folder = "notes/dailies",
+  },
+  use_advanced_uri = true
+})
+```

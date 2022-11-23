@@ -12,12 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `:ObsidianFollowLink` and companion function `util.cursor_on_markdown_link`
 - Added `:ObsidianLink` and `:ObsidianLinkNew` commands.
 - Added configuration option `disable_frontmatter` for frontmatter disabling
+- Added line-navigation to :ObsidianOpen via the Obsidian Advanced URI plugin
 
 ### Fixed
 
 - Fixed bug with `Note.from_lines` where the given path would be modified in place to be relative to the root, which caused a bug in `:ObsidianFollowLink`.
 - Completion for creating new notes via nvim-cmp is now aware of daily notes, so when you start typing todays date in the form of YYYY-MM-DD, you get a "Create new" completion option for today's daily note if it doesn't exist yet.
 - Fixed bug where `:ObsidianOpen` blocked the NeoVim UI on Linux.
+- Fixed URL encoding of space characters for better compatibility with external applications.
 
 ## [v1.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.6.1) - 2022-10-17
 
