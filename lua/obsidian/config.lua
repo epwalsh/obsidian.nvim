@@ -7,6 +7,7 @@ local config = {}
 ---@field notes_subdir string|?
 ---@field note_id_func function|?
 ---@field note_frontmatter_func function|?
+---@field disable_frontmatter bool|?
 ---@field completion obsidian.config.CompletionOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 config.ClientOpts = {}
@@ -19,6 +20,7 @@ config.ClientOpts.default = function()
     notes_subdir = nil,
     note_id_func = nil,
     note_frontmatter_func = nil,
+    disable_frontmatter = false,
     completion = config.CompletionOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
   }
