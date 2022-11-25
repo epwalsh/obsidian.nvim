@@ -323,10 +323,6 @@ Navigate to the current line when using `:ObsidianOpen` If you have the
 >
     require("obsidian").setup({
       dir = "~/my-vault",
-      notes_subdir = "notes",
-      daily_notes = {
-        folder = "notes/dailies",
-      },
       use_advanced_uri = true
     })
 <
