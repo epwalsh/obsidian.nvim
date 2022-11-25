@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `:ObsidianFollowLink` and companion function `util.cursor_on_markdown_link`
 - Added `:ObsidianLink` and `:ObsidianLinkNew` commands.
 - Added configuration option `disable_frontmatter` for frontmatter disabling
+- Added line-navigation to `:ObsidianOpen` via the Obsidian Advanced URI plugin
 
 ### Fixed
 
