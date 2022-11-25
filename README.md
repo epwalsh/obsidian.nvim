@@ -225,10 +225,6 @@ If you have the [Obsidian Advanced URI](https://github.com/Vinzent03/obsidian-ad
 ```lua
 require("obsidian").setup({
   dir = "~/my-vault",
-  notes_subdir = "notes",
-  daily_notes = {
-    folder = "notes/dailies",
-  },
   use_advanced_uri = true
 })
 ```
