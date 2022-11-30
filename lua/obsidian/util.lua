@@ -298,8 +298,8 @@ end
 -- @return boolean
 util.is_working_day = function(time)
   local is_saturday = (os.date("%w", time) == 5)
-  local is_sunday   = (os.date("%w", time) == 6)
-  return not(is_saturday or is_sunday)
+  local is_sunday = (os.date("%w", time) == 6)
+  return not (is_saturday or is_sunday)
 end
 
 -- Determines The working day before a given time
@@ -308,7 +308,7 @@ end
 --
 -- @return time
 util.working_day_before = function(time)
-  local previous_day = time - (24*60*60)
+  local previous_day = time - (24 * 60 * 60)
   if util.is_working_day(previous_day) then
     return previous_day
   else
