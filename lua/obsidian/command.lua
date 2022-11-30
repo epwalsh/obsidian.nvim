@@ -54,6 +54,15 @@ command.today = function(client, _)
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
+---Create (or open) yesterday daily note.
+---
+---@param client obsidian.Client
+---@param _ table
+command.yesterday = function(client, _)
+  local note = client:yesterday()
+  vim.api.nvim_command("e " .. tostring(note.path))
+end
+
 ---Create a new note.
 ---
 ---@param client obsidian.Client
@@ -373,6 +382,7 @@ end
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
+  ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
