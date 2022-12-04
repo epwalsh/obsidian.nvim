@@ -297,8 +297,8 @@ end
 --
 -- @return boolean
 util.is_working_day = function(time)
-  local is_saturday = (os.date("%w", time) == 5)
-  local is_sunday = (os.date("%w", time) == 6)
+  local is_saturday = (os.date("%w", time) == "6")
+  local is_sunday = (os.date("%w", time) == "0")
   return not (is_saturday or is_sunday)
 end
 
