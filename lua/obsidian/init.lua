@@ -271,7 +271,7 @@ client.today = function(self)
   return note
 end
 
----Open (or create) yesterday daily note.
+---Open (or create) the daily note from the last weekday.
 ---
 ---@return obsidian.Note
 client.yesterday = function(self)

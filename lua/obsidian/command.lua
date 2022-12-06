@@ -54,7 +54,7 @@ command.today = function(client, _)
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
----Create (or open) yesterday daily note.
+---Create (or open) the daily note from the last weekday.
 ---
 ---@param client obsidian.Client
 ---@param _ table

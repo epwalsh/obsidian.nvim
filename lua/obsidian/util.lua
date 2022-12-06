@@ -302,7 +302,7 @@ util.is_working_day = function(time)
   return not (is_saturday or is_sunday)
 end
 
--- Determines The working day before a given time
+-- Determines the last working day before a given time
 --
 -- @param time a Time
 --
