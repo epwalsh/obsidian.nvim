@@ -212,11 +212,23 @@ note.from_lines = function(lines, path, root)
     if ok then
       for k, v in pairs(data) do
         if k == "id" then
-          id = v
+          if type(v) == "string" then
+            id = v
+          else
+            echo.warn("Invalid 'id' in frontmatter for " .. path)
+          end
         elseif k == "aliases" then
-          aliases = v
+          if type(v) == "table" then
+            aliases = v
+          else
+            echo.warn("Invalid 'aliases' in frontmatter for " .. path)
+          end
         elseif k == "tags" then
-          tags = v
+          if type(v) == "table" then
+            tags = v
+          else
+            echo.warn("Invalid 'tags' in frontmatter for " .. path)
+          end
         else
           if metadata == nil then
             metadata = {}
