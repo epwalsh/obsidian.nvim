@@ -16,6 +16,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
 - `:ObsidianToday` to create a new daily note.
+- `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
 - `:ObsidianOpen` to open a note in the Obsidian app.
   This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew` to create a new note.

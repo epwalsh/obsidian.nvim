@@ -291,4 +291,29 @@ util.cursor_on_markdown_link = function()
   end
 end
 
+-- Determines if the given date is a working day (not weekend)
+--
+-- @param time a Time
+--
+-- @return boolean
+util.is_working_day = function(time)
+  local is_saturday = (os.date("%w", time) == "6")
+  local is_sunday = (os.date("%w", time) == "0")
+  return not (is_saturday or is_sunday)
+end
+
+-- Determines the last working day before a given time
+--
+-- @param time a Time
+--
+-- @return time
+util.working_day_before = function(time)
+  local previous_day = time - (24 * 60 * 60)
+  if util.is_working_day(previous_day) then
+    return previous_day
+  else
+    return util.working_day_before(previous_day)
+  end
+end
+
 return util
