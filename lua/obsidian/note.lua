@@ -211,12 +211,24 @@ note.from_lines = function(lines, path, root)
     local ok, data = pcall(yaml.loads, frontmatter)
     if ok then
       for k, v in pairs(data) do
-        if k == "id" and type(v) == "string" then
-          id = v
-        elseif k == "aliases" and type(v) == "table" then
-          aliases = v
-        elseif k == "tags" and type(v) == "table" then
-          tags = v
+        if k == "id" then
+          if type(v) == "string" then
+            id = v
+          else
+            echo.warn("Invalid 'id' in frontmatter for " .. path)
+          end
+        elseif k == "aliases" then
+          if type(v) == "table" then
+            aliases = v
+          else
+            echo.warn("Invalid 'aliases' in frontmatter for " .. path)
+          end
+        elseif k == "tags" then
+          if type(v) == "table" then
+            tags = v
+          else
+            echo.warn("Invalid 'tags' in frontmatter for " .. path)
+          end
         else
           if metadata == nil then
             metadata = {}
