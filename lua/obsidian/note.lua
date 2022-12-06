@@ -211,11 +211,11 @@ note.from_lines = function(lines, path, root)
     local ok, data = pcall(yaml.loads, frontmatter)
     if ok then
       for k, v in pairs(data) do
-        if k == "id" then
+        if k == "id" and type(v) == "string" then
           id = v
-        elseif k == "aliases" then
+        elseif k == "aliases" and type(v) == "table" then
           aliases = v
-        elseif k == "tags" then
+        elseif k == "tags" and type(v) == "table" then
           tags = v
         else
           if metadata == nil then
