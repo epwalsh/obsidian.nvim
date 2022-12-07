@@ -161,6 +161,22 @@ require("obsidian").setup({
 })
 ```
 
+#### Customizing daily notes' date format
+
+You can customize the file name of your daily notes by providing a date format:
+
+```lua
+require("obsidian").setup({
+  dir = "~/my-vault",
+  daily_notes = {
+    date_format = function()
+      return os.date("%Y%m%d")  -- format: year, month and date
+    end,
+  }
+})
+```
+
+
 #### Using nvim-treesitter
 
 If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:
