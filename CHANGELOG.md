@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug where `:ObsidianOpen` blocked the NeoVim UI on Linux.
 - Fixed URL encoding of space characters for better compatibility with external applications.
 - Made more robust to unexpected types in frontmatter.
+- Fixed edge case where frontmatter consisting of exactly one empty field would raise an exception.
 
 ## [v1.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.6.1) - 2022-10-17
 
