@@ -199,6 +199,47 @@ command.search = function(client, data)
   end
 end
 
+---Quick switch to an obsidian note
+---
+---@param client obsidian.Client
+---@param data table
+command.quick_switch = function(client, data)
+  local dir = tostring(client.dir)
+  local has_telescope, telescope = pcall(require, "telescope.builtin")
+
+  ---Helper function to convert a table with the list of table_params
+  ---into a single string with params separated by spaces
+  ---@param table_params a table with the list of params
+  ---@return a single string with params separated by spaces
+  table_params_to_str = function(table_params)
+      local s = ""
+      for i, param in ipairs(table_params) do
+          s = s .. " " .. param
+      end
+      return s
+  end
+
+  if has_telescope then
+    -- Search with telescope.nvim
+    telescope.find_files { cwd = dir , search_file = "*.md"}
+    return
+  end
+
+  -- Fall back to trying with fzf.vim
+  local has_fzf, _ = pcall(function()
+    local base_cmd = vim.tbl_flatten { util.FIND_CMD, { dir, "-name", "'*.md'" } }
+    base_cmd = table_params_to_str(base_cmd)
+    local fzf_options = { source = base_cmd, sink = "e" }
+    vim.api.nvim_call_function("fzf#run", {
+      vim.api.nvim_call_function("fzf#wrap", {fzf_options}),
+    })
+  end)
+
+  if not has_fzf then
+    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianQuickSwitch command"
+  end
+end
+
 command.link_new = function(client, data)
   local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
   local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
@@ -385,6 +426,7 @@ local commands = {
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
+  ObsidianQuickSwitch = { func = command.quick_switch, opts = { nargs = 0 } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },

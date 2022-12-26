@@ -23,6 +23,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   This command has one optional argument: the title of the new note.
 - `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
   This command has one optional argument: a search query to start with.
+- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
   This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
@@ -37,7 +38,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - If you want completion and search features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
-Search functionality via the `:ObsidianSearch` command also requires either [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+Search functionality via the `:ObsidianSearch` and `:ObsidianQuickSwitch` command also requires either [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ### Install
 
@@ -47,11 +48,11 @@ Using `vim-plug`, for example:
 " (optional) for completion:
 Plug 'hrsh7th/nvim-cmp'
 
-" (optional) for :ObsidianSearch command unless you use telescope:
+" (optional) for :ObsidianSearch and :ObsidianQuickSwitch commands unless you use telescope:
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
-" (optional) for :ObsidianSearch command if you prefer this over fzf.vim:
+" (optional) for :ObsidianSearch and :ObsidianQuickSwitch command if you prefer this over fzf.vim:
 Plug 'nvim-telescope/telescope.nvim'
 
 " (optional) recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter:

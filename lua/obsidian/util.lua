@@ -61,6 +61,7 @@ util.urlencode = function(str)
 end
 
 util.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
+util.FIND_CMD = { "find" }
 
 ---@class MatchPath
 ---@field text string
