@@ -35,4 +35,8 @@ describe("obsidian.util", function()
       assert.equals(indices[i][2], expected_indices[i][2])
     end
   end)
+  it("should convert a list of params into a string", function()
+    local as_string = util.table_params_to_str { "find", "/home/user/obsidian", "-name", "*.md" }
+    assert.equals(as_string, "find /home/user/obsidian -name *.md")
+  end)
 end)

@@ -259,6 +259,22 @@ util.is_array = function(t)
   return true
 end
 
+---Helper function to convert a table with the list of table_params
+---into a single string with params separated by spaces
+---@param table_params a table with the list of params
+---@return a single string with params separated by spaces
+util.table_params_to_str = function(table_params)
+  local s = ""
+  for i, param in ipairs(table_params) do
+    if #s > 0 then
+      s = s .. " " .. param
+    else
+      s = param
+    end
+  end
+  return s
+end
+
 util.strip = function(s)
   local out = string.gsub(s, "^%s+", "")
   return out
