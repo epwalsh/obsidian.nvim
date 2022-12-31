@@ -51,6 +51,9 @@ Plug 'hrsh7th/nvim-cmp'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
+" (optional) another alternative for the :ObsidianSearch command:
+Plug 'ibhagwan/fzf-lua'
+
 " (optional) for :ObsidianSearch command if you prefer this over fzf.vim:
 Plug 'nvim-telescope/telescope.nvim'
 
