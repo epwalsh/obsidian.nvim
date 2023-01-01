@@ -145,6 +145,40 @@ end
 ---Get backlinks to a note.
 ---
 ---@param client obsidian.Client
+command.cursor_backlinks = function(client, _)
+  local open, close = util.cursor_on_markdown_link()
+
+  local current_line = vim.api.nvim_get_current_line()
+
+  if open == nil or close == nil then
+    echo.err "Cursor is not on a reference!"
+    return
+  end
+
+  local note_name = current_line:sub(open + 2, close - 1)
+
+  if note_name:match "|[^%]]*" then
+    note_name = note_name:sub(1, note_name:find "|" - 1)
+  end
+
+  if not note_name:match "%.md" then
+    note_name = note_name .. ".md"
+  end
+
+  local ok, backlinks = pcall(function()
+    return require("obsidian.backlinks").new(client, note_name)
+  end)
+  if ok then
+    echo.info(("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id))
+    backlinks:view()
+  else
+    echo.err "Backlinks command can only be used from a valid note"
+  end
+end
+
+---Get backlinks to a note.
+---
+---@param client obsidian.Client
 command.backlinks = function(client, _)
   local ok, backlinks = pcall(function()
     return require("obsidian.backlinks").new(client)
@@ -399,6 +433,7 @@ local commands = {
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
+  ObsidianFollowBackLink = { func = command.cursor_backlinks, opts = { nargs = 0 } },
 }
 
 ---Register all commands.
