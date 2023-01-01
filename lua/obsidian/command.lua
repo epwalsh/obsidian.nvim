@@ -353,7 +353,7 @@ local get_note_name = function()
   return note_name
 end
 
----Get backlinks to a note.
+---Find backlinks for the note under the cursor
 ---
 ---@param client obsidian.Client
 command.cursor_backlinks = function(client, _)
