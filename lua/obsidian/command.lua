@@ -433,7 +433,7 @@ local commands = {
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
-  ObsidianFollowBackLink = { func = command.cursor_backlinks, opts = { nargs = 0 } },
+  ObsidianCursorBacklinks = { func = command.cursor_backlinks, opts = { nargs = 0 } },
 }
 
 ---Register all commands.
