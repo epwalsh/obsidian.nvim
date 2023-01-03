@@ -210,7 +210,7 @@ note.from_lines = function(lines, path, root)
     local frontmatter = table.concat(frontmatter_lines, "\n")
     local ok, data = pcall(yaml.loads, frontmatter)
     if type(data) == 'string' then
-      data = {data = nil}
+      data = {}
     end
     if ok then
       for k, v in pairs(data) do
@@ -296,29 +296,27 @@ note.frontmatter_lines = function(self, eol, frontmatter)
   local new_lines = { "---" }
 
   local frontmatter_ = frontmatter and frontmatter or self:frontmatter()
-  for _, line in
-    ipairs(yaml.dumps_lines(frontmatter_, function(a, b)
-      local a_idx = nil
-      local b_idx = nil
-      for i, k in ipairs { "id", "aliases", "tags" } do
-        if a == k then
-          a_idx = i
-        end
-        if b == k then
-          b_idx = i
-        end
+  for _, line in ipairs(yaml.dumps_lines(frontmatter_, function(a, b)
+    local a_idx = nil
+    local b_idx = nil
+    for i, k in ipairs { "id", "aliases", "tags" } do
+      if a == k then
+        a_idx = i
       end
-      if a_idx ~= nil and b_idx ~= nil then
-        return a_idx < b_idx
-      elseif a_idx ~= nil then
-        return true
-      elseif b_idx ~= nil then
-        return false
-      else
-        return a < b
+      if b == k then
+        b_idx = i
       end
-    end))
-  do
+    end
+    if a_idx ~= nil and b_idx ~= nil then
+      return a_idx < b_idx
+    elseif a_idx ~= nil then
+      return true
+    elseif b_idx ~= nil then
+      return false
+    else
+      return a < b
+    end
+  end)) do
     table.insert(new_lines, line)
   end
 
