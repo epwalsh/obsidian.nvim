@@ -209,6 +209,9 @@ note.from_lines = function(lines, path, root)
   if #frontmatter_lines > 0 then
     local frontmatter = table.concat(frontmatter_lines, "\n")
     local ok, data = pcall(yaml.loads, frontmatter)
+    if type(data) == "string" then
+      data = {}
+    end
     if ok then
       for k, v in pairs(data) do
         if k == "id" then
@@ -226,6 +229,8 @@ note.from_lines = function(lines, path, root)
         elseif k == "tags" then
           if type(v) == "table" then
             tags = v
+          elseif type(v) == "string" then
+            tags = vim.split(v, " ")
           else
             echo.warn("Invalid 'tags' in frontmatter for " .. path)
           end
