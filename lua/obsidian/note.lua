@@ -229,6 +229,8 @@ note.from_lines = function(lines, path, root)
         elseif k == "tags" then
           if type(v) == "table" then
             tags = v
+          elseif type(v) == "string" then
+            tags = vim.split(v, " ")
           else
             echo.warn("Invalid 'tags' in frontmatter for " .. path)
           end
