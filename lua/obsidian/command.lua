@@ -187,7 +187,7 @@ command.search = function(client, data)
     if data.args:len() > 0 then
       fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
     else
-      fzf_lua.live_grep { cwd = tostring(client.dir) }
+      fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
     end
     return
   end
