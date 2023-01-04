@@ -181,6 +181,17 @@ command.search = function(client, data)
     return
   end
 
+  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+
+  if has_fzf_lua then
+    if data.args:len() > 0 then
+      fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
+    else
+      fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
+    end
+    return
+  end
+
   -- Fall back to trying with fzf.vim
   local has_fzf, _ = pcall(function()
     local grep_cmd =
@@ -195,7 +206,7 @@ command.search = function(client, data)
   end)
 
   if not has_fzf then
-    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianSearch command"
+    echo.err "Either telescope.nvim, fzf-lua or fzf.vim is required for :ObsidianSearch command"
   end
 end
 
