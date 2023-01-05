@@ -357,7 +357,7 @@ end
 ---
 ---@param client obsidian.Client
 command.cursor_backlinks = function(client, _)
-  local note_name = get_note_name()
+  local note_name = util.get_note_name()
   if note_name == nil then
     return
   end
@@ -381,7 +381,7 @@ command.follow = function(client, _)
   local path = client.dir
 
   local notes = {}
-  local note_name = get_note_name()
+  local note_name = util.get_note_name()
   if note_name == nil then
     return
   end
