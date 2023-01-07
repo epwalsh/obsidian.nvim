@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added configuration option `disable_frontmatter` for frontmatter disabling
 - Added line-navigation to `:ObsidianOpen` via the Obsidian Advanced URI plugin
 - Added `:ObsidianYesterday` command to open/create the previous working day daily note
+- Added `:ObsidianCursorBacklinks` command to open the backlinks under the cursor
 
 ### Fixed
 
