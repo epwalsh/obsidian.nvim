@@ -362,8 +362,29 @@ command.cursor_backlinks = function(client, _)
     return
   end
 
+  local scan = require "plenary.scandir"
+  local notepath = ""
+  if not note_name:match "/" then
+    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
+      hidden = false,
+      add_dirs = false,
+      only_dirs = true,
+      respect_gitignore = true,
+      on_insert = function(entry)
+        ---@type Path
+        ---@diagnostic disable-next-line: assign-type-mismatch
+        local n = Path:new(entry) / note_name
+        if n:is_file() then
+          local ok, _ = pcall(Note.from_file, n, client.dir)
+          if ok then
+            notepath = n.filename
+          end
+        end
+      end,
+    })
+  end
   local ok, backlinks = pcall(function()
-    return require("obsidian.backlinks").new(client, note_name)
+    return require("obsidian.backlinks").new(client, notepath)
   end)
   if ok then
     echo.info(("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id))
