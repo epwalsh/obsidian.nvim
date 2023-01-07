@@ -330,7 +330,7 @@ command.complete_args = function(client, _, cmd_line, _)
   return completions
 end
 
----Find backlinks for the note under the cursor
+---Find backlinks for the note under the cursor.
 ---
 ---@param client obsidian.Client
 command.cursor_backlinks = function(client, _)
