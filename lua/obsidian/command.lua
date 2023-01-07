@@ -330,29 +330,6 @@ command.complete_args = function(client, _, cmd_line, _)
   return completions
 end
 
----Get cursor note name
-local get_note_name = function()
-  local open, close = util.cursor_on_markdown_link()
-  local current_line = vim.api.nvim_get_current_line()
-
-  if open == nil or close == nil then
-    echo.err "Cursor is not on a reference!"
-    return
-  end
-
-  local note_name = current_line:sub(open + 2, close - 1)
-  local note_file_name = note_name
-
-  if note_file_name:match "|[^%]]*" then
-    note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
-  end
-
-  if not note_file_name:match "%.md" then
-    note_file_name = note_file_name .. ".md"
-  end
-  return note_name
-end
-
 ---Find backlinks for the note under the cursor
 ---
 ---@param client obsidian.Client
