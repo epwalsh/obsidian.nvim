@@ -334,7 +334,7 @@ end
 ---
 ---@param client obsidian.Client
 command.cursor_backlinks = function(client, _)
-  local note_name = util.get_note_name()
+  local note_name, _ = util.get_note_name()
   if note_name == nil then
     return
   end
@@ -379,7 +379,7 @@ command.follow = function(client, _)
   local path = client.dir
 
   local notes = {}
-  local note_file_name = util.get_note_name()
+  local note_name, note_file_name = util.get_note_name()
   if note_file_name == nil then
     return
   end
@@ -405,7 +405,7 @@ command.follow = function(client, _)
   end
 
   if #notes < 1 then
-    command.new(client, { args = note_file_name })
+    command.new(client, { args = note_name })
   elseif #notes == 1 then
     local path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
