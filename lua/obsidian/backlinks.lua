@@ -57,16 +57,18 @@ local backlinks = {}
 ---Create a new backlinks object.
 ---
 ---@param client obsidian.Client
+---@param notepath string|?
 ---@param bufnr integer|?
 ---@param winnr integer|?
 ---@return obsidian.Backlinks
-backlinks.new = function(client, bufnr, winnr)
+backlinks.new = function(client, notepath, bufnr, winnr)
   local self = setmetatable({}, { __index = backlinks })
   self.client = client
   self.bufnr = bufnr and bufnr or vim.fn.bufnr()
   self.winnr = winnr and winnr or vim.fn.winnr()
   self.bufname = vim.api.nvim_buf_get_name(self.bufnr)
-  self.note = Note.from_file(self.bufname)
+  local path = notepath and notepath or self.bufname
+  self.note = Note.from_file(path)
   return self
 end
 

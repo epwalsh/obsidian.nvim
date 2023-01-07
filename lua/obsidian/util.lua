@@ -1,4 +1,5 @@
 local scan = require "plenary.scandir"
+local echo = require "obsidian.echo"
 
 local util = {}
 
@@ -314,6 +315,32 @@ util.working_day_before = function(time)
   else
     return util.working_day_before(previous_day)
   end
+end
+
+---Get the filename of the note under the cursor.
+---
+---@return string note name
+---@return string note file name
+util.get_note_name = function()
+  local open, close = util.cursor_on_markdown_link()
+  local current_line = vim.api.nvim_get_current_line()
+
+  if open == nil or close == nil then
+    echo.err "Cursor is not on a reference!"
+    return
+  end
+
+  local note_name = current_line:sub(open + 2, close - 1)
+  local note_file_name = note_name
+
+  if note_file_name:match "|[^%]]*" then
+    note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
+  end
+
+  if not note_file_name:match "%.md" then
+    note_file_name = note_file_name .. ".md"
+  end
+  return note_name, note_file_name
 end
 
 return util

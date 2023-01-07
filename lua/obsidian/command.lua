@@ -330,32 +330,59 @@ command.complete_args = function(client, _, cmd_line, _)
   return completions
 end
 
+---Find backlinks for the note under the cursor.
+---
+---@param client obsidian.Client
+command.cursor_backlinks = function(client, _)
+  local note_name, _ = util.get_note_name()
+  if note_name == nil then
+    return
+  end
+
+  local scan = require "plenary.scandir"
+  local notepath = ""
+  if not note_name:match "/" then
+    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
+      hidden = false,
+      add_dirs = false,
+      only_dirs = true,
+      respect_gitignore = true,
+      on_insert = function(entry)
+        ---@type Path
+        ---@diagnostic disable-next-line: assign-type-mismatch
+        local n = Path:new(entry) / note_name
+        if n:is_file() then
+          local ok, _ = pcall(Note.from_file, n, client.dir)
+          if ok then
+            notepath = n.filename
+          end
+        end
+      end,
+    })
+  end
+  local ok, backlinks = pcall(function()
+    return require("obsidian.backlinks").new(client, notepath)
+  end)
+  if ok then
+    echo.info(("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id))
+    backlinks:view()
+  else
+    echo.err "Backlinks command can only be used from a valid note"
+  end
+end
+
 ---Follow link under cursor.
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
   local scan = require "plenary.scandir"
-
-  local open, close = util.cursor_on_markdown_link()
-  local current_line = vim.api.nvim_get_current_line()
-
-  if open == nil or close == nil then
-    echo.err "Cursor is not on a reference!"
-    return
-  end
-
-  local note_name = current_line:sub(open + 2, close - 1)
-  local note_file_name = note_name
-
-  if note_file_name:match "|[^%]]*" then
-    note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
-  end
-
-  if not note_file_name:match "%.md" then
-    note_file_name = note_file_name .. ".md"
-  end
+  local path = client.dir
 
   local notes = {}
+  local note_name, note_file_name = util.get_note_name()
+  if note_file_name == nil then
+    return
+  end
 
   if not note_file_name:match "/" then
     scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
@@ -399,6 +426,7 @@ local commands = {
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
+  ObsidianCursorBacklinks = { func = command.cursor_backlinks, opts = { nargs = 0 } },
 }
 
 ---Register all commands.
