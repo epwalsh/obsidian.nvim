@@ -52,18 +52,18 @@ obsidian.setup = function(opts)
 
   -- Ensure directories exist.
   self.dir:mkdir { parents = true, exists_ok = true }
-  vim.cmd("set path+=" .. tostring(self.dir))
+  vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(self.dir)))
 
   if self.opts.notes_subdir ~= nil then
     local notes_subdir = self.dir / self.opts.notes_subdir
     notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. tostring(notes_subdir))
+    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(notes_subdir)))
   end
 
   if self.opts.daily_notes.folder ~= nil then
     local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. tostring(daily_notes_subdir))
+    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(daily_notes_subdir)))
   end
 
   -- Register commands.
