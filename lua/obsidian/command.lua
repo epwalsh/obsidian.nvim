@@ -220,7 +220,7 @@ command.quick_switch = function(client, data)
 
   if has_telescope then
     -- Search with telescope.nvim
-    telescope.find_files { cwd = dir , search_file = "*.md"}
+    telescope.find_files { cwd = dir, search_file = "*.md" }
     return
   end
 
@@ -230,7 +230,7 @@ command.quick_switch = function(client, data)
     base_cmd = util.table_params_to_str(base_cmd)
     local fzf_options = { source = base_cmd, sink = "e" }
     vim.api.nvim_call_function("fzf#run", {
-      vim.api.nvim_call_function("fzf#wrap", {fzf_options}),
+      vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
     })
   end)
 

@@ -304,7 +304,7 @@ end
 ---@return a single string with params separated by spaces
 util.table_params_to_str = function(table_params)
   local s = ""
-  for i, param in ipairs(table_params) do
+  for _, param in ipairs(table_params) do
     if #s > 0 then
       s = s .. " " .. param
     else
