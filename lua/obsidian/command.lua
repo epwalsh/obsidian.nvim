@@ -334,8 +334,6 @@ end
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
-  local scan = require "plenary.scandir"
-
   local open, close = util.cursor_on_markdown_link()
   local current_line = vim.api.nvim_get_current_line()
 
@@ -355,33 +353,7 @@ command.follow = function(client, _)
     note_file_name = note_file_name .. ".md"
   end
 
-  local notes = {}
-
-  local visit_dir = function(entry)
-    ---@type Path
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    local note_path = Path:new(entry) / note_file_name
-    if note_path:is_file() then
-      local ok, _ = pcall(Note.from_file, note_path, client.dir)
-      if ok then
-        table.insert(notes, note_path)
-      end
-    end
-  end
-
-  if not note_file_name:match "/" then
-    local root_dir = vim.fs.normalize(tostring(client.dir))
-    -- We must separately check the vault's root dir because scan_dir will
-    -- skip it, but Obsidian does allow root-level notes.
-    visit_dir(root_dir)
-    scan.scan_dir(root_dir, {
-      hidden = false,
-      add_dirs = false,
-      only_dirs = true,
-      respect_gitignore = true,
-      on_insert = visit_dir,
-    })
-  end
+  local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
     command.new(client, { args = note_name })
