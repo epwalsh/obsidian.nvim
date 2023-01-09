@@ -100,6 +100,7 @@ util.urlencode = function(str)
 end
 
 util.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
+util.FIND_CMD = { "find" }
 
 ---@class MatchPath
 ---@field text string
@@ -295,6 +296,22 @@ util.is_array = function(t)
     end
   end
   return true
+end
+
+---Helper function to convert a table with the list of table_params
+---into a single string with params separated by spaces
+---@param table_params a table with the list of params
+---@return a single string with params separated by spaces
+util.table_params_to_str = function(table_params)
+  local s = ""
+  for _, param in ipairs(table_params) do
+    if #s > 0 then
+      s = s .. " " .. param
+    else
+      s = param
+    end
+  end
+  return s
 end
 
 util.strip = function(s)

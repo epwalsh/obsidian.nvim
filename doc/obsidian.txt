@@ -41,6 +41,7 @@ COMMANDS ~
     This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew` to create a new note.
     This command has one optional argument: the title of the new note.
+- `:ObsidianQuickSwitch` to fuzzy-find and open an existing note, using fzf.vim <https://github.com/junegunn/fzf.vim> or telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>.
 - `:ObsidianSearch` to search for notes in your vault using ripgrep <https://github.com/BurntSushi/ripgrep> with fzf.vim <https://github.com/junegunn/fzf.vim> or telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>.
     This command has one optional argument: a search query to start with.
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
@@ -60,7 +61,7 @@ REQUIREMENTS ~
     See ripgrep#installation <https://github.com/BurntSushi/ripgrep> for install options.
 
 
-Search functionality via the `:ObsidianSearch` command also requires either
+Search functionality via the `:ObsidianSearch or :ObsidianQuickSwitch` command also requires either
 fzf.vim <https://github.com/junegunn/fzf.vim> or telescope.nvim
 <https://github.com/nvim-telescope/telescope.nvim>.
 
@@ -72,14 +73,14 @@ Using `vim-plug`, for example:
     " (optional) for completion:
     Plug 'hrsh7th/nvim-cmp'
     
-    " (optional) for :ObsidianSearch command unless you use telescope:
+    " (optional) for :ObsidianQuickSwitch and :ObsidianSearch command unless you use telescope:
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
     
-    " (optional) another alternative for the :ObsidianSearch command:
+    " (optional) another alternative for the :ObsidianQuickSwitch and :ObsidianSearch commands:
     Plug 'ibhagwan/fzf-lua'
     
-    " (optional) for :ObsidianSearch command if you prefer this over fzf.vim:
+    " (optional) for :ObsidianQuickSwitch and :ObsidianSearch command if you prefer this over fzf.vim:
     Plug 'nvim-telescope/telescope.nvim'
     
     " (optional) recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter:
