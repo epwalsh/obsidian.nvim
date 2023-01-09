@@ -36,6 +36,7 @@ config.ClientOpts.normalize = function(opts)
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
+  opts.dir = vim.fs.normalize(tostring(opts.dir))
   return opts
 end
 
