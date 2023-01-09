@@ -181,6 +181,17 @@ command.search = function(client, data)
     return
   end
 
+  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+
+  if has_fzf_lua then
+    if data.args:len() > 0 then
+      fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
+    else
+      fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
+    end
+    return
+  end
+
   -- Fall back to trying with fzf.vim
   local has_fzf, _ = pcall(function()
     local grep_cmd =
@@ -195,7 +206,7 @@ command.search = function(client, data)
   end)
 
   if not has_fzf then
-    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianSearch command"
+    echo.err "Either telescope.nvim, fzf-lua or fzf.vim is required for :ObsidianSearch command"
   end
 end
 
@@ -352,8 +363,6 @@ end
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
-  local scan = require "plenary.scandir"
-
   local open, close = util.cursor_on_markdown_link()
   local current_line = vim.api.nvim_get_current_line()
 
@@ -363,44 +372,22 @@ command.follow = function(client, _)
   end
 
   local note_name = current_line:sub(open + 2, close - 1)
-  local path = client.dir
+  local note_file_name = note_name
 
-  if note_name:match "|[^%]]*" then
-    note_name = note_name:sub(1, note_name:find "|" - 1)
+  if note_file_name:match "|[^%]]*" then
+    note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
   end
 
-  if not note_name:match "%.md" then
-    note_name = note_name .. ".md"
+  if not note_file_name:match "%.md" then
+    note_file_name = note_file_name .. ".md"
   end
 
-  local notes = {}
-
-  if not note_name:match "/" then
-    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
-      hidden = false,
-      add_dirs = false,
-      only_dirs = true,
-      respect_gitignore = true,
-      on_insert = function(entry)
-        ---@type Path
-        ---@diagnostic disable-next-line: assign-type-mismatch
-        local note_path = Path:new(entry) / note_name
-        if note_path:is_file() then
-          local ok, _ = pcall(Note.from_file, note_path, client.dir)
-          if ok then
-            table.insert(notes, note_path)
-          end
-        end
-      end,
-    })
-  end
+  local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
-    ---@diagnostic disable-next-line: cast-local-type
-    path = path / note_name
-    vim.api.nvim_command("e " .. tostring(path))
+    command.new(client, { args = note_name })
   elseif #notes == 1 then
-    path = notes[1]
+    local path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
   else
     echo.err "Multiple notes with this name exist"

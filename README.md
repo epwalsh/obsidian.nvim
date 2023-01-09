@@ -52,7 +52,10 @@ Plug 'hrsh7th/nvim-cmp'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
-" (optional) for :ObsidianSearch and :ObsidianQuickSwitch command if you prefer this over fzf.vim:
+" (optional) another alternative for the :ObsidianSearch and :ObsidianQuickSwitch commands:
+Plug 'ibhagwan/fzf-lua'
+
+" (optional) for :ObsidianSearch and :ObsidianQuickSwitch commands if you prefer this over fzf.vim:
 Plug 'nvim-telescope/telescope.nvim'
 
 " (optional) recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter:
@@ -189,7 +192,7 @@ require("obsidian").setup({
     local out = { id = note.id, aliases = note.aliases, tags = note.tags }
     -- `note.metadata` contains any manually added fields in the frontmatter.
     -- So here we just make sure those fields are kept in the frontmatter.
-    if note.metadata ~= nil and util.table_length(note.metadata) > 0 then
+    if note.metadata ~= nil and require("obsidian").util.table_length(note.metadata) > 0 then
       for k, v in pairs(note.metadata) do
         out[k] = v
       end

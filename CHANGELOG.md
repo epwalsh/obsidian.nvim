@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added support for [fzf-lua](https://github.com/ibhagwan/fzf-lua) as one of the possible fallbacks for the `:ObsidianSearch` command.
 - Added `:ObsidianFollowLink` and companion function `util.cursor_on_markdown_link`
 - Added `:ObsidianLink` and `:ObsidianLinkNew` commands.
 - Added configuration option `disable_frontmatter` for frontmatter disabling
@@ -22,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug where `:ObsidianOpen` blocked the NeoVim UI on Linux.
 - Fixed URL encoding of space characters for better compatibility with external applications.
 - Made more robust to unexpected types in frontmatter.
+- Fixed edge case where frontmatter consisting of exactly one empty field would raise an exception.
+- Fixed `:ObsidianFollowLink` not creating a new note when following a dangling link; matches behavior in the official Obsidian app.
+- Fixed handling spaces in configured vault directory.
+- Fixed `:ObsidianFollowLink` not considering the vault's root directory.
 
 ## [v1.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.6.1) - 2022-10-17
 
