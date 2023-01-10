@@ -73,11 +73,6 @@ obsidian.setup = function(opts)
   local lazy_setup = function()
     -- Configure completion...
     if opts.completion.nvim_cmp then
-      -- Check for ripgrep.
-      if os.execute "rg --help" > 0 then
-        echo.err "Can't find 'rg' command! Did you forget to install ripgrep?"
-      end
-
       -- Add source.
       local cmp = require "cmp"
       local sources = {
