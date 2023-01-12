@@ -21,9 +21,9 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew` to create a new note.
   This command has one optional argument: the title of the new note.
-- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim). 
   This command has one optional argument: a search query to start with.
-- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
   This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
