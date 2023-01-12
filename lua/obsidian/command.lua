@@ -224,6 +224,15 @@ command.quick_switch = function(client, data)
     return
   end
 
+  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+
+  if has_fzf_lua then
+    local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+    cmd = util.table_params_to_str(cmd)
+    fzf_lua.files { cmd = cmd, cwd = tostring(client.dir) }
+    return
+  end
+
   -- Fall back to trying with fzf.vim
   local has_fzf, _ = pcall(function()
     local base_cmd = vim.tbl_flatten { util.FIND_CMD, { dir, "-name", "'*.md'" } }
