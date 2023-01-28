@@ -128,7 +128,6 @@ command.open = function(client, data)
     cmd = "powershell"
     args = { "Start-Process '" .. uri .."'" }
   end
-  end
 
   if cmd == nil then
     echo.err "open command does not support this OS yet"
