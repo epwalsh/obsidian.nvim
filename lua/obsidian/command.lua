@@ -101,6 +101,9 @@ command.open = function(client, data)
     end
   else
     local bufname = vim.api.nvim_buf_get_name(0)
+    if vim.loop.os_uname().sysname == "Windows_NT" then
+      bufname = bufname:gsub("/","\\")
+    end
     path = Path:new(bufname):make_relative(vault)
   end
 
