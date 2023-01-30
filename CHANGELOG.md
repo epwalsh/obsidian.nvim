@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug with `Note.from_lines` where the given path would be modified in place to be relative to the root, which caused a bug in `:ObsidianFollowLink`.
 - Completion for creating new notes via nvim-cmp is now aware of daily notes, so when you start typing todays date in the form of YYYY-MM-DD, you get a "Create new" completion option for today's daily note if it doesn't exist yet.
 - Fixed bug where `:ObsidianOpen` blocked the NeoVim UI on Linux.
+- `:ObsidianOpen` should now work on Windows.
 - Fixed URL encoding of space characters for better compatibility with external applications.
 - Made more robust to unexpected types in frontmatter.
 - Fixed edge case where frontmatter consisting of exactly one empty field would raise an exception.
