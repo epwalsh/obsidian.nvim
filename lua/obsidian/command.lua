@@ -102,7 +102,7 @@ command.open = function(client, data)
   else
     local bufname = vim.api.nvim_buf_get_name(0)
     if vim.loop.os_uname().sysname == "Windows_NT" then
-      bufname = bufname:gsub("/","\\")
+      bufname = bufname:gsub("/", "\\")
     end
     path = Path:new(bufname):make_relative(vault)
   end
@@ -129,7 +129,7 @@ command.open = function(client, data)
     args = { "-a", "/Applications/Obsidian.app", "--background", uri }
   elseif sysname == "Windows_NT" then
     cmd = "powershell"
-    args = { "Start-Process '" .. uri .."'" }
+    args = { "Start-Process '" .. uri .. "'" }
   end
 
   if cmd == nil then
