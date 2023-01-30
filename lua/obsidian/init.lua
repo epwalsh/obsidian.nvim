@@ -187,8 +187,9 @@ end
 ---
 ---@param title string|?
 ---@param id string|?
+---@param dir string|Path|?
 ---@return obsidian.Note
-client.new_note = function(self, title, id)
+client.new_note = function(self, title, id, dir)
   -- Generate new ID if needed.
   local new_id = id and id or self:new_note_id(title)
   if new_id == tostring(os.date "%Y-%m-%d") then
@@ -197,8 +198,8 @@ client.new_note = function(self, title, id)
 
   -- Get path.
   ---@type Path
-  local path = Path:new(self.dir)
-  if self.opts.notes_subdir ~= nil then
+  local path = dir == nil and Path:new(self.dir) or Path:new(dir)
+  if dir == nil and self.opts.notes_subdir ~= nil then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.notes_subdir

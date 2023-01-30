@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed handling spaces in configured vault directory.
 - Fixed `:ObsidianFollowLink` not considering the vault's root directory.
 
+### Changed
+
+- The new note completion source will now create the new note in the same directory as the current note, regardless of the `notes_subdir` setting.
+
 ## [v1.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.6.1) - 2022-10-17
 
 ### Fixed
