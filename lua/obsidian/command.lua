@@ -277,7 +277,7 @@ command.link_new = function(client, data)
   else
     title = string.sub(line, cscol, cecol)
   end
-  local note = client:new_note(title)
+  local note = client:new_note(title, nil, vim.fn.expand "%:p:h")
 
   line = string.sub(line, 1, cscol - 1)
     .. "[["
