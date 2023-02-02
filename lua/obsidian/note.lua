@@ -158,7 +158,6 @@ end
 ---@return obsidian.Note
 note.from_lines = function(lines, path, root)
   local cwd = tostring(root and root or "./")
-  local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
 
   local id = nil
   local title = nil
@@ -249,9 +248,13 @@ note.from_lines = function(lines, path, root)
     table.insert(aliases, title)
   end
 
-  -- Fall back to using the relative path as the ID.
-  if id == nil then
-    id = relative_path
+  -- The ID should match the filename with or without the extension.
+  local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
+  local relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
+  local fname = vim.fs.basename(relative_path)
+  local fname_no_ext = vim.fn.fnamemodify(fname, ":r")
+  if id ~= relative_path and id ~= relative_path_no_ext and id ~= fname and id ~= fname_no_ext then
+    id = fname_no_ext
   end
 
   local n = note.new(id, aliases, tags, path)
