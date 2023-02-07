@@ -82,6 +82,13 @@ local char_to_hex = function(c)
   return string.format("%%%02X", string.byte(c))
 end
 
+---Escape characters in a string for literal matching in a pattern.
+---@param str string
+---@return string
+util.pattern_escape = function(str)
+  return (str:gsub("[%-%.%+%[%]%(%)%$%^%%%?%*]", "%%%1"))
+end
+
 ---Encode a string into URL-safe version.
 ---
 ---@param str string
@@ -196,6 +203,36 @@ util.replace_refs = function(s)
   out, _ = out:gsub("%[%[([^%]]+)%]%]", "%1")
   out, _ = out:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
   return out
+end
+
+---Relink references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with a new link.
+---
+---@param line string
+---@param old_id string
+---@param new_id string
+---@returns string, boolean
+util.relink_refs = function(line, old_id, new_id)
+  local replaced = false
+  local escaped_old_id = util.pattern_escape(old_id)
+  -- Obsidian link with alias: [[foo|Foo]]
+  if line:match("%[%[" .. escaped_old_id .. "%|[^]]+%]%]") ~= nil then
+    replaced = true
+    line = line:gsub("%[%[" .. escaped_old_id .. "%|", "[[" .. new_id .. "|")
+  end
+
+  -- Obsidian link without alias: [[foo]]
+  if line:match("%[%[" .. escaped_old_id .. "%]%]") ~= nil then
+    replaced = true
+    line = line:gsub("%[%[" .. escaped_old_id .. "%]%]", "[[" .. new_id .. "]]")
+  end
+
+  -- Regular markdown link: [Foo](foo)
+  if line:match("%[[^]]+%]%(" .. escaped_old_id .. "%)") ~= nil then
+    replaced = true
+    line = line:gsub("%]%(" .. escaped_old_id .. "%)", "](" .. new_id .. ")")
+  end
+
+  return line, replaced
 end
 
 ---Find refs and URLs.
@@ -327,8 +364,9 @@ util.table_length = function(x)
   return n
 end
 
--- Determines if cursor is currently inside markdown link
--- @return integer, integer
+---Determines if cursor is currently inside link.
+---
+---@return integer|?, integer|?
 util.cursor_on_markdown_link = function()
   local current_line = vim.api.nvim_get_current_line()
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -347,22 +385,45 @@ util.cursor_on_markdown_link = function()
   end
 end
 
--- Determines if the given date is a working day (not weekend)
---
--- @param time a Time
---
--- @return boolean
+---Get the link name and note ID/path of the link under the cursor, if there is one.
+---
+---@returns string|?, string|?
+util.cursor_link = function()
+  local open, close = util.cursor_on_markdown_link()
+  local current_line = vim.api.nvim_get_current_line()
+
+  if open == nil or close == nil then
+    return nil, nil
+  end
+
+  local link = current_line:sub(open + 2, close - 1)
+
+  local name = link
+  local path_or_id = link
+  if link:match "|[^%]]*" then
+    name = link:sub(link:find "|" + 1, link:find "]")
+    path_or_id = link:sub(1, link:find "|" - 1)
+  end
+
+  return name, path_or_id
+end
+
+---Determines if the given date is a working day (not weekend)
+---
+---@param time integer
+---
+---@return boolean
 util.is_working_day = function(time)
   local is_saturday = (os.date("%w", time) == "6")
   local is_sunday = (os.date("%w", time) == "0")
   return not (is_saturday or is_sunday)
 end
 
--- Determines the last working day before a given time
---
--- @param time a Time
---
--- @return time
+---Determines the last working day before a given time
+---
+---@param time integer
+---
+---@return integer
 util.working_day_before = function(time)
   local previous_day = time - (24 * 60 * 60)
   if util.is_working_day(previous_day) then
@@ -370,6 +431,23 @@ util.working_day_before = function(time)
   else
     return util.working_day_before(previous_day)
   end
+end
+
+---Get a list of all buffers.
+---
+---@return integer[]
+util.get_buffers = function()
+  local buffers = {}
+  local len = 0
+
+  for buffer = 1, vim.fn.bufnr "$" do
+    if vim.fn.buflisted(buffer) == 1 then
+      len = len + 1
+      buffers[len] = buffer
+    end
+  end
+
+  return buffers
 end
 
 return util

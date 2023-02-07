@@ -36,6 +36,14 @@ describe("obsidian.util", function()
       assert.equals(indices[i][2], expected_indices[i][2])
     end
   end)
+  it("should relink refs to a new link", function()
+    local old_id = "foo"
+    local new_id = "bar"
+    local line = "- [[foo|Foo]] and [[foo]] and [Foo](foo)"
+    local new_line, replaced = util.relink_refs(line, old_id, new_id)
+    assert.equals(replaced, true)
+    assert.equals(new_line, "- [[bar|Foo]] and [[bar]] and [Foo](bar)")
+  end)
   it("should convert a list of params into a string", function()
     local as_string = util.table_params_to_str { "find", "/home/user/obsidian", "-name", "*.md" }
     assert.equals(as_string, "find /home/user/obsidian -name *.md")

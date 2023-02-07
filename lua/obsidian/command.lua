@@ -329,7 +329,7 @@ command.link = function(client, data)
   vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
 end
 
-command.complete_args = function(client, _, cmd_line, _)
+command.complete_args_search = function(client, _, cmd_line, _)
   local search
   local cmd_arg, _ = util.strip(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
   if string.len(cmd_arg) > 0 then
@@ -378,26 +378,17 @@ end
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
-  local open, close = util.cursor_on_markdown_link()
-  local current_line = vim.api.nvim_get_current_line()
-
-  if open == nil or close == nil then
+  local note_name, note_path = util.cursor_link()
+  if note_name == nil or note_path == nil then
     echo.err "Cursor is not on a reference!"
     return
   end
 
-  local note_name = current_line:sub(open + 2, close - 1)
-  local note_file_name = note_name
-
-  if note_file_name:match "|[^%]]*" then
-    note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
+  if note_path:match "%.md" == nil then
+    note_path = note_path .. ".md"
   end
 
-  if not note_file_name:match "%.md" then
-    note_file_name = note_file_name .. ".md"
-  end
-
-  local notes = util.find_note(client.dir, note_file_name)
+  local notes = util.find_note(client.dir, note_path)
 
   if #notes < 1 then
     command.new(client, { args = note_name })
@@ -410,18 +401,78 @@ command.follow = function(client, _)
   end
 end
 
+command.complete_args_id = function(_, _, cmd_line, _)
+  local cmd_arg, _ = util.strip(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
+  if string.len(cmd_arg) > 0 then
+    return {}
+  else
+    local _, note_id = util.cursor_link()
+    if note_id == nil then
+      local bufpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
+      local note = Note.from_file(bufpath)
+      note_id = note.id
+    end
+    return { note_id }
+  end
+end
+
+---Rename the current note and update all backlinks in the process.
+command.rename = function(_, data)
+  local new_id = data.args
+  local bufpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
+  local note = Note.from_file(bufpath)
+  local old_id = note.id
+
+  local bufdir = vim.fn.fnamemodify(bufpath, ":h")
+  local new_bufpath = tostring(Path:new(bufdir) / (new_id .. ".md"))
+
+  if new_bufpath == bufpath then
+    echo.warn "New name is the same, doing nothing"
+    return
+  end
+
+  -- Rename the buffer.
+  echo.info("Renaming " .. bufpath .. " to " .. new_bufpath)
+  vim.cmd.saveas(new_bufpath)
+  vim.fn.delete(bufpath)
+
+  -- Update backlinks.
+  echo.info("Updating backlinks from " .. old_id .. " to " .. new_id)
+
+  -- Update open buffers.
+  for _, bufnr in ipairs(util.get_buffers()) do
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    if bufname:match "%.md" ~= nil then
+      local buf_updated = false
+      for linenr, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+        local newline, should_update = util.relink_refs(line, old_id, new_id)
+        if should_update then
+          buf_updated = true
+          vim.api.nvim_buf_set_lines(bufnr, linenr - 1, linenr, false, { newline })
+        end
+      end
+      if buf_updated then
+        echo.info("Updated refs in " .. bufname)
+      end
+    end
+  end
+
+  -- TODO: update files that are not loaded to buffers
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
-  ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
+  ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args_search },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
   ObsidianQuickSwitch = { func = command.quick_switch, opts = { nargs = 0 } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
-  ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
+  ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args_search },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
+  ObsidianRename = { func = command.rename, opts = { nargs = "+" }, complete = command.complete_args_id },
 }
 
 ---Register all commands.
