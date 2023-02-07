@@ -56,7 +56,7 @@ source.execute = function(_, item, callback)
   local data = item.data
   local client = obsidian.new(data.opts)
   client:new_note(data.title, data.id, vim.fn.expand "%:p:h")
-  return callback
+  return callback { }
 end
 
 ---Get opts.
