@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a bug where creating a new note with `nvim-cmp` completion
   would cause `nvim-cmp` to stop working.
+- Fixed bug where `disable_frontmatter` setting would be ignored for `:ObsidianNew` command.
 
 ## [v1.7.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.7.0) - 2023-02-02
 

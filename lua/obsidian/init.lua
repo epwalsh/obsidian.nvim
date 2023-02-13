@@ -218,7 +218,7 @@ client.new_note = function(self, title, id, dir)
 
   -- Create Note object and save.
   local note = obsidian.note.new(new_id, aliases, {}, path)
-  note:save()
+  note:save(nil, not self.opts.disable_frontmatter)
   echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
 
   return note
