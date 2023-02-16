@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed handling spaces in configured vault directory.
 - Fixed `:ObsidianFollowLink` not considering the vault's root directory.
 - Fixed bug where the note ID in the YAML frontmatter wasn't updated after the file is renamed.
+- Fixed `require` module name syntax; see #93 for explanation.
 
 ### Changed
 
