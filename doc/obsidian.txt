@@ -70,6 +70,9 @@ INSTALL ~
 Using `vim-plug`, for example:
 
 >
+    " (required)
+    Plug 'nvim-lua/plenary.nvim'
+    
     " (optional) for completion:
     Plug 'hrsh7th/nvim-cmp'
     
