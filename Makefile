@@ -13,9 +13,7 @@ test :
 
 .PHONY : lint
 lint :
-	luacheck after lua \
-		--exclude-files='lua/deps/*' \
-		--exclude-files='lua/plenary/*'
+	luacheck after lua
 
 .PHONY : style
 style :

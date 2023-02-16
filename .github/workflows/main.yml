@@ -16,6 +16,8 @@ on:
 
 env:
   runtime: ~/.local/share/nvim/site/pack/vendor/start
+  plenary-git: https://github.com/nvim-lua/plenary.nvim
+  plenary-path: ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
 
 jobs:
   style:
@@ -84,6 +86,7 @@ jobs:
             mkdir -p _neovim
             curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
           }
+          git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
           ln -s $(pwd) ${{ env.runtime }}
 
       - name: Prepare
@@ -103,7 +106,9 @@ jobs:
     needs: [checks, style]
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v4
