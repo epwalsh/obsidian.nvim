@@ -1,4 +1,4 @@
-local _yaml = require "../deps/lua_yaml/yaml"
+local _yaml = require "deps.lua_yaml.yaml"
 local util = require "obsidian.util"
 
 local yaml = {}
