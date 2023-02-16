@@ -15,8 +15,7 @@ test :
 lint :
 	luacheck after lua \
 		--exclude-files='lua/deps/*' \
-		--exclude-files='lua/plenary/*' \
-		--exclude-files='lua/yaml.lua'
+		--exclude-files='lua/plenary/*'
 
 .PHONY : style
 style :
