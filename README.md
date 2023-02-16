@@ -45,6 +45,9 @@ Search functionality via the `:ObsidianSearch` and `:ObsidianQuickSwitch` comman
 Using `vim-plug`, for example:
 
 ```vim
+" (required)
+Plug 'nvim-lua/plenary.nvim'
+
 " (optional) for completion:
 Plug 'hrsh7th/nvim-cmp'
 
