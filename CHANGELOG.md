@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed a bug where creating a new note with `nvim-cmp` completion
+  would cause `nvim-cmp` to stop working.
+- Fixed bug where `disable_frontmatter` setting would be ignored for `:ObsidianNew` command.
+
+## [v1.7.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.7.0) - 2023-02-02
+
 ### Added
 
+- Added support for [fzf-lua](https://github.com/ibhagwan/fzf-lua) as one of the possible fallbacks for the `:ObsidianQuickSwitch` command.
+- Added `:ObsidianQuickSwitch` to fuzzy-find a note by name in telescope/fzf _a la_ <C-O> in Obsidian.
 - Added support for [fzf-lua](https://github.com/ibhagwan/fzf-lua) as one of the possible fallbacks for the `:ObsidianSearch` command.
 - Added `:ObsidianFollowLink` and companion function `util.cursor_on_markdown_link`
 - Added `:ObsidianLink` and `:ObsidianLinkNew` commands.
@@ -21,11 +31,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug with `Note.from_lines` where the given path would be modified in place to be relative to the root, which caused a bug in `:ObsidianFollowLink`.
 - Completion for creating new notes via nvim-cmp is now aware of daily notes, so when you start typing todays date in the form of YYYY-MM-DD, you get a "Create new" completion option for today's daily note if it doesn't exist yet.
 - Fixed bug where `:ObsidianOpen` blocked the NeoVim UI on Linux.
+- `:ObsidianOpen` should now work on Windows.
 - Fixed URL encoding of space characters for better compatibility with external applications.
 - Made more robust to unexpected types in frontmatter.
 - Fixed edge case where frontmatter consisting of exactly one empty field would raise an exception.
 - Fixed `:ObsidianFollowLink` not creating a new note when following a dangling link; matches behavior in the official Obsidian app.
-- Replace relative module name with idiomatic name; see #93 for explanation.
+- Fixed handling spaces in configured vault directory.
+- Fixed `:ObsidianFollowLink` not considering the vault's root directory.
+- Fixed bug where the note ID in the YAML frontmatter wasn't updated after the file is renamed.
+- Fixed `require` module name syntax; see #93 for explanation.
+
+### Changed
+
+- The new note completion source will now create the new note in the same directory as the current note, regardless of the `notes_subdir` setting.
 
 ## [v1.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.6.1) - 2022-10-17
 

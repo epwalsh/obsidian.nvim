@@ -101,6 +101,9 @@ command.open = function(client, data)
     end
   else
     local bufname = vim.api.nvim_buf_get_name(0)
+    if vim.loop.os_uname().sysname == "Windows_NT" then
+      bufname = bufname:gsub("/", "\\")
+    end
     path = Path:new(bufname):make_relative(vault)
   end
 
@@ -124,6 +127,9 @@ command.open = function(client, data)
   elseif sysname == "Darwin" then
     cmd = "open"
     args = { "-a", "/Applications/Obsidian.app", "--background", uri }
+  elseif sysname == "Windows_NT" then
+    cmd = "powershell"
+    args = { "Start-Process '" .. uri .. "'" }
   end
 
   if cmd == nil then
@@ -210,6 +216,44 @@ command.search = function(client, data)
   end
 end
 
+---Quick switch to an obsidian note
+---
+---@param client obsidian.Client
+---@param data table
+command.quick_switch = function(client, data)
+  local dir = tostring(client.dir)
+  local has_telescope, telescope = pcall(require, "telescope.builtin")
+
+  if has_telescope then
+    -- Search with telescope.nvim
+    telescope.find_files { cwd = dir, search_file = "*.md" }
+    return
+  end
+
+  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+
+  if has_fzf_lua then
+    local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+    cmd = util.table_params_to_str(cmd)
+    fzf_lua.files { cmd = cmd, cwd = tostring(client.dir) }
+    return
+  end
+
+  -- Fall back to trying with fzf.vim
+  local has_fzf, _ = pcall(function()
+    local base_cmd = vim.tbl_flatten { util.FIND_CMD, { dir, "-name", "'*.md'" } }
+    base_cmd = util.table_params_to_str(base_cmd)
+    local fzf_options = { source = base_cmd, sink = "e" }
+    vim.api.nvim_call_function("fzf#run", {
+      vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
+    })
+  end)
+
+  if not has_fzf then
+    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianQuickSwitch command"
+  end
+end
+
 command.link_new = function(client, data)
   local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
   local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
@@ -233,7 +277,7 @@ command.link_new = function(client, data)
   else
     title = string.sub(line, cscol, cecol)
   end
-  local note = client:new_note(title)
+  local note = client:new_note(title, nil, vim.fn.expand "%:p:h")
 
   line = string.sub(line, 1, cscol - 1)
     .. "[["
@@ -334,8 +378,6 @@ end
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
-  local scan = require "plenary.scandir"
-
   local open, close = util.cursor_on_markdown_link()
   local current_line = vim.api.nvim_get_current_line()
 
@@ -355,27 +397,7 @@ command.follow = function(client, _)
     note_file_name = note_file_name .. ".md"
   end
 
-  local notes = {}
-
-  if not note_file_name:match "/" then
-    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
-      hidden = false,
-      add_dirs = false,
-      only_dirs = true,
-      respect_gitignore = true,
-      on_insert = function(entry)
-        ---@type Path
-        ---@diagnostic disable-next-line: assign-type-mismatch
-        local note_path = Path:new(entry) / note_file_name
-        if note_path:is_file() then
-          local ok, _ = pcall(Note.from_file, note_path, client.dir)
-          if ok then
-            table.insert(notes, note_path)
-          end
-        end
-      end,
-    })
-  end
+  local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
     command.new(client, { args = note_name })
@@ -394,6 +416,7 @@ local commands = {
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
+  ObsidianQuickSwitch = { func = command.quick_switch, opts = { nargs = 0 } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },

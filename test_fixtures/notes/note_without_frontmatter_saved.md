@@ -1,5 +1,5 @@
 ---
-id: "test_fixtures/notes/note_without_frontmatter.md"
+id: "note_without_frontmatter"
 aliases:
   - "Hey there"
 tags: []

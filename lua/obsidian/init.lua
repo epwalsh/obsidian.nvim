@@ -5,7 +5,7 @@ local config = require "obsidian.config"
 
 local obsidian = {}
 
-obsidian.VERSION = "1.6.1"
+obsidian.VERSION = "1.7.0"
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
@@ -52,18 +52,18 @@ obsidian.setup = function(opts)
 
   -- Ensure directories exist.
   self.dir:mkdir { parents = true, exists_ok = true }
-  vim.cmd("set path+=" .. tostring(self.dir))
+  vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(self.dir)))
 
   if self.opts.notes_subdir ~= nil then
     local notes_subdir = self.dir / self.opts.notes_subdir
     notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. tostring(notes_subdir))
+    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(notes_subdir)))
   end
 
   if self.opts.daily_notes.folder ~= nil then
     local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. tostring(daily_notes_subdir))
+    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(daily_notes_subdir)))
   end
 
   -- Register commands.
@@ -73,11 +73,6 @@ obsidian.setup = function(opts)
   local lazy_setup = function()
     -- Configure completion...
     if opts.completion.nvim_cmp then
-      -- Check for ripgrep.
-      if os.execute "rg --help" > 0 then
-        echo.err "Can't find 'rg' command! Did you forget to install ripgrep?"
-      end
-
       -- Add source.
       local cmp = require "cmp"
       local sources = {
@@ -192,8 +187,9 @@ end
 ---
 ---@param title string|?
 ---@param id string|?
+---@param dir string|Path|?
 ---@return obsidian.Note
-client.new_note = function(self, title, id)
+client.new_note = function(self, title, id, dir)
   -- Generate new ID if needed.
   local new_id = id and id or self:new_note_id(title)
   if new_id == tostring(os.date "%Y-%m-%d") then
@@ -202,8 +198,8 @@ client.new_note = function(self, title, id)
 
   -- Get path.
   ---@type Path
-  local path = Path:new(self.dir)
-  if self.opts.notes_subdir ~= nil then
+  local path = dir == nil and Path:new(self.dir) or Path:new(dir)
+  if dir == nil and self.opts.notes_subdir ~= nil then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.notes_subdir
@@ -222,7 +218,7 @@ client.new_note = function(self, title, id)
 
   -- Create Note object and save.
   local note = obsidian.note.new(new_id, aliases, {}, path)
-  note:save()
+  note:save(nil, not self.opts.disable_frontmatter)
   echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
 
   return note

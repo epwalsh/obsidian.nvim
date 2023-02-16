@@ -1,4 +1,5 @@
 local scan = require "plenary.scandir"
+local Path = require "plenary.path"
 
 local util = {}
 
@@ -26,6 +27,44 @@ util.find_markdown_files = function(dir)
     add_dirs = false,
     search_pattern = ".*%.md",
   })
+end
+
+---Find all notes with the given file_name recursively in a directory.
+---
+---@param dir string|Path
+---@param note_file_name string
+---@return Path[]
+util.find_note = function(dir, note_file_name)
+  local Note = require "obsidian.note"
+
+  local notes = {}
+  local root_dir = vim.fs.normalize(tostring(dir))
+
+  local visit_dir = function(entry)
+    ---@type Path
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local note_path = Path:new(entry) / note_file_name
+    if note_path:is_file() then
+      local ok, _ = pcall(Note.from_file, note_path, root_dir)
+      if ok then
+        table.insert(notes, note_path)
+      end
+    end
+  end
+
+  -- We must separately check the vault's root dir because scan_dir will
+  -- skip it, but Obsidian does allow root-level notes.
+  visit_dir(root_dir)
+
+  scan.scan_dir(root_dir, {
+    hidden = false,
+    add_dirs = false,
+    only_dirs = true,
+    respect_gitignore = true,
+    on_insert = visit_dir,
+  })
+
+  return notes
 end
 
 ---Quote a string for safe command-line usage.
@@ -61,6 +100,7 @@ util.urlencode = function(str)
 end
 
 util.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
+util.FIND_CMD = { "find" }
 
 ---@class MatchPath
 ---@field text string
@@ -256,6 +296,22 @@ util.is_array = function(t)
     end
   end
   return true
+end
+
+---Helper function to convert a table with the list of table_params
+---into a single string with params separated by spaces
+---@param table_params a table with the list of params
+---@return a single string with params separated by spaces
+util.table_params_to_str = function(table_params)
+  local s = ""
+  for _, param in ipairs(table_params) do
+    if #s > 0 then
+      s = s .. " " .. param
+    else
+      s = param
+    end
+  end
+  return s
 end
 
 util.strip = function(s)

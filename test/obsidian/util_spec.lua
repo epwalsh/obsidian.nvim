@@ -1,4 +1,5 @@
 local util = require "obsidian.util"
+local Path = require "plenary.path"
 
 describe("obsidian.util", function()
   it("should correctly URL-encode a path", function()
@@ -34,5 +35,19 @@ describe("obsidian.util", function()
       assert.equals(indices[i][1], expected_indices[i][1])
       assert.equals(indices[i][2], expected_indices[i][2])
     end
+  end)
+  it("should convert a list of params into a string", function()
+    local as_string = util.table_params_to_str { "find", "/home/user/obsidian", "-name", "*.md" }
+    assert.equals(as_string, "find /home/user/obsidian -name *.md")
+  end)
+  it("should recursively find notes in a directory given a file name", function()
+    local matches = util.find_note(".", "foo.md")
+    assert.equals(#matches, 1)
+    assert.equals(tostring(matches[1]), "./test_fixtures/notes/foo.md")
+  end)
+  it("should recursively find notes in a directory given a partial path", function()
+    local matches = util.find_note(".", "notes/foo.md")
+    assert.equals(#matches, 1)
+    assert.equals(tostring(matches[1]), "./test_fixtures/notes/foo.md")
   end)
 end)
