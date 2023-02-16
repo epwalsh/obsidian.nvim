@@ -1,6 +1,3 @@
-[submodule "lua/deps/lua_yaml"]
-	path = lua/deps/lua_yaml
-	url = https://github.com/exosite/lua-yaml.git
 [submodule "lua/deps/plenary"]
 	path = lua/deps/plenary
 	url = https://github.com/nvim-lua/plenary.nvim.git
