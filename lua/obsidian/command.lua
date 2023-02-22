@@ -201,7 +201,7 @@ command.search = function(client, data)
   -- Fall back to trying with fzf.vim
   local has_fzf, _ = pcall(function()
     local grep_cmd =
-      vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
+    vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
 
     vim.api.nvim_call_function("fzf#vim#grep", {
       table.concat(grep_cmd, " "),
@@ -213,6 +213,66 @@ command.search = function(client, data)
 
   if not has_fzf then
     echo.err "Either telescope.nvim, fzf-lua or fzf.vim is required for :ObsidianSearch command"
+  end
+end
+
+--- Insert a template
+---
+---@param client obsidian.Client
+---@param data table
+command.insert_template = function(client, data)
+  local has_telescope, telescope = pcall(require, "telescope.builtin")
+  if has_telescope then
+    -- Search with telescope.nvim
+
+    -- We need to get these upfront otherwise
+    -- Telescope hijacks the current window
+    local buf = vim.api.nvim_win_get_buf(0)
+    local win = vim.api.nvim_get_current_win()
+    local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+    local templates_dir = vim.fs.normalize(client.dir .. "/" .. client.opts.templates_subdir)
+    print(templates_dir)
+
+    local apply_template = function(name)
+      local template_path = templates_dir .. "/" .. name
+      local date = tostring(os.date("%Y-%m-%d"))
+      local fp = vim.api.nvim_buf_get_name(buf)
+      local _, _, title = string.find(vim.fs.normalize(fp), ".*/(.*)%.md")
+
+      local insert_lines = {}
+      local template_file = io.open(template_path, "r")
+      local lines = template_file:lines()
+      for line in lines do
+        line = string.gsub(line, "{{date}}", date)
+        line = string.gsub(line, "{{title}}", title)
+        table.insert(insert_lines, line)
+      end
+      template_file:close()
+
+      vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
+    end
+
+    local choose_template = function()
+      local opts = {
+        cwd = templates_dir,
+        attach_mappings = function(_, map)
+          map({ "i", "n" }, "<CR>", function(prompt_bufnr)
+            template = require("telescope.actions.state").get_selected_entry()
+            apply_template(template[1])
+            require("telescope.actions").close(prompt_bufnr)
+          end)
+
+          return true
+        end,
+      }
+      require("telescope.builtin").find_files(opts)
+    end
+    choose_template()
+    return
+  end
+
+  if not has_telescope then
+    echo.err "telescope.nvim is required to use the ObsidianTemplate command"
   end
 end
 
@@ -280,12 +340,12 @@ command.link_new = function(client, data)
   local note = client:new_note(title, nil, vim.fn.expand "%:p:h")
 
   line = string.sub(line, 1, cscol - 1)
-    .. "[["
-    .. note.id
-    .. "|"
-    .. string.sub(line, cscol, cecol)
-    .. "]]"
-    .. string.sub(line, cecol + 1)
+      .. "[["
+      .. note.id
+      .. "|"
+      .. string.sub(line, cscol, cecol)
+      .. "]]"
+      .. string.sub(line, cecol + 1)
   vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
 end
 
@@ -320,12 +380,12 @@ command.link = function(client, data)
   end
 
   line = string.sub(line, 1, cscol - 1)
-    .. "[["
-    .. note.id
-    .. "|"
-    .. string.sub(line, cscol, cecol)
-    .. "]]"
-    .. string.sub(line, cecol + 1)
+      .. "[["
+      .. note.id
+      .. "|"
+      .. string.sub(line, cscol, cecol)
+      .. "]]"
+      .. string.sub(line, cecol + 1)
   vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
 end
 
@@ -412,6 +472,7 @@ end
 
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
+  ObsidianTemplate = { func = command.insert_template, opts = { nargs = "?" } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
