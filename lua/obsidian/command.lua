@@ -233,59 +233,59 @@ command.insert_template = function(client, data)
   end
 
   local has_telescope, telescope = pcall(require, "telescope.builtin")
-  if has_telescope then
-    -- We need to get these upfront otherwise
-    -- Telescope hijacks the current window
-    local buf = vim.api.nvim_win_get_buf(0)
-    local win = vim.api.nvim_get_current_win()
-    local row, col = unpack(vim.api.nvim_win_get_cursor(win))
-
-    local apply_template = function(name)
-      local template_path = Path:new(templates_dir / name)
-      local date_format = client.opts.templates.date_format or "%Y-%m-%d"
-      local time_format = client.opts.templates.time_format or "%H:%M"
-      local date = tostring(os.date(date_format))
-      local time = tostring(os.date(time_format))
-      local fp = vim.api.nvim_buf_get_name(buf)
-      local _, _, title = string.find(vim.fs.normalize(fp), ".*/(.*)%.md")
-
-      local insert_lines = {}
-      local template_file = io.open(tostring(template_path), "r")
-      local lines = template_file:lines()
-      for line in lines do
-        line = string.gsub(line, "{{date}}", date)
-        line = string.gsub(line, "{{time}}", time)
-        line = string.gsub(line, "{{title}}", title)
-        table.insert(insert_lines, line)
-      end
-      template_file:close()
-
-      vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
-    end
-
-    local choose_template = function()
-      local opts = {
-        cwd = tostring(templates_dir),
-        attach_mappings = function(_, map)
-          map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-            template = require("telescope.actions.state").get_selected_entry()
-            apply_template(template[1])
-            require("telescope.actions").close(prompt_bufnr)
-          end)
-
-          return true
-        end,
-      }
-      require("telescope.builtin").find_files(opts)
-    end
-    choose_template()
+  if not has_telescope then
+    echo.err "telescope.nvim is required to use the ObsidianTemplate command"
     return
   end
 
-  if not has_telescope then
-    echo.err "telescope.nvim is required to use the ObsidianTemplate command"
+  -- We need to get these upfront otherwise
+  -- Telescope hijacks the current window
+  local buf = vim.api.nvim_win_get_buf(0)
+  local win = vim.api.nvim_get_current_win()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+
+  local apply_template = function(name)
+    local template_path = Path:new(templates_dir / name)
+    local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+    local time_format = client.opts.templates.time_format or "%H:%M"
+    local date = tostring(os.date(date_format))
+    local time = tostring(os.date(time_format))
+    local fp = vim.api.nvim_buf_get_name(buf)
+    local _, _, title = string.find(vim.fs.normalize(fp), ".*/(.*)%.md")
+
+    local insert_lines = {}
+    local template_file = io.open(tostring(template_path), "r")
+    local lines = template_file:lines()
+    for line in lines do
+      line = string.gsub(line, "{{date}}", date)
+      line = string.gsub(line, "{{time}}", time)
+      line = string.gsub(line, "{{title}}", title)
+      table.insert(insert_lines, line)
+    end
+    template_file:close()
+
+    vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
   end
+
+  local choose_template = function()
+    local opts = {
+      cwd = tostring(templates_dir),
+      attach_mappings = function(_, map)
+        map({ "i", "n" }, "<CR>", function(prompt_bufnr)
+          template = require("telescope.actions.state").get_selected_entry()
+          apply_template(template[1])
+          require("telescope.actions").close(prompt_bufnr)
+        end)
+
+        return true
+      end,
+    }
+    require("telescope.builtin").find_files(opts)
+  end
+  choose_template()
+  return
 end
+
 
 ---Quick switch to an obsidian note
 ---
