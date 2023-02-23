@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [`lua-yaml`](https://github.com/exosite/lua-yaml) no-longer bundled as a git submodule. Code from that project has been copied and modified into it's own Lua submodule of `obsidian`.
 - (BREAKING) 'nvim-lua/plenary.nvim' is no-longer bundled, so must be explicitly installed (e.g. Plug 'nvim-lua/plenary.nvim' in your `init.nvim`).
 
+### Added
+
+- Added `:ObsidianTemplate` to insert a template, configurable using a `templates` table passed to `setup()`.
+
 ### Fixed
 
 - Fixed a bug where creating a new note with `nvim-cmp` completion
