@@ -5,7 +5,10 @@ local config = {}
 ---@class obsidian.config.ClientOpts
 ---@field dir string
 ---@field notes_subdir string|?
----@field templates_subdir string|?
+---@field templates table|?
+---@field templates.subdir string
+---@field templates.date_format string
+---@field templates.time_format string
 ---@field note_id_func function|?
 ---@field note_frontmatter_func function|?
 ---@field disable_frontmatter boolean|?
@@ -20,7 +23,7 @@ config.ClientOpts.default = function()
   return {
     dir = vim.fs.normalize "./",
     notes_subdir = nil,
-    templates_subdir = nil,
+    templates = nil,
     note_id_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,

@@ -221,29 +221,40 @@ end
 ---@param client obsidian.Client
 ---@param data table
 command.insert_template = function(client, data)
+  if not client.opts.templates.subdir then
+    echo.err "No templates folder defined in setup()"
+    return
+  end
+
+  local templates_dir = Path:new(client.dir) / client.opts.templates.subdir
+  if not templates_dir:is_dir() then
+    echo.err(string.format("%s is not a valid directory for templates", templates_dir))
+    return
+  end
+
   local has_telescope, telescope = pcall(require, "telescope.builtin")
   if has_telescope then
-    -- Search with telescope.nvim
-
     -- We need to get these upfront otherwise
     -- Telescope hijacks the current window
     local buf = vim.api.nvim_win_get_buf(0)
     local win = vim.api.nvim_get_current_win()
     local row, col = unpack(vim.api.nvim_win_get_cursor(win))
-    local templates_dir = vim.fs.normalize(client.dir .. "/" .. client.opts.templates_subdir)
-    print(templates_dir)
 
     local apply_template = function(name)
-      local template_path = templates_dir .. "/" .. name
-      local date = tostring(os.date("%Y-%m-%d"))
+      local template_path = Path:new(templates_dir / name)
+      local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+      local time_format = client.opts.templates.time_format or "%H:%M"
+      local date = tostring(os.date(date_format))
+      local time = tostring(os.date(time_format))
       local fp = vim.api.nvim_buf_get_name(buf)
       local _, _, title = string.find(vim.fs.normalize(fp), ".*/(.*)%.md")
 
       local insert_lines = {}
-      local template_file = io.open(template_path, "r")
+      local template_file = io.open(tostring(template_path), "r")
       local lines = template_file:lines()
       for line in lines do
         line = string.gsub(line, "{{date}}", date)
+        line = string.gsub(line, "{{time}}", time)
         line = string.gsub(line, "{{title}}", title)
         table.insert(insert_lines, line)
       end
@@ -254,7 +265,7 @@ command.insert_template = function(client, data)
 
     local choose_template = function()
       local opts = {
-        cwd = templates_dir,
+        cwd = tostring(templates_dir),
         attach_mappings = function(_, map)
           map({ "i", "n" }, "<CR>", function(prompt_bufnr)
             template = require("telescope.actions.state").get_selected_entry()
