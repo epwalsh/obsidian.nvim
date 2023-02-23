@@ -232,7 +232,7 @@ command.insert_template = function(client, data)
     return
   end
 
-  local has_telescope, telescope = pcall(require, "telescope.builtin")
+  local has_telescope, _ = pcall(require, "telescope.builtin")
   if not has_telescope then
     echo.err "telescope.nvim is required to use the ObsidianTemplate command"
     return
@@ -242,7 +242,7 @@ command.insert_template = function(client, data)
   -- Telescope hijacks the current window
   local buf = vim.api.nvim_win_get_buf(0)
   local win = vim.api.nvim_get_current_win()
-  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+  local row, _ = unpack(vim.api.nvim_win_get_cursor(win))
 
   local apply_template = function(name)
     local template_path = Path:new(templates_dir / name)
@@ -272,11 +272,10 @@ command.insert_template = function(client, data)
       cwd = tostring(templates_dir),
       attach_mappings = function(_, map)
         map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-          template = require("telescope.actions.state").get_selected_entry()
+          local template = require("telescope.actions.state").get_selected_entry()
           apply_template(template[1])
           require("telescope.actions").close(prompt_bufnr)
         end)
-
         return true
       end,
     }
