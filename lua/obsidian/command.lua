@@ -251,7 +251,8 @@ command.insert_template = function(client, data)
     local date = tostring(os.date(date_format))
     local time = tostring(os.date(time_format))
     local fp = vim.api.nvim_buf_get_name(buf)
-    local _, _, title = string.find(vim.fs.normalize(fp), ".*/(.*)%.md")
+    local _, _, title = string.find(vim.fs.normalize(fp), ".*/(.-)%.md")
+    title = title or ""
 
     local insert_lines = {}
     local template_file = io.open(tostring(template_path), "r")
