@@ -232,12 +232,6 @@ command.insert_template = function(client, data)
     return
   end
 
-  local has_telescope, _ = pcall(require, "telescope.builtin")
-  if not has_telescope then
-    echo.err "telescope.nvim is required to use the ObsidianTemplate command"
-    return
-  end
-
   -- We need to get these upfront otherwise
   -- Telescope hijacks the current window
   local buf = vim.api.nvim_win_get_buf(0)
@@ -246,12 +240,13 @@ command.insert_template = function(client, data)
 
   local apply_template = function(name)
     local template_path = Path:new(templates_dir / name)
+    print(tostring(template_path))
     local date_format = client.opts.templates.date_format or "%Y-%m-%d"
     local time_format = client.opts.templates.time_format or "%H:%M"
     local date = tostring(os.date(date_format))
     local time = tostring(os.date(time_format))
-    local fp = vim.api.nvim_buf_get_name(buf)
-    local _, _, title = string.find(vim.fs.normalize(fp), ".*/(.-)%.md")
+    local current_fp = vim.api.nvim_buf_get_name(buf)
+    local _, _, title = string.find(vim.fs.normalize(current_fp), ".*/(.-)%.md")
     title = title or ""
 
     local insert_lines = {}
@@ -268,22 +263,48 @@ command.insert_template = function(client, data)
     vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
   end
 
-  local choose_template = function()
-    local opts = {
+  --[[ local has_telescope, _ = pcall(require, "telescope.builtin")
+  if has_telescope then
+    local choose_template = function()
+      local opts = {
+        cwd = tostring(templates_dir),
+        attach_mappings = function(_, map)
+          map({ "i", "n" }, "<CR>", function(prompt_bufnr)
+            local template = require("telescope.actions.state").get_selected_entry()
+            apply_template(template[1])
+            require("telescope.actions").close(prompt_bufnr)
+          end)
+          return true
+        end,
+      }
+      require("telescope.builtin").find_files(opts)
+    end
+    choose_template()
+    return
+  end ]]
+
+  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+
+  if has_fzf_lua then
+    local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+    cmd = util.table_params_to_str(cmd)
+    fzf_lua.files {
+      cmd = cmd,
       cwd = tostring(templates_dir),
-      attach_mappings = function(_, map)
-        map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-          local template = require("telescope.actions.state").get_selected_entry()
-          apply_template(template[1])
-          require("telescope.actions").close(prompt_bufnr)
-        end)
-        return true
-      end,
+      file_icons = false,
+      actions = { ["default"] =
+      function(entry)
+        -- for some reason fzf-lua passes the filename with 6 characters at the start
+        -- that appear on screen as 2 whitespace characters
+        -- so we need to start on the 7th character
+        local template = entry[1]:sub(7)
+        apply_template(template)
+      end
+      }
     }
-    require("telescope.builtin").find_files(opts)
+    return
   end
-  choose_template()
-  return
+
 end
 
 
