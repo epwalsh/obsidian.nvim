@@ -29,7 +29,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
-- `:ObsidianTemplates` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 
 ## Setup
 
@@ -171,7 +171,9 @@ require("obsidian").setup({
 
 #### Templates support
 
-To insert a template, run the command `:ObsidianTemplates`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported. 
+To insert a template, run the command `:ObsidianTemplate`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported. 
+
+For example, with the following configuration
 
 ```lua
 require("obsidian").setup({
@@ -183,6 +185,27 @@ require("obsidian").setup({
   }
 })
 ```
+and the file `~/my-vault/my-templates-folder/note template.md`:
+
+```markdown
+---
+aliases = []
+---
+
+# {{title}}
+Date created: {{date}}
+```
+
+creating the note `Configuring Neovim.md` and executing `:ObsidianTemplate` will insert
+```markdown
+---
+aliases = []
+---
+
+# Configuring Neovim
+Date created: 2023-03-01-Wed
+```
+above the cursor position.
 
 #### Using nvim-treesitter
 
