@@ -240,30 +240,32 @@ command.insert_template = function(client, data)
 
   local apply_template = function(name)
     local template_path = Path:new(templates_dir / name)
-    print(tostring(template_path))
     local date_format = client.opts.templates.date_format or "%Y-%m-%d"
     local time_format = client.opts.templates.time_format or "%H:%M"
     local date = tostring(os.date(date_format))
     local time = tostring(os.date(time_format))
     local current_fp = vim.api.nvim_buf_get_name(buf)
     local _, _, title = string.find(vim.fs.normalize(current_fp), ".*/(.-)%.md")
-    title = title or ""
+    title = title or vim.fs.basename(current_fp)
 
     local insert_lines = {}
     local template_file = io.open(tostring(template_path), "r")
-    local lines = template_file:lines()
-    for line in lines do
-      line = string.gsub(line, "{{date}}", date)
-      line = string.gsub(line, "{{time}}", time)
-      line = string.gsub(line, "{{title}}", title)
-      table.insert(insert_lines, line)
+    if template_file then
+      local lines = template_file:lines()
+      for line in lines do
+        line = string.gsub(line, "{{date}}", date)
+        line = string.gsub(line, "{{time}}", time)
+        line = string.gsub(line, "{{title}}", title)
+        table.insert(insert_lines, line)
+      end
+      template_file:close()
     end
-    template_file:close()
 
     vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
   end
 
-  --[[ local has_telescope, _ = pcall(require, "telescope.builtin")
+  -- try with telescope.nvim
+  local has_telescope, _ = pcall(require, "telescope.builtin")
   if has_telescope then
     local choose_template = function()
       local opts = {
@@ -281,10 +283,10 @@ command.insert_template = function(client, data)
     end
     choose_template()
     return
-  end ]]
+  end
 
+  -- try with fzf-lua
   local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
-
   if has_fzf_lua then
     local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
     cmd = util.table_params_to_str(cmd)
@@ -294,8 +296,8 @@ command.insert_template = function(client, data)
       file_icons = false,
       actions = { ["default"] =
       function(entry)
-        -- for some reason fzf-lua passes the filename with 6 characters at the start
-        -- that appear on screen as 2 whitespace characters
+        -- for some reason fzf-lua passes the filename with 6 characters
+        -- at the start that appear on screen as 2 whitespace characters
         -- so we need to start on the 7th character
         local template = entry[1]:sub(7)
         apply_template(template)
@@ -305,6 +307,29 @@ command.insert_template = function(client, data)
     return
   end
 
+
+  -- try with fzf
+  local has_fzf, _ = pcall(function()
+    vim.api.nvim_create_user_command("ApplyTemplate",
+      function(path)
+        -- remove escaped whitespace and extract the file name
+        local file_path = string.gsub(path.args, "\\ ", " ")
+        local template = vim.fs.basename(file_path)
+        apply_template(template)
+        vim.api.nvim_del_user_command("ApplyTemplate")
+      end, { nargs = 1, bang = true })
+
+    local base_cmd = vim.tbl_flatten { util.FIND_CMD, { tostring(templates_dir), "-name", "'*.md'" } }
+    base_cmd = util.table_params_to_str(base_cmd)
+    local fzf_options = { source = base_cmd, sink = 'ApplyTemplate' }
+    vim.api.nvim_call_function("fzf#run", {
+      vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
+    })
+  end)
+
+  if not has_fzf then
+    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianTemplate command"
+  end
 end
 
 
