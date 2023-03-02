@@ -194,10 +194,6 @@ Date created: {{date}}
 
 creating the note `Configuring Neovim.md` and executing `:ObsidianTemplate` will insert
 ```markdown
----
-aliases = []
----
-
 # Configuring Neovim
 Date created: 2023-03-01-Wed
 ```
