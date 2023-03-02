@@ -188,10 +188,6 @@ require("obsidian").setup({
 and the file `~/my-vault/my-templates-folder/note template.md`:
 
 ```markdown
----
-aliases = []
----
-
 # {{title}}
 Date created: {{date}}
 ```
