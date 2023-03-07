@@ -236,7 +236,7 @@ command.insert_template = function(client, data)
   -- Telescope hijacks the current window
   local buf = vim.api.nvim_win_get_buf(0)
   local win = vim.api.nvim_get_current_win()
-  local row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
 
   local apply_template = function(name)
     local template_path = Path:new(templates_dir / name)
@@ -259,9 +259,12 @@ command.insert_template = function(client, data)
         table.insert(insert_lines, line)
       end
       template_file:close()
+      table.insert(insert_lines, "")
     end
 
-    vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
+    vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
+    local new_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+    vim.api.nvim_win_set_cursor(0, { new_row, 0 })
   end
 
   -- try with telescope.nvim
@@ -273,8 +276,8 @@ command.insert_template = function(client, data)
         attach_mappings = function(_, map)
           map({ "i", "n" }, "<CR>", function(prompt_bufnr)
             local template = require("telescope.actions.state").get_selected_entry()
-            apply_template(template[1])
             require("telescope.actions").close(prompt_bufnr)
+            apply_template(template[1])
           end)
           return true
         end,
