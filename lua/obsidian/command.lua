@@ -216,6 +216,121 @@ command.search = function(client, data)
   end
 end
 
+--- Insert a template
+---
+---@param client obsidian.Client
+---@param data table
+command.insert_template = function(client, data)
+  if not client.opts.templates.subdir then
+    echo.err "No templates folder defined in setup()"
+    return
+  end
+
+  local templates_dir = Path:new(client.dir) / client.opts.templates.subdir
+  if not templates_dir:is_dir() then
+    echo.err(string.format("%s is not a valid directory for templates", templates_dir))
+    return
+  end
+
+  -- We need to get these upfront otherwise
+  -- Telescope hijacks the current window
+  local buf = vim.api.nvim_win_get_buf(0)
+  local win = vim.api.nvim_get_current_win()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+
+  local apply_template = function(name)
+    local template_path = Path:new(templates_dir / name)
+    local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+    local time_format = client.opts.templates.time_format or "%H:%M"
+    local date = tostring(os.date(date_format))
+    local time = tostring(os.date(time_format))
+    local title = Note.from_buffer(buf, client.dir):display_name()
+
+    local insert_lines = {}
+    local template_file = io.open(tostring(template_path), "r")
+    if template_file then
+      local lines = template_file:lines()
+      for line in lines do
+        line = string.gsub(line, "{{date}}", date)
+        line = string.gsub(line, "{{time}}", time)
+        line = string.gsub(line, "{{title}}", title)
+        table.insert(insert_lines, line)
+      end
+      template_file:close()
+      table.insert(insert_lines, "")
+    end
+
+    vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
+    local new_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+    vim.api.nvim_win_set_cursor(0, { new_row, 0 })
+  end
+
+  -- try with telescope.nvim
+  local has_telescope, _ = pcall(require, "telescope.builtin")
+  if has_telescope then
+    local choose_template = function()
+      local opts = {
+        cwd = tostring(templates_dir),
+        attach_mappings = function(_, map)
+          map({ "i", "n" }, "<CR>", function(prompt_bufnr)
+            local template = require("telescope.actions.state").get_selected_entry()
+            require("telescope.actions").close(prompt_bufnr)
+            apply_template(template[1])
+          end)
+          return true
+        end,
+      }
+      require("telescope.builtin").find_files(opts)
+    end
+    choose_template()
+    return
+  end
+
+  -- try with fzf-lua
+  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+  if has_fzf_lua then
+    local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+    cmd = util.table_params_to_str(cmd)
+    fzf_lua.files {
+      cmd = cmd,
+      cwd = tostring(templates_dir),
+      file_icons = false,
+      actions = {
+        ["default"] = function(entry)
+          -- for some reason fzf-lua passes the filename with 6 characters
+          -- at the start that appear on screen as 2 whitespace characters
+          -- so we need to start on the 7th character
+          local template = entry[1]:sub(7)
+          apply_template(template)
+        end,
+      },
+    }
+    return
+  end
+
+  -- try with fzf
+  local has_fzf, _ = pcall(function()
+    vim.api.nvim_create_user_command("ApplyTemplate", function(path)
+      -- remove escaped whitespace and extract the file name
+      local file_path = string.gsub(path.args, "\\ ", " ")
+      local template = vim.fs.basename(file_path)
+      apply_template(template)
+      vim.api.nvim_del_user_command "ApplyTemplate"
+    end, { nargs = 1, bang = true })
+
+    local base_cmd = vim.tbl_flatten { util.FIND_CMD, { tostring(templates_dir), "-name", "'*.md'" } }
+    base_cmd = util.table_params_to_str(base_cmd)
+    local fzf_options = { source = base_cmd, sink = "ApplyTemplate" }
+    vim.api.nvim_call_function("fzf#run", {
+      vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
+    })
+  end)
+
+  if not has_fzf then
+    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianTemplate command"
+  end
+end
+
 ---Quick switch to an obsidian note
 ---
 ---@param client obsidian.Client
@@ -412,6 +527,7 @@ end
 
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
+  ObsidianTemplate = { func = command.insert_template, opts = { nargs = "?" } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },

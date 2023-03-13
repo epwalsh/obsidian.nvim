@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+
+### Added
+
+- Added `:ObsidianTemplate` to insert a template, configurable using a `templates` table passed to `setup()`.
+
 ## [v1.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.8.0) - 2023-02-16
 
 ### Changed
