@@ -201,7 +201,7 @@ command.search = function(client, data)
   -- Fall back to trying with fzf.vim
   local has_fzf, _ = pcall(function()
     local grep_cmd =
-    vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
+      vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
 
     vim.api.nvim_call_function("fzf#vim#grep", {
       table.concat(grep_cmd, " "),
@@ -295,34 +295,32 @@ command.insert_template = function(client, data)
       cmd = cmd,
       cwd = tostring(templates_dir),
       file_icons = false,
-      actions = { ["default"] =
-      function(entry)
-        -- for some reason fzf-lua passes the filename with 6 characters
-        -- at the start that appear on screen as 2 whitespace characters
-        -- so we need to start on the 7th character
-        local template = entry[1]:sub(7)
-        apply_template(template)
-      end
-      }
+      actions = {
+        ["default"] = function(entry)
+          -- for some reason fzf-lua passes the filename with 6 characters
+          -- at the start that appear on screen as 2 whitespace characters
+          -- so we need to start on the 7th character
+          local template = entry[1]:sub(7)
+          apply_template(template)
+        end,
+      },
     }
     return
   end
 
-
   -- try with fzf
   local has_fzf, _ = pcall(function()
-    vim.api.nvim_create_user_command("ApplyTemplate",
-      function(path)
-        -- remove escaped whitespace and extract the file name
-        local file_path = string.gsub(path.args, "\\ ", " ")
-        local template = vim.fs.basename(file_path)
-        apply_template(template)
-        vim.api.nvim_del_user_command("ApplyTemplate")
-      end, { nargs = 1, bang = true })
+    vim.api.nvim_create_user_command("ApplyTemplate", function(path)
+      -- remove escaped whitespace and extract the file name
+      local file_path = string.gsub(path.args, "\\ ", " ")
+      local template = vim.fs.basename(file_path)
+      apply_template(template)
+      vim.api.nvim_del_user_command "ApplyTemplate"
+    end, { nargs = 1, bang = true })
 
     local base_cmd = vim.tbl_flatten { util.FIND_CMD, { tostring(templates_dir), "-name", "'*.md'" } }
     base_cmd = util.table_params_to_str(base_cmd)
-    local fzf_options = { source = base_cmd, sink = 'ApplyTemplate' }
+    local fzf_options = { source = base_cmd, sink = "ApplyTemplate" }
     vim.api.nvim_call_function("fzf#run", {
       vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
     })
@@ -332,7 +330,6 @@ command.insert_template = function(client, data)
     echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianTemplate command"
   end
 end
-
 
 ---Quick switch to an obsidian note
 ---
@@ -398,12 +395,12 @@ command.link_new = function(client, data)
   local note = client:new_note(title, nil, vim.fn.expand "%:p:h")
 
   line = string.sub(line, 1, cscol - 1)
-      .. "[["
-      .. note.id
-      .. "|"
-      .. string.sub(line, cscol, cecol)
-      .. "]]"
-      .. string.sub(line, cecol + 1)
+    .. "[["
+    .. note.id
+    .. "|"
+    .. string.sub(line, cscol, cecol)
+    .. "]]"
+    .. string.sub(line, cecol + 1)
   vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
 end
 
@@ -438,12 +435,12 @@ command.link = function(client, data)
   end
 
   line = string.sub(line, 1, cscol - 1)
-      .. "[["
-      .. note.id
-      .. "|"
-      .. string.sub(line, cscol, cecol)
-      .. "]]"
-      .. string.sub(line, cecol + 1)
+    .. "[["
+    .. note.id
+    .. "|"
+    .. string.sub(line, cscol, cecol)
+    .. "]]"
+    .. string.sub(line, cecol + 1)
   vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
 end
 

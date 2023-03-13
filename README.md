@@ -185,6 +185,7 @@ require("obsidian").setup({
   }
 })
 ```
+
 and the file `~/my-vault/my-templates-folder/note template.md`:
 
 ```markdown
@@ -195,8 +196,10 @@ Date created: {{date}}
 creating the note `Configuring Neovim.md` and executing `:ObsidianTemplate` will insert
 ```markdown
 # Configuring Neovim
+
 Date created: 2023-03-01-Wed
 ```
+
 above the cursor position.
 
 #### Using nvim-treesitter
