@@ -406,7 +406,7 @@ command.follow = function(client, _)
 
   if #notes < 1 then
     if #headers >= 1 then
-      Note.jump_to_header(headers)
+      util.jump_to_header(headers)
     else
       command.new(client, { args = note_name })
     end
@@ -414,7 +414,7 @@ command.follow = function(client, _)
     local path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
     if #headers >= 1 then
-      Note.jump_to_header(headers)
+      util.jump_to_header(headers)
     end
   else
     echo.err "Multiple notes with this name exist"

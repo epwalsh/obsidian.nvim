@@ -372,4 +372,17 @@ util.working_day_before = function(time)
   end
 end
 
+--Jump to a series of nested headers
+--Used with :ObsidianFollowLink to follow links in the form [[note#header]]
+--Also accepts [[#header]] or [[note#header1#header2]] to indicate hierarchy
+--
+---@param headers table
+util.jump_to_header = function(headers)
+  -- Begin search at beginning of note
+  vim.fn["cursor"](1, 1)
+  for _, header in ipairs(headers) do
+    vim.cmd("/^#\\+ " .. header .. "$")
+  end
+end
+
 return util
