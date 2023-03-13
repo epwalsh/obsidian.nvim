@@ -4,8 +4,8 @@
 Table of Contents                                 *obsidian-table-of-contents*
 
 1. Obsidian.nvim                                      |obsidian-obsidian.nvim|
-  - Features                                               |obsidian-features|
-  - Setup                                                     |obsidian-setup|
+  - Features                                 |obsidian-obsidian.nvim-features|
+  - Setup                                       |obsidian-obsidian.nvim-setup|
 
 ==============================================================================
 1. Obsidian.nvim                                      *obsidian-obsidian.nvim*
@@ -23,7 +23,8 @@ while viewing and reading them using the Obsidian app. That said, this plugin
 stands on its own as well. You don’t necessarily need to use it alongside the
 Obsidian app.
 
-FEATURES                                                   *obsidian-features*
+
+FEATURES                                     *obsidian-obsidian.nvim-features*
 
 
 - ▶️ Autocompletion for note references via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> (triggered by typing `[[`)
@@ -49,9 +50,11 @@ COMMANDS ~
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
     This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
+- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf` alternatives.
 
 
-SETUP                                                         *obsidian-setup*
+SETUP                                           *obsidian-obsidian.nvim-setup*
+
 
 REQUIREMENTS ~
 
@@ -60,16 +63,16 @@ REQUIREMENTS ~
 - If you want completion and search features (recommended) you’ll also need ripgrep <https://github.com/BurntSushi/ripgrep> to be installed and on your `$PATH`.
     See ripgrep#installation <https://github.com/BurntSushi/ripgrep> for install options.
 
-
 Search functionality via the `:ObsidianSearch` and `:ObsidianQuickSwitch`
 command also requires either fzf.vim <https://github.com/junegunn/fzf.vim> or
 telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>.
+
 
 INSTALL ~
 
 Using `vim-plug`, for example:
 
->
+>vim
     " (required)
     Plug 'nvim-lua/plenary.nvim'
     
@@ -94,22 +97,21 @@ Using `vim-plug`, for example:
     Plug 'epwalsh/obsidian.nvim'
 <
 
-
 To avoid unexpected breaking changes, you can also pin `Obsidian.nvim` to a
 specific release like this:
 
->
+>vim
     Plug 'epwalsh/obsidian.nvim', { 'tag': 'v1.*' }
 <
 
-
 Always check the CHANGELOG <./CHANGELOG.md> when upgrading.
+
 
 MINIMAL CONFIGURATION ~
 
 For a minimal configuration, just add:
 
->
+>lua
     require("obsidian").setup({
       dir = "~/my-vault",
       completion = {
@@ -118,12 +120,11 @@ For a minimal configuration, just add:
     })
 <
 
-
 ❗ Note: you do **not** need to specify this plugin as an `nvim-cmp` "source".
 Obsidian.nvim will set itself up as a source automatically when you enter a
 markdown buffer within your vault directory.
 
->
+>lua
     require("cmp").setup({
       sources = {
         { name = "obsidian" }, -- WRONG! Don't put this here. Obsidian configures itself for nvim-cmp
@@ -134,21 +135,18 @@ markdown buffer within your vault directory.
 
 ADVANCED CONFIGURATION ~
 
-                                     *obsidian-Customizing-note-paths-and-IDs*
 
-Customizing note paths and IDs         If you want to customize how the file
-                                       names / unique IDs for new notes are
-                                       created, set the configuration option
-                                       `note_id_func` to your own function that
-                                       takes an optional string (the title of
-                                       the note) as input and returns a string
-                                       representing a unique ID or file name /
-                                       path (relative to your vault directory).
+CUSTOMIZING NOTE PATHS AND IDS
 
+If you want to customize how the file names / unique IDs for new notes are
+created, set the configuration option `note_id_func` to your own function that
+takes an optional string (the title of the note) as input and returns a string
+representing a unique ID or file name / path (relative to your vault
+directory).
 
 For example:
 
->
+>lua
     require("obsidian").setup({
       dir = "~/my-vault",
       note_id_func = function(title)
@@ -168,33 +166,30 @@ For example:
     })
 <
 
-
 In this case a note with the title "My new note" will given an ID that looks
 something like `1657296016-my-new-note`, and therefore the file name
 `1657296016-my-new-note.md`. If you always want to put new notes in a
 particular subdirectory of your vault, use the option `notes_subdir`:
 
->
+>lua
     require("obsidian").setup({
       dir = "~/my-vault",
       notes_subdir = "notes",
     })
 <
 
-
 The `notes_subdir` and `note_id_func` options are not mutually exclusive. You
 can use them both. For example, using a combination of both of the above
 settings, a new note called "My new note" will assigned a path like
 `notes/1657296016-my-new-note.md`.
 
-                                       *obsidian-Customizing-daily-notes-path*
 
-Customizing daily notes path           If you want to customize where the daily
-                                       notes are being stored, just set the
-                                       `daily_notes.folder` option:
+CUSTOMIZING DAILY NOTES PATH
 
+If you want to customize where the daily notes are being stored, just set the
+`daily_notes.folder` option:
 
->
+>lua
     require("obsidian").setup({
       dir = "~/my-vault",
       daily_notes = {
@@ -202,7 +197,6 @@ Customizing daily notes path           If you want to customize where the daily
       }
     })
 <
-
 
 This option isn’t mutually exclusive with the `notes_subdir` function; the
 `daily_notes.folder` path won’t be appended to `notes_subdir`, so both paths
@@ -212,7 +206,7 @@ E.g., if you have your vault at `~/my-vault`, and want to save your notes under
 `~/my-vault/notes`, and your dailies under `~/my-vault/notes/dailies`, this is
 the right config:
 
->
+>lua
     require("obsidian").setup({
       dir = "~/my-vault",
       notes_subdir = "notes",
@@ -223,20 +217,55 @@ the right config:
 <
 
 
-                                              *obsidian-Using-nvim-treesitter*
+TEMPLATES SUPPORT
 
-Using nvim-treesitter                  If you’re using nvim-treesitter
-                                       <https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md>
-                                       and not vim-markdown
-                                       <https://github.com/preservim/vim-markdown>,
-                                       you’ll probably want to enable
-                                       `additional_vim_regex_highlighting` for
-                                       markdown to benefit from
-                                       Obsidian.nvim’s extra syntax
-                                       improvements:
+To insert a template, run the command `:ObsidianTemplate`. This will open
+telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the
+`fzf` alternatives and allow you to select a template from the templates
+folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`,
+`{{time}}`, and `{{title}}` is supported.
+
+For example, with the following configuration
+
+>lua
+    require("obsidian").setup({
+      dir = "~/my-vault",
+      templates = {
+          subdir = "my-templates-folder",
+          date_format = "%Y-%m-%d-%a",
+          time_format = "%H:%M"
+      }
+    })
+<
+
+and the file `~/my-vault/my-templates-folder/note template.md`:
+
+>markdown
+    # {{title}}
+    Date created: {{date}}
+<
+
+creating the note `Configuring Neovim.md` and executing `:ObsidianTemplate`
+will insert
+
+>markdown
+    # Configuring Neovim
+    
+    Date created: 2023-03-01-Wed
+<
+
+above the cursor position.
 
 
->
+USING NVIM-TREESITTER
+
+If you’re using nvim-treesitter
+<https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md> and
+not vim-markdown <https://github.com/preservim/vim-markdown>, you’ll probably
+want to enable `additional_vim_regex_highlighting` for markdown to benefit from
+Obsidian.nvim’s extra syntax improvements:
+
+>lua
     require("nvim-treesitter.configs").setup({
       ensure_installed = { "markdown", "markdown_inline", ... },
       highlight = {
@@ -247,24 +276,18 @@ Using nvim-treesitter                  If you’re using nvim-treesitter
 <
 
 
-           *obsidian-Customizing-the-automatically-generated-YAML-frontmatter*
+CUSTOMIZING THE AUTOMATICALLY GENERATED YAML FRONTMATTER
 
-Customizing the automatically generated YAML frontmatter By default the
-                                       auto-generated YAML frontmatter will
-                                       just contain `id`, `aliases`, and
-                                       `tags`, as well as any other fields you
-                                       add manually. If you want to customize
-                                       this behavior, set the configuration
-                                       option `note_frontmatter_func` to a
-                                       function that takes an `obsidian.Note`
-                                       object and returns a table. Or if you
-                                       want to disable this feature, just set
-                                       `disable_frontmatter = true`.
-
+By default the auto-generated YAML frontmatter will just contain `id`,
+`aliases`, and `tags`, as well as any other fields you add manually. If you
+want to customize this behavior, set the configuration option
+`note_frontmatter_func` to a function that takes an `obsidian.Note` object and
+returns a table. Or if you want to disable this feature, just set
+`disable_frontmatter = true`.
 
 For example, you can emulate the default functionality like this:
 
->
+>lua
     require("obsidian").setup({
       dir = "~/my-vault",
       note_frontmatter_func = function(note)
@@ -282,18 +305,14 @@ For example, you can emulate the default functionality like this:
 <
 
 
-             *obsidian-Mapping-`:ObsidianFollowLink`-to-`gf`-with-passthrough*
+MAPPING :OBSIDIANFOLLOWLINK TO GF WITH PASSTHROUGH
 
-Mapping `:ObsidianFollowLink` to `gf` with passthrough If you have notes in
-                                       subdirectories of your vault, Neovim’s
-                                       default `gf` mapping might not be able
-                                       to find the note corresponding to the
-                                       reference under your cursor. If that’s
-                                       the case you can map `gf` to the
-                                       `:ObsidianFollowLink` command like this:
+If you have notes in subdirectories of your vault, Neovim’s default `gf`
+mapping might not be able to find the note corresponding to the reference under
+your cursor. If that’s the case you can map `gf` to the `:ObsidianFollowLink`
+command like this:
 
-
->
+>lua
     vim.keymap.set(
       "n",
       "gf",
@@ -308,33 +327,26 @@ Mapping `:ObsidianFollowLink` to `gf` with passthrough If you have notes in
     )
 <
 
-
 The other benefit of doing this is that it will now work even if your cursor is
 on the enclosing brackets (`[[` or `]]`) or the alias part of a reference (the
 part after `|`).
 
-            *obsidian-Navigate-to-the-current-line-when-using-`:ObsidianOpen`*
 
-Navigate to the current line when using `:ObsidianOpen` If you have the
-                                       Obsidian Advanced URI
-                                       <https://github.com/Vinzent03/obsidian-advanced-uri>
-                                       plugin enabled, the Obsidian editor can
-                                       automatically navigate to the same line
-                                       in the current NeoVim buffer. For files
-                                       that are already open, it will update
-                                       the cursor position within Obsidian’s
-                                       editor. To enable this feature, add
-                                       `use_advanced_uri = true` to the setup
-                                       options. For example:
+NAVIGATE TO THE CURRENT LINE WHEN USING :OBSIDIANOPEN
 
+If you have the Obsidian Advanced URI
+<https://github.com/Vinzent03/obsidian-advanced-uri> plugin enabled, the
+Obsidian editor can automatically navigate to the same line in the current
+NeoVim buffer. For files that are already open, it will update the cursor
+position within Obsidian’s editor. To enable this feature, add
+`use_advanced_uri = true` to the setup options. For example:
 
->
+>lua
     require("obsidian").setup({
       dir = "~/my-vault",
       use_advanced_uri = true
     })
 <
-
 
 Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
 
