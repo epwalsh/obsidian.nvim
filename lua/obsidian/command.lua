@@ -393,6 +393,11 @@ command.follow = function(client, _)
     note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
   end
 
+  -- Don't trim empty elements to ensure [[#header]] is still valid
+  local headers = vim.split(note_file_name, "#", { plain = true, trimempty = false })
+  note_file_name = headers[1]
+  table.remove(headers, 1)
+
   if not note_file_name:match "%.md" then
     note_file_name = note_file_name .. ".md"
   end
@@ -400,10 +405,17 @@ command.follow = function(client, _)
   local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
-    command.new(client, { args = note_name })
+    if #headers >= 1 then
+      Note.jump_to_header(headers)
+    else
+      command.new(client, { args = note_name })
+    end
   elseif #notes == 1 then
     local path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
+    if #headers >= 1 then
+      Note.jump_to_header(headers)
+    end
   else
     echo.err "Multiple notes with this name exist"
     return
