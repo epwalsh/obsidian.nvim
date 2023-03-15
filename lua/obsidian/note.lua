@@ -221,13 +221,37 @@ note.from_lines = function(lines, path, root)
           end
         elseif k == "aliases" then
           if type(v) == "table" then
-            aliases = v
+            for _, alias in ipairs(v) do
+              if type(alias) == "string" then
+                table.insert(aliases, alias)
+              else
+                echo.warn(
+                  "Invalid alias value found in frontmatter for "
+                    .. path
+                    .. ". Expected string, found "
+                    .. type(alias)
+                    .. "."
+                )
+              end
+            end
           else
             echo.warn("Invalid 'aliases' in frontmatter for " .. path)
           end
         elseif k == "tags" then
           if type(v) == "table" then
-            tags = v
+            for _, tag in ipairs(v) do
+              if type(tag) == "string" then
+                table.insert(tags, tag)
+              else
+                echo.warn(
+                  "Invalid tag value found in frontmatter for "
+                    .. path
+                    .. ". Expected string, found "
+                    .. type(tag)
+                    .. "."
+                )
+              end
+            end
           elseif type(v) == "string" then
             tags = vim.split(v, " ")
           else
