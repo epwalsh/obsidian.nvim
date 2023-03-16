@@ -21,7 +21,8 @@ source.complete = function(self, request, callback)
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local items = {}
     for note in client:search(search, "--ignore-case") do
-      for _, alias in pairs(note.aliases) do
+      local aliases = util.unique { note.id, note:display_name(), unpack(note.aliases) }
+      for _, alias in pairs(aliases) do
         local options = {}
 
         local alias_case_matched = util.match_case(search, alias)
