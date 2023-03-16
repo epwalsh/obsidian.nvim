@@ -17,6 +17,20 @@ util.contains = function(table, val)
   return false
 end
 
+---Return a new table (list) with only the unique values of the original.
+---
+---@param table table
+---@return any[]
+util.unique = function(table)
+  local out = {}
+  for _, val in pairs(table) do
+    if not util.contains(out, val) then
+      out[#out + 1] = val
+    end
+  end
+  return out
+end
+
 ---Find all markdown files in a directory.
 ---
 ---@param dir string|Path
