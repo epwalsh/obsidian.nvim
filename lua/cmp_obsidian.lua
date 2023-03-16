@@ -43,6 +43,7 @@ source.complete = function(self, request, callback)
           else
             label = label .. "]]"
           end
+
           table.insert(items, {
             sortText = "[[" .. option,
             label = label,

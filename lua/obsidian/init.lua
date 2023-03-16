@@ -143,20 +143,38 @@ end
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
----@param opts string|?
+---@param search_opts string|?
 ---@return function
-client.search = function(self, search, opts)
-  opts = opts and (opts .. " ") or ""
-  local search_results = obsidian.util.search(self.dir, search, opts .. "-m 1")
+client.search = function(self, search, search_opts)
+  search_opts = search_opts and (search_opts .. " ") or ""
+  local search_results = obsidian.util.search(self.dir, search, search_opts .. "-m 1")
+  local find_results = obsidian.util.find(self.dir, search)
+
+  local found = {}
+  local note = nil
 
   ---@return obsidian.Note|?
   return function()
-    local match = search_results()
-    if match == nil then
-      return nil
-    else
-      return obsidian.note.from_file(match.path.text, self.dir)
+    local content_match = search_results()
+    if content_match ~= nil then
+      note = obsidian.note.from_file(content_match.path.text, self.dir)
+      found[#found + 1] = note.id
+      return note
     end
+
+    local path_match = find_results()
+    note = path_match ~= nil and obsidian.note.from_file(path_match, self.dir) or nil
+    -- keep looking until we get a new match that we haven't seen yet.
+    while path_match ~= nil and note ~= nil and obsidian.util.contains(found, note.id) do
+      path_match = find_results()
+      note = path_match ~= nil and obsidian.note.from_file(path_match, self.dir) or nil
+    end
+
+    if note ~= nil then
+      return note
+    end
+
+    return nil
   end
 end
 
