@@ -199,13 +199,11 @@ util.find = function(dir, term)
   ---
   ---@return MatchData|?
   return function()
-    while true do
-      local line = handle:read "*l"
-      if line == nil then
-        return nil
-      end
-      return line
+    local line = handle:read "*l"
+    if line == nil then
+      return nil
     end
+    return line
   end
 end
 
