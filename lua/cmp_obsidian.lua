@@ -37,12 +37,19 @@ source.complete = function(self, request, callback)
         table.insert(options, alias)
 
         for _, option in pairs(options) do
+          local label = "[[" .. note.id
+          if option ~= note.id then
+            label = label .. "|" .. option .. "]]"
+          else
+            label = label .. "]]"
+          end
+
           table.insert(items, {
             sortText = "[[" .. option,
-            label = "[[" .. note.id .. "|" .. option .. "]]",
+            label = label,
             kind = 18,
             textEdit = {
-              newText = "[[" .. note.id .. "|" .. option .. "]]",
+              newText = label,
               range = {
                 start = {
                   line = request.context.cursor.row - 1,
