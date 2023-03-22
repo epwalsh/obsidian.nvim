@@ -104,6 +104,9 @@ require("cmp").setup({
 
 ### Advanced configuration
 
+❗ Note: you should only call `obsidian.setup(...)` once in your config. Calling it a second time will overwrite the settings from the first call,
+so if you choose to use multiple of the examples below, make sure to merge the arguments in each `setup()` call into one.
+
 #### Customizing note paths and IDs
 
 If you want to customize how the file names / unique IDs for new notes are created, set the configuration option `note_id_func` to your own function that takes an optional string (the title of the note) as input and returns a string representing a unique ID or file name / path (relative to your vault directory).
