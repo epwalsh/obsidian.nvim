@@ -135,6 +135,11 @@ markdown buffer within your vault directory.
 
 ADVANCED CONFIGURATION ~
 
+❗ Note: you should only call `obsidian.setup(...)` once in your config.
+Calling it a second time will overwrite the settings from the first call, so if
+you choose to use multiple of the examples below, make sure to merge the
+arguments in each `setup()` call into one.
+
 
 CUSTOMIZING NOTE PATHS AND IDS
 
