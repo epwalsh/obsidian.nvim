@@ -33,7 +33,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 ### Demo
 
-https://user-images.githubusercontent.com/75107188/227359291-5c4e7bb8-a217-4fbd-aa5d-fd64a57f9783.mov
+https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4
 
 ## Setup
 
