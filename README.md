@@ -31,6 +31,10 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
 - `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives.
 
+### Demo
+
+https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4
+
 ## Setup
 
 ### Requirements
