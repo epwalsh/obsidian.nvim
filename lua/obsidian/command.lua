@@ -107,9 +107,11 @@ command.open = function(client, data)
       vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
     end
 
-    local _, j = bufname:find(vault_name_escaped)
-    path = bufname:sub(j)
-    -- path = Path:new(bufname):make_relative(vault) -- doesn't handle links
+    path = Path:new(bufname):make_relative(vault)
+    local _, j = path:find(vault_name_escaped)
+    if j ~= nil then
+      path = bufname:sub(j)
+    end
   end
 
 
