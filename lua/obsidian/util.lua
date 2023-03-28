@@ -424,4 +424,18 @@ util.working_day_before = function(time)
   end
 end
 
+-- Determines the next working day after a given time
+--
+-- @param time a Time
+--
+-- @return time
+util.working_day_after = function(time)
+  local next_day = time + (24 * 60 * 60)
+  if util.is_working_day(next_day) then
+    return next_day
+  else
+    return util.working_day_before(next_day)
+  end
+end
+
 return util

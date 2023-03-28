@@ -307,6 +307,28 @@ client.yesterday = function(self)
   return note
 end
 
+---Open (or create) the daily note from the next weekday.
+---
+---@return obsidian.Note
+client.tomorrow = function(self)
+  ---@type string
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local today = os.time()
+  local tomorrow = obsidian.util.working_day_after(today)
+  local id = tostring(os.date("%Y-%m-%d", tomorrow))
+  local alias = tostring(os.date("%B %-d, %Y", tomorrow))
+  local path = self:daily_note_path(id)
+
+  -- Create Note object and save if it doesn't already exist.
+  local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
+  if not note:exists() then
+    note:save()
+    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  end
+
+  return note
+end
+
 ---Resolve the query to a single note.
 ---
 ---@param query string

@@ -63,6 +63,15 @@ command.yesterday = function(client, _)
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
+---Create (or open) the daily note from the next weekday.
+---
+---@param client obsidian.Client
+---@param _ table
+command.tomorrow = function(client, _)
+  local note = client:tomorrow()
+  vim.api.nvim_command("e " .. tostring(note.path))
+end
+
 ---Create a new note.
 ---
 ---@param client obsidian.Client
@@ -530,6 +539,7 @@ local commands = {
   ObsidianTemplate = { func = command.insert_template, opts = { nargs = "?" } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
+  ObsidianTomorrow = { func = command.tomorrow, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
   ObsidianQuickSwitch = { func = command.quick_switch, opts = { nargs = 0 } },
