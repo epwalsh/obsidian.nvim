@@ -114,7 +114,6 @@ command.open = function(client, data)
     end
   end
 
-
   local encoded_vault = util.urlencode(vault_name)
   local encoded_path = util.urlencode(tostring(path))
 
