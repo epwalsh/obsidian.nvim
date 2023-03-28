@@ -101,11 +101,17 @@ command.open = function(client, data)
     end
   else
     local bufname = vim.api.nvim_buf_get_name(0)
+    local vault_name_escaped = vault_name:gsub("%W", "%%%0") .. "%/"
     if vim.loop.os_uname().sysname == "Windows_NT" then
       bufname = bufname:gsub("/", "\\")
+      vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
     end
-    path = Path:new(bufname):make_relative(vault)
+
+    local _, j = bufname:find(vault_name_escaped)
+    path = bufname:sub(j)
+    -- path = Path:new(bufname):make_relative(vault) -- doesn't handle links
   end
+
 
   local encoded_vault = util.urlencode(vault_name)
   local encoded_path = util.urlencode(tostring(path))
