@@ -21,9 +21,9 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: panvimdoc
-        uses: kdheepak/panvimdoc@main
+        uses: kdheepak/panvimdoc@v3.0.5
         with:
-          vimdoc: obsidian
+          vimdoc: obsidian.nvim
           description: a plugin for writing and navigating an Obsidian vault
           pandoc: README.md
           toc: true
