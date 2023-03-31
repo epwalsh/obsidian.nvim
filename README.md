@@ -277,3 +277,15 @@ require("obsidian").setup({
   use_advanced_uri = true
 })
 ```
+
+## Known Issues 
+
+### Configuring vault directory behind a link
+
+If you are having issues with commands like `ObsidianOpen`, ensure that your vault is configured to use an absolute path rather than a link. If you must use a link in your configuration, make sure that the name of the vault is present in the file path of the link. For example:
+
+```
+Vault: ~/path/to/vault/parent/obsidian/
+Link: ~/obsidian OR ~/parent
+```
+

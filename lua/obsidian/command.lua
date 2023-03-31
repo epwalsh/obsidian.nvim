@@ -101,10 +101,28 @@ command.open = function(client, data)
     end
   else
     local bufname = vim.api.nvim_buf_get_name(0)
+    local vault_name_escaped = vault_name:gsub("%W", "%%%0") .. "%/"
     if vim.loop.os_uname().sysname == "Windows_NT" then
       bufname = bufname:gsub("/", "\\")
+      vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
     end
+
+    -- make_relative fails to work when vault path is configured to look behind a link
+    -- make_relative returns an unaltered path if it cannot make the path relative
     path = Path:new(bufname):make_relative(vault)
+
+    -- if the vault name appears in the output of make_relative
+    --          i.e. make_relative has failed
+    -- then remove everything up to and including the vault path
+    -- Example:
+    -- Config path: ~/Dropbox/Documents/0-obsidian-notes/
+    -- File path: /Users/username/Library/CloudStorage/Dropbox/Documents/0-obsidian-notes/Notes/note.md
+    --                                                                   ^
+    -- Proper relative path: Notes/note.md
+    local _, j = path:find(vault_name_escaped)
+    if j ~= nil then
+      path = bufname:sub(j)
+    end
   end
 
   local encoded_vault = util.urlencode(vault_name)
