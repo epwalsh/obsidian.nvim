@@ -271,14 +271,14 @@ end
 client.today = function(self)
   ---@type string
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local date_format
-  if self.opts.daily_notes.date_format ~= nil then
-    date_format = self.opts.daily_notes.date_format()
+  local formatted_date
+  if self.opts.daily_notes.format_date ~= nil then
+    formatted_date = self.opts.daily_notes.format_date(os.time())
   else
-    date_format = os.date("%Y-%m-%d")
+    formatted_date = tostring(os.date("%Y-%m-%d"))
   end
-  local id = date_format
-  local alias = os.date "%B %-d, %Y"
+  local id = formatted_date
+  local alias = tostring(os.date "%B %-d, %Y")
   local path = self:daily_note_path(id)
 
   -- Create Note object and save if it doesn't already exist.
@@ -299,7 +299,13 @@ client.yesterday = function(self)
   ---@diagnostic disable-next-line: assign-type-mismatch
   local today = os.time()
   local yesterday = obsidian.util.working_day_before(today)
-  local id = tostring(os.date("%Y-%m-%d", yesterday))
+  local formatted_date
+  if self.opts.daily_notes.format_date ~= nil then
+    formatted_date = self.opts.daily_notes.format_date(yesterday)
+  else
+    formatted_date = tostring(os.date("%Y-%m-%d", yesterday))
+  end
+  local id = formatted_date
   local alias = tostring(os.date("%B %-d, %Y", yesterday))
   local path = self:daily_note_path(id)
 
