@@ -278,6 +278,15 @@ require("obsidian").setup({
 })
 ```
 
+### Open Obsidian.app in foreground (macOS)
+
+By default `ObsidianOpen` opens Obsidian.app in background on macOS. This can be
+changed via `open_app_foreground` option:
+
+```lua
+require("obsidian").setup({ open_app_foreground = true })
+```
+
 ## Known Issues 
 
 ### Configuring vault directory behind a link

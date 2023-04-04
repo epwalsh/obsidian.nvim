@@ -144,7 +144,11 @@ command.open = function(client, data)
     args = { uri }
   elseif sysname == "Darwin" then
     cmd = "open"
-    args = { "-a", "/Applications/Obsidian.app", "--background", uri }
+    if client.opts.open_app_foreground then
+      args = { "-a", "/Applications/Obsidian.app", uri }
+    else
+      args = { "-a", "/Applications/Obsidian.app", "--background", uri }
+    end
   elseif sysname == "Windows_NT" then
     cmd = "powershell"
     args = { "Start-Process '" .. uri .. "'" }

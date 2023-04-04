@@ -15,6 +15,7 @@ local config = {}
 ---@field completion obsidian.config.CompletionOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
+---@field open_app_foreground boolean|?
 config.ClientOpts = {}
 
 ---Get defaults.
@@ -30,6 +31,7 @@ config.ClientOpts.default = function()
     completion = config.CompletionOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
+    open_app_foreground = false,
   }
 end
 
