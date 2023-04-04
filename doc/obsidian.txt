@@ -361,6 +361,16 @@ position within Obsidian’s editor. To enable this feature, add
 <
 
 
+OPEN OBSIDIAN.APP IN FOREGROUND (MACOS) ~
+
+By default `ObsidianOpen` opens Obsidian.app in background on macOS. This can
+be changed via `open_app_foreground` option:
+
+>lua
+    require("obsidian").setup({ open_app_foreground = true })
+<
+
+
 KNOWN ISSUES                             *obsidian-obsidian.nvim-known-issues*
 
 
