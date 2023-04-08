@@ -523,7 +523,15 @@ command.follow = function(client, _)
     return
   end
 
-  local note_name = current_line:sub(open + 2, close - 1)
+  local note_name = current_line:sub(open, close)
+  if note_name:match "^%[.-%]%(.*%)$" then
+    -- transform markdown link to wiki link
+    note_name = note_name:gsub("^%[(.-)%]%((.*)%)$", "%2|%1")
+  else
+    -- wiki link
+    note_name = note_name:sub(3, #note_name - 2)
+  end
+
   local note_file_name = note_name
 
   if note_file_name:match "|[^%]]*" then

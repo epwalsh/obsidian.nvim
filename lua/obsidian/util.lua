@@ -380,23 +380,32 @@ util.table_length = function(x)
 end
 
 -- Determines if cursor is currently inside markdown link
--- @return integer, integer
-util.cursor_on_markdown_link = function()
-  local current_line = vim.api.nvim_get_current_line()
+---@param line string|nil - line to check or current line if nil
+---@param col  integer|nil - column to check or current column if nil (1-indexed)
+---@return integer|nil, integer|nil - start and end column of link (1-indexed)
+util.cursor_on_markdown_link = function(line, col)
+  local current_line = line or vim.api.nvim_get_current_line()
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
+  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
-  local current_line_lh = current_line:sub(0, cur_col + 2)
-
-  -- Search for two open brackets followed by any number of non-open bracket
-  -- characters nor close bracket characters
-  local open = current_line_lh:find "%[%[[^%[%]]*%]?%]?$"
-  local close = current_line:find("%]%]", cur_col)
-
-  if open == nil or close == nil then
-    return nil, nil
-  else
-    return open, close
+  local find_boundaries = function(pattern)
+    local open, close = current_line:find(pattern)
+    while open ~= nil and close ~= nil do
+      if open <= cur_col and cur_col <= close then
+        return open, close
+      end
+      open, close = current_line:find(pattern, close + 1)
+    end
   end
+
+  -- wiki link
+  local open, close = find_boundaries "%[%[.-%]%]"
+  if open == nil or close == nil then
+    -- markdown link
+    open, close = find_boundaries "%[.-%]%(.-%)"
+  end
+
+  return open, close
 end
 
 -- Determines if the given date is a working day (not weekend)
