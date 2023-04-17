@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `open_app_foreground` option to open Obsidian.app in foreground on macOS.
 - Added `:ObsidianTemplate` to insert a template, configurable using a `templates` table passed to `setup()`.
+- Added support for following links in markdown format
 
 ### Fixed
 

@@ -50,4 +50,26 @@ describe("obsidian.util", function()
     assert.equals(#matches, 1)
     assert.equals(tostring(matches[1]), "./test_fixtures/notes/foo.md")
   end)
+  it("should correctly find if coursor is on markdown/wiki link", function()
+    --           0    5    10   15   20   25   30   35   40    45  50   55
+    --           |    |    |    |    |    |    |    |    |    |    |    |
+    local text = "The [other](link/file.md) plus [[yet|another/file.md]] there"
+    local tests = {
+      { cur_col = 4, open = nil, close = nil },
+      { cur_col = 5, open = 5, close = 25 },
+      { cur_col = 7, open = 5, close = 25 },
+      { cur_col = 25, open = 5, close = 25 },
+      { cur_col = 26, open = nil, close = nil },
+      { cur_col = 31, open = nil, close = nil },
+      { cur_col = 32, open = 32, close = 54 },
+      { cur_col = 40, open = 32, close = 54 },
+      { cur_col = 54, open = 32, close = 54 },
+      { cur_col = 55, open = nil, close = nil },
+    }
+    for _, test in ipairs(tests) do
+      local open, close = util.cursor_on_markdown_link(text, test.cur_col)
+      assert.equals(test.open, open, "cursor at: " .. test.cur_col)
+      assert.equals(test.close, close, "close")
+    end
+  end)
 end)
