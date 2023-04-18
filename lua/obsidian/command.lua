@@ -538,6 +538,15 @@ command.follow = function(client, _)
     note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
   end
 
+  if note_file_name:match "^[%a%d]*%:%/%/" then
+    if client.opts.follow_url_func ~= nil then
+      client.opts.follow_url_func(note_file_name)
+    else
+      echo.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+    end
+    return
+  end
+
   if not note_file_name:match "%.md" then
     note_file_name = note_file_name .. ".md"
   end

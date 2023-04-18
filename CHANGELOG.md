@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `open_app_foreground` option to open Obsidian.app in foreground on macOS.
 - Added `:ObsidianTemplate` to insert a template, configurable using a `templates` table passed to `setup()`.
 - Added support for following links in markdown format
+- Added `follow_url_func` option to customize behaviour of following URLs
 
 ### Fixed
 
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nvim-cmp` completion will search based on file names now too, not just contents.
 - Fixed bug when `nvim-cmp` is not installed.
 - Workaround error which prevented users from using `ObsidianOpen` when vault path was configured behind a link
+- Detect URLs when following links and ignore them by default.
 
 ## [v1.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.8.0) - 2023-02-16
 

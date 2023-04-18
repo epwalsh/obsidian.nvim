@@ -268,6 +268,23 @@ vim.keymap.set(
 
 The other benefit of doing this is that it will now work even if your cursor is on the enclosing brackets (`[[` or `]]`) or the alias part of a reference (the part after `|`).
 
+#### Customizing the behavior of following URL links
+
+By default, when you use `:ObsidianFollowLink` on a link to an external URL it will be ignored. However, you can customize this behavior by setting the configuration option `follow_url_func` to a function that takes the URL as its first argument.
+
+For example, you might want to open it in the browser. Here's an example of how you could implement this:
+
+```lua
+require("obsidian").setup({
+  follow_url_func = function(url)
+    -- Open the URL in the default web browser.
+    vim.fn.jobstart({"xdg-open", url})
+  end,
+})
+```
+
+In this example, we use `vim.fn.jobstart` function to open the URL in the default web browser.
+
 #### Navigate to the current line when using `:ObsidianOpen`
 
 If you have the [Obsidian Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin enabled, the Obsidian editor can automatically navigate to the same line in the current NeoVim buffer. For files that are already open, it will update the cursor position within Obsidian's editor. To enable this feature, add `use_advanced_uri = true` to the setup options. For example:
