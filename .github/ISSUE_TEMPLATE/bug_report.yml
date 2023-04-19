@@ -35,10 +35,12 @@ body:
     label: Versions
     description: |
       Please run the following and paste the output below.
+      
       ```sh
       nvim --version
       nvim --headless -c 'lua print("Obsidian v" .. require("obsidian").VERSION)' -c q
       ```
+      
       In addition, please include the versions of any other relevant plugins. Or simply include your `lazy-lock.json` file if you use [lazy.nvim](https://github.com/folke/lazy.nvim) as your plugin manager.
   validations:
     required: true
