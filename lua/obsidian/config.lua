@@ -10,6 +10,7 @@ local config = {}
 ---@field templates.date_format string
 ---@field templates.time_format string
 ---@field note_id_func function|?
+---@field follow_url_func function|?
 ---@field note_frontmatter_func function|?
 ---@field disable_frontmatter boolean|?
 ---@field completion obsidian.config.CompletionOpts
@@ -26,6 +27,7 @@ config.ClientOpts.default = function()
     notes_subdir = nil,
     templates = nil,
     note_id_func = nil,
+    follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
     completion = config.CompletionOpts.default(),
