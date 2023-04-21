@@ -9,7 +9,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 ## Features
 
 - ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
-- 🏃 Go to a note buffer with `gf` when cursor is on a reference (see: [Mapping `:ObsidianFollowLink` to `gf` with follow through](#mapping-obsidianfollowlink-to-gf-with-passthrough) for an even better `gf`)
+- 🏃 Go to a note buffer with `gf` when cursor is on a reference
 - 💅 Additional markdown syntax highlighting and concealing for references
 
 ### Commands
@@ -43,154 +43,151 @@ https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-
 - If you want completion and search features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
-Search functionality via the `:ObsidianSearch` and `:ObsidianQuickSwitch` command also requires either [fzf.vim](https://github.com/junegunn/fzf.vim) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see below).
 
-### Install
+### Install and configure
 
-Using `vim-plug`, for example:
-
-```vim
-" (required)
-Plug 'nvim-lua/plenary.nvim'
-
-" (optional) for completion:
-Plug 'hrsh7th/nvim-cmp'
-
-" (optional) for :ObsidianSearch and :ObsidianQuickSwitch commands unless you use telescope:
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-Plug 'junegunn/fzf.vim'
-
-" (optional) another alternative for the :ObsidianSearch and :ObsidianQuickSwitch commands:
-Plug 'ibhagwan/fzf-lua'
-
-" (optional) for :ObsidianSearch and :ObsidianQuickSwitch commands if you prefer this over fzf.vim:
-Plug 'nvim-telescope/telescope.nvim'
-
-" (optional) recommended for syntax highlighting, folding, etc if you're not using nvim-treesitter:
-Plug 'preservim/vim-markdown'
-Plug 'godlygeek/tabular'  " needed by 'preservim/vim-markdown'
-
-" (required)
-Plug 'epwalsh/obsidian.nvim'
-```
-
-To avoid unexpected breaking changes, you can also pin `Obsidian.nvim` to a specific release like this:
-
-```vim 
-Plug 'epwalsh/obsidian.nvim', { 'tag': 'v1.*' }
-```
-
-Always check the [CHANGELOG](./CHANGELOG.md) when upgrading.
-
-### Minimal configuration
-
-For a minimal configuration, just add:
+Using [`lazy.nvim`](https://github.com/folke/lazy.nvim), for example:
 
 ```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  completion = {
-    nvim_cmp = true, -- if using nvim-cmp, otherwise set to false
-  }
-})
-```
+return {
+  "epwalsh/obsidian.nvim",
+  lazy = true,
+  event = { "BufReadPre path/to/my-vault/**.md" },
+  -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand':
+  -- event = { "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md" },
+  dependencies = {
+    -- Required.
+    "nvim-lua/plenary.nvim",
 
-❗ Note: you do **not** need to specify this plugin as an `nvim-cmp` "source".
-Obsidian.nvim will set itself up as a source automatically when you enter a markdown buffer within your vault directory.
+    -- Optional, for completion.
+    "hrsh7th/nvim-cmp",
 
-```lua
-require("cmp").setup({
-  sources = {
-    { name = "obsidian" }, -- WRONG! Don't put this here. Obsidian configures itself for nvim-cmp
+    -- Optional, for search and quick-switch functionality.
+    "nvim-telescope/telescope.nvim",
+
+    -- Optional, an alternative to telescope for search and quick-switch functionality.
+    -- "ibhagwan/fzf-lua"
+
+    -- Optional, another alternative to telescope for search and quick-switch functionality.
+    -- "junegunn/fzf",
+    -- "junegunn/fzf.vim"
+
+    -- Optional, alternative to nvim-treesitter for syntax highlighting.
+    "godlygeek/tabular",
+    "preservim/vim-markdown",
   },
-})
-```
+  opts = {
+    dir = "~/my-vault",  -- no need to call 'vim.fn.expand' here
 
-### Advanced configuration
+    -- Optional, if you keep notes in a specific subdirectory of your vault.
+    notes_subdir = "notes",
 
-❗ Note: you should only call `obsidian.setup(...)` once in your config. Calling it a second time will overwrite the settings from the first call,
-so if you choose to use multiple of the examples below, make sure to merge the arguments in each `setup()` call into one.
+    -- Optional, if you keep daily notes in a separate directory.
+    daily_notes = {
+      folder = "notes/dailies",
+    },
 
-#### Customizing note paths and IDs
+    -- Optional, completion.
+    completion = {
+      nvim_cmp = true,  -- if using nvim-cmp, otherwise set to false
+    },
 
-If you want to customize how the file names / unique IDs for new notes are created, set the configuration option `note_id_func` to your own function that takes an optional string (the title of the note) as input and returns a string representing a unique ID or file name / path (relative to your vault directory).
-
-For example:
-
-```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  note_id_func = function(title)
-    -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
-    local suffix = ""
-    if title ~= nil then
-      -- If title is given, transform it into valid file name.
-      suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
-    else
-      -- If title is nil, just add 4 random uppercase letters to the suffix.
-      for _ = 1, 4 do
-        suffix = suffix .. string.char(math.random(65, 90))
+    -- Optional, customize how names/IDs for new notes are created.
+    note_id_func = function(title)
+      -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
+      -- In this case a note with the title 'My new note' will given an ID that looks
+      -- like '1657296016-my-new-note', and therefore the file name '1657296016-my-new-note.md'
+      local suffix = ""
+      if title ~= nil then
+        -- If title is given, transform it into valid file name.
+        suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
+      else
+        -- If title is nil, just add 4 random uppercase letters to the suffix.
+        for _ = 1, 4 do
+          suffix = suffix .. string.char(math.random(65, 90))
+        end
       end
-    end
-    return tostring(os.time()) .. "-" .. suffix
-  end
-})
+      return tostring(os.time()) .. "-" .. suffix
+    end,
+
+    -- Optional, set to true if you don't want Obsidian to manage frontmatter.
+    disable_frontmatter = false,
+
+    -- Optional, alternatively you can customize the frontmatter data.
+    note_frontmatter_func = function(note)
+      -- This is equivalent to the default frontmatter function.
+      local out = { id = note.id, aliases = note.aliases, tags = note.tags }
+      -- `note.metadata` contains any manually added fields in the frontmatter.
+      -- So here we just make sure those fields are kept in the frontmatter.
+      if note.metadata ~= nil and require("obsidian").util.table_length(note.metadata) > 0 then
+        for k, v in pairs(note.metadata) do
+          out[k] = v
+        end
+      end
+      return out
+    end,
+
+    -- Optional, for templates (see below).
+    templates = {
+      subdir = "templates",
+      date_format = "%Y-%m-%d-%a",
+      time_format = "%H:%M",
+    },
+
+    -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
+    -- URL it will be ignored but you can customize this behavior here.
+    follow_url_func = function(url)
+      -- Open the URL in the default web browser.
+      vim.fn.jobstart({"open", url})  -- Mac OS
+      -- vim.fn.jobstart({"xdg-open", url})  -- linux
+    end,
+
+    -- Optional, set to true if you use the Obsidian Advanced URI plugin.
+    -- https://github.com/Vinzent03/obsidian-advanced-uri
+    use_advanced_uri = true,
+
+    -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
+    open_app_foreground = false,
+  },
+  config = function(_, opts)
+    require("obsidian").setup(opts)
+
+    -- Optional, override the 'gf' keymap to utilize Obsidian's search functionality.
+    -- see also: 'follow_url_func' config option above.
+    vim.keymap.set("n", "gf", function()
+      if require("obsidian").util.cursor_on_markdown_link() then
+        return "<cmd>ObsidianFollowLink<CR>"
+      else
+        return "gf"
+      end
+    end, { noremap = false, expr = true })
+  end,
+}
 ```
 
-In this case a note with the title "My new note" will given an ID that looks something like `1657296016-my-new-note`, and therefore the file name `1657296016-my-new-note.md`.
-If you always want to put new notes in a particular subdirectory of your vault, use the option `notes_subdir`:
+**❗ Notes**
 
-```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  notes_subdir = "notes",
-})
-```
+- Obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
+- If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
+- The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
 
-The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
-
-#### Customizing daily notes path
-
-If you want to customize where the daily notes are being stored, just set the `daily_notes.folder` option:
-
-```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  daily_notes = {
-    folder = "dailies",
-  }
-})
-```
-
-This option isn't mutually exclusive with the `notes_subdir` function; the `daily_notes.folder` path won't be appended to `notes_subdir`, so both paths will need to be relative to `dir`.
-
-E.g., if you have your vault at `~/my-vault`, and want to save your notes under `~/my-vault/notes`, and your dailies under `~/my-vault/notes/dailies`, this is the right config:
-
-```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  notes_subdir = "notes",
-  daily_notes = {
-    folder = "notes/dailies",
-  }
-})
-```
-
-#### Templates support
+### Templates support
 
 To insert a template, run the command `:ObsidianTemplate`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported. 
 
 For example, with the following configuration
 
 ```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
+{
+  -- other fields ...
+
   templates = {
       subdir = "my-templates-folder",
       date_format = "%Y-%m-%d-%a",
       time_format = "%H:%M"
-  }
-})
+  },
+}
 ```
 
 and the file `~/my-vault/my-templates-folder/note template.md`:
@@ -209,7 +206,7 @@ Date created: 2023-03-01-Wed
 
 above the cursor position.
 
-#### Using nvim-treesitter
+### Using nvim-treesitter
 
 If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:
 
@@ -223,87 +220,6 @@ require("nvim-treesitter.configs").setup({
 })
 ```
 
-#### Customizing the automatically generated YAML frontmatter
-
-By default the auto-generated YAML frontmatter will just contain `id`, `aliases`, and `tags`, as well as any other fields you add manually. If you want to customize this behavior, set the configuration option `note_frontmatter_func` to a function that takes an `obsidian.Note` object and returns a table. Or if you want to disable this feature, just set `disable_frontmatter = true`.
-
-For example, you can emulate the default functionality like this:
-
-```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  note_frontmatter_func = function(note)
-    local out = { id = note.id, aliases = note.aliases, tags = note.tags }
-    -- `note.metadata` contains any manually added fields in the frontmatter.
-    -- So here we just make sure those fields are kept in the frontmatter.
-    if note.metadata ~= nil and require("obsidian").util.table_length(note.metadata) > 0 then
-      for k, v in pairs(note.metadata) do
-        out[k] = v
-      end
-    end
-    return out
-  end,
-})
-```
-
-#### Mapping `:ObsidianFollowLink` to `gf` with passthrough
-
-If you have notes in subdirectories of your vault, Neovim's default `gf` mapping might not be able to find the note corresponding to the reference under your cursor.
-If that's the case you can map `gf` to the `:ObsidianFollowLink` command like this:
-
-```lua
-vim.keymap.set(
-  "n",
-  "gf",
-  function()
-    if require('obsidian').util.cursor_on_markdown_link() then
-      return "<cmd>ObsidianFollowLink<CR>"
-    else
-      return "gf"
-    end
-  end,
-  { noremap = false, expr = true}
-)
-```
-
-The other benefit of doing this is that it will now work even if your cursor is on the enclosing brackets (`[[` or `]]`) or the alias part of a reference (the part after `|`).
-
-#### Customizing the behavior of following URL links
-
-By default, when you use `:ObsidianFollowLink` on a link to an external URL it will be ignored. However, you can customize this behavior by setting the configuration option `follow_url_func` to a function that takes the URL as its first argument.
-
-For example, you might want to open it in the browser. Here's an example of how you could implement this:
-
-```lua
-require("obsidian").setup({
-  follow_url_func = function(url)
-    -- Open the URL in the default web browser.
-    vim.fn.jobstart({"xdg-open", url})
-  end,
-})
-```
-
-In this example, we use `vim.fn.jobstart` function to open the URL in the default web browser.
-
-#### Navigate to the current line when using `:ObsidianOpen`
-
-If you have the [Obsidian Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin enabled, the Obsidian editor can automatically navigate to the same line in the current NeoVim buffer. For files that are already open, it will update the cursor position within Obsidian's editor. To enable this feature, add `use_advanced_uri = true` to the setup options. For example:
-```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  use_advanced_uri = true
-})
-```
-
-### Open Obsidian.app in foreground (macOS)
-
-By default `ObsidianOpen` opens Obsidian.app in background on macOS. This can be
-changed via `open_app_foreground` option:
-
-```lua
-require("obsidian").setup({ open_app_foreground = true })
-```
-
 ## Known Issues 
 
 ### Configuring vault directory behind a link
@@ -314,4 +230,3 @@ If you are having issues with commands like `ObsidianOpen`, ensure that your vau
 Vault: ~/path/to/vault/parent/obsidian/
 Link: ~/obsidian OR ~/parent
 ```
-
