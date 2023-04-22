@@ -586,16 +586,12 @@ command.check_health = function(client, _)
         end
       end
 
-      if has_obsidian_source then
-        echo.info "OK - note completion configured"
-      else
+      if not has_obsidian_source then
         echo.err "FAILED - note completion is not configured"
         errors = errors + 1
       end
 
-      if has_obsidian_new_source then
-        echo.info "OK - new note completion configured"
-      else
+      if not has_obsidian_new_source then
         echo.err "FAILED - new note completion is not configured"
         errors = errors + 1
       end

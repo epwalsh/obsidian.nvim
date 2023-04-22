@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for following links in markdown format
 - Added `follow_url_func` option to customize behaviour of following URLs
 
+### Changed
+
+- Use `vim.notify` to echo log messages now.
+
 ### Fixed
 
 - Gracefully handle invalid aliases / tags in frontmatter (i.e. values that aren't strings). We'll warn about them and ignore the invalid values.
