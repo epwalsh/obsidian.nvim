@@ -21,9 +21,6 @@ local client = {}
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 obsidian.new = function(opts)
-  -- Setup highlight groups.
-  echo.setup()
-
   local self = setmetatable({}, { __index = client })
   self.dir = Path:new(vim.fs.normalize(tostring(opts.dir and opts.dir or "./")))
   self.opts = opts
