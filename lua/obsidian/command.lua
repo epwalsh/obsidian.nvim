@@ -564,6 +564,54 @@ command.follow = function(client, _)
   end
 end
 
+---Run a health check.
+---
+---@param client obsidian.Client
+command.check_health = function(client, _)
+  local errors = 0
+
+  -- Check completion via nvim-cmp
+  if client.opts.completion.nvim_cmp then
+    local ok, cmp = pcall(require, "cmp")
+    if not ok then
+      echo.err "nvim-cmp could not be loaded"
+    else
+      local has_obsidian_source = false
+      local has_obsidian_new_source = false
+      for _, source in pairs(cmp.get_config().sources) do
+        if source.name == "obsidian" then
+          has_obsidian_source = true
+        elseif source.name == "obsidian_new" then
+          has_obsidian_new_source = true
+        end
+      end
+
+      if has_obsidian_source then
+        echo.info "OK - note completion configured"
+      else
+        echo.err "FAILED - note completion is not configured"
+        errors = errors + 1
+      end
+
+      if has_obsidian_new_source then
+        echo.info "OK - new note completion configured"
+      else
+        echo.err "FAILED - new note completion is not configured"
+        errors = errors + 1
+      end
+    end
+  end
+
+  -- Report total errors.
+  if errors == 1 then
+    echo.err "There was 1 error with obsidian setup"
+  elseif errors > 1 then
+    echo.err("There were " .. tostring(errors) .. " errors with obsidian setup")
+  else
+    echo.info "All good! No errors to report"
+  end
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianTemplate = { func = command.insert_template, opts = { nargs = "?" } },
@@ -577,6 +625,7 @@ local commands = {
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
+  ObsidianCheckHealth = { func = command.check_health, opts = { nargs = 0 } },
 }
 
 ---Register all commands.
