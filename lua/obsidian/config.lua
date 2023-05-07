@@ -17,6 +17,7 @@ local config = {}
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
+---@field finder string|?
 config.ClientOpts = {}
 
 ---Get defaults.
@@ -34,6 +35,7 @@ config.ClientOpts.default = function()
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
+    finder = nil,
   }
 end
 

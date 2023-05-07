@@ -433,4 +433,72 @@ util.working_day_before = function(time)
   end
 end
 
+local IMPLEMENTATION_UNAVAILABLE = { "implementation_unavailable called from outside run_first_supported" }
+
+---Try implementations one by one in the given order, until finding one that is supported
+---
+---Implementations are given as functions. If the backend of the implementation
+---is unavailable (usually because a plugin is not installed), the function
+---should call the `implementation_unavailable()` function from the
+---`obsidian.util` module so that the next implementation in order will be
+---attempted.
+---
+---If the implementation's backend is installed but for some reason the
+---operation fails, the error will bubble up normally and the next
+---implementation will not be attempted.
+---
+---@param command_name string - name of the command, used for formatting the error message
+---@param order table - list of implementation names in the order in which they should be attempted
+---@param implementations table - map of implementation name to implementation function
+util.run_first_supported = function(command_name, order, implementations)
+  local unavailable = {}
+  local not_supported = {}
+  for _, impl_name in ipairs(order) do
+    local impl_function = implementations[impl_name]
+    if impl_function then
+      local result = { pcall(impl_function) }
+      if result[1] then
+        return select(2, unpack(result))
+      elseif result[2] == IMPLEMENTATION_UNAVAILABLE then
+        table.insert(unavailable, impl_name)
+      else
+        error(result[2])
+      end
+    else
+      table.insert(not_supported, impl_name)
+    end
+  end
+
+  if next(unavailable) == nil then
+    error(command_name .. " cannot be run with " .. table.concat(not_supported, " or "))
+  end
+
+  local error_message
+  if #unavailable == 1 then
+    error_message = unavailable[1] .. " is required for " .. command_name .. " command"
+  elseif #unavailable then
+    error_message = "Either " .. table.concat(unavailable, " or ") .. " is required for " .. command_name .. " command"
+  end
+
+  if next(not_supported) ~= nil then
+    if #not_supported == 1 then
+      error_message = error_message .. ". " .. not_supported[1] .. " is not a viable option for this command"
+    else
+      error_message = error_message
+        .. ". "
+        .. table.concat(not_supported, " and ")
+        .. " are not viable options for this command"
+    end
+  end
+
+  error(error_message)
+end
+
+---Should be called inside implementation functions passed to
+---`run_first_supported` when the implementation's backend is unavailable
+---(usually because a plugin is not installed)
+util.implementation_unavailable = function()
+  error(IMPLEMENTATION_UNAVAILABLE)
+end
+
 return util

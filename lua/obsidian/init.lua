@@ -357,4 +357,25 @@ client.resolve_note = function(self, query)
   return nil
 end
 
+client._run_with_finder_backend = function(self, command_name, implementations)
+  local finders_order = { "telescope.nvim", "fzf-lua", "fzf.vim" }
+  if self.opts.finder then
+    for idx, finder in ipairs(finders_order) do
+      if finder == self.opts.finder then
+        table.remove(finders_order, idx)
+        break
+      end
+    end
+    table.insert(finders_order, 1, self.opts.finder)
+  end
+  local success, err = pcall(obsidian.util.run_first_supported, command_name, finders_order, implementations)
+  if not success then
+    if type(err) == "string" then
+      echo.err(err)
+    else
+      error(err)
+    end
+  end
+end
+
 return obsidian
