@@ -570,6 +570,13 @@ end
 command.check_health = function(client, _)
   local errors = 0
 
+  local vault = client:vault()
+  if vault == nil then
+    errors = errors + 1
+    echo.err("FAILED - couldn't find an Obsidian vault in '" .. tostring(client.dir) .. "'")
+    return
+  end
+
   -- Check completion via nvim-cmp
   if client.opts.completion.nvim_cmp then
     local ok, cmp = pcall(require, "cmp")
@@ -604,7 +611,7 @@ command.check_health = function(client, _)
   elseif errors > 1 then
     echo.err("There were " .. tostring(errors) .. " errors with obsidian setup")
   else
-    echo.info "All good! No errors to report"
+    echo.info("All good!\nVault configured to '" .. vault .. "'")
   end
 end
 
