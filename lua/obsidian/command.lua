@@ -594,7 +594,6 @@ command.check_health = function(client, _)
   if vault == nil then
     errors = errors + 1
     echo.err("FAILED - couldn't find an Obsidian vault in '" .. tostring(client.dir) .. "'")
-    return
   end
 
   -- Check completion via nvim-cmp
