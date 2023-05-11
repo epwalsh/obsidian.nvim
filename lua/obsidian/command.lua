@@ -192,50 +192,60 @@ end
 command.search = function(client, data)
   local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--smart-case", "--column", "--line-number", "--no-heading" } }
 
-  local has_telescope, telescope = pcall(require, "telescope.builtin")
+  client:_run_with_finder_backend(":ObsidianSearch", {
+    ["telescope.nvim"] = function()
+      local has_telescope, telescope = pcall(require, "telescope.builtin")
 
-  if has_telescope then
-    -- Search with telescope.nvim
-    local vimgrep_arguments = vim.tbl_flatten { base_cmd, {
-      "--with-filename",
-      "--color=never",
-    } }
+      if not has_telescope then
+        util.implementation_unavailable()
+      end
+      -- Search with telescope.nvim
+      local vimgrep_arguments =
+        vim.tbl_flatten { base_cmd, {
+          "--with-filename",
+          "--color=never",
+        } }
 
-    if data.args:len() > 0 then
-      telescope.grep_string { cwd = tostring(client.dir), search = data.args, vimgrep_arguments = vimgrep_arguments }
-    else
-      telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
-    end
-    return
-  end
+      if data.args:len() > 0 then
+        telescope.grep_string {
+          cwd = tostring(client.dir),
+          search = data.args,
+          vimgrep_arguments = vimgrep_arguments,
+        }
+      else
+        telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
+      end
+    end,
+    ["fzf-lua"] = function()
+      local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
 
-  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+      if not has_fzf_lua then
+        util.implementation_unavailable()
+      end
+      if data.args:len() > 0 then
+        fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
+      else
+        fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
+      end
+    end,
+    ["fzf.vim"] = function()
+      -- Fall back to trying with fzf.vim
+      local has_fzf, _ = pcall(function()
+        local grep_cmd =
+          vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
 
-  if has_fzf_lua then
-    if data.args:len() > 0 then
-      fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
-    else
-      fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
-    end
-    return
-  end
-
-  -- Fall back to trying with fzf.vim
-  local has_fzf, _ = pcall(function()
-    local grep_cmd =
-      vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
-
-    vim.api.nvim_call_function("fzf#vim#grep", {
-      table.concat(grep_cmd, " "),
-      true,
-      vim.api.nvim_call_function("fzf#vim#with_preview", {}),
-      false,
-    })
-  end)
-
-  if not has_fzf then
-    echo.err "Either telescope.nvim, fzf-lua or fzf.vim is required for :ObsidianSearch command"
-  end
+        vim.api.nvim_call_function("fzf#vim#grep", {
+          table.concat(grep_cmd, " "),
+          true,
+          vim.api.nvim_call_function("fzf#vim#with_preview", {}),
+          false,
+        })
+      end)
+      if not has_fzf then
+        util.implementation_unavailable()
+      end
+    end,
+  })
 end
 
 --- Insert a template
@@ -287,70 +297,74 @@ command.insert_template = function(client, data)
     vim.api.nvim_win_set_cursor(0, { new_row, 0 })
   end
 
-  -- try with telescope.nvim
-  local has_telescope, _ = pcall(require, "telescope.builtin")
-  if has_telescope then
-    local choose_template = function()
-      local opts = {
+  client:_run_with_finder_backend(":ObsidianTemplate", {
+    ["telescope.nvim"] = function()
+      -- try with telescope.nvim
+      local has_telescope, _ = pcall(require, "telescope.builtin")
+      if not has_telescope then
+        util.implementation_unavailable()
+      end
+      local choose_template = function()
+        local opts = {
+          cwd = tostring(templates_dir),
+          attach_mappings = function(_, map)
+            map({ "i", "n" }, "<CR>", function(prompt_bufnr)
+              local template = require("telescope.actions.state").get_selected_entry()
+              require("telescope.actions").close(prompt_bufnr)
+              apply_template(template[1])
+            end)
+          end,
+        }
+        require("telescope.builtin").find_files(opts)
+      end
+      choose_template()
+    end,
+    ["fzf-lua"] = function()
+      -- try with fzf-lua
+      local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+      if not has_fzf_lua then
+        util.implementation_unavailable()
+      end
+      local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+      cmd = util.table_params_to_str(cmd)
+      fzf_lua.files {
+        cmd = cmd,
         cwd = tostring(templates_dir),
-        attach_mappings = function(_, map)
-          map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-            local template = require("telescope.actions.state").get_selected_entry()
-            require("telescope.actions").close(prompt_bufnr)
-            apply_template(template[1])
-          end)
-          return true
-        end,
+        file_icons = false,
+        actions = {
+          ["default"] = function(entry)
+            -- for some reason fzf-lua passes the filename with 6 characters
+            -- at the start that appear on screen as 2 whitespace characters
+            -- so we need to start on the 7th character
+            local template = entry[1]:sub(7)
+            apply_template(template)
+          end,
+        },
       }
-      require("telescope.builtin").find_files(opts)
-    end
-    choose_template()
-    return
-  end
-
-  -- try with fzf-lua
-  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
-  if has_fzf_lua then
-    local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
-    cmd = util.table_params_to_str(cmd)
-    fzf_lua.files {
-      cmd = cmd,
-      cwd = tostring(templates_dir),
-      file_icons = false,
-      actions = {
-        ["default"] = function(entry)
-          -- for some reason fzf-lua passes the filename with 6 characters
-          -- at the start that appear on screen as 2 whitespace characters
-          -- so we need to start on the 7th character
-          local template = entry[1]:sub(7)
+    end,
+    ["fzf.vim"] = function()
+      -- try with fzf
+      local has_fzf, _ = pcall(function()
+        vim.api.nvim_create_user_command("ApplyTemplate", function(path)
+          -- remove escaped whitespace and extract the file name
+          local file_path = string.gsub(path.args, "\\ ", " ")
+          local template = vim.fs.basename(file_path)
           apply_template(template)
-        end,
-      },
-    }
-    return
-  end
+          vim.api.nvim_del_user_command "ApplyTemplate"
+        end, { nargs = 1, bang = true })
 
-  -- try with fzf
-  local has_fzf, _ = pcall(function()
-    vim.api.nvim_create_user_command("ApplyTemplate", function(path)
-      -- remove escaped whitespace and extract the file name
-      local file_path = string.gsub(path.args, "\\ ", " ")
-      local template = vim.fs.basename(file_path)
-      apply_template(template)
-      vim.api.nvim_del_user_command "ApplyTemplate"
-    end, { nargs = 1, bang = true })
-
-    local base_cmd = vim.tbl_flatten { util.FIND_CMD, { tostring(templates_dir), "-name", "'*.md'" } }
-    base_cmd = util.table_params_to_str(base_cmd)
-    local fzf_options = { source = base_cmd, sink = "ApplyTemplate" }
-    vim.api.nvim_call_function("fzf#run", {
-      vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
-    })
-  end)
-
-  if not has_fzf then
-    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianTemplate command"
-  end
+        local base_cmd = vim.tbl_flatten { util.FIND_CMD, { tostring(templates_dir), "-name", "'*.md'" } }
+        base_cmd = util.table_params_to_str(base_cmd)
+        local fzf_options = { source = base_cmd, sink = "ApplyTemplate" }
+        vim.api.nvim_call_function("fzf#run", {
+          vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
+        })
+      end)
+      if not has_fzf then
+        util.implementation_unavailable()
+      end
+    end,
+  })
 end
 
 ---Quick switch to an obsidian note
@@ -359,36 +373,42 @@ end
 ---@param data table
 command.quick_switch = function(client, data)
   local dir = tostring(client.dir)
-  local has_telescope, telescope = pcall(require, "telescope.builtin")
 
-  if has_telescope then
-    -- Search with telescope.nvim
-    telescope.find_files { cwd = dir, search_file = "*.md" }
-    return
-  end
+  client:_run_with_finder_backend(":ObsidianQuickSwitch", {
+    ["telescope.nvim"] = function()
+      local has_telescope, telescope = pcall(require, "telescope.builtin")
 
-  local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+      if not has_telescope then
+        util.implementation_unavailable()
+      end
+      -- Search with telescope.nvim
+      telescope.find_files { cwd = dir, search_file = "*.md" }
+    end,
+    ["fzf-lua"] = function()
+      local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
 
-  if has_fzf_lua then
-    local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
-    cmd = util.table_params_to_str(cmd)
-    fzf_lua.files { cmd = cmd, cwd = tostring(client.dir) }
-    return
-  end
-
-  -- Fall back to trying with fzf.vim
-  local has_fzf, _ = pcall(function()
-    local base_cmd = vim.tbl_flatten { util.FIND_CMD, { dir, "-name", "'*.md'" } }
-    base_cmd = util.table_params_to_str(base_cmd)
-    local fzf_options = { source = base_cmd, sink = "e" }
-    vim.api.nvim_call_function("fzf#run", {
-      vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
-    })
-  end)
-
-  if not has_fzf then
-    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianQuickSwitch command"
-  end
+      if not has_fzf_lua then
+        util.implementation_unavailable()
+      end
+      local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+      cmd = util.table_params_to_str(cmd)
+      fzf_lua.files { cmd = cmd, cwd = tostring(client.dir) }
+    end,
+    ["fzf.vim"] = function()
+      -- Fall back to trying with fzf.vim
+      local has_fzf, _ = pcall(function()
+        local base_cmd = vim.tbl_flatten { util.FIND_CMD, { dir, "-name", "'*.md'" } }
+        base_cmd = util.table_params_to_str(base_cmd)
+        local fzf_options = { source = base_cmd, sink = "e" }
+        vim.api.nvim_call_function("fzf#run", {
+          vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
+        })
+      end)
+      if not has_fzf then
+        util.implementation_unavailable()
+      end
+    end,
+  })
 end
 
 command.link_new = function(client, data)
