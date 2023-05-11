@@ -150,13 +150,13 @@ return {
     -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
     open_app_foreground = false,
 
-    -- Optional, by default commands like `:ObsidianSearch` will attempt -
-    -- in that order - telescope.nvim, fzf-lua, and fzf.nvim, and use the
+    -- Optional, by default commands like `:ObsidianSearch` will attempt to use
+    -- telescope.nvim, fzf-lua, and fzf.nvim (in that order), and use the
     -- first one they find. By setting this option to your preferred
-    -- finder, you can attempt it first. Note that if the specified finder
+    -- finder you can attempt it first. Note that if the specified finder
     -- is not installed, or if it the command does not support it, the
     -- remaining finders will be attempted in the original order.
-    finder = "fzf-lua",
+    finder = "telescope.nvim",
   },
   config = function(_, opts)
     require("obsidian").setup(opts)
