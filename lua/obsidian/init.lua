@@ -273,7 +273,7 @@ client.today = function(self)
   -- Create Note object and save if it doesn't already exist.
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
-    note:save()
+    note:save(nil, not self.opts.disable_frontmatter)
     echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   end
 
@@ -295,7 +295,7 @@ client.yesterday = function(self)
   -- Create Note object and save if it doesn't already exist.
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
-    note:save()
+    note:save(nil, not self.opts.disable_frontmatter)
     echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   end
 
