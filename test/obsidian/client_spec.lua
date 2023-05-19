@@ -1,4 +1,5 @@
 local Path = require "plenary.path"
+local Note = require "obsidian.note"
 local obsidian = require "obsidian"
 
 ---Get a client in a temporary directory.
@@ -22,5 +23,23 @@ describe("Client", function()
     local note = client:today()
     assert.is_true(note.path ~= nil)
     assert.is_true(note:exists())
+  end)
+
+  it("should not add frontmatter for today when disabled", function()
+    local client = tmp_client()
+    client.opts.disable_frontmatter = true
+    local new_note = client:today()
+
+    local saved_note = Note.from_file(new_note.path)
+    assert.is_false(saved_note.has_frontmatter)
+  end)
+
+  it("should not add frontmatter for yesterday when disabled", function()
+    local client = tmp_client()
+    client.opts.disable_frontmatter = true
+    local new_note = client:yesterday()
+
+    local saved_note = Note.from_file(new_note.path)
+    assert.is_false(saved_note.has_frontmatter)
   end)
 end)
