@@ -313,6 +313,7 @@ command.insert_template = function(client, data)
               require("telescope.actions").close(prompt_bufnr)
               apply_template(template[1])
             end)
+            return true
           end,
         }
         require("telescope.builtin").find_files(opts)
