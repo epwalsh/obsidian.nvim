@@ -21,7 +21,8 @@ source.complete = function(self, request, callback)
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local items = {}
     for note in client:search(search, "--ignore-case") do
-      for _, alias in pairs(note.aliases) do
+      local aliases = util.unique { note.id, note:display_name(), unpack(note.aliases) }
+      for _, alias in pairs(aliases) do
         local options = {}
 
         local alias_case_matched = util.match_case(search, alias)
@@ -36,13 +37,20 @@ source.complete = function(self, request, callback)
         table.insert(options, alias)
 
         for _, option in pairs(options) do
+          local label = "[[" .. note.id
+          if option ~= note.id then
+            label = label .. "|" .. option .. "]]"
+          else
+            label = label .. "]]"
+          end
+
           table.insert(items, {
             sortText = "[[" .. option,
-            label = "[[" .. note.id .. "|" .. option .. "]]",
+            label = label,
             kind = 18,
             textEdit = {
-              newText = "[[" .. note.id .. "|" .. option .. "]]",
-              insert = {
+              newText = label,
+              range = {
                 start = {
                   line = request.context.cursor.row - 1,
                   character = insert_start,

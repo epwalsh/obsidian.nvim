@@ -13,10 +13,7 @@ test :
 
 .PHONY : lint
 lint :
-	luacheck after lua \
-		--exclude-files='lua/deps/*' \
-		--exclude-files='lua/plenary/*' \
-		--exclude-files='lua/yaml.lua'
+	luacheck after lua
 
 .PHONY : style
 style :

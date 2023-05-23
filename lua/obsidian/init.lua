@@ -5,7 +5,7 @@ local config = require "obsidian.config"
 
 local obsidian = {}
 
-obsidian.VERSION = "1.6.1"
+obsidian.VERSION = "1.10.0"
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
@@ -21,9 +21,6 @@ local client = {}
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 obsidian.new = function(opts)
-  -- Setup highlight groups.
-  echo.setup()
-
   local self = setmetatable({}, { __index = client })
   self.dir = Path:new(vim.fs.normalize(tostring(opts.dir and opts.dir or "./")))
   self.opts = opts
@@ -52,18 +49,18 @@ obsidian.setup = function(opts)
 
   -- Ensure directories exist.
   self.dir:mkdir { parents = true, exists_ok = true }
-  vim.cmd("set path+=" .. tostring(self.dir))
+  vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(self.dir)))
 
   if self.opts.notes_subdir ~= nil then
     local notes_subdir = self.dir / self.opts.notes_subdir
     notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. tostring(notes_subdir))
+    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(notes_subdir)))
   end
 
   if self.opts.daily_notes.folder ~= nil then
     local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. tostring(daily_notes_subdir))
+    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(daily_notes_subdir)))
   end
 
   -- Register commands.
@@ -73,11 +70,6 @@ obsidian.setup = function(opts)
   local lazy_setup = function()
     -- Configure completion...
     if opts.completion.nvim_cmp then
-      -- Check for ripgrep.
-      if os.execute "rg --help" > 0 then
-        echo.err "Can't find 'rg' command! Did you forget to install ripgrep?"
-      end
-
       -- Add source.
       local cmp = require "cmp"
       local sources = {
@@ -118,8 +110,6 @@ obsidian.setup = function(opts)
         local lines = note:frontmatter_lines(nil, frontmatter)
         vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
         echo.info "Updated frontmatter"
-      elseif self.opts.disable_frontmatter then
-        echo.info "Frontmatter skipped"
       end
     end,
   })
@@ -148,20 +138,38 @@ end
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
----@param opts string|?
+---@param search_opts string|?
 ---@return function
-client.search = function(self, search, opts)
-  opts = opts and (opts .. " ") or ""
-  local search_results = obsidian.util.search(self.dir, search, opts .. "-m 1")
+client.search = function(self, search, search_opts)
+  search_opts = search_opts and (search_opts .. " ") or ""
+  local search_results = obsidian.util.search(self.dir, search, search_opts .. "-m 1")
+  local find_results = obsidian.util.find(self.dir, search)
+
+  local found = {}
+  local note = nil
 
   ---@return obsidian.Note|?
   return function()
-    local match = search_results()
-    if match == nil then
-      return nil
-    else
-      return obsidian.note.from_file(match.path.text, self.dir)
+    local content_match = search_results()
+    if content_match ~= nil then
+      note = obsidian.note.from_file(content_match.path.text, self.dir)
+      found[#found + 1] = note.id
+      return note
     end
+
+    local path_match = find_results()
+    note = path_match ~= nil and obsidian.note.from_file(path_match, self.dir) or nil
+    -- keep looking until we get a new match that we haven't seen yet.
+    while path_match ~= nil and note ~= nil and obsidian.util.contains(found, note.id) do
+      path_match = find_results()
+      note = path_match ~= nil and obsidian.note.from_file(path_match, self.dir) or nil
+    end
+
+    if note ~= nil then
+      return note
+    end
+
+    return nil
   end
 end
 
@@ -192,8 +200,9 @@ end
 ---
 ---@param title string|?
 ---@param id string|?
+---@param dir string|Path|?
 ---@return obsidian.Note
-client.new_note = function(self, title, id)
+client.new_note = function(self, title, id, dir)
   -- Generate new ID if needed.
   local new_id = id and id or self:new_note_id(title)
   if new_id == tostring(os.date "%Y-%m-%d") then
@@ -202,8 +211,8 @@ client.new_note = function(self, title, id)
 
   -- Get path.
   ---@type Path
-  local path = Path:new(self.dir)
-  if self.opts.notes_subdir ~= nil then
+  local path = dir == nil and Path:new(self.dir) or Path:new(dir)
+  if dir == nil and self.opts.notes_subdir ~= nil then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.notes_subdir
@@ -222,7 +231,7 @@ client.new_note = function(self, title, id)
 
   -- Create Note object and save.
   local note = obsidian.note.new(new_id, aliases, {}, path)
-  note:save()
+  note:save(nil, not self.opts.disable_frontmatter)
   echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
 
   return note
@@ -270,7 +279,29 @@ client.today = function(self)
   -- Create Note object and save if it doesn't already exist.
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
-    note:save()
+    note:save(nil, not self.opts.disable_frontmatter)
+    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  end
+
+  return note
+end
+
+---Open (or create) the daily note from the last weekday.
+---
+---@return obsidian.Note
+client.yesterday = function(self)
+  ---@type string
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local today = os.time()
+  local yesterday = obsidian.util.working_day_before(today)
+  local id = tostring(os.date("%Y-%m-%d", yesterday))
+  local alias = tostring(os.date("%B %-d, %Y", yesterday))
+  local path = self:daily_note_path(id)
+
+  -- Create Note object and save if it doesn't already exist.
+  local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
+  if not note:exists() then
+    note:save(nil, not self.opts.disable_frontmatter)
     echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   end
 
@@ -330,6 +361,27 @@ client.resolve_note = function(self, query)
   end
 
   return nil
+end
+
+client._run_with_finder_backend = function(self, command_name, implementations)
+  local finders_order = { "telescope.nvim", "fzf-lua", "fzf.vim" }
+  if self.opts.finder then
+    for idx, finder in ipairs(finders_order) do
+      if finder == self.opts.finder then
+        table.remove(finders_order, idx)
+        break
+      end
+    end
+    table.insert(finders_order, 1, self.opts.finder)
+  end
+  local success, err = pcall(obsidian.util.run_first_supported, command_name, finders_order, implementations)
+  if not success then
+    if type(err) == "string" then
+      echo.err(err)
+    else
+      error(err)
+    end
+  end
 end
 
 return obsidian

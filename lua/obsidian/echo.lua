@@ -1,34 +1,23 @@
 local echo = {}
 
-local HlInfo = "ObsidianInfo"
-local HlWarn = "ObsidianWarn"
-local HlError = "ObsidianError"
-
----Define highlight groups.
-echo.setup = function()
-  vim.api.nvim_set_hl(0, HlInfo, { link = "Question" })
-  vim.api.nvim_set_hl(0, HlWarn, { link = "WarningMsg" })
-  vim.api.nvim_set_hl(0, HlError, { link = "ErrorMsg" })
-end
-
 ---Echo a message with a highlight group.
 ---
 ---@param msg any
----@param group string
-echo.echo = function(msg, group)
-  vim.api.nvim_echo({ { "[Obsidian]", group }, { " " .. tostring(msg), nil } }, true, {})
+---@param level integer
+echo.echo = function(msg, level)
+  vim.notify("[Obsidian] " .. tostring(msg), level)
 end
 
 echo.info = function(msg)
-  echo.echo(msg, HlInfo)
+  echo.echo(msg, vim.log.levels.INFO)
 end
 
 echo.warn = function(msg)
-  echo.echo(msg, HlWarn)
+  echo.echo(msg, vim.log.levels.WARN)
 end
 
 echo.err = function(msg)
-  echo.echo(msg, HlError)
+  echo.echo(msg, vim.log.levels.ERROR)
 end
 
 echo.fail = function(msg)

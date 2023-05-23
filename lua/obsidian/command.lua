@@ -1,4 +1,5 @@
 local Path = require "plenary.path"
+local Job = require "plenary.job"
 local Note = require "obsidian.note"
 local echo = require "obsidian.echo"
 local util = require "obsidian.util"
@@ -53,6 +54,15 @@ command.today = function(client, _)
   vim.api.nvim_command("e " .. tostring(note.path))
 end
 
+---Create (or open) the daily note from the last weekday.
+---
+---@param client obsidian.Client
+---@param _ table
+command.yesterday = function(client, _)
+  local note = client:yesterday()
+  vim.api.nvim_command("e " .. tostring(note.path))
+end
+
 ---Create a new note.
 ---
 ---@param client obsidian.Client
@@ -91,30 +101,73 @@ command.open = function(client, data)
     end
   else
     local bufname = vim.api.nvim_buf_get_name(0)
+    local vault_name_escaped = vault_name:gsub("%W", "%%%0") .. "%/"
+    if vim.loop.os_uname().sysname == "Windows_NT" then
+      bufname = bufname:gsub("/", "\\")
+      vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
+    end
+
+    -- make_relative fails to work when vault path is configured to look behind a link
+    -- make_relative returns an unaltered path if it cannot make the path relative
     path = Path:new(bufname):make_relative(vault)
+
+    -- if the vault name appears in the output of make_relative
+    --          i.e. make_relative has failed
+    -- then remove everything up to and including the vault path
+    -- Example:
+    -- Config path: ~/Dropbox/Documents/0-obsidian-notes/
+    -- File path: /Users/username/Library/CloudStorage/Dropbox/Documents/0-obsidian-notes/Notes/note.md
+    --                                                                   ^
+    -- Proper relative path: Notes/note.md
+    local _, j = path:find(vault_name_escaped)
+    if j ~= nil then
+      path = bufname:sub(j)
+    end
   end
 
   local encoded_vault = util.urlencode(vault_name)
   local encoded_path = util.urlencode(tostring(path))
-  local cmd = nil
-  local sysname = vim.loop.os_uname().sysname
-  if sysname == "Linux" then
-    cmd = ("xdg-open 'obsidian://open?vault=%s&file=%s'"):format(encoded_vault, encoded_path)
-  elseif sysname == "Darwin" then
-    cmd = ("open -a /Applications/Obsidian.app --background 'obsidian://open?vault=%s&file=%s'"):format(
-      encoded_vault,
-      encoded_path
-    )
+
+  local uri
+  if client.opts.use_advanced_uri then
+    local line = vim.api.nvim_win_get_cursor(0)[1] or 1
+    uri = ("obsidian://advanced-uri?vault=%s&filepath=%s&line=%i"):format(encoded_vault, encoded_path, line)
   else
-    echo.err "open command does not support this OS yet"
+    uri = ("obsidian://open?vault=%s&file=%s"):format(encoded_vault, encoded_path)
   end
 
-  if cmd ~= nil then
-    local return_code = os.execute(cmd)
-    if return_code > 0 then
-      echo.err "failed opening Obsidian app to note"
+  local cmd = nil
+  local args = {}
+  local sysname = vim.loop.os_uname().sysname
+  if sysname == "Linux" then
+    cmd = "xdg-open"
+    args = { uri }
+  elseif sysname == "Darwin" then
+    cmd = "open"
+    if client.opts.open_app_foreground then
+      args = { "-a", "/Applications/Obsidian.app", uri }
+    else
+      args = { "-a", "/Applications/Obsidian.app", "--background", uri }
     end
+  elseif sysname == "Windows_NT" then
+    cmd = "powershell"
+    args = { "Start-Process '" .. uri .. "'" }
   end
+
+  if cmd == nil then
+    echo.err "open command does not support this OS yet"
+    return
+  end
+
+  Job:new({
+    command = cmd,
+    args = args,
+    on_exit = vim.schedule_wrap(function(_, return_code)
+      if return_code > 0 then
+        echo.err "failed opening Obsidian app to note"
+      end
+    end),
+  }):start()
 end
 
 ---Get backlinks to a note.
@@ -139,39 +192,223 @@ end
 command.search = function(client, data)
   local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--smart-case", "--column", "--line-number", "--no-heading" } }
 
-  local has_telescope, telescope = pcall(require, "telescope.builtin")
+  client:_run_with_finder_backend(":ObsidianSearch", {
+    ["telescope.nvim"] = function()
+      local has_telescope, telescope = pcall(require, "telescope.builtin")
 
-  if has_telescope then
-    -- Search with telescope.nvim
-    local vimgrep_arguments = vim.tbl_flatten { base_cmd, {
-      "--with-filename",
-      "--color=never",
-    } }
+      if not has_telescope then
+        util.implementation_unavailable()
+      end
+      -- Search with telescope.nvim
+      local vimgrep_arguments =
+        vim.tbl_flatten { base_cmd, {
+          "--with-filename",
+          "--color=never",
+        } }
 
-    if data.args:len() > 0 then
-      telescope.grep_string { cwd = tostring(client.dir), search = data.args, vimgrep_arguments = vimgrep_arguments }
-    else
-      telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
-    end
+      if data.args:len() > 0 then
+        telescope.grep_string {
+          cwd = tostring(client.dir),
+          search = data.args,
+          vimgrep_arguments = vimgrep_arguments,
+        }
+      else
+        telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
+      end
+    end,
+    ["fzf-lua"] = function()
+      local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+
+      if not has_fzf_lua then
+        util.implementation_unavailable()
+      end
+      if data.args:len() > 0 then
+        fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
+      else
+        fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
+      end
+    end,
+    ["fzf.vim"] = function()
+      -- Fall back to trying with fzf.vim
+      local has_fzf, _ = pcall(function()
+        local grep_cmd =
+          vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
+
+        vim.api.nvim_call_function("fzf#vim#grep", {
+          table.concat(grep_cmd, " "),
+          true,
+          vim.api.nvim_call_function("fzf#vim#with_preview", {}),
+          false,
+        })
+      end)
+      if not has_fzf then
+        util.implementation_unavailable()
+      end
+    end,
+  })
+end
+
+--- Insert a template
+---
+---@param client obsidian.Client
+---@param data table
+command.insert_template = function(client, data)
+  if not client.opts.templates.subdir then
+    echo.err "No templates folder defined in setup()"
     return
   end
 
-  -- Fall back to trying with fzf.vim
-  local has_fzf, _ = pcall(function()
-    local grep_cmd =
-      vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
-
-    vim.api.nvim_call_function("fzf#vim#grep", {
-      table.concat(grep_cmd, " "),
-      true,
-      vim.api.nvim_call_function("fzf#vim#with_preview", {}),
-      false,
-    })
-  end)
-
-  if not has_fzf then
-    echo.err "Either telescope.nvim or fzf.vim is required for :ObsidianSearch command"
+  local templates_dir = Path:new(client.dir) / client.opts.templates.subdir
+  if not templates_dir:is_dir() then
+    echo.err(string.format("%s is not a valid directory for templates", templates_dir))
+    return
   end
+
+  -- We need to get these upfront otherwise
+  -- Telescope hijacks the current window
+  local buf = vim.api.nvim_win_get_buf(0)
+  local win = vim.api.nvim_get_current_win()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+
+  local apply_template = function(name)
+    local template_path = Path:new(templates_dir / name)
+    local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+    local time_format = client.opts.templates.time_format or "%H:%M"
+    local date = tostring(os.date(date_format))
+    local time = tostring(os.date(time_format))
+    local title = Note.from_buffer(buf, client.dir):display_name()
+
+    local insert_lines = {}
+    local template_file = io.open(tostring(template_path), "r")
+    if template_file then
+      local lines = template_file:lines()
+      for line in lines do
+        line = string.gsub(line, "{{date}}", date)
+        line = string.gsub(line, "{{time}}", time)
+        line = string.gsub(line, "{{title}}", title)
+        table.insert(insert_lines, line)
+      end
+      template_file:close()
+      table.insert(insert_lines, "")
+    end
+
+    vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
+    local new_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+    vim.api.nvim_win_set_cursor(0, { new_row, 0 })
+  end
+
+  client:_run_with_finder_backend(":ObsidianTemplate", {
+    ["telescope.nvim"] = function()
+      -- try with telescope.nvim
+      local has_telescope, _ = pcall(require, "telescope.builtin")
+      if not has_telescope then
+        util.implementation_unavailable()
+      end
+      local choose_template = function()
+        local opts = {
+          cwd = tostring(templates_dir),
+          attach_mappings = function(_, map)
+            map({ "i", "n" }, "<CR>", function(prompt_bufnr)
+              local template = require("telescope.actions.state").get_selected_entry()
+              require("telescope.actions").close(prompt_bufnr)
+              apply_template(template[1])
+            end)
+          end,
+        }
+        require("telescope.builtin").find_files(opts)
+      end
+      choose_template()
+    end,
+    ["fzf-lua"] = function()
+      -- try with fzf-lua
+      local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+      if not has_fzf_lua then
+        util.implementation_unavailable()
+      end
+      local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+      cmd = util.table_params_to_str(cmd)
+      fzf_lua.files {
+        cmd = cmd,
+        cwd = tostring(templates_dir),
+        file_icons = false,
+        actions = {
+          ["default"] = function(entry)
+            -- for some reason fzf-lua passes the filename with 6 characters
+            -- at the start that appear on screen as 2 whitespace characters
+            -- so we need to start on the 7th character
+            local template = entry[1]:sub(7)
+            apply_template(template)
+          end,
+        },
+      }
+    end,
+    ["fzf.vim"] = function()
+      -- try with fzf
+      local has_fzf, _ = pcall(function()
+        vim.api.nvim_create_user_command("ApplyTemplate", function(path)
+          -- remove escaped whitespace and extract the file name
+          local file_path = string.gsub(path.args, "\\ ", " ")
+          local template = vim.fs.basename(file_path)
+          apply_template(template)
+          vim.api.nvim_del_user_command "ApplyTemplate"
+        end, { nargs = 1, bang = true })
+
+        local base_cmd = vim.tbl_flatten { util.FIND_CMD, { tostring(templates_dir), "-name", "'*.md'" } }
+        base_cmd = util.table_params_to_str(base_cmd)
+        local fzf_options = { source = base_cmd, sink = "ApplyTemplate" }
+        vim.api.nvim_call_function("fzf#run", {
+          vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
+        })
+      end)
+      if not has_fzf then
+        util.implementation_unavailable()
+      end
+    end,
+  })
+end
+
+---Quick switch to an obsidian note
+---
+---@param client obsidian.Client
+---@param data table
+command.quick_switch = function(client, data)
+  local dir = tostring(client.dir)
+
+  client:_run_with_finder_backend(":ObsidianQuickSwitch", {
+    ["telescope.nvim"] = function()
+      local has_telescope, telescope = pcall(require, "telescope.builtin")
+
+      if not has_telescope then
+        util.implementation_unavailable()
+      end
+      -- Search with telescope.nvim
+      telescope.find_files { cwd = dir, search_file = "*.md" }
+    end,
+    ["fzf-lua"] = function()
+      local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
+
+      if not has_fzf_lua then
+        util.implementation_unavailable()
+      end
+      local cmd = vim.tbl_flatten { util.FIND_CMD, { ".", "-name", "'*.md'" } }
+      cmd = util.table_params_to_str(cmd)
+      fzf_lua.files { cmd = cmd, cwd = tostring(client.dir) }
+    end,
+    ["fzf.vim"] = function()
+      -- Fall back to trying with fzf.vim
+      local has_fzf, _ = pcall(function()
+        local base_cmd = vim.tbl_flatten { util.FIND_CMD, { dir, "-name", "'*.md'" } }
+        base_cmd = util.table_params_to_str(base_cmd)
+        local fzf_options = { source = base_cmd, sink = "e" }
+        vim.api.nvim_call_function("fzf#run", {
+          vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
+        })
+      end)
+      if not has_fzf then
+        util.implementation_unavailable()
+      end
+    end,
+  })
 end
 
 command.link_new = function(client, data)
@@ -197,7 +434,7 @@ command.link_new = function(client, data)
   else
     title = string.sub(line, cscol, cecol)
   end
-  local note = client:new_note(title)
+  local note = client:new_note(title, nil, vim.fn.expand "%:p:h")
 
   line = string.sub(line, 1, cscol - 1)
     .. "[["
@@ -298,8 +535,6 @@ end
 ---
 ---@param client obsidian.Client
 command.follow = function(client, _)
-  local scan = require "plenary.scandir"
-
   local open, close = util.cursor_on_markdown_link()
   local current_line = vim.api.nvim_get_current_line()
 
@@ -308,45 +543,40 @@ command.follow = function(client, _)
     return
   end
 
-  local note_name = current_line:sub(open + 2, close - 1)
-  local path = client.dir
-
-  if note_name:match "|[^%]]*" then
-    note_name = note_name:sub(1, note_name:find "|" - 1)
+  local note_name = current_line:sub(open, close)
+  if note_name:match "^%[.-%]%(.*%)$" then
+    -- transform markdown link to wiki link
+    note_name = note_name:gsub("^%[(.-)%]%((.*)%)$", "%2|%1")
+  else
+    -- wiki link
+    note_name = note_name:sub(3, #note_name - 2)
   end
 
-  if not note_name:match "%.md" then
-    note_name = note_name .. ".md"
+  local note_file_name = note_name
+
+  if note_file_name:match "|[^%]]*" then
+    note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
   end
 
-  local notes = {}
-
-  if not note_name:match "/" then
-    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
-      hidden = false,
-      add_dirs = false,
-      only_dirs = true,
-      respect_gitignore = true,
-      on_insert = function(entry)
-        ---@type Path
-        ---@diagnostic disable-next-line: assign-type-mismatch
-        local note_path = Path:new(entry) / note_name
-        if note_path:is_file() then
-          local ok, _ = pcall(Note.from_file, note_path, client.dir)
-          if ok then
-            table.insert(notes, note_path)
-          end
-        end
-      end,
-    })
+  if note_file_name:match "^[%a%d]*%:%/%/" then
+    if client.opts.follow_url_func ~= nil then
+      client.opts.follow_url_func(note_file_name)
+    else
+      echo.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+    end
+    return
   end
+
+  if not note_file_name:match "%.md" then
+    note_file_name = note_file_name .. ".md"
+  end
+
+  local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
-    ---@diagnostic disable-next-line: cast-local-type
-    path = path / note_name
-    vim.api.nvim_command("e " .. tostring(path))
+    command.new(client, { args = note_name })
   elseif #notes == 1 then
-    path = notes[1]
+    local path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
   else
     echo.err "Multiple notes with this name exist"
@@ -354,16 +584,70 @@ command.follow = function(client, _)
   end
 end
 
+---Run a health check.
+---
+---@param client obsidian.Client
+command.check_health = function(client, _)
+  local errors = 0
+
+  local vault = client:vault()
+  if vault == nil then
+    errors = errors + 1
+    echo.err("FAILED - couldn't find an Obsidian vault in '" .. tostring(client.dir) .. "'")
+  end
+
+  -- Check completion via nvim-cmp
+  if client.opts.completion.nvim_cmp then
+    local ok, cmp = pcall(require, "cmp")
+    if not ok then
+      echo.err "nvim-cmp could not be loaded"
+    else
+      local has_obsidian_source = false
+      local has_obsidian_new_source = false
+      for _, source in pairs(cmp.get_config().sources) do
+        if source.name == "obsidian" then
+          has_obsidian_source = true
+        elseif source.name == "obsidian_new" then
+          has_obsidian_new_source = true
+        end
+      end
+
+      if not has_obsidian_source then
+        echo.err "FAILED - note completion is not configured"
+        errors = errors + 1
+      end
+
+      if not has_obsidian_new_source then
+        echo.err "FAILED - new note completion is not configured"
+        errors = errors + 1
+      end
+    end
+  end
+
+  -- Report total errors.
+  if errors == 1 then
+    echo.err "There was 1 error with obsidian setup"
+  elseif errors > 1 then
+    echo.err("There were " .. tostring(errors) .. " errors with obsidian setup")
+  else
+    echo.info("All good!\nVault configured to '" .. vault .. "'")
+  end
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
+  ObsidianTemplate = { func = command.insert_template, opts = { nargs = "?" } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
+  ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
+  ObsidianQuickSwitch = { func = command.quick_switch, opts = { nargs = 0 } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },
   ObsidianLink = { func = command.link, opts = { nargs = "?", range = true }, complete = command.complete_args },
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
+  ObsidianCheckHealth = { func = command.check_health, opts = { nargs = 0 } },
 }
 
 ---Register all commands.

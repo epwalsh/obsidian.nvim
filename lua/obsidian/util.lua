@@ -1,4 +1,5 @@
 local scan = require "plenary.scandir"
+local Path = require "plenary.path"
 
 local util = {}
 
@@ -16,6 +17,20 @@ util.contains = function(table, val)
   return false
 end
 
+---Return a new table (list) with only the unique values of the original.
+---
+---@param table table
+---@return any[]
+util.unique = function(table)
+  local out = {}
+  for _, val in pairs(table) do
+    if not util.contains(out, val) then
+      out[#out + 1] = val
+    end
+  end
+  return out
+end
+
 ---Find all markdown files in a directory.
 ---
 ---@param dir string|Path
@@ -26,6 +41,44 @@ util.find_markdown_files = function(dir)
     add_dirs = false,
     search_pattern = ".*%.md",
   })
+end
+
+---Find all notes with the given file_name recursively in a directory.
+---
+---@param dir string|Path
+---@param note_file_name string
+---@return Path[]
+util.find_note = function(dir, note_file_name)
+  local Note = require "obsidian.note"
+
+  local notes = {}
+  local root_dir = vim.fs.normalize(tostring(dir))
+
+  local visit_dir = function(entry)
+    ---@type Path
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local note_path = Path:new(entry) / note_file_name
+    if note_path:is_file() then
+      local ok, _ = pcall(Note.from_file, note_path, root_dir)
+      if ok then
+        table.insert(notes, note_path)
+      end
+    end
+  end
+
+  -- We must separately check the vault's root dir because scan_dir will
+  -- skip it, but Obsidian does allow root-level notes.
+  visit_dir(root_dir)
+
+  scan.scan_dir(root_dir, {
+    hidden = false,
+    add_dirs = false,
+    only_dirs = true,
+    respect_gitignore = true,
+    on_insert = visit_dir,
+  })
+
+  return notes
 end
 
 ---Quote a string for safe command-line usage.
@@ -51,11 +104,17 @@ util.urlencode = function(str)
   local url = str
   url = url:gsub("\n", "\r\n")
   url = url:gsub("([^%w _%%%-%.~])", char_to_hex)
-  url = url:gsub(" ", "+")
+
+  -- Spaces in URLs are always safely encoded with `%20`, but not always safe
+  -- with `+`. For example, `+` in a query param's value will be interpreted
+  -- as a literal plus-sign if the decoder is using JavaScript's `decodeURI`
+  -- function.
+  url = url:gsub(" ", "%%20")
   return url
 end
 
 util.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
+util.FIND_CMD = { "find" }
 
 ---@class MatchPath
 ---@field text string
@@ -107,6 +166,44 @@ util.search = function(dir, term, opts)
         return match_data
       end
     end
+  end
+end
+
+---Find markdown files in a directory matching a given term. Return an iterator
+---over file names.
+---
+---@param dir string|Path
+---@param term string
+---@return function
+util.find = function(dir, term)
+  local norm_dir = vim.fs.normalize(tostring(dir))
+  local cmd_args = vim.tbl_flatten {
+    util.FIND_CMD,
+    {
+      util.quote(norm_dir),
+      "-type",
+      "f",
+      "-not",
+      "-path",
+      util.quote "*/.*",
+      "-iname",
+      util.quote("*" .. term .. "*.md"),
+    },
+  }
+  local cmd = table.concat(cmd_args, " ")
+  print(cmd)
+
+  local handle = assert(io.popen(cmd, "r"))
+
+  ---Iterator over matches.
+  ---
+  ---@return MatchData|?
+  return function()
+    local line = handle:read "*l"
+    if line == nil then
+      return nil
+    end
+    return line
   end
 end
 
@@ -253,6 +350,22 @@ util.is_array = function(t)
   return true
 end
 
+---Helper function to convert a table with the list of table_params
+---into a single string with params separated by spaces
+---@param table_params table a table with the list of params
+---@return string a single string with params separated by spaces
+util.table_params_to_str = function(table_params)
+  local s = ""
+  for _, param in ipairs(table_params) do
+    if #s > 0 then
+      s = s .. " " .. param
+    else
+      s = param
+    end
+  end
+  return s
+end
+
 util.strip = function(s)
   local out = string.gsub(s, "^%s+", "")
   return out
@@ -267,23 +380,125 @@ util.table_length = function(x)
 end
 
 -- Determines if cursor is currently inside markdown link
--- @return integer, integer
-util.cursor_on_markdown_link = function()
-  local current_line = vim.api.nvim_get_current_line()
+---@param line string|nil - line to check or current line if nil
+---@param col  integer|nil - column to check or current column if nil (1-indexed)
+---@return integer|nil, integer|nil - start and end column of link (1-indexed)
+util.cursor_on_markdown_link = function(line, col)
+  local current_line = line or vim.api.nvim_get_current_line()
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
+  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
-  local current_line_lh = current_line:sub(0, cur_col + 2)
-
-  -- Search for two open brackets followed by any number of non-open bracket
-  -- characters nor close bracket characters
-  local open = current_line_lh:find "%[%[[^%[%]]*%]?%]?$"
-  local close = current_line:find("%]%]", cur_col)
-
-  if open == nil or close == nil then
-    return nil, nil
-  else
-    return open, close
+  local find_boundaries = function(pattern)
+    local open, close = current_line:find(pattern)
+    while open ~= nil and close ~= nil do
+      if open <= cur_col and cur_col <= close then
+        return open, close
+      end
+      open, close = current_line:find(pattern, close + 1)
+    end
   end
+
+  -- wiki link
+  local open, close = find_boundaries "%[%[.-%]%]"
+  if open == nil or close == nil then
+    -- markdown link
+    open, close = find_boundaries "%[.-%]%(.-%)"
+  end
+
+  return open, close
+end
+
+-- Determines if the given date is a working day (not weekend)
+--
+-- @param time a Time
+--
+-- @return boolean
+util.is_working_day = function(time)
+  local is_saturday = (os.date("%w", time) == "6")
+  local is_sunday = (os.date("%w", time) == "0")
+  return not (is_saturday or is_sunday)
+end
+
+-- Determines the last working day before a given time
+--
+-- @param time a Time
+--
+-- @return time
+util.working_day_before = function(time)
+  local previous_day = time - (24 * 60 * 60)
+  if util.is_working_day(previous_day) then
+    return previous_day
+  else
+    return util.working_day_before(previous_day)
+  end
+end
+
+local IMPLEMENTATION_UNAVAILABLE = { "implementation_unavailable called from outside run_first_supported" }
+
+---Try implementations one by one in the given order, until finding one that is supported
+---
+---Implementations are given as functions. If the backend of the implementation
+---is unavailable (usually because a plugin is not installed), the function
+---should call the `implementation_unavailable()` function from the
+---`obsidian.util` module so that the next implementation in order will be
+---attempted.
+---
+---If the implementation's backend is installed but for some reason the
+---operation fails, the error will bubble up normally and the next
+---implementation will not be attempted.
+---
+---@param command_name string - name of the command, used for formatting the error message
+---@param order table - list of implementation names in the order in which they should be attempted
+---@param implementations table - map of implementation name to implementation function
+util.run_first_supported = function(command_name, order, implementations)
+  local unavailable = {}
+  local not_supported = {}
+  for _, impl_name in ipairs(order) do
+    local impl_function = implementations[impl_name]
+    if impl_function then
+      local result = { pcall(impl_function) }
+      if result[1] then
+        return select(2, unpack(result))
+      elseif result[2] == IMPLEMENTATION_UNAVAILABLE then
+        table.insert(unavailable, impl_name)
+      else
+        error(result[2])
+      end
+    else
+      table.insert(not_supported, impl_name)
+    end
+  end
+
+  if next(unavailable) == nil then
+    error(command_name .. " cannot be run with " .. table.concat(not_supported, " or "))
+  end
+
+  local error_message
+  if #unavailable == 1 then
+    error_message = unavailable[1] .. " is required for " .. command_name .. " command"
+  elseif #unavailable then
+    error_message = "Either " .. table.concat(unavailable, " or ") .. " is required for " .. command_name .. " command"
+  end
+
+  if next(not_supported) ~= nil then
+    if #not_supported == 1 then
+      error_message = error_message .. ". " .. not_supported[1] .. " is not a viable option for this command"
+    else
+      error_message = error_message
+        .. ". "
+        .. table.concat(not_supported, " and ")
+        .. " are not viable options for this command"
+    end
+  end
+
+  error(error_message)
+end
+
+---Should be called inside implementation functions passed to
+---`run_first_supported` when the implementation's backend is unavailable
+---(usually because a plugin is not installed)
+util.implementation_unavailable = function()
+  error(IMPLEMENTATION_UNAVAILABLE)
 end
 
 return util

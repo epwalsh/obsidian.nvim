@@ -158,7 +158,6 @@ end
 ---@return obsidian.Note
 note.from_lines = function(lines, path, root)
   local cwd = tostring(root and root or "./")
-  local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
 
   local id = nil
   local title = nil
@@ -209,14 +208,55 @@ note.from_lines = function(lines, path, root)
   if #frontmatter_lines > 0 then
     local frontmatter = table.concat(frontmatter_lines, "\n")
     local ok, data = pcall(yaml.loads, frontmatter)
+    if type(data) == "string" then
+      data = {}
+    end
     if ok then
       for k, v in pairs(data) do
         if k == "id" then
-          id = v
+          if type(v) == "string" then
+            id = v
+          else
+            echo.warn("Invalid 'id' in frontmatter for " .. path)
+          end
         elseif k == "aliases" then
-          aliases = v
+          if type(v) == "table" then
+            for _, alias in ipairs(v) do
+              if type(alias) == "string" then
+                table.insert(aliases, alias)
+              else
+                echo.warn(
+                  "Invalid alias value found in frontmatter for "
+                    .. path
+                    .. ". Expected string, found "
+                    .. type(alias)
+                    .. "."
+                )
+              end
+            end
+          else
+            echo.warn("Invalid 'aliases' in frontmatter for " .. path)
+          end
         elseif k == "tags" then
-          tags = v
+          if type(v) == "table" then
+            for _, tag in ipairs(v) do
+              if type(tag) == "string" then
+                table.insert(tags, tag)
+              else
+                echo.warn(
+                  "Invalid tag value found in frontmatter for "
+                    .. path
+                    .. ". Expected string, found "
+                    .. type(tag)
+                    .. "."
+                )
+              end
+            end
+          elseif type(v) == "string" then
+            tags = vim.split(v, " ")
+          else
+            echo.warn("Invalid 'tags' in frontmatter for " .. path)
+          end
         else
           if metadata == nil then
             metadata = {}
@@ -232,9 +272,13 @@ note.from_lines = function(lines, path, root)
     table.insert(aliases, title)
   end
 
-  -- Fall back to using the relative path as the ID.
-  if id == nil then
-    id = relative_path
+  -- The ID should match the filename with or without the extension.
+  local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
+  local relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
+  local fname = vim.fs.basename(relative_path)
+  local fname_no_ext = vim.fn.fnamemodify(fname, ":r")
+  if id ~= relative_path and id ~= relative_path_no_ext and id ~= fname and id ~= fname_no_ext then
+    id = fname_no_ext
   end
 
   local n = note.new(id, aliases, tags, path)
@@ -325,7 +369,8 @@ end
 ---Save note to file.
 ---
 ---@param path string|Path|?
-note.save = function(self, path)
+---@param insert_frontmatter boolean|?
+note.save = function(self, path, insert_frontmatter)
   if self.path == nil then
     echo.fail "note path cannot be nil"
     error()
@@ -361,7 +406,10 @@ note.save = function(self, path)
   end
 
   -- Replace frontmatter.
-  local new_lines = self:frontmatter_lines(true)
+  local new_lines = {}
+  if insert_frontmatter ~= false then
+    new_lines = self:frontmatter_lines(true)
+  end
 
   -- Add remaining original lines.
   for i = end_idx + 1, #lines do

@@ -26,7 +26,7 @@ source.complete = function(self, request, callback)
       kind = 18,
       textEdit = {
         newText = "[[" .. new_id .. "|" .. search .. "]]",
-        insert = {
+        range = {
           start = {
             line = request.context.cursor.row - 1,
             character = insert_start,
@@ -55,8 +55,8 @@ end
 source.execute = function(_, item, callback)
   local data = item.data
   local client = obsidian.new(data.opts)
-  client:new_note(data.title, data.id)
-  return callback
+  client:new_note(data.title, data.id, vim.fn.expand "%:p:h")
+  return callback {}
 end
 
 ---Get opts.

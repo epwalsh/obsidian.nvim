@@ -5,10 +5,19 @@ local config = {}
 ---@class obsidian.config.ClientOpts
 ---@field dir string
 ---@field notes_subdir string|?
+---@field templates table|?
+---@field templates.subdir string
+---@field templates.date_format string
+---@field templates.time_format string
 ---@field note_id_func function|?
+---@field follow_url_func function|?
 ---@field note_frontmatter_func function|?
+---@field disable_frontmatter boolean|?
 ---@field completion obsidian.config.CompletionOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
+---@field use_advanced_uri boolean|?
+---@field open_app_foreground boolean|?
+---@field finder string|?
 config.ClientOpts = {}
 
 ---Get defaults.
@@ -17,10 +26,16 @@ config.ClientOpts.default = function()
   return {
     dir = vim.fs.normalize "./",
     notes_subdir = nil,
+    templates = nil,
     note_id_func = nil,
+    follow_url_func = nil,
     note_frontmatter_func = nil,
+    disable_frontmatter = false,
     completion = config.CompletionOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
+    use_advanced_uri = nil,
+    open_app_foreground = false,
+    finder = nil,
   }
 end
 
@@ -32,6 +47,7 @@ config.ClientOpts.normalize = function(opts)
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
+  opts.dir = vim.fs.normalize(tostring(opts.dir))
   return opts
 end
 

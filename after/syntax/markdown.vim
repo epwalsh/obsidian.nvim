@@ -29,3 +29,5 @@ syntax region htmlH6       matchgroup=mkdHeading     start="^\s*######"         
 syntax match mkdToDo '\v(\s+)?-\s\[\s\]'hs=e-4 conceal cchar=☐
 syntax match mkdToDoDone '\v(\s+)?-\s\[x\]'hs=e-4 conceal cchar=✔
 syntax match mkdToDoSkip '\v(\s+)?-\s\[\~\]'hs=e-4 conceal cchar=✗
+syntax match mkdToDoQuestion '\v(\s+)?-\s\[\?\]'hs=e-4 conceal cchar=❓
+syntax match mkdToDoFollowup '\v(\s+)?-\s\[\>\]'hs=e-4 conceal cchar=⇨
