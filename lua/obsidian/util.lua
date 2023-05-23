@@ -379,7 +379,8 @@ util.table_length = function(x)
   return n
 end
 
--- Determines if cursor is currently inside markdown link
+---Determines if cursor is currently inside markdown link.
+---
 ---@param line string|nil - line to check or current line if nil
 ---@param col  integer|nil - column to check or current column if nil (1-indexed)
 ---@return integer|nil, integer|nil - start and end column of link (1-indexed)
@@ -408,22 +409,22 @@ util.cursor_on_markdown_link = function(line, col)
   return open, close
 end
 
--- Determines if the given date is a working day (not weekend)
---
--- @param time a Time
---
--- @return boolean
+---Determines if the given date is a working day (not weekend)
+---
+---@param time integer
+---
+---@return boolean
 util.is_working_day = function(time)
   local is_saturday = (os.date("%w", time) == "6")
   local is_sunday = (os.date("%w", time) == "0")
   return not (is_saturday or is_sunday)
 end
 
--- Determines the last working day before a given time
---
--- @param time a Time
---
--- @return time
+---Determines the last working day before a given time
+---
+---@param time integer
+---
+---@return integer
 util.working_day_before = function(time)
   local previous_day = time - (24 * 60 * 60)
   if util.is_working_day(previous_day) then
