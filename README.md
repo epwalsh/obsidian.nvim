@@ -83,9 +83,13 @@ return {
     -- Optional, if you keep notes in a specific subdirectory of your vault.
     notes_subdir = "notes",
 
-    -- Optional, if you keep daily notes in a separate directory.
     daily_notes = {
+      -- Optional, if you keep daily notes in a separate directory.
       folder = "notes/dailies",
+      -- Optional, if you want to change the date format for daily notes.
+      format_date = function()
+        return os.date("%Y-%m-%d")
+      end,
     },
 
     -- Optional, completion.
@@ -212,20 +216,6 @@ creating the note `Configuring Neovim.md` and executing `:ObsidianTemplate` will
 Date created: 2023-03-01-Wed
 ```
 
-#### Customizing daily notes' date format
-
-You can customize the file name of your daily notes by providing a date formatting function:
-
-```lua
-require("obsidian").setup({
-  dir = "~/my-vault",
-  daily_notes = {
-    format_date = function()
-      return os.date("%Y%m%d")  -- format: year, month and date
-    end,
-  }
-})
-```
 above the cursor position.
 
 ### Using nvim-treesitter

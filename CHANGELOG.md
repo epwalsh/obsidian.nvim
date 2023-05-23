@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Added option to format daily_notes file name and path.
+### Added
+
+- Added configuration option `daily_notes.format_date` (a function) to customize the date format of daily notes.
 
 ### Fixed
 
