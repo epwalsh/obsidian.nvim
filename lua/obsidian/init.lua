@@ -257,13 +257,13 @@ end
 client.today = function(self)
   ---@type string
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local date_format
-  if self.opts.daily_notes.date_format ~= nil then
-    date_format = self.opts.daily_notes.date_format()
+  local formatted_date
+  if self.opts.daily_notes.format_date ~= nil then
+    formatted_date = self.opts.daily_notes.format_date()
   else
-    date_format = os.date("%Y-%m-%d")
+    formatted_date = os.date("%Y-%m-%d")
   end
-  local id = date_format
+  local id = format_date
   local alias = os.date "%B %-d, %Y"
   local path = self:daily_note_path(id)
 

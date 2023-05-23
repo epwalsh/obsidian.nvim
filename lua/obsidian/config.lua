@@ -52,7 +52,7 @@ end
 
 ---@class obsidian.config.DailyNotesOpts
 ---@field folder string|?
----@field date_format string|osdate
+---@field format_date function|?
 config.DailyNotesOpts = {}
 
 ---Get defaults.
@@ -60,7 +60,7 @@ config.DailyNotesOpts = {}
 config.DailyNotesOpts.default = function()
   return {
     folder = nil,
-    date_format = nil,
+    format_date = nil,
   }
 end
 

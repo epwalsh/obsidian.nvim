@@ -163,13 +163,13 @@ require("obsidian").setup({
 
 #### Customizing daily notes' date format
 
-You can customize the file name of your daily notes by providing a date format:
+You can customize the file name of your daily notes by providing a date formatting function:
 
 ```lua
 require("obsidian").setup({
   dir = "~/my-vault",
   daily_notes = {
-    date_format = function()
+    format_date = function()
       return os.date("%Y%m%d")  -- format: year, month and date
     end,
   }
