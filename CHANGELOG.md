@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Added option to format daily_notes file name and path.
+
 ### Fixed
 
 - A bug when `disable_frontmatter` is ignored for `ObsidianToday` and `ObsidianYesterday`.

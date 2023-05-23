@@ -270,9 +270,9 @@ client.today = function(self)
   if self.opts.daily_notes.format_date ~= nil then
     formatted_date = self.opts.daily_notes.format_date()
   else
-    formatted_date = os.date("%Y-%m-%d")
+    formatted_date = os.date "%Y-%m-%d"
   end
-  local id = format_date
+  local id = formatted_date
   local alias = os.date "%B %-d, %Y"
   local path = self:daily_note_path(id)
 
