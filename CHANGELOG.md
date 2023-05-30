@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added configuration option `daily_notes.format_date` (a function) to customize the date format of daily notes.
+- Added configuration option `daily_notes.date_format` (a string) to customize the date format of daily notes.
 
 ### Fixed
 

@@ -87,9 +87,7 @@ return {
       -- Optional, if you keep daily notes in a separate directory.
       folder = "notes/dailies",
       -- Optional, if you want to change the date format for daily notes.
-      format_date = function()
-        return os.date("%Y-%m-%d")
-      end,
+      date_format = "%Y-%m-%d"
     },
 
     -- Optional, completion.
