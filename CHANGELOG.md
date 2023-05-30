@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added configuration option `daily_notes.date_format` (a string) to customize the date format of daily notes.
+
 ### Fixed
 
 - A bug when `disable_frontmatter` is ignored for `ObsidianToday` and `ObsidianYesterday`.

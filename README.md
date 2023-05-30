@@ -83,9 +83,11 @@ return {
     -- Optional, if you keep notes in a specific subdirectory of your vault.
     notes_subdir = "notes",
 
-    -- Optional, if you keep daily notes in a separate directory.
     daily_notes = {
+      -- Optional, if you keep daily notes in a separate directory.
       folder = "notes/dailies",
+      -- Optional, if you want to change the date format for daily notes.
+      date_format = "%Y-%m-%d"
     },
 
     -- Optional, completion.
