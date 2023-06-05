@@ -1,11 +1,13 @@
 TEST = test/obsidian
+# This is where you have plenary installed locally. Override this at runtime if yours is elsewhere.
+PLENARY = ~/.local/share/nvim/lazy/plenary.nvim/
 
 .PHONY : all
 all : style lint test
 
 .PHONY : test
 test :
-	nvim \
+	PLENARY=$(PLENARY) nvim \
 		--headless \
 		--noplugin \
 		-u test/minimal_init.vim \

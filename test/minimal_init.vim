@@ -1,4 +1,5 @@
 set rtp+=.
-set rtp+=./lua/deps/plenary
-
+if $PLENARY != "" && isdirectory($PLENARY)
+  set rtp+=$PLENARY
+endif
 runtime! plugin/plenary.vim
