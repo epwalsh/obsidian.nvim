@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Disabled managed frontmatter for files in the templates subdirectory.
 - A bug when `disable_frontmatter` is ignored for `ObsidianToday` and `ObsidianYesterday`.
 - A bug with `ObsidianTemplate` when using Telescope
 
