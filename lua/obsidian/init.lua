@@ -85,6 +85,19 @@ obsidian.setup = function(opts)
     end
   end
 
+  --- @type fun(match: string): boolean
+  local is_template
+  if self.opts.templates ~= nil then
+    local templates_pattern = "^" .. tostring(self.dir / self.opts.templates.subdir / ".*")
+    is_template = function(match)
+      return vim.fn.matchstr(match, templates_pattern) ~= ""
+    end
+  else
+    is_template = function(_)
+      return false
+    end
+  end
+
   -- Autocommands...
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
@@ -99,7 +112,11 @@ obsidian.setup = function(opts)
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = group,
     pattern = tostring(self.dir / "**.md"),
-    callback = function()
+    callback = function(args)
+      if is_template(args.match) then
+        return
+      end
+
       local bufnr = vim.api.nvim_get_current_buf()
       local note = obsidian.note.from_buffer(bufnr, self.dir)
       if note:should_save_frontmatter() and self.opts.disable_frontmatter ~= true then
