@@ -231,8 +231,15 @@ command.search = function(client, data)
     ["fzf.vim"] = function()
       -- Fall back to trying with fzf.vim
       local has_fzf, _ = pcall(function()
-        local grep_cmd =
-          vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
+        local grep_cmd = vim.tbl_flatten {
+          base_cmd,
+          {
+            "--color=always",
+            "--",
+            vim.fn.shellescape(data.args),
+            tostring(client.dir),
+          },
+        }
 
         vim.api.nvim_call_function("fzf#vim#grep", {
           table.concat(grep_cmd, " "),
@@ -252,49 +259,31 @@ end
 ---
 ---@param client obsidian.Client
 ---@param data table
-command.insert_template = function(client, data)
+command.template = function(client, data)
   if not client.opts.templates.subdir then
     echo.err "No templates folder defined in setup()"
     return
   end
 
-  local templates_dir = Path:new(client.dir) / client.opts.templates.subdir
-  if not templates_dir:is_dir() then
-    echo.err(string.format("%s is not a valid directory for templates", templates_dir))
-    return
+  local templates_dir = client.templates_dir
+
+  -- We need to get this upfront before
+  -- Telescope hijacks the current window
+  local insert_location = util.get_active_window_cursor_location()
+
+  local function insert_template(name)
+    util.insert_template(name, client, insert_location)
   end
 
-  -- We need to get these upfront otherwise
-  -- Telescope hijacks the current window
-  local buf = vim.api.nvim_win_get_buf(0)
-  local win = vim.api.nvim_get_current_win()
-  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
-
-  local apply_template = function(name)
-    local template_path = Path:new(templates_dir / name)
-    local date_format = client.opts.templates.date_format or "%Y-%m-%d"
-    local time_format = client.opts.templates.time_format or "%H:%M"
-    local date = tostring(os.date(date_format))
-    local time = tostring(os.date(time_format))
-    local title = Note.from_buffer(buf, client.dir):display_name()
-
-    local insert_lines = {}
-    local template_file = io.open(tostring(template_path), "r")
-    if template_file then
-      local lines = template_file:lines()
-      for line in lines do
-        line = string.gsub(line, "{{date}}", date)
-        line = string.gsub(line, "{{time}}", time)
-        line = string.gsub(line, "{{title}}", title)
-        table.insert(insert_lines, line)
-      end
-      template_file:close()
-      table.insert(insert_lines, "")
+  if string.len(data.args) > 0 then
+    local template_name = data.args
+    local path = Path:new(templates_dir) / template_name
+    if path:is_file() then
+      insert_template(data.args)
+    else
+      echo.err "Not a valid template file"
     end
-
-    vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
-    local new_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
-    vim.api.nvim_win_set_cursor(0, { new_row, 0 })
+    return
   end
 
   client:_run_with_finder_backend(":ObsidianTemplate", {
@@ -311,7 +300,7 @@ command.insert_template = function(client, data)
             map({ "i", "n" }, "<CR>", function(prompt_bufnr)
               local template = require("telescope.actions.state").get_selected_entry()
               require("telescope.actions").close(prompt_bufnr)
-              apply_template(template[1])
+              insert_template(template[1])
             end)
             return true
           end,
@@ -338,7 +327,7 @@ command.insert_template = function(client, data)
             -- at the start that appear on screen as 2 whitespace characters
             -- so we need to start on the 7th character
             local template = entry[1]:sub(7)
-            apply_template(template)
+            insert_location(template)
           end,
         },
       }
@@ -350,7 +339,7 @@ command.insert_template = function(client, data)
           -- remove escaped whitespace and extract the file name
           local file_path = string.gsub(path.args, "\\ ", " ")
           local template = vim.fs.basename(file_path)
-          apply_template(template)
+          insert_template(template)
           vim.api.nvim_del_user_command "ApplyTemplate"
         end, { nargs = 1, bang = true })
 
@@ -637,7 +626,7 @@ end
 
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
-  ObsidianTemplate = { func = command.insert_template, opts = { nargs = "?" } },
+  ObsidianTemplate = { func = command.template, opts = { nargs = "?" } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },

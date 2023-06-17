@@ -12,6 +12,7 @@ obsidian.util = require "obsidian.util"
 
 ---@class obsidian.Client
 ---@field dir Path
+---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
 ---@field backlinks_namespace integer
 local client = {}
@@ -61,6 +62,13 @@ obsidian.setup = function(opts)
     local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
     vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(daily_notes_subdir)))
+  end
+
+  if self.opts.templates.subdir ~= nil then
+    self.templates_dir = Path:new(self.dir) / self.opts.templates.subdir
+    if not self.templates_dir:is_dir() then
+      echo.err(string.format("%s is not a valid directory for templates", self.templates_dir))
+    end
   end
 
   -- Register commands.

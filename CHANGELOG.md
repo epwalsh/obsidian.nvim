@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Allow user to supply an argument to `ObsidianTemplate` to select a template.
+- Renamed `command.insert_template()` to `command.template()` and split the template insert script into a separate function `util.insert_template()`.
+
 ## [v1.11.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.11.0) - 2023-06-09
 
 ### Added
