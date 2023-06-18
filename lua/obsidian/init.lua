@@ -64,7 +64,7 @@ obsidian.setup = function(opts)
     vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(daily_notes_subdir)))
   end
 
-  if self.opts.templates.subdir ~= nil then
+  if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
     self.templates_dir = Path:new(self.dir) / self.opts.templates.subdir
     if not self.templates_dir:is_dir() then
       echo.err(string.format("%s is not a valid directory for templates", self.templates_dir))
