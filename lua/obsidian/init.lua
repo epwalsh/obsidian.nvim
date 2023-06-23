@@ -137,7 +137,9 @@ obsidian.setup = function(opts)
       end
       local lines = note:frontmatter_lines(nil, frontmatter)
       vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
-      echo.info "Updated frontmatter"
+      if not self.opts.silent then
+        echo.info "Updated frontmatter"
+      end
     end,
   })
 
@@ -259,7 +261,9 @@ client.new_note = function(self, title, id, dir)
   -- Create Note object and save.
   local note = obsidian.note.new(new_id, aliases, {}, path)
   note:save(nil, not self.opts.disable_frontmatter)
-  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  if not self.opts.silent then
+    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  end
 
   return note
 end
@@ -307,7 +311,9 @@ client.today = function(self)
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
     note:save(nil, not self.opts.disable_frontmatter)
-    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+    if not self.opts.silent then
+      echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+    end
   end
 
   return note
@@ -334,7 +340,9 @@ client.yesterday = function(self)
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
     note:save(nil, not self.opts.disable_frontmatter)
-    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+    if not self.opts.silent then
+      echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+    end
   end
 
   return note

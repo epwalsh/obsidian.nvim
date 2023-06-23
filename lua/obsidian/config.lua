@@ -4,7 +4,9 @@ local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field dir string
+---@field silent boolean
 ---@field notes_subdir string|?
+---@field never_current_dir boolean
 ---@field templates table|?
 ---@field templates.subdir string
 ---@field templates.date_format string
@@ -25,7 +27,9 @@ config.ClientOpts = {}
 config.ClientOpts.default = function()
   return {
     dir = vim.fs.normalize "./",
+    silent = false,
     notes_subdir = nil,
+    never_current_dir = false,
     templates = nil,
     note_id_func = nil,
     follow_url_func = nil,

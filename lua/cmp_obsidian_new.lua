@@ -55,7 +55,11 @@ end
 source.execute = function(_, item, callback)
   local data = item.data
   local client = obsidian.new(data.opts)
-  client:new_note(data.title, data.id, vim.fn.expand "%:p:h")
+  local dir = vim.fn.expand "%:p:h"
+  if client.opts.never_current_dir then
+    dir = nil
+  end
+  client:new_note(data.title, data.id, dir)
   return callback {}
 end
 
