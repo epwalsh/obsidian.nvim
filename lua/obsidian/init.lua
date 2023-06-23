@@ -98,7 +98,7 @@ obsidian.setup = function(opts)
   if self.opts.templates ~= nil then
     local templates_pattern = "^" .. tostring(self.dir / self.opts.templates.subdir / ".*")
     is_template = function(match)
-      return vim.fn.matchstr(match, templates_pattern) ~= ""
+      return string.find(match, templates_pattern) ~= nil
     end
   else
     is_template = function(_)
