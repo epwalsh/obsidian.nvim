@@ -36,7 +36,7 @@ command.check = function(client, _)
     end,
   })
 
-  echo.info("Found " .. tostring(count) .. " notes total")
+  echo.info("Found " .. tostring(count) .. " notes total", client)
   if warn_count > 0 then
     echo.warn("There were " .. tostring(warn_count) .. " warnings")
   end
@@ -178,7 +178,7 @@ command.backlinks = function(client, _)
     return require("obsidian.backlinks").new(client)
   end)
   if ok then
-    echo.info(("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id))
+    echo.info(("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id), client)
     backlinks:view()
   else
     echo.err "Backlinks command can only be used from a valid note"
@@ -620,7 +620,7 @@ command.check_health = function(client, _)
   elseif errors > 1 then
     echo.err("There were " .. tostring(errors) .. " errors with obsidian setup")
   else
-    echo.info("All good!\nVault configured to '" .. vault .. "'")
+    echo.info("All good!\nVault configured to '" .. vault .. "'", client)
   end
 end
 

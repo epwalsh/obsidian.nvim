@@ -6,7 +6,6 @@ local config = {}
 ---@field dir string
 ---@field silent boolean
 ---@field notes_subdir string|?
----@field never_current_dir boolean
 ---@field templates table|?
 ---@field templates.subdir string
 ---@field templates.date_format string
@@ -58,6 +57,7 @@ end
 ---@class obsidian.config.CompletionOpts
 ---@field nvim_cmp boolean
 ---@field min_chars integer
+---@field new_notes_location "current_dir"|"notes_subdir"
 config.CompletionOpts = {}
 
 ---Get defaults.
@@ -67,6 +67,7 @@ config.CompletionOpts.default = function()
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
+    new_notes_location = "current_dir",
   }
 end
 

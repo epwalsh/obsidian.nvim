@@ -8,8 +8,12 @@ echo.echo = function(msg, level)
   vim.notify("[Obsidian] " .. tostring(msg), level)
 end
 
-echo.info = function(msg)
-  echo.echo(msg, vim.log.levels.INFO)
+---@param msg string
+---@param client obsidian.Client|nil
+echo.info = function(msg, client)
+  if client == nil or client.opts.silent == false then
+    echo.echo(msg, vim.log.levels.INFO)
+  end
 end
 
 echo.warn = function(msg)
