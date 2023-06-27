@@ -28,7 +28,6 @@ config.ClientOpts.default = function()
     dir = vim.fs.normalize "./",
     log_level = nil,
     notes_subdir = nil,
-    never_current_dir = false,
     templates = nil,
     note_id_func = nil,
     follow_url_func = nil,
