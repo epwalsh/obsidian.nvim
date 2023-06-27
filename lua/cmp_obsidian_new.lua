@@ -57,7 +57,7 @@ source.execute = function(_, item, callback)
   ---@type obsidian.Client
   local client = obsidian.new(data.opts)
   local dir = vim.fn.expand "%:p:h"
-  if client.opts.completion.new_notes_location == "notes_subdir" then
+  if client.opts.completion ~= nil and client.opts.completion.new_notes_location == "notes_subdir" then
     dir = nil
   end
   client:new_note(data.title, data.id, dir)

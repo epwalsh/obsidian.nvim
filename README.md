@@ -83,6 +83,10 @@ return {
     -- Optional, if you keep notes in a specific subdirectory of your vault.
     notes_subdir = "notes",
 
+    -- Optional, set the log level for Obsidian. This is an integer corresponding to one of the log
+    -- levels defined by "vim.log.levels.*" or nil, which is equivalent to DEBUG (1).
+    log_level = vim.log.levels.DEBUG,
+
     daily_notes = {
       -- Optional, if you keep daily notes in a separate directory.
       folder = "notes/dailies",
@@ -92,7 +96,14 @@ return {
 
     -- Optional, completion.
     completion = {
-      nvim_cmp = true,  -- if using nvim-cmp, otherwise set to false
+      -- If using nvim-cmp, otherwise set to false
+      nvim_cmp = true,
+      -- Trigger completion at 2 chars
+      min_chars = 2,
+      -- Where to put new notes created from completion. Valid options are
+      --  * "current_dir" - put new notes in same directory as the current buffer
+      --  * "notes_subdir" - put new notes in the default notes subdirectory.
+      new_notes_location = "current_dir"
     },
 
     -- Optional, customize how names/IDs for new notes are created.
