@@ -178,7 +178,10 @@ command.backlinks = function(client, _)
     return require("obsidian.backlinks").new(client)
   end)
   if ok then
-    echo.info(("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id), client.opts.log_level)
+    echo.info(
+      ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id),
+      client.opts.log_level
+    )
     backlinks:view()
   else
     echo.err("Backlinks command can only be used from a valid note", client.opts.log_level)
@@ -552,7 +555,10 @@ command.follow = function(client, _)
     if client.opts.follow_url_func ~= nil then
       client.opts.follow_url_func(note_file_name)
     else
-      echo.warn("This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option.", client.opts.log_level)
+      echo.warn(
+        "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option.",
+        client.opts.log_level
+      )
     end
     return
   end
