@@ -8,18 +8,31 @@ echo.echo = function(msg, level)
   vim.notify("[Obsidian] " .. tostring(msg), level)
 end
 
-echo.info = function(msg)
-  echo.echo(msg, vim.log.levels.INFO)
+---@param msg string
+---@param log_level integer
+echo.info = function(msg, log_level)
+  if log_level == nil or log_level <= vim.log.levels.INFO then
+    echo.echo(msg, vim.log.levels.INFO)
+  end
 end
 
-echo.warn = function(msg)
-  echo.echo(msg, vim.log.levels.WARN)
+---@param msg any
+---@param log_level integer
+echo.warn = function(msg, log_level)
+  if log_level == nil or log_level <= vim.log.levels.WARN then
+    echo.echo(msg, vim.log.levels.WARN)
+  end
 end
 
-echo.err = function(msg)
-  echo.echo(msg, vim.log.levels.ERROR)
+---@param msg any
+---@param log_level integer
+echo.err = function(msg, log_level)
+  if log_level == nil or log_level <= vim.log.levels.ERROR then
+    echo.echo(msg, vim.log.levels.ERROR)
+  end
 end
 
+---@param msg any
 echo.fail = function(msg)
   error("[Obsidian] " .. msg)
 end

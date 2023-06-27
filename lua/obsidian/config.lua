@@ -4,6 +4,7 @@ local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field dir string
+---@field log_level integer|?
 ---@field notes_subdir string|?
 ---@field templates table|?
 ---@field templates.subdir string
@@ -25,6 +26,7 @@ config.ClientOpts = {}
 config.ClientOpts.default = function()
   return {
     dir = vim.fs.normalize "./",
+    log_level = nil,
     notes_subdir = nil,
     templates = nil,
     note_id_func = nil,
@@ -54,6 +56,7 @@ end
 ---@class obsidian.config.CompletionOpts
 ---@field nvim_cmp boolean
 ---@field min_chars integer
+---@field new_notes_location "current_dir"|"notes_subdir"
 config.CompletionOpts = {}
 
 ---Get defaults.
@@ -63,6 +66,7 @@ config.CompletionOpts.default = function()
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
+    new_notes_location = "current_dir",
   }
 end
 
