@@ -230,23 +230,52 @@ end
 ---@param dir string|Path|?
 ---@return obsidian.Note
 client.new_note = function(self, title, id, dir)
+  ---@type Path
+  local base_dir = dir == nil and Path:new(self.dir) or Path:new(dir)
+  local title_is_path = false
+
+  -- Clean up title and guess the right base_dir.
+  if title ~= nil then
+    -- Remove suffix.
+    if title:match "%.md" then
+      title = title:sub(1, title:len() - 3)
+    end
+
+    -- Pull out any parent dirs from title.
+    local parts = vim.split(title, Path.path.sep)
+    if #parts > 1 then
+      title_is_path = true
+
+      -- 'title' will just be the final part of the path.
+      title = parts[#parts]
+
+      -- Add the other parts, if there are any, to the base_dir.
+      if
+        parts[1] == self.opts.notes_subdir
+        or (self.opts.daily_notes ~= nil and parts[1] == self.opts.daily_notes.folder)
+        or self.opts.notes_subdir == nil
+      then
+        base_dir = base_dir / table.concat(parts, Path.path.sep, 1, #parts - 1)
+      elseif self.opts.notes_subdir ~= nil then
+        base_dir = base_dir / self.opts.notes_subdir / table.concat(parts, Path.path.sep, 1, #parts - 1)
+      end
+    elseif dir == nil and self.opts.notes_subdir ~= nil then
+      base_dir = base_dir / self.opts.notes_subdir
+    end
+  elseif dir == nil and self.opts.notes_subdir ~= nil then
+    base_dir = base_dir / self.opts.notes_subdir
+  end
+
   -- Generate new ID if needed.
-  local new_id = id and id or self:new_note_id(title)
+  local new_id = id and id or (title_is_path and title or self:new_note_id(title))
   if new_id == tostring(os.date "%Y-%m-%d") then
     return self:today()
   end
 
   -- Get path.
   ---@type Path
-  local path = dir == nil and Path:new(self.dir) or Path:new(dir)
-  if dir == nil and self.opts.notes_subdir ~= nil then
-    ---@type Path
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    path = path / self.opts.notes_subdir
-  end
-  ---@type Path
   ---@diagnostic disable-next-line: assign-type-mismatch
-  path = path / (new_id .. ".md")
+  local path = base_dir / (new_id .. ".md")
 
   -- Add title as an alias.
   local aliases

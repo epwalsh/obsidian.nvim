@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `log_level` option to suspend notifications.
 - Added `completion.new_notes_location` to specify where newly created notes are placed in completion.
 
+### Fixed
+
+- Fixed creating new notes when the title of the note contains a path.
+
 ## [v1.11.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.11.0) - 2023-06-09
 
 ### Added
