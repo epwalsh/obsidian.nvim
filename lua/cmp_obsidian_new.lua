@@ -1,3 +1,5 @@
+local Path = require "plenary.path"
+
 local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
@@ -63,7 +65,10 @@ source.execute = function(_, item, callback)
   if client.opts.completion.new_notes_location == nil then
     dir = nil -- let the client decide
   elseif client.opts.completion.new_notes_location == "notes_subdir" then
-    dir = client.opts.notes_subdir ~= nil and client.opts.notes_subdir or client.opts.dir
+    dir = Path:new(client.opts.dir)
+    if client.opts.notes_subdir ~= nil then
+      dir = dir / client.opts.notes_subdir
+    end
   elseif client.opts.completion.new_notes_location == "current_dir" then
     dir = vim.fn.expand "%:p:h"
   else
