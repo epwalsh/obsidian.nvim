@@ -217,6 +217,39 @@ Using `lazy.nvim` <https://github.com/folke/lazy.nvim>, for example:
     }
 <
 
+Basic setup using `packer.nvim` <https://github.com/wbthomason/packer.nvim>:
+
+>lua
+      use({
+        "epwalsh/obsidian.nvim",
+        config = function()
+          require("obsidian").setup({
+            use_advanced_uri = true,
+            dir = "~/path/to/my-vault",
+            daily_notes = {
+              folder = "dailies",
+            },
+            completion = {
+              nvim_cmp = true,
+            },
+            note_id_func = function(title)
+              local sane_name = ""
+              if title ~= nil then
+                -- If title is given, transform it into valid file name.
+                sane_name = title:gsub(" ", "_"):gsub("[^A-Za-z0-9-]", ""):lower()
+              else
+                -- If title is nil, just add 4 random uppercase letters to the suffix.
+                for _ in 1, 4 do
+                  sane_name = sane_name .. string.char(math.random(65, 90))
+                end
+              end
+              return sane_name
+            end,
+          })
+        end,
+      })
+<
+
 **❗ Notes**
 
 
