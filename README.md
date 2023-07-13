@@ -186,7 +186,7 @@ return {
   end,
 }
 ```
-Basic setup using [´packer.vim´](https://github.com/wbthomason/packer.nvim):
+Basic setup using [`packer.nvim`](https://github.com/wbthomason/packer.nvim):
 
 ```lua
   use({
