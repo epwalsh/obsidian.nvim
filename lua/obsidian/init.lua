@@ -245,20 +245,10 @@ client.new_note = function(self, title, id, dir)
     local parts = vim.split(title, Path.path.sep)
     if #parts > 1 then
       title_is_path = true
-
       -- 'title' will just be the final part of the path.
       title = parts[#parts]
-
-      -- Add the other parts, if there are any, to the base_dir.
-      if
-        parts[1] == self.opts.notes_subdir
-        or (self.opts.daily_notes ~= nil and parts[1] == self.opts.daily_notes.folder)
-        or self.opts.notes_subdir == nil
-      then
-        base_dir = base_dir / table.concat(parts, Path.path.sep, 1, #parts - 1)
-      elseif self.opts.notes_subdir ~= nil then
-        base_dir = base_dir / self.opts.notes_subdir / table.concat(parts, Path.path.sep, 1, #parts - 1)
-      end
+      -- Add the other parts to the base_dir.
+      base_dir = base_dir / table.concat(parts, Path.path.sep, 1, #parts - 1)
     elseif dir == nil and self.opts.notes_subdir ~= nil then
       base_dir = base_dir / self.opts.notes_subdir
     end
