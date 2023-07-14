@@ -6,6 +6,20 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 *This plugin is not meant to replace Obsidian, but to complement it.* My personal workflow involves writing Obsidian notes in Neovim using this plugin, while viewing and reading them using the Obsidian app. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
 
+## Table of contents
+
+- [**Features**](#features)
+  - [Commands](#commands)
+  - [Demo](#demo)
+- [**Setup**](#setup)
+  - [Requirements](#requirements)
+  - [Install and configure](#install-and-configure)
+  - [Configuration options](#configuration-options)
+  - [Templates support](#templates-support)
+  - [Using nvim-treesitter](#using-nvim-treesitter)
+- [**Known issues**](#known-issues)
+
+
 ## Features
 
 - ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
@@ -47,6 +61,7 @@ Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` 
 
 ### Install and configure
 
+To configure Obsidian.nvim you just need to call `require("obsidian").setup({ ... })` with the desired options.
 Here are some examples using different plugin managers. The full set of configuration options are listed [below](#configuration-options).
 
 #### Using [`lazy.nvim`](https://github.com/folke/lazy.nvim)
@@ -115,7 +130,7 @@ use({
 })
 ```
 
-#### Configuration options
+### Configuration options
 
 This is a complete list of all of the options that can be passed to `require("obsidian").setup()`:
 
