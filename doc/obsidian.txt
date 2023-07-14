@@ -1,16 +1,5 @@
 *obsidian.txt*           a plugin for writing and navigating an Obsidian vault
 
-==============================================================================
-Table of Contents                                 *obsidian-table-of-contents*
-
-1. Obsidian.nvim                                      |obsidian-obsidian.nvim|
-  - Features                                 |obsidian-obsidian.nvim-features|
-  - Setup                                       |obsidian-obsidian.nvim-setup|
-  - Known Issues                         |obsidian-obsidian.nvim-known-issues|
-
-==============================================================================
-1. Obsidian.nvim                                      *obsidian-obsidian.nvim*
-
 A Neovim plugin for writing and navigating an Obsidian <https://obsidian.md>
 vault, written in Lua.
 
@@ -25,7 +14,24 @@ stands on its own as well. You don’t necessarily need to use it alongside the
 Obsidian app.
 
 
-FEATURES                                     *obsidian-obsidian.nvim-features*
+==============================================================================
+1. Table of contents                              *obsidian-table-of-contents*
+
+
+- 👉 |obsidian-features|
+    - |obsidian-commands|
+    - |obsidian-demo|
+- ⚙️ |obsidian-setup|
+    - |obsidian-requirements|
+    - |obsidian-install-and-configure|
+    - |obsidian-configuration-options|
+    - |obsidian-templates-support|
+    - |obsidian-using-nvim-treesitter|
+- 🐞 |obsidian-known-issues|
+
+
+==============================================================================
+2. Features                                                *obsidian-features*
 
 
 - ▶️ Autocompletion for note references via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> (triggered by typing `[[`)
@@ -33,7 +39,7 @@ FEATURES                                     *obsidian-obsidian.nvim-features*
 - 💅 Additional markdown syntax highlighting and concealing for references
 
 
-COMMANDS ~
+COMMANDS                                                   *obsidian-commands*
 
 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
@@ -54,15 +60,17 @@ COMMANDS ~
 - `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf` alternatives.
 
 
-DEMO ~
+DEMO                                                           *obsidian-demo*
 
 
+<https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4>
 
 
-SETUP                                           *obsidian-obsidian.nvim-setup*
+==============================================================================
+3. Setup                                                      *obsidian-setup*
 
 
-REQUIREMENTS ~
+REQUIREMENTS                                           *obsidian-requirements*
 
 
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
@@ -75,9 +83,14 @@ Search functionality (e.g. via the `:ObsidianSearch` and
 alternatives (see below).
 
 
-INSTALL AND CONFIGURE ~
+INSTALL AND CONFIGURE                         *obsidian-install-and-configure*
 
-Using `lazy.nvim` <https://github.com/folke/lazy.nvim>, for example:
+To configure Obsidian.nvim you just need to call `require("obsidian").setup({
+... })` with the desired options. Here are some examples using different plugin
+managers. The full set of configuration options are listed |obsidian-below|.
+
+
+USING LAZY.NVIM ~
 
 >lua
     return {
@@ -110,89 +123,13 @@ Using `lazy.nvim` <https://github.com/folke/lazy.nvim>, for example:
       opts = {
         dir = "~/my-vault",  -- no need to call 'vim.fn.expand' here
     
-        -- Optional, if you keep notes in a specific subdirectory of your vault.
-        notes_subdir = "notes",
-    
-        -- Optional, if you keep daily notes in a separate directory.
-        daily_notes = {
-          folder = "notes/dailies",
-        },
-    
-        -- Optional, completion.
-        completion = {
-          nvim_cmp = true,  -- if using nvim-cmp, otherwise set to false
-        },
-    
-        -- Optional, customize how names/IDs for new notes are created.
-        note_id_func = function(title)
-          -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
-          -- In this case a note with the title 'My new note' will given an ID that looks
-          -- like '1657296016-my-new-note', and therefore the file name '1657296016-my-new-note.md'
-          local suffix = ""
-          if title ~= nil then
-            -- If title is given, transform it into valid file name.
-            suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
-          else
-            -- If title is nil, just add 4 random uppercase letters to the suffix.
-            for _ = 1, 4 do
-              suffix = suffix .. string.char(math.random(65, 90))
-            end
-          end
-          return tostring(os.time()) .. "-" .. suffix
-        end,
-    
-        -- Optional, set to true if you don't want Obsidian to manage frontmatter.
-        disable_frontmatter = false,
-    
-        -- Optional, alternatively you can customize the frontmatter data.
-        note_frontmatter_func = function(note)
-          -- This is equivalent to the default frontmatter function.
-          local out = { id = note.id, aliases = note.aliases, tags = note.tags }
-          -- `note.metadata` contains any manually added fields in the frontmatter.
-          -- So here we just make sure those fields are kept in the frontmatter.
-          if note.metadata ~= nil and require("obsidian").util.table_length(note.metadata) > 0 then
-            for k, v in pairs(note.metadata) do
-              out[k] = v
-            end
-          end
-          return out
-        end,
-    
-        -- Optional, for templates (see below).
-        templates = {
-          subdir = "templates",
-          date_format = "%Y-%m-%d-%a",
-          time_format = "%H:%M",
-        },
-    
-        -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
-        -- URL it will be ignored but you can customize this behavior here.
-        follow_url_func = function(url)
-          -- Open the URL in the default web browser.
-          vim.fn.jobstart({"open", url})  -- Mac OS
-          -- vim.fn.jobstart({"xdg-open", url})  -- linux
-        end,
-    
-        -- Optional, set to true if you use the Obsidian Advanced URI plugin.
-        -- https://github.com/Vinzent03/obsidian-advanced-uri
-        use_advanced_uri = true,
-    
-        -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
-        open_app_foreground = false,
-    
-        -- Optional, by default commands like `:ObsidianSearch` will attempt to use
-        -- telescope.nvim, fzf-lua, and fzf.nvim (in that order), and use the
-        -- first one they find. By setting this option to your preferred
-        -- finder you can attempt it first. Note that if the specified finder
-        -- is not installed, or if it the command does not support it, the
-        -- remaining finders will be attempted in the original order.
-        finder = "telescope.nvim",
+        -- see below for full list of options 👇
       },
       config = function(_, opts)
         require("obsidian").setup(opts)
     
         -- Optional, override the 'gf' keymap to utilize Obsidian's search functionality.
-        -- see also: 'follow_url_func' config option above.
+        -- see also: 'follow_url_func' config option below.
         vim.keymap.set("n", "gf", function()
           if require("obsidian").util.cursor_on_markdown_link() then
             return "<cmd>ObsidianFollowLink<CR>"
@@ -204,6 +141,126 @@ Using `lazy.nvim` <https://github.com/folke/lazy.nvim>, for example:
     }
 <
 
+
+USING PACKER.NVIM ~
+
+>lua
+    use({
+      "epwalsh/obsidian.nvim",
+      config = function()
+        require("obsidian").setup({
+          dir = "~/my-vault",
+    
+          -- see below for full list of options 👇
+        })
+      end,
+    })
+<
+
+
+CONFIGURATION OPTIONS                         *obsidian-configuration-options*
+
+This is a complete list of all of the options that can be passed to
+`require("obsidian").setup()`:
+
+>lua
+    {
+      -- Required, the path to your vault directory.
+      dir = "~/my-vault",
+    
+      -- Optional, if you keep notes in a specific subdirectory of your vault.
+      notes_subdir = "notes",
+    
+      -- Optional, set the log level for Obsidian. This is an integer corresponding to one of the log
+      -- levels defined by "vim.log.levels.*" or nil, which is equivalent to DEBUG (1).
+      log_level = vim.log.levels.DEBUG,
+    
+      daily_notes = {
+        -- Optional, if you keep daily notes in a separate directory.
+        folder = "notes/dailies",
+        -- Optional, if you want to change the date format for daily notes.
+        date_format = "%Y-%m-%d"
+      },
+    
+      -- Optional, completion.
+      completion = {
+        -- If using nvim-cmp, otherwise set to false
+        nvim_cmp = true,
+        -- Trigger completion at 2 chars
+        min_chars = 2,
+        -- Where to put new notes created from completion. Valid options are
+        --  * "current_dir" - put new notes in same directory as the current buffer.
+        --  * "notes_subdir" - put new notes in the default notes subdirectory.
+        new_notes_location = "current_dir"
+      },
+    
+      -- Optional, customize how names/IDs for new notes are created.
+      note_id_func = function(title)
+        -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
+        -- In this case a note with the title 'My new note' will given an ID that looks
+        -- like '1657296016-my-new-note', and therefore the file name '1657296016-my-new-note.md'
+        local suffix = ""
+        if title ~= nil then
+          -- If title is given, transform it into valid file name.
+          suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
+        else
+          -- If title is nil, just add 4 random uppercase letters to the suffix.
+          for _ = 1, 4 do
+            suffix = suffix .. string.char(math.random(65, 90))
+          end
+        end
+        return tostring(os.time()) .. "-" .. suffix
+      end,
+    
+      -- Optional, set to true if you don't want Obsidian to manage frontmatter.
+      disable_frontmatter = false,
+    
+      -- Optional, alternatively you can customize the frontmatter data.
+      note_frontmatter_func = function(note)
+        -- This is equivalent to the default frontmatter function.
+        local out = { id = note.id, aliases = note.aliases, tags = note.tags }
+        -- `note.metadata` contains any manually added fields in the frontmatter.
+        -- So here we just make sure those fields are kept in the frontmatter.
+        if note.metadata ~= nil and require("obsidian").util.table_length(note.metadata) > 0 then
+          for k, v in pairs(note.metadata) do
+            out[k] = v
+          end
+        end
+        return out
+      end,
+    
+      -- Optional, for templates (see below).
+      templates = {
+        subdir = "templates",
+        date_format = "%Y-%m-%d-%a",
+        time_format = "%H:%M",
+      },
+    
+      -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
+      -- URL it will be ignored but you can customize this behavior here.
+      follow_url_func = function(url)
+        -- Open the URL in the default web browser.
+        vim.fn.jobstart({"open", url})  -- Mac OS
+        -- vim.fn.jobstart({"xdg-open", url})  -- linux
+      end,
+    
+      -- Optional, set to true if you use the Obsidian Advanced URI plugin.
+      -- https://github.com/Vinzent03/obsidian-advanced-uri
+      use_advanced_uri = true,
+    
+      -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
+      open_app_foreground = false,
+    
+      -- Optional, by default commands like `:ObsidianSearch` will attempt to use
+      -- telescope.nvim, fzf-lua, and fzf.nvim (in that order), and use the
+      -- first one they find. By setting this option to your preferred
+      -- finder you can attempt it first. Note that if the specified finder
+      -- is not installed, or if it the command does not support it, the
+      -- remaining finders will be attempted in the original order.
+      finder = "telescope.nvim",
+    }
+<
+
 **❗ Notes**
 
 
@@ -212,7 +269,7 @@ Using `lazy.nvim` <https://github.com/folke/lazy.nvim>, for example:
 - The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
 
 
-TEMPLATES SUPPORT ~
+TEMPLATES SUPPORT                                 *obsidian-templates-support*
 
 To insert a template, run the command `:ObsidianTemplate`. This will open
 telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the
@@ -253,7 +310,7 @@ will insert
 above the cursor position.
 
 
-USING NVIM-TREESITTER ~
+USING NVIM-TREESITTER                         *obsidian-using-nvim-treesitter*
 
 If you’re using nvim-treesitter
 <https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md> and
@@ -272,10 +329,11 @@ Obsidian.nvim’s extra syntax improvements:
 <
 
 
-KNOWN ISSUES                             *obsidian-obsidian.nvim-known-issues*
+==============================================================================
+4. Known Issues                                        *obsidian-known-issues*
 
 
-CONFIGURING VAULT DIRECTORY BEHIND A LINK ~
+CONFIGURING VAULT DIRECTORY BEHIND A LINK*obsidian-configuring-vault-directory-behind-a-link*
 
 If you are having issues with commands like `ObsidianOpen`, ensure that your
 vault is configured to use an absolute path rather than a link. If you must use
@@ -288,9 +346,9 @@ in the file path of the link. For example:
 <
 
 ==============================================================================
-2. Links                                                      *obsidian-links*
+5. Links                                                      *obsidian-links*
 
-1. **: https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4
+1. *See https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4*: https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4
 
 Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
 

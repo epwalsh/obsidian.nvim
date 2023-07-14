@@ -28,20 +28,20 @@ command.check = function(client, _)
       local ok, note = pcall(Note.from_file, entry, client.dir)
       if not ok then
         err_count = err_count + 1
-        echo.err("Failed to parse note at " .. entry)
+        echo.err("Failed to parse note at " .. entry, client.opts.log_level)
       elseif note.has_frontmatter == false then
         warn_count = warn_count + 1
-        echo.warn(tostring(entry) .. " is missing frontmatter")
+        echo.warn(tostring(entry) .. " is missing frontmatter", client.opts.log_level)
       end
     end,
   })
 
-  echo.info("Found " .. tostring(count) .. " notes total")
+  echo.info("Found " .. tostring(count) .. " notes total", client.opts.log_level)
   if warn_count > 0 then
-    echo.warn("There were " .. tostring(warn_count) .. " warnings")
+    echo.warn("There were " .. tostring(warn_count) .. " warnings", client.opts.log_level)
   end
   if err_count > 0 then
-    echo.err("There were " .. tostring(err_count) .. " errors")
+    echo.err("There were " .. tostring(err_count) .. " errors", client.opts.log_level)
   end
 end
 
@@ -85,7 +85,7 @@ end
 command.open = function(client, data)
   local vault = client:vault()
   if vault == nil then
-    echo.err "couldn't find an Obsidian vault"
+    echo.err("couldn't find an Obsidian vault", client.opts.log_level)
     return
   end
   local vault_name = vim.fs.basename(vault)
@@ -96,7 +96,7 @@ command.open = function(client, data)
     if note ~= nil then
       path = note.path:make_relative(vault)
     else
-      echo.err "Could not resolve arguments to a note ID, path, or alias"
+      echo.err("Could not resolve arguments to a note ID, path, or alias", client.opts.log_level)
       return
     end
   else
@@ -155,7 +155,7 @@ command.open = function(client, data)
   end
 
   if cmd == nil then
-    echo.err "open command does not support this OS yet"
+    echo.err("open command does not support this OS yet", client.opts.log_level)
     return
   end
 
@@ -164,7 +164,7 @@ command.open = function(client, data)
     args = args,
     on_exit = vim.schedule_wrap(function(_, return_code)
       if return_code > 0 then
-        echo.err "failed opening Obsidian app to note"
+        echo.err("failed opening Obsidian app to note", client.opts.log_level)
       end
     end),
   }):start()
@@ -178,10 +178,13 @@ command.backlinks = function(client, _)
     return require("obsidian.backlinks").new(client)
   end)
   if ok then
-    echo.info(("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id))
+    echo.info(
+      ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id),
+      client.opts.log_level
+    )
     backlinks:view()
   else
-    echo.err "Backlinks command can only be used from a valid note"
+    echo.err("Backlinks command can only be used from a valid note", client.opts.log_level)
   end
 end
 
@@ -231,8 +234,15 @@ command.search = function(client, data)
     ["fzf.vim"] = function()
       -- Fall back to trying with fzf.vim
       local has_fzf, _ = pcall(function()
-        local grep_cmd =
-          vim.tbl_flatten { base_cmd, { "--color=always", "--", vim.fn.shellescape(data.args), tostring(client.dir) } }
+        local grep_cmd = vim.tbl_flatten {
+          base_cmd,
+          {
+            "--color=always",
+            "--",
+            vim.fn.shellescape(data.args),
+            tostring(client.dir),
+          },
+        }
 
         vim.api.nvim_call_function("fzf#vim#grep", {
           table.concat(grep_cmd, " "),
@@ -252,49 +262,31 @@ end
 ---
 ---@param client obsidian.Client
 ---@param data table
-command.insert_template = function(client, data)
+command.template = function(client, data)
   if not client.opts.templates.subdir then
-    echo.err "No templates folder defined in setup()"
+    echo.err("No templates folder defined in setup()", client.opts.log_level)
     return
   end
 
-  local templates_dir = Path:new(client.dir) / client.opts.templates.subdir
-  if not templates_dir:is_dir() then
-    echo.err(string.format("%s is not a valid directory for templates", templates_dir))
-    return
-  end
+  local templates_dir = client.templates_dir
 
-  -- We need to get these upfront otherwise
+  -- We need to get this upfront before
   -- Telescope hijacks the current window
-  local buf = vim.api.nvim_win_get_buf(0)
-  local win = vim.api.nvim_get_current_win()
-  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+  local insert_location = util.get_active_window_cursor_location()
 
-  local apply_template = function(name)
-    local template_path = Path:new(templates_dir / name)
-    local date_format = client.opts.templates.date_format or "%Y-%m-%d"
-    local time_format = client.opts.templates.time_format or "%H:%M"
-    local date = tostring(os.date(date_format))
-    local time = tostring(os.date(time_format))
-    local title = Note.from_buffer(buf, client.dir):display_name()
+  local function insert_template(name)
+    util.insert_template(name, client, insert_location)
+  end
 
-    local insert_lines = {}
-    local template_file = io.open(tostring(template_path), "r")
-    if template_file then
-      local lines = template_file:lines()
-      for line in lines do
-        line = string.gsub(line, "{{date}}", date)
-        line = string.gsub(line, "{{time}}", time)
-        line = string.gsub(line, "{{title}}", title)
-        table.insert(insert_lines, line)
-      end
-      template_file:close()
-      table.insert(insert_lines, "")
+  if string.len(data.args) > 0 then
+    local template_name = data.args
+    local path = Path:new(templates_dir) / template_name
+    if path:is_file() then
+      insert_template(data.args)
+    else
+      echo.err("Not a valid template file", client.opts.log_level)
     end
-
-    vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
-    local new_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
-    vim.api.nvim_win_set_cursor(0, { new_row, 0 })
+    return
   end
 
   client:_run_with_finder_backend(":ObsidianTemplate", {
@@ -311,8 +303,9 @@ command.insert_template = function(client, data)
             map({ "i", "n" }, "<CR>", function(prompt_bufnr)
               local template = require("telescope.actions.state").get_selected_entry()
               require("telescope.actions").close(prompt_bufnr)
-              apply_template(template[1])
+              insert_template(template[1])
             end)
+            return true
           end,
         }
         require("telescope.builtin").find_files(opts)
@@ -337,7 +330,7 @@ command.insert_template = function(client, data)
             -- at the start that appear on screen as 2 whitespace characters
             -- so we need to start on the 7th character
             local template = entry[1]:sub(7)
-            apply_template(template)
+            insert_location(template)
           end,
         },
       }
@@ -349,7 +342,7 @@ command.insert_template = function(client, data)
           -- remove escaped whitespace and extract the file name
           local file_path = string.gsub(path.args, "\\ ", " ")
           local template = vim.fs.basename(file_path)
-          apply_template(template)
+          insert_template(template)
           vim.api.nvim_del_user_command "ApplyTemplate"
         end, { nargs = 1, bang = true })
 
@@ -416,13 +409,13 @@ command.link_new = function(client, data)
   local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
 
   if data.line1 ~= csrow or data.line2 ~= cerow then
-    echo.err "ObsidianLink must be called with visual selection"
+    echo.err("ObsidianLink must be called with visual selection", client.opts.log_level)
     return
   end
 
   local lines = vim.fn.getline(csrow, cerow)
   if #lines ~= 1 then
-    echo.err "Only in-line visual selections allowed"
+    echo.err("Only in-line visual selections allowed", client.opts.log_level)
     return
   end
 
@@ -451,13 +444,13 @@ command.link = function(client, data)
   local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
 
   if data.line1 ~= csrow or data.line2 ~= cerow then
-    echo.err "ObsidianLink must be called with visual selection"
+    echo.err("ObsidianLink must be called with visual selection", client.opts.log_level)
     return
   end
 
   local lines = vim.fn.getline(csrow, cerow)
   if #lines ~= 1 then
-    echo.err "Only in-line visual selections allowed"
+    echo.err("Only in-line visual selections allowed", client.opts.log_level)
     return
   end
 
@@ -472,7 +465,7 @@ command.link = function(client, data)
   end
 
   if note == nil then
-    echo.err "Could not resolve argument to a note ID, alias, or path"
+    echo.err("Could not resolve argument to a note ID, alias, or path", client.opts.log_level)
     return
   end
 
@@ -539,7 +532,7 @@ command.follow = function(client, _)
   local current_line = vim.api.nvim_get_current_line()
 
   if open == nil or close == nil then
-    echo.err "Cursor is not on a reference!"
+    echo.err("Cursor is not on a reference!", client.opts.log_level)
     return
   end
 
@@ -553,16 +546,19 @@ command.follow = function(client, _)
   end
 
   local note_file_name = note_name
-
-  if note_file_name:match "|[^%]]*" then
+  if note_name:match "|[^%]]*" then
     note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
+    note_name = note_name:sub(note_name:find "|" + 1, note_name:len())
   end
 
   if note_file_name:match "^[%a%d]*%:%/%/" then
     if client.opts.follow_url_func ~= nil then
       client.opts.follow_url_func(note_file_name)
     else
-      echo.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+      echo.warn(
+        "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option.",
+        client.opts.log_level
+      )
     end
     return
   end
@@ -574,12 +570,14 @@ command.follow = function(client, _)
   local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
-    command.new(client, { args = note_name })
+    local aliases = note_name == note_file_name and {} or { note_name }
+    local note = client:new_note(note_file_name, nil, nil, aliases)
+    vim.api.nvim_command("e " .. tostring(note.path))
   elseif #notes == 1 then
     local path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))
   else
-    echo.err "Multiple notes with this name exist"
+    echo.err("Multiple notes with this name exist", client.opts.log_level)
     return
   end
 end
@@ -593,14 +591,14 @@ command.check_health = function(client, _)
   local vault = client:vault()
   if vault == nil then
     errors = errors + 1
-    echo.err("FAILED - couldn't find an Obsidian vault in '" .. tostring(client.dir) .. "'")
+    echo.err("FAILED - couldn't find an Obsidian vault in '" .. tostring(client.dir) .. "'", client.opts.log_level)
   end
 
   -- Check completion via nvim-cmp
   if client.opts.completion.nvim_cmp then
     local ok, cmp = pcall(require, "cmp")
     if not ok then
-      echo.err "nvim-cmp could not be loaded"
+      echo.err("nvim-cmp could not be loaded", client.opts.log_level)
     else
       local has_obsidian_source = false
       local has_obsidian_new_source = false
@@ -613,12 +611,12 @@ command.check_health = function(client, _)
       end
 
       if not has_obsidian_source then
-        echo.err "FAILED - note completion is not configured"
+        echo.err("FAILED - note completion is not configured", client.opts.log_level)
         errors = errors + 1
       end
 
       if not has_obsidian_new_source then
-        echo.err "FAILED - new note completion is not configured"
+        echo.err("FAILED - new note completion is not configured", client.opts.log_level)
         errors = errors + 1
       end
     end
@@ -626,17 +624,17 @@ command.check_health = function(client, _)
 
   -- Report total errors.
   if errors == 1 then
-    echo.err "There was 1 error with obsidian setup"
+    echo.err("There was 1 error with obsidian setup", client.opts.log_level)
   elseif errors > 1 then
-    echo.err("There were " .. tostring(errors) .. " errors with obsidian setup")
+    echo.err("There were " .. tostring(errors) .. " errors with obsidian setup", client.opts.log_level)
   else
-    echo.info("All good!\nVault configured to '" .. vault .. "'")
+    echo.info("All good!\nVault configured to '" .. vault .. "'", client.opts.log_level)
   end
 end
 
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
-  ObsidianTemplate = { func = command.insert_template, opts = { nargs = "?" } },
+  ObsidianTemplate = { func = command.template, opts = { nargs = "?" } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },

@@ -191,7 +191,6 @@ util.find = function(dir, term)
     },
   }
   local cmd = table.concat(cmd_args, " ")
-  print(cmd)
 
   local handle = assert(io.popen(cmd, "r"))
 
@@ -379,7 +378,8 @@ util.table_length = function(x)
   return n
 end
 
--- Determines if cursor is currently inside markdown link
+---Determines if cursor is currently inside markdown link.
+---
 ---@param line string|nil - line to check or current line if nil
 ---@param col  integer|nil - column to check or current column if nil (1-indexed)
 ---@return integer|nil, integer|nil - start and end column of link (1-indexed)
@@ -408,22 +408,22 @@ util.cursor_on_markdown_link = function(line, col)
   return open, close
 end
 
--- Determines if the given date is a working day (not weekend)
---
--- @param time a Time
---
--- @return boolean
+---Determines if the given date is a working day (not weekend)
+---
+---@param time integer
+---
+---@return boolean
 util.is_working_day = function(time)
   local is_saturday = (os.date("%w", time) == "6")
   local is_sunday = (os.date("%w", time) == "0")
   return not (is_saturday or is_sunday)
 end
 
--- Determines the last working day before a given time
---
--- @param time a Time
---
--- @return time
+---Determines the last working day before a given time
+---
+---@param time integer
+---
+---@return integer
 util.working_day_before = function(time)
   local previous_day = time - (24 * 60 * 60)
   if util.is_working_day(previous_day) then
@@ -431,6 +431,50 @@ util.working_day_before = function(time)
   else
     return util.working_day_before(previous_day)
   end
+end
+
+---
+---
+---@return table - tuple containing {bufnr, winnr, row, col}
+util.get_active_window_cursor_location = function()
+  local buf = vim.api.nvim_win_get_buf(0)
+  local win = vim.api.nvim_get_current_win()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+  local location = { buf, win, row, col }
+  return location
+end
+
+---Insert a template at the given location.
+---
+---@param name string - name of a template in the configured templates folder
+---@param client obsidian.Client
+---@param location table - a tuple with {bufnr, winnr, row, col}
+util.insert_template = function(name, client, location)
+  local buf, win, row, col = unpack(location)
+  local template_path = Path:new(client.templates_dir) / name
+  local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+  local time_format = client.opts.templates.time_format or "%H:%M"
+  local date = tostring(os.date(date_format))
+  local time = tostring(os.date(time_format))
+  local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
+
+  local insert_lines = {}
+  local template_file = io.open(tostring(template_path), "r")
+  if template_file then
+    local lines = template_file:lines()
+    for line in lines do
+      line = string.gsub(line, "{{date}}", date)
+      line = string.gsub(line, "{{time}}", time)
+      line = string.gsub(line, "{{title}}", title)
+      table.insert(insert_lines, line)
+    end
+    template_file:close()
+    table.insert(insert_lines, "")
+  end
+
+  vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
+  local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+  vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
 end
 
 local IMPLEMENTATION_UNAVAILABLE = { "implementation_unavailable called from outside run_first_supported" }

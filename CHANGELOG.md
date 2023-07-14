@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Allow user to supply an argument to `ObsidianTemplate` to select a template.
+- Renamed `command.insert_template()` to `command.template()` and split the template insert script into a separate function `util.insert_template()`.
+- Added `log_level` option to suspend notifications.
+- Added `completion.new_notes_location` to specify where newly created notes are placed in completion.
+
+### Fixed
+
+- Fixed creating new notes when the title of the note contains a path. Now that path will always be treated as relative to the vault, not the `notes_subdir`.
+
+## [v1.11.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.11.0) - 2023-06-09
+
+### Added
+
+- Added configuration option `daily_notes.date_format` (a string) to customize the date format of daily notes.
+
+### Fixed
+
+- Disabled managed frontmatter for files in the templates subdirectory.
+- A bug when `disable_frontmatter` is ignored for `ObsidianToday` and `ObsidianYesterday`.
+- A bug with `ObsidianTemplate` when using Telescope
+
 ## [v1.10.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.10.0) - 2023-05-11
 
 ### Added

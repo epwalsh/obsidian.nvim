@@ -1,6 +1,9 @@
+local Path = require "plenary.path"
+
 local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
+local echo = require "obsidian.echo"
 
 local source = {}
 
@@ -54,8 +57,29 @@ end
 
 source.execute = function(_, item, callback)
   local data = item.data
+  ---@type obsidian.Client
   local client = obsidian.new(data.opts)
-  client:new_note(data.title, data.id, vim.fn.expand "%:p:h")
+
+  ---@type string|Path|?
+  local dir
+  if client.opts.completion.new_notes_location == nil then
+    dir = nil -- let the client decide
+  elseif client.opts.completion.new_notes_location == "notes_subdir" then
+    dir = Path:new(client.opts.dir)
+    if client.opts.notes_subdir ~= nil then
+      dir = dir / client.opts.notes_subdir
+    end
+  elseif client.opts.completion.new_notes_location == "current_dir" then
+    dir = vim.fn.expand "%:p:h"
+  else
+    echo.error(
+      "Bad option value for 'completion.new_notes_location'. Skipping creating new note.",
+      client.opts.log_level
+    )
+    return
+  end
+
+  client:new_note(data.title, data.id, dir)
   return callback {}
 end
 
