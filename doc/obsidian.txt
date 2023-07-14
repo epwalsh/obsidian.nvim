@@ -1,14 +1,6 @@
 *obsidian.txt*           a plugin for writing and navigating an Obsidian vault
 
 ==============================================================================
-Table of Contents                                 *obsidian-table-of-contents*
-
-1. Obsidian.nvim                                      |obsidian-obsidian.nvim|
-  - Features                                 |obsidian-obsidian.nvim-features|
-  - Setup                                       |obsidian-obsidian.nvim-setup|
-  - Known Issues                         |obsidian-obsidian.nvim-known-issues|
-
-==============================================================================
 1. Obsidian.nvim                                      *obsidian-obsidian.nvim*
 
 A Neovim plugin for writing and navigating an Obsidian <https://obsidian.md>
@@ -23,6 +15,21 @@ personal workflow involves writing Obsidian notes in Neovim using this plugin,
 while viewing and reading them using the Obsidian app. That said, this plugin
 stands on its own as well. You don’t necessarily need to use it alongside the
 Obsidian app.
+
+
+TABLE OF CONTENTS                   *obsidian-obsidian.nvim-table-of-contents*
+
+
+- |obsidian-**features**|
+    - |obsidian-commands|
+    - |obsidian-demo|
+- |obsidian-**setup**|
+    - |obsidian-requirements|
+    - |obsidian-install-and-configure|
+    - |obsidian-configuration-options|
+    - |obsidian-templates-support|
+    - |obsidian-using-nvim-treesitter|
+- |obsidian-**known-issues**|
 
 
 FEATURES                                     *obsidian-obsidian.nvim-features*
@@ -75,8 +82,9 @@ alternatives (see below).
 
 INSTALL AND CONFIGURE ~
 
-Here are some examples using different plugin managers. The full set of
-configuration options are listed |obsidian-below|.
+To configure Obsidian.nvim you just need to call `require("obsidian").setup({
+... })` with the desired options. Here are some examples using different plugin
+managers. The full set of configuration options are listed |obsidian-below|.
 
 
 USING LAZY.NVIM
@@ -147,7 +155,7 @@ USING PACKER.NVIM
 <
 
 
-CONFIGURATION OPTIONS
+CONFIGURATION OPTIONS ~
 
 This is a complete list of all of the options that can be passed to
 `require("obsidian").setup()`:
