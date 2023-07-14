@@ -27,6 +27,7 @@ Obsidian app.
     - |obsidian-templates-support|
     - |obsidian-using-nvim-treesitter|
 - 🐞 |obsidian-known-issues|
+- ➕ |obsidian-contributing|
 
 
 ==============================================================================
@@ -340,8 +341,16 @@ in the file path of the link. For example:
     Link: ~/obsidian OR ~/parent
 <
 
+
 ==============================================================================
-5. Links                                                      *obsidian-links*
+5. Contributing                                        *obsidian-contributing*
+
+Please read the CONTRIBUTING
+<https://github.com/epwalsh/obsidian.nvim/blob/main/.github/CONTRIBUTING.md>
+guide before submitting a pull request.
+
+==============================================================================
+6. Links                                                      *obsidian-links*
 
 1. *See https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4*: https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4
 
