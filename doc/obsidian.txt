@@ -1,8 +1,5 @@
 *obsidian.txt*           a plugin for writing and navigating an Obsidian vault
 
-==============================================================================
-1. Obsidian.nvim                                      *obsidian-obsidian.nvim*
-
 A Neovim plugin for writing and navigating an Obsidian <https://obsidian.md>
 vault, written in Lua.
 
@@ -17,31 +14,30 @@ stands on its own as well. You don’t necessarily need to use it alongside the
 Obsidian app.
 
 
-TABLE OF CONTENTS                   *obsidian-obsidian.nvim-table-of-contents*
+==============================================================================
+1. Table of contents                              *obsidian-table-of-contents*
 
-
-- |obsidian-**features**|
+- 👉 |obsidian-features|
     - |obsidian-commands|
     - |obsidian-demo|
-- |obsidian-**setup**|
+- ⚙️ |obsidian-setup|
     - |obsidian-requirements|
     - |obsidian-install-and-configure|
     - |obsidian-configuration-options|
     - |obsidian-templates-support|
     - |obsidian-using-nvim-treesitter|
-- |obsidian-**known-issues**|
+- 🐞 |obsidian-known-issues|
 
 
-FEATURES                                     *obsidian-obsidian.nvim-features*
-
+==============================================================================
+2. Features                                                *obsidian-features*
 
 - ▶️ Autocompletion for note references via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> (triggered by typing `[[`)
 - 🏃 Go to a note buffer with `gf` when cursor is on a reference
 - 💅 Additional markdown syntax highlighting and concealing for references
 
 
-COMMANDS ~
-
+COMMANDS                                                   *obsidian-commands*
 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
 - `:ObsidianToday` to create a new daily note.
@@ -61,33 +57,36 @@ COMMANDS ~
 - `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf` alternatives.
 
 
-DEMO ~
+DEMO                                                           *obsidian-demo*
 
 
-SETUP                                           *obsidian-obsidian.nvim-setup*
+<https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4>
 
 
-REQUIREMENTS ~
+==============================================================================
+3. Setup                                                      *obsidian-setup*
 
+
+REQUIREMENTS                                           *obsidian-requirements*
 
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
 - If you want completion and search features (recommended) you’ll also need ripgrep <https://github.com/BurntSushi/ripgrep> to be installed and on your `$PATH`.
     See ripgrep#installation <https://github.com/BurntSushi/ripgrep> for install options.
 
-Search functionality (e.g. via the `:ObsidianSearch` and
+Search functionality (e.g. via the `:ObsidianSearch` and
 `:ObsidianQuickSwitch` commands) also requires telescope.nvim
 <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf`
 alternatives (see below).
 
 
-INSTALL AND CONFIGURE ~
+INSTALL AND CONFIGURE                         *obsidian-install-and-configure*
 
 To configure Obsidian.nvim you just need to call `require("obsidian").setup({
 ... })` with the desired options. Here are some examples using different plugin
 managers. The full set of configuration options are listed |obsidian-below|.
 
 
-USING LAZY.NVIM
+USING LAZY.NVIM ~
 
 >lua
     return {
@@ -139,7 +138,7 @@ USING LAZY.NVIM
 <
 
 
-USING PACKER.NVIM
+USING PACKER.NVIM ~
 
 >lua
     use({
@@ -155,7 +154,7 @@ USING PACKER.NVIM
 <
 
 
-CONFIGURATION OPTIONS ~
+CONFIGURATION OPTIONS                         *obsidian-configuration-options*
 
 This is a complete list of all of the options that can be passed to
 `require("obsidian").setup()`:
@@ -260,13 +259,12 @@ This is a complete list of all of the options that can be passed to
 
 **❗ Notes**
 
-
 - Obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
 - If you use `vim-markdown` you’ll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I’ve found doesn’t work very well.
 - The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
 
 
-TEMPLATES SUPPORT ~
+TEMPLATES SUPPORT                                 *obsidian-templates-support*
 
 To insert a template, run the command `:ObsidianTemplate`. This will open
 telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the
@@ -307,7 +305,7 @@ will insert
 above the cursor position.
 
 
-USING NVIM-TREESITTER ~
+USING NVIM-TREESITTER                         *obsidian-using-nvim-treesitter*
 
 If you’re using nvim-treesitter
 <https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md> and
@@ -326,10 +324,11 @@ Obsidian.nvim’s extra syntax improvements:
 <
 
 
-KNOWN ISSUES                             *obsidian-obsidian.nvim-known-issues*
+==============================================================================
+4. Known Issues                                        *obsidian-known-issues*
 
 
-CONFIGURING VAULT DIRECTORY BEHIND A LINK ~
+CONFIGURING VAULT DIRECTORY BEHIND A LINK*obsidian-configuring-vault-directory-behind-a-link*
 
 If you are having issues with commands like `ObsidianOpen`, ensure that your
 vault is configured to use an absolute path rather than a link. If you must use
@@ -342,7 +341,7 @@ in the file path of the link. For example:
 <
 
 ==============================================================================
-2. Links                                                      *obsidian-links*
+5. Links                                                      *obsidian-links*
 
 1. *See https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4*: https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4
 

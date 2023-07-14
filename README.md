@@ -8,16 +8,16 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 ## Table of contents
 
-- [**Features**](#features)
+- 👉 [Features](#features)
   - [Commands](#commands)
   - [Demo](#demo)
-- [**Setup**](#setup)
+- ⚙️ [Setup](#setup)
   - [Requirements](#requirements)
   - [Install and configure](#install-and-configure)
   - [Configuration options](#configuration-options)
   - [Templates support](#templates-support)
   - [Using nvim-treesitter](#using-nvim-treesitter)
-- [**Known issues**](#known-issues)
+- 🐞 [Known issues](#known-issues)
 
 
 ## Features
@@ -47,7 +47,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 ### Demo
 
-![See https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4](https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4)
+[![See https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4](https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4)](https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4)
 
 ## Setup
 
