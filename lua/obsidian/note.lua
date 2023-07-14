@@ -212,6 +212,7 @@ note.from_lines = function(lines, path, root)
       data = {}
     end
     if ok then
+      ---@diagnostic disable-next-line: param-type-mismatch
       for k, v in pairs(data) do
         if k == "id" then
           if type(v) == "string" then

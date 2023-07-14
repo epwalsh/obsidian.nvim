@@ -191,7 +191,6 @@ util.find = function(dir, term)
     },
   }
   local cmd = table.concat(cmd_args, " ")
-  print(cmd)
 
   local handle = assert(io.popen(cmd, "r"))
 
