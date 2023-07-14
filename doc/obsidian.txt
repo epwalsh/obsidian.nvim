@@ -17,6 +17,7 @@ Obsidian app.
 ==============================================================================
 1. Table of contents                              *obsidian-table-of-contents*
 
+
 - 👉 |obsidian-features|
     - |obsidian-commands|
     - |obsidian-demo|
@@ -32,12 +33,14 @@ Obsidian app.
 ==============================================================================
 2. Features                                                *obsidian-features*
 
+
 - ▶️ Autocompletion for note references via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> (triggered by typing `[[`)
 - 🏃 Go to a note buffer with `gf` when cursor is on a reference
 - 💅 Additional markdown syntax highlighting and concealing for references
 
 
 COMMANDS                                                   *obsidian-commands*
+
 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
 - `:ObsidianToday` to create a new daily note.
@@ -69,11 +72,12 @@ DEMO                                                           *obsidian-demo*
 
 REQUIREMENTS                                           *obsidian-requirements*
 
+
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
 - If you want completion and search features (recommended) you’ll also need ripgrep <https://github.com/BurntSushi/ripgrep> to be installed and on your `$PATH`.
     See ripgrep#installation <https://github.com/BurntSushi/ripgrep> for install options.
 
-Search functionality (e.g. via the `:ObsidianSearch` and
+Search functionality (e.g. via the `:ObsidianSearch` and
 `:ObsidianQuickSwitch` commands) also requires telescope.nvim
 <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf`
 alternatives (see below).
@@ -258,6 +262,7 @@ This is a complete list of all of the options that can be passed to
 <
 
 **❗ Notes**
+
 
 - Obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
 - If you use `vim-markdown` you’ll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I’ve found doesn’t work very well.
