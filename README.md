@@ -18,6 +18,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   - [Templates support](#templates-support)
   - [Using nvim-treesitter](#using-nvim-treesitter)
 - 🐞 [Known issues](#known-issues)
+- ➕ [Contributing](#contributing)
 
 
 ## Features
@@ -296,3 +297,7 @@ If you are having issues with commands like `ObsidianOpen`, ensure that your vau
 Vault: ~/path/to/vault/parent/obsidian/
 Link: ~/obsidian OR ~/parent
 ```
+
+## Contributing
+
+Please read the [CONTRIBUTING](https://github.com/epwalsh/obsidian.nvim/blob/main/.github/CONTRIBUTING.md) guide before submitting a pull request.
