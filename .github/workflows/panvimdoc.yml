@@ -26,9 +26,11 @@ jobs:
           vimdoc: obsidian
           description: a plugin for writing and navigating an Obsidian vault
           pandoc: README.md
-          toc: true
+          toc: false
           version: NVIM v0.8.0
           demojify: false
+          dedupsubheadings: false
+          shiftheadinglevelby: -1
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:

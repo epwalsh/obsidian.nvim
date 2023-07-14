@@ -191,7 +191,6 @@ util.find = function(dir, term)
     },
   }
   local cmd = table.concat(cmd_args, " ")
-  print(cmd)
 
   local handle = assert(io.popen(cmd, "r"))
 
@@ -379,7 +378,8 @@ util.table_length = function(x)
   return n
 end
 
--- Determines if cursor is currently inside markdown link
+---Determines if cursor is currently inside markdown link.
+---
 ---@param line string|nil - line to check or current line if nil
 ---@param col  integer|nil - column to check or current column if nil (1-indexed)
 ---@return integer|nil, integer|nil - start and end column of link (1-indexed)
@@ -408,22 +408,22 @@ util.cursor_on_markdown_link = function(line, col)
   return open, close
 end
 
--- Determines if the given date is a working day (not weekend)
---
--- @param time a Time
---
--- @return boolean
+---Determines if the given date is a working day (not weekend)
+---
+---@param time integer
+---
+---@return boolean
 util.is_working_day = function(time)
   local is_saturday = (os.date("%w", time) == "6")
   local is_sunday = (os.date("%w", time) == "0")
   return not (is_saturday or is_sunday)
 end
 
--- Determines the last working day before a given time
---
--- @param time a Time
---
--- @return time
+---Determines the last working day before a given time
+---
+---@param time integer
+---
+---@return integer
 util.working_day_before = function(time)
   local previous_day = time - (24 * 60 * 60)
   if util.is_working_day(previous_day) then
@@ -431,6 +431,118 @@ util.working_day_before = function(time)
   else
     return util.working_day_before(previous_day)
   end
+end
+
+---
+---
+---@return table - tuple containing {bufnr, winnr, row, col}
+util.get_active_window_cursor_location = function()
+  local buf = vim.api.nvim_win_get_buf(0)
+  local win = vim.api.nvim_get_current_win()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+  local location = { buf, win, row, col }
+  return location
+end
+
+---Insert a template at the given location.
+---
+---@param name string - name of a template in the configured templates folder
+---@param client obsidian.Client
+---@param location table - a tuple with {bufnr, winnr, row, col}
+util.insert_template = function(name, client, location)
+  local buf, win, row, col = unpack(location)
+  local template_path = Path:new(client.templates_dir) / name
+  local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+  local time_format = client.opts.templates.time_format or "%H:%M"
+  local date = tostring(os.date(date_format))
+  local time = tostring(os.date(time_format))
+  local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
+
+  local insert_lines = {}
+  local template_file = io.open(tostring(template_path), "r")
+  if template_file then
+    local lines = template_file:lines()
+    for line in lines do
+      line = string.gsub(line, "{{date}}", date)
+      line = string.gsub(line, "{{time}}", time)
+      line = string.gsub(line, "{{title}}", title)
+      table.insert(insert_lines, line)
+    end
+    template_file:close()
+    table.insert(insert_lines, "")
+  end
+
+  vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
+  local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+  vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
+end
+
+local IMPLEMENTATION_UNAVAILABLE = { "implementation_unavailable called from outside run_first_supported" }
+
+---Try implementations one by one in the given order, until finding one that is supported
+---
+---Implementations are given as functions. If the backend of the implementation
+---is unavailable (usually because a plugin is not installed), the function
+---should call the `implementation_unavailable()` function from the
+---`obsidian.util` module so that the next implementation in order will be
+---attempted.
+---
+---If the implementation's backend is installed but for some reason the
+---operation fails, the error will bubble up normally and the next
+---implementation will not be attempted.
+---
+---@param command_name string - name of the command, used for formatting the error message
+---@param order table - list of implementation names in the order in which they should be attempted
+---@param implementations table - map of implementation name to implementation function
+util.run_first_supported = function(command_name, order, implementations)
+  local unavailable = {}
+  local not_supported = {}
+  for _, impl_name in ipairs(order) do
+    local impl_function = implementations[impl_name]
+    if impl_function then
+      local result = { pcall(impl_function) }
+      if result[1] then
+        return select(2, unpack(result))
+      elseif result[2] == IMPLEMENTATION_UNAVAILABLE then
+        table.insert(unavailable, impl_name)
+      else
+        error(result[2])
+      end
+    else
+      table.insert(not_supported, impl_name)
+    end
+  end
+
+  if next(unavailable) == nil then
+    error(command_name .. " cannot be run with " .. table.concat(not_supported, " or "))
+  end
+
+  local error_message
+  if #unavailable == 1 then
+    error_message = unavailable[1] .. " is required for " .. command_name .. " command"
+  elseif #unavailable then
+    error_message = "Either " .. table.concat(unavailable, " or ") .. " is required for " .. command_name .. " command"
+  end
+
+  if next(not_supported) ~= nil then
+    if #not_supported == 1 then
+      error_message = error_message .. ". " .. not_supported[1] .. " is not a viable option for this command"
+    else
+      error_message = error_message
+        .. ". "
+        .. table.concat(not_supported, " and ")
+        .. " are not viable options for this command"
+    end
+  end
+
+  error(error_message)
+end
+
+---Should be called inside implementation functions passed to
+---`run_first_supported` when the implementation's backend is unavailable
+---(usually because a plugin is not installed)
+util.implementation_unavailable = function()
+  error(IMPLEMENTATION_UNAVAILABLE)
 end
 
 return util
