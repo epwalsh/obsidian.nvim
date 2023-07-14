@@ -1,5 +1,4 @@
 local util = require "obsidian.util"
-local Path = require "plenary.path"
 
 describe("obsidian.util", function()
   it("should correctly URL-encode a path", function()

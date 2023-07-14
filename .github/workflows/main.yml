@@ -33,7 +33,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: 0.15.1
-          args: --check lua/ after/ test/
+          args: --check .
 
   checks:
     name: ${{ matrix.task.name }} (${{ matrix.os }})

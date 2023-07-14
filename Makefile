@@ -15,11 +15,11 @@ test :
 
 .PHONY : lint
 lint :
-	luacheck after lua
+	luacheck .
 
 .PHONY : style
 style :
-	stylua --check lua/ after/ test/
+	stylua --check .
 
 .PHONY : version
 version :
