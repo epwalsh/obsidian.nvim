@@ -546,9 +546,9 @@ command.follow = function(client, _)
   end
 
   local note_file_name = note_name
-
-  if note_file_name:match "|[^%]]*" then
+  if note_name:match "|[^%]]*" then
     note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
+    note_name = note_name:sub(note_name:find "|" + 1, note_name:len())
   end
 
   if note_file_name:match "^[%a%d]*%:%/%/" then
@@ -570,7 +570,9 @@ command.follow = function(client, _)
   local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
-    command.new(client, { args = note_name })
+    local aliases = note_name == note_file_name and {} or { note_name }
+    local note = client:new_note(note_file_name, nil, nil, aliases)
+    vim.api.nvim_command("e " .. tostring(note.path))
   elseif #notes == 1 then
     local path = notes[1]
     vim.api.nvim_command("e " .. tostring(path))

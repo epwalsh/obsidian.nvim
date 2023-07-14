@@ -67,7 +67,7 @@ obsidian.setup = function(opts)
   if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
     self.templates_dir = Path:new(self.dir) / self.opts.templates.subdir
     if not self.templates_dir:is_dir() then
-      echo.err(string.format("%s is not a valid directory for templates", self.templates_dir))
+      echo.err(string.format("%s is not a valid directory for templates", self.templates_dir), self.opts.log_level)
     end
   end
 
@@ -228,8 +228,10 @@ end
 ---@param title string|?
 ---@param id string|?
 ---@param dir string|Path|?
+---@param aliases string[]|?
+---
 ---@return obsidian.Note
-client.new_note = function(self, title, id, dir)
+client.new_note = function(self, title, id, dir, aliases)
   ---@type Path
   local base_dir = dir == nil and Path:new(self.dir) or Path:new(dir)
   local title_is_path = false
@@ -239,26 +241,17 @@ client.new_note = function(self, title, id, dir)
     -- Remove suffix.
     if title:match "%.md" then
       title = title:sub(1, title:len() - 3)
+      title_is_path = true
     end
 
     -- Pull out any parent dirs from title.
     local parts = vim.split(title, Path.path.sep)
     if #parts > 1 then
       title_is_path = true
-
       -- 'title' will just be the final part of the path.
       title = parts[#parts]
-
-      -- Add the other parts, if there are any, to the base_dir.
-      if
-        parts[1] == self.opts.notes_subdir
-        or (self.opts.daily_notes ~= nil and parts[1] == self.opts.daily_notes.folder)
-        or self.opts.notes_subdir == nil
-      then
-        base_dir = base_dir / table.concat(parts, Path.path.sep, 1, #parts - 1)
-      elseif self.opts.notes_subdir ~= nil then
-        base_dir = base_dir / self.opts.notes_subdir / table.concat(parts, Path.path.sep, 1, #parts - 1)
-      end
+      -- Add the other parts to the base_dir.
+      base_dir = base_dir / table.concat(parts, Path.path.sep, 1, #parts - 1)
     elseif dir == nil and self.opts.notes_subdir ~= nil then
       base_dir = base_dir / self.opts.notes_subdir
     end
@@ -278,11 +271,11 @@ client.new_note = function(self, title, id, dir)
   local path = base_dir / (new_id .. ".md")
 
   -- Add title as an alias.
-  local aliases
-  if title ~= nil and title:len() > 0 then
-    aliases = { title }
-  else
-    aliases = {}
+  ---@type string[]
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  aliases = aliases == nil and {} or aliases
+  if title ~= nil and title:len() > 0 and not obsidian.util.contains(aliases, title) then
+    aliases[#aliases + 1] = title
   end
 
   -- Create Note object and save.
@@ -320,7 +313,7 @@ end
 ---
 ---@return obsidian.Note
 client.today = function(self)
-  ---@type string
+  ---@type string|osdate
   ---@diagnostic disable-next-line: assign-type-mismatch
   local formatted_date
   if self.opts.daily_notes.date_format ~= nil then
@@ -328,8 +321,8 @@ client.today = function(self)
   else
     formatted_date = os.date "%Y-%m-%d"
   end
-  local id = formatted_date
-  local alias = os.date "%B %-d, %Y"
+  local id = tostring(formatted_date)
+  local alias = tostring(os.date "%B %-d, %Y")
   local path = self:daily_note_path(id)
 
   -- Create Note object and save if it doesn't already exist.
@@ -346,10 +339,7 @@ end
 ---
 ---@return obsidian.Note
 client.yesterday = function(self)
-  ---@type string
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local today = os.time()
-  local yesterday = obsidian.util.working_day_before(today)
+  local yesterday = obsidian.util.working_day_before(os.time())
   local id
   if self.opts.daily_notes.date_format ~= nil then
     id = tostring(os.date(self.opts.daily_notes.date_format, yesterday))

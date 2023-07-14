@@ -280,7 +280,7 @@ Parser.parse = function(self)
   elseif c.token[1] == "id" then
     result = self:parseHash()
   elseif c.token[1] == "string" then
-    result = self:parseString "\n"
+    result = self:parseString()
   elseif c.token[1] == "timestamp" then
     result = self:parseTimestamp()
   elseif c.token[1] == "number" then
