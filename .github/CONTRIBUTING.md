@@ -4,7 +4,10 @@ Thanks for considering contributing! Please read this document to learn the vari
 
 ## Keeping the CHANGELOG up-to-date
 
-This project tries hard to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and we maintain a `CHANGELOG` with a format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). If your PR addresses a bug or makes any other substantial change, please be sure to add an entry under the "Unreleased" section at the top.
+This project tries hard to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and we maintain a [`CHANGELOG`](https://github.com/epwalsh/obsidian.nvim/blob/main/CHANGELOG.md) with a format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). 
+If your PR addresses a bug or makes any other substantial change, please be sure to add an entry under the "Unreleased" section at the top of `CHANGELOG.md`.
+Entries should always be in the form of a list item under a level-3 header of either "Added", "Fixed", "Changed", or "Removed" for the most part.
+If the corresponding level-3 header for your item does not already exist in the "Unreleased" section, you should add it.
 
 ## Formatting code
 
