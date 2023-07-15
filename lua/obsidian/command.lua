@@ -545,12 +545,14 @@ command.follow = function(client, _)
     note_name = note_name:sub(3, #note_name - 2)
   end
 
+  -- Split note file name/path from note name/alias.
   local note_file_name = note_name
   if note_name:match "|[^%]]*" then
     note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
     note_name = note_name:sub(note_name:find "|" + 1, note_name:len())
   end
 
+  -- Check if it's a URL.
   if note_file_name:match "^[%a%d]*%:%/%/" then
     if client.opts.follow_url_func ~= nil then
       client.opts.follow_url_func(note_file_name)
@@ -563,10 +565,18 @@ command.follow = function(client, _)
     return
   end
 
+  -- Remove header link from the end if there is one.
+  local header_link = note_file_name:match "#[%a%d-_]+$"
+  if header_link ~= nil then
+    note_file_name = note_file_name:sub(1, -header_link:len() - 1)
+  end
+
+  -- Ensure file name ends with suffix.
   if not note_file_name:match "%.md" then
     note_file_name = note_file_name .. ".md"
   end
 
+  -- Search for matching notes.
   local notes = util.find_note(client.dir, note_file_name)
 
   if #notes < 1 then
