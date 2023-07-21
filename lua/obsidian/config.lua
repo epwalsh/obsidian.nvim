@@ -5,6 +5,7 @@ local config = {}
 ---[[ Options specs ]]---
 
 ---@class obsidian.config.ClientOpts
+---@field workspaces table
 ---@field dir string
 ---@field log_level integer|?
 ---@field notes_subdir string|?
@@ -30,7 +31,8 @@ config.ClientOpts = {}
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.default = function()
   return {
-    dir = vim.fs.normalize "./",
+    workspaces = { "./" },
+    dir = nil,
     log_level = nil,
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
@@ -64,13 +66,21 @@ config.ClientOpts.normalize = function(opts)
   opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
-  opts.dir = vim.fs.normalize(tostring(opts.dir))
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
     echo.err("invalid 'sort_by' option '" .. opts.sort_by .. "'")
   end
 
+  for _, value in pairs(opts.workspaces) do
+    local normalized_dir = vim.fs.normalize(tostring(value))
+    if normalized_dir == vim.fn.getcwd() then
+      opts.dir = normalized_dir
+      break;
+    end
+  end
+
+  print('dir: ' .. tostring(opts.dir))
   return opts
 end
 

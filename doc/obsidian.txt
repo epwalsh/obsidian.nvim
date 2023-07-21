@@ -23,10 +23,9 @@ Obsidian app.
 - ⚙️ |obsidian-setup|
     - |obsidian-requirements|
     - |obsidian-install-and-configure|
-    - |obsidian-plugin-dependencies|
     - |obsidian-configuration-options|
-    - |obsidian-notes-on-configuration|
-    - |obsidian-using-templates|
+    - |obsidian-templates-support|
+    - |obsidian-using-nvim-treesitter|
 - 🐞 |obsidian-known-issues|
 - ➕ |obsidian-contributing|
 
@@ -35,29 +34,28 @@ Obsidian app.
 2. Features                                                *obsidian-features*
 
 - ▶️ Autocompletion for note references via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> (triggered by typing `[[`)
-- 🏃 Optional passthrough for `gf` to enable Obsidian links without interfering with existing functionality
+- 🏃 Go to a note buffer with `gf` when cursor is on a reference
 - 💅 Additional markdown syntax highlighting and concealing for references
 
 
 COMMANDS                                                   *obsidian-commands*
 
+- `:ObsidianBacklinks` for getting a location list of references to the current buffer.
+- `:ObsidianToday` to create a new daily note.
+- `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
 - `:ObsidianOpen` to open a note in the Obsidian app.
     This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew` to create a new note.
     This command has one optional argument: the title of the new note.
-- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using fzf.vim <https://github.com/junegunn/fzf.vim>, fzf-lua <https://github.com/ibhagwan/fzf-lua> or telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>.
-- `:ObsidianFollowLink` to follow a note reference under the cursor.
-- `:ObsidianBacklinks` for getting a location list of references to the current buffer.
-- `:ObsidianToday` to create a new daily note.
-- `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
-- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf` alternatives.
-    See |obsidian-"using-templates"| for more information.
 - `:ObsidianSearch` to search for notes in your vault using ripgrep <https://github.com/BurntSushi/ripgrep> with fzf.vim <https://github.com/junegunn/fzf.vim>, fzf-lua <https://github.com/ibhagwan/fzf-lua> or telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>.
     This command has one optional argument: a search query to start with.
+- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using fzf.vim <https://github.com/junegunn/fzf.vim>, fzf-lua <https://github.com/ibhagwan/fzf-lua> or telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>.
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
     This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
     This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
+- `:ObsidianFollowLink` to follow a note reference under the cursor.
+- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf` alternatives.
 
 
 DEMO                                                           *obsidian-demo*
@@ -75,20 +73,18 @@ REQUIREMENTS                                           *obsidian-requirements*
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
 - If you want completion and search features (recommended) you’ll also need ripgrep <https://github.com/BurntSushi/ripgrep> to be installed and on your `$PATH`.
     See ripgrep#installation <https://github.com/BurntSushi/ripgrep> for install options.
-- If you using WSL, you’ll also need wsl-open <https://gitlab.com/4U6U57/wsl-open>
 
 Search functionality (e.g. via the `:ObsidianSearch` and
 `:ObsidianQuickSwitch` commands) also requires telescope.nvim
 <https://github.com/nvim-telescope/telescope.nvim> or one of the `fzf`
-alternatives (see |obsidian-plugin-dependencies| below).
+alternatives (see below).
 
 
 INSTALL AND CONFIGURE                         *obsidian-install-and-configure*
 
-To configure obsidian.nvim you just need to call `require("obsidian").setup({
+To configure Obsidian.nvim you just need to call `require("obsidian").setup({
 ... })` with the desired options. Here are some examples using different plugin
-managers. The full set of |obsidian-plugin-dependencies| and
-|obsidian-configuration-options| are listed below.
+managers. The full set of configuration options are listed |obsidian-below|.
 
 
 USING LAZY.NVIM ~
@@ -97,23 +93,52 @@ USING LAZY.NVIM ~
     return {
       "epwalsh/obsidian.nvim",
       lazy = true,
-      event = {
-        -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
-        -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
-        "BufReadPre path/to/my-vault/**.md",
-        "BufNewFile path/to/my-vault/**.md",
-      },
+      event = { "BufReadPre path/to/my-vault/**.md" },
+      -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand':
+      -- event = { "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md" },
       dependencies = {
         -- Required.
         "nvim-lua/plenary.nvim",
-    
-        -- see below for full list of optional dependencies 👇
+
+        -- Optional, for completion.
+        "hrsh7th/nvim-cmp",
+
+        -- Optional, for search and quick-switch functionality.
+        "nvim-telescope/telescope.nvim",
+
+        -- Optional, an alternative to telescope for search and quick-switch functionality.
+        -- "ibhagwan/fzf-lua"
+
+        -- Optional, another alternative to telescope for search and quick-switch functionality.
+        -- "junegunn/fzf",
+        -- "junegunn/fzf.vim"
+
+        -- Optional, alternative to nvim-treesitter for syntax highlighting.
+        "godlygeek/tabular",
+        "preservim/vim-markdown",
       },
       opts = {
-        dir = "~/my-vault",  -- no need to call 'vim.fn.expand' here
-    
+        -- no need to call 'vim.fn.expand' here
+        workspaces = {
+	  "~/notes/personal",
+	  "~/notes/work",
+	}
+
         -- see below for full list of options 👇
       },
+      config = function(_, opts)
+        require("obsidian").setup(opts)
+
+        -- Optional, override the 'gf' keymap to utilize Obsidian's search functionality.
+        -- see also: 'follow_url_func' config option below.
+        vim.keymap.set("n", "gf", function()
+          if require("obsidian").util.cursor_on_markdown_link() then
+            return "<cmd>ObsidianFollowLink<CR>"
+          else
+            return "gf"
+          end
+        end, { noremap = false, expr = true })
+      end,
     }
 <
 
@@ -123,37 +148,18 @@ USING PACKER.NVIM ~
 >lua
     use({
       "epwalsh/obsidian.nvim",
-      requires = {
-        -- Required.
-        "nvim-lua/plenary.nvim",
-    
-        -- see below for full list of optional dependencies 👇
-      },
       config = function()
         require("obsidian").setup({
-          dir = "~/my-vault",
-    
+          workspaces = {
+	    "~/notes/personal",
+	    "~/notes/work",
+	  }
+
           -- see below for full list of options 👇
         })
       end,
     })
 <
-
-
-PLUGIN DEPENDENCIES                             *obsidian-plugin-dependencies*
-
-The only required plugin dependency is plenary.nvim
-<https://github.com/nvim-lua/plenary.nvim>, but there are a number of optional
-dependencies that enhance the obsidian.nvim experience:
-
-- hrsh7th/nvim-cmp <https://github.com/hrsh7th/nvim-cmp>: for completion of note references.
-- nvim-telescope/telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>: for search and quick-switch functionality.
-- ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>: an alternative to telescope for search and quick-switch functionality.
-- junegunn/fzf <https://github.com/junegunn/fzf> and junegunn/fzf.vim <https://github.com/junegunn/fzf.vim>: another alternative to telescope for search and quick-switch functionality.
-- godlygeek/tabular <https://github.com/godlygeek/tabular> and preservim/vim-markdown <https://github.com/preservim/vim-markdown>: alternative to nvim-treesitter for syntax highlighting.
-
-If you choose to use any of these you should include them in the "dependencies"
-or "requires" field of the obsidian.nvim plugin spec for your package manager.
 
 
 CONFIGURATION OPTIONS                         *obsidian-configuration-options*
@@ -164,26 +170,25 @@ This is a complete list of all of the options that can be passed to
 >lua
     {
       -- Required, the path to your vault directory.
-      dir = "~/my-vault",
-    
+      workspaces = {
+	"~/notes/personal",
+	"~/notes/work",
+      }
+
       -- Optional, if you keep notes in a specific subdirectory of your vault.
       notes_subdir = "notes",
-    
-      -- Optional, set the log level for obsidian.nvim. This is an integer corresponding to one of the log
+
+      -- Optional, set the log level for Obsidian. This is an integer corresponding to one of the log
       -- levels defined by "vim.log.levels.*" or nil, which is equivalent to DEBUG (1).
       log_level = vim.log.levels.DEBUG,
-    
+
       daily_notes = {
         -- Optional, if you keep daily notes in a separate directory.
         folder = "notes/dailies",
-        -- Optional, if you want to change the date format for the ID of daily notes.
-        date_format = "%Y-%m-%d",
-        -- Optional, if you want to change the date format of the default alias of daily notes.
-        alias_format = "%B %-d, %Y"
-        -- Optional, if you want to automatically insert a template from your template directory like 'daily.md'
-        template = nil
+        -- Optional, if you want to change the date format for daily notes.
+        date_format = "%Y-%m-%d"
       },
-    
+
       -- Optional, completion.
       completion = {
         -- If using nvim-cmp, otherwise set to false
@@ -193,29 +198,9 @@ This is a complete list of all of the options that can be passed to
         -- Where to put new notes created from completion. Valid options are
         --  * "current_dir" - put new notes in same directory as the current buffer.
         --  * "notes_subdir" - put new notes in the default notes subdirectory.
-        new_notes_location = "current_dir",
-    
-        -- Whether to add the output of the node_id_func to new notes in autocompletion.
-        -- E.g. "[[Foo" completes to "[[foo|Foo]]" assuming "foo" is the ID of the note.
-        prepend_note_id = true
+        new_notes_location = "current_dir"
       },
-    
-      -- Optional, key mappings.
-      mappings = {
-        -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
-        ["gf"] = {
-          action = function()
-            return require("obsidian").util.gf_passthrough()
-          end,
-          opts = { noremap = false, expr = true, buffer = true },
-        },
-      },
-    
-      -- Optional, if set to true, the specified mappings in the `mappings`
-      -- table will overwrite existing ones. Otherwise a warning is printed
-      -- and the mappings are not applied.
-      overwrite_mappings = false,
-    
+
       -- Optional, customize how names/IDs for new notes are created.
       note_id_func = function(title)
         -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
@@ -233,10 +218,10 @@ This is a complete list of all of the options that can be passed to
         end
         return tostring(os.time()) .. "-" .. suffix
       end,
-    
-      -- Optional, set to true if you don't want obsidian.nvim to manage frontmatter.
+
+      -- Optional, set to true if you don't want Obsidian to manage frontmatter.
       disable_frontmatter = false,
-    
+
       -- Optional, alternatively you can customize the frontmatter data.
       note_frontmatter_func = function(note)
         -- This is equivalent to the default frontmatter function.
@@ -250,24 +235,14 @@ This is a complete list of all of the options that can be passed to
         end
         return out
       end,
-    
+
       -- Optional, for templates (see below).
       templates = {
         subdir = "templates",
-        date_format = "%Y-%m-%d",
+        date_format = "%Y-%m-%d-%a",
         time_format = "%H:%M",
-        -- A map for custom variables, the key should be the variable and the value a function
-        substitutions = {}
       },
-    
-      -- Optional, customize the backlinks interface.
-      backlinks = {
-        -- The default height of the backlinks pane.
-        height = 10,
-        -- Whether or not to wrap lines.
-        wrap = true,
-      },
-    
+
       -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
       -- URL it will be ignored but you can customize this behavior here.
       follow_url_func = function(url)
@@ -275,14 +250,14 @@ This is a complete list of all of the options that can be passed to
         vim.fn.jobstart({"open", url})  -- Mac OS
         -- vim.fn.jobstart({"xdg-open", url})  -- linux
       end,
-    
+
       -- Optional, set to true if you use the Obsidian Advanced URI plugin.
       -- https://github.com/Vinzent03/obsidian-advanced-uri
       use_advanced_uri = true,
-    
+
       -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
       open_app_foreground = false,
-    
+
       -- Optional, by default commands like `:ObsidianSearch` will attempt to use
       -- telescope.nvim, fzf-lua, and fzf.nvim (in that order), and use the
       -- first one they find. By setting this option to your preferred
@@ -291,12 +266,6 @@ This is a complete list of all of the options that can be passed to
       -- remaining finders will be attempted in the original order.
       finder = "telescope.nvim",
     
-      -- Optional, sort search results by "path", "modified", "accessed", or "created".
-      -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example `:ObsidianQuickSwitch`
-      -- will show the notes sorted by latest modified time
-      sort_by = "modified",
-      sort_reversed = true,
-    
       -- Optional, determines whether to open notes in a horizontal split, a vertical split,
       -- or replacing the current buffer (default)
       -- Accepted values are "current", "hsplit" and "vsplit"
@@ -304,88 +273,14 @@ This is a complete list of all of the options that can be passed to
     }
 <
 
+**❗ Notes**
 
-NOTES ON CONFIGURATION                       *obsidian-notes-on-configuration*
-
-
-COMPLETION ~
-
-obsidian.nvim will set itself up as an nvim-cmp source automatically when you
-enter a markdown buffer within your vault directory, you do **not** need to
-specify this plugin as a cmp source manually.
+- Obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
+- If you use `vim-markdown` you’ll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I’ve found doesn’t work very well.
+- The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
 
 
-SYNTAX HIGHLIGHTING ~
-
-If you use `vim-markdown` you’ll probably want to disable its frontmatter
-syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I’ve found
-doesn’t work very well.
-
-If you’re using nvim-treesitter
-<https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md> and
-not vim-markdown <https://github.com/preservim/vim-markdown>, you’ll probably
-want to enable `additional_vim_regex_highlighting` for markdown to benefit from
-obsidian.nvim’s extra syntax improvements:
-
->lua
-    require("nvim-treesitter.configs").setup({
-      ensure_installed = { "markdown", "markdown_inline", ... },
-      highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = { "markdown" },
-      },
-    })
-<
-
-
-NOTE NAMING AND LOCATION ~
-
-The `notes_subdir` and `note_id_func` options are not mutually exclusive. You
-can use them both. For example, using a combination of both of the above
-settings, a new note called "My new note" will assigned a path like
-`notes/1657296016-my-new-note.md`.
-
-
-GF PASSTHROUGH ~
-
-If you want the `gf` passthrough functionality but you’ve already overridden
-the `gf` keybinding, just change your `gf` mapping definition to something like
-this:
-
->lua
-    vim.keymap.set("n", "gf", function()
-      if require("obsidian").util.cursor_on_markdown_link() then
-        return "<cmd>ObsidianFollowLink<CR>"
-      else
-        return "gf"
-      end
-    end, { noremap = false, expr = true })
-<
-
-Then make sure to comment out the `gf` keybinding in your obsidian.nvim config:
-
->lua
-    mappings = {
-      -- ["gf"] = ...
-    },
-<
-
-Or alternatively you could map obsidian.nvim’s follow functionality to a
-different key:
-
->lua
-    mappings = {
-      ["fo"] = {
-        action = function()
-          return require("obsidian").util.gf_passthrough()
-        end,
-        opts = { noremap = false, expr = true, buffer = true },
-      },
-    },
-<
-
-
-USING TEMPLATES                                     *obsidian-using-templates*
+TEMPLATES SUPPORT                                 *obsidian-templates-support*
 
 To insert a template, run the command `:ObsidianTemplate`. This will open
 telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> or one of the
@@ -398,11 +293,11 @@ For example, with the following configuration
 >lua
     {
       -- other fields ...
-    
+
       templates = {
           subdir = "my-templates-folder",
           date_format = "%Y-%m-%d-%a",
-          time_format = "%H:%M",
+          time_format = "%H:%M"
       },
     }
 <
@@ -411,7 +306,6 @@ and the file `~/my-vault/my-templates-folder/note template.md`:
 
 >markdown
     # {{title}}
-    
     Date created: {{date}}
 <
 
@@ -420,27 +314,29 @@ will insert
 
 >markdown
     # Configuring Neovim
-    
+
     Date created: 2023-03-01-Wed
 <
 
 above the cursor position.
 
-You can also define custom template substitutions with the configuration field
-`templates.substitutions`. For example, to automatically substitute the
-template variable `{{yesterday}}` when inserting a template, you could add this
-to your config:
+
+USING NVIM-TREESITTER                         *obsidian-using-nvim-treesitter*
+
+If you’re using nvim-treesitter
+<https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md> and
+not vim-markdown <https://github.com/preservim/vim-markdown>, you’ll probably
+want to enable `additional_vim_regex_highlighting` for markdown to benefit from
+Obsidian.nvim’s extra syntax improvements:
 
 >lua
-    {
-    -- other fields ...
-    templates = {
-      substitutions = {
-        yesterday = function()
-          return os.date("%Y-%m-%d", os.time() - 86400)
-        end
-      }
-    }
+    require("nvim-treesitter.configs").setup({
+      ensure_installed = { "markdown", "markdown_inline", ... },
+      highlight = {
+        enable = true,
+        additional_vim_regex_highlighting = { "markdown" },
+      },
+    })
 <
 
 
