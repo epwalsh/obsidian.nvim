@@ -99,36 +99,32 @@ USING LAZY.NVIM ~
       dependencies = {
         -- Required.
         "nvim-lua/plenary.nvim",
-
+    
         -- Optional, for completion.
         "hrsh7th/nvim-cmp",
-
+    
         -- Optional, for search and quick-switch functionality.
         "nvim-telescope/telescope.nvim",
-
+    
         -- Optional, an alternative to telescope for search and quick-switch functionality.
         -- "ibhagwan/fzf-lua"
-
+    
         -- Optional, another alternative to telescope for search and quick-switch functionality.
         -- "junegunn/fzf",
         -- "junegunn/fzf.vim"
-
+    
         -- Optional, alternative to nvim-treesitter for syntax highlighting.
         "godlygeek/tabular",
         "preservim/vim-markdown",
       },
       opts = {
-        -- no need to call 'vim.fn.expand' here
-        workspaces = {
-	  "~/notes/personal",
-	  "~/notes/work",
-	}
-
+        dir = "~/my-vault",  -- no need to call 'vim.fn.expand' here
+    
         -- see below for full list of options 👇
       },
       config = function(_, opts)
         require("obsidian").setup(opts)
-
+    
         -- Optional, override the 'gf' keymap to utilize Obsidian's search functionality.
         -- see also: 'follow_url_func' config option below.
         vim.keymap.set("n", "gf", function()
@@ -150,11 +146,8 @@ USING PACKER.NVIM ~
       "epwalsh/obsidian.nvim",
       config = function()
         require("obsidian").setup({
-          workspaces = {
-	    "~/notes/personal",
-	    "~/notes/work",
-	  }
-
+          dir = "~/my-vault",
+    
           -- see below for full list of options 👇
         })
       end,
@@ -170,25 +163,22 @@ This is a complete list of all of the options that can be passed to
 >lua
     {
       -- Required, the path to your vault directory.
-      workspaces = {
-	"~/notes/personal",
-	"~/notes/work",
-      }
-
+      dir = "~/my-vault",
+    
       -- Optional, if you keep notes in a specific subdirectory of your vault.
       notes_subdir = "notes",
-
+    
       -- Optional, set the log level for Obsidian. This is an integer corresponding to one of the log
       -- levels defined by "vim.log.levels.*" or nil, which is equivalent to DEBUG (1).
       log_level = vim.log.levels.DEBUG,
-
+    
       daily_notes = {
         -- Optional, if you keep daily notes in a separate directory.
         folder = "notes/dailies",
         -- Optional, if you want to change the date format for daily notes.
         date_format = "%Y-%m-%d"
       },
-
+    
       -- Optional, completion.
       completion = {
         -- If using nvim-cmp, otherwise set to false
@@ -200,7 +190,7 @@ This is a complete list of all of the options that can be passed to
         --  * "notes_subdir" - put new notes in the default notes subdirectory.
         new_notes_location = "current_dir"
       },
-
+    
       -- Optional, customize how names/IDs for new notes are created.
       note_id_func = function(title)
         -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
@@ -218,10 +208,10 @@ This is a complete list of all of the options that can be passed to
         end
         return tostring(os.time()) .. "-" .. suffix
       end,
-
+    
       -- Optional, set to true if you don't want Obsidian to manage frontmatter.
       disable_frontmatter = false,
-
+    
       -- Optional, alternatively you can customize the frontmatter data.
       note_frontmatter_func = function(note)
         -- This is equivalent to the default frontmatter function.
@@ -235,14 +225,14 @@ This is a complete list of all of the options that can be passed to
         end
         return out
       end,
-
+    
       -- Optional, for templates (see below).
       templates = {
         subdir = "templates",
         date_format = "%Y-%m-%d-%a",
         time_format = "%H:%M",
       },
-
+    
       -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
       -- URL it will be ignored but you can customize this behavior here.
       follow_url_func = function(url)
@@ -250,14 +240,14 @@ This is a complete list of all of the options that can be passed to
         vim.fn.jobstart({"open", url})  -- Mac OS
         -- vim.fn.jobstart({"xdg-open", url})  -- linux
       end,
-
+    
       -- Optional, set to true if you use the Obsidian Advanced URI plugin.
       -- https://github.com/Vinzent03/obsidian-advanced-uri
       use_advanced_uri = true,
-
+    
       -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
       open_app_foreground = false,
-
+    
       -- Optional, by default commands like `:ObsidianSearch` will attempt to use
       -- telescope.nvim, fzf-lua, and fzf.nvim (in that order), and use the
       -- first one they find. By setting this option to your preferred
@@ -293,7 +283,7 @@ For example, with the following configuration
 >lua
     {
       -- other fields ...
-
+    
       templates = {
           subdir = "my-templates-folder",
           date_format = "%Y-%m-%d-%a",
@@ -314,7 +304,7 @@ will insert
 
 >markdown
     # Configuring Neovim
-
+    
     Date created: 2023-03-01-Wed
 <
 
