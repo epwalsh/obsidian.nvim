@@ -24,27 +24,27 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 ## Features
 
 - ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
-- 🏃 Go to a note buffer with `gf` when cursor is on a reference
+- 🏃 Optional passthrough for `gf` to enable Obsidian links without interfering with existing functionality
 - 💅 Additional markdown syntax highlighting and concealing for references
 
 ### Commands
 
-- `:ObsidianBacklinks` for getting a location list of references to the current buffer.
-- `:ObsidianToday` to create a new daily note.
-- `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
 - `:ObsidianOpen` to open a note in the Obsidian app.
   This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew` to create a new note.
   This command has one optional argument: the title of the new note.
+- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- `:ObsidianFollowLink` to follow a note reference under the cursor.
+- `:ObsidianBacklinks` for getting a location list of references to the current buffer.
+- `:ObsidianToday` to create a new daily note.
+- `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
+- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives.
 - `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim). 
   This command has one optional argument: a search query to start with.
-- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
   This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
-- `:ObsidianFollowLink` to follow a note reference under the cursor.
-- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives.
 
 ### Demo
 
