@@ -166,7 +166,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     new_notes_location = "current_dir"
   },
 
-  -- Optional, customize how names/IDs for new notes are created.
+  -- Optional, customize how names/IDs for new notes are created. If nil or an empty string
+  -- is returned the id will be ignored.
   note_id_func = function(title)
     -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
     -- In this case a note with the title 'My new note' will given an ID that looks
