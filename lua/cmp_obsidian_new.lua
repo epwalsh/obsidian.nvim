@@ -25,7 +25,7 @@ source.complete = function(self, request, callback)
     local items = {}
     local new_title = search
     if new_id ~= "" and new_id ~= nil then
-        new_title = new_id .. "|" .. search
+      new_title = new_id .. "|" .. search
     end
     table.insert(items, {
       sortText = "[[" .. search,
