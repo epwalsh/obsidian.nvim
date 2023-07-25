@@ -57,6 +57,7 @@ end
 ---@field nvim_cmp boolean
 ---@field min_chars integer
 ---@field new_notes_location "current_dir"|"notes_subdir"
+---@field prepend_note_id boolean
 config.CompletionOpts = {}
 
 ---Get defaults.
@@ -67,6 +68,7 @@ config.CompletionOpts.default = function()
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
     new_notes_location = "current_dir",
+    prepend_note_id = true,
   }
 end
 
