@@ -14,6 +14,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - ⚙️ [Setup](#setup)
   - [Requirements](#requirements)
   - [Install and configure](#install-and-configure)
+  - [Plugin dependencies](#plugin-dependencies)
   - [Configuration options](#configuration-options)
   - [Templates support](#templates-support)
   - [Using nvim-treesitter](#using-nvim-treesitter)
@@ -63,7 +64,7 @@ Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` 
 ### Install and configure
 
 To configure Obsidian.nvim you just need to call `require("obsidian").setup({ ... })` with the desired options.
-Here are some examples using different plugin managers. The full set of configuration options are listed [below](#configuration-options).
+Here are some examples using different plugin managers. The full set of [plugin dependencies](#plugin-dependencies) and [configuration options](#configuration-options) are listed below.
 
 #### Using [`lazy.nvim`](https://github.com/folke/lazy.nvim)
 
@@ -78,22 +79,7 @@ return {
     -- Required.
     "nvim-lua/plenary.nvim",
 
-    -- Optional, for completion.
-    "hrsh7th/nvim-cmp",
-
-    -- Optional, for search and quick-switch functionality.
-    "nvim-telescope/telescope.nvim",
-
-    -- Optional, an alternative to telescope for search and quick-switch functionality.
-    -- "ibhagwan/fzf-lua"
-
-    -- Optional, another alternative to telescope for search and quick-switch functionality.
-    -- "junegunn/fzf",
-    -- "junegunn/fzf.vim"
-
-    -- Optional, alternative to nvim-treesitter for syntax highlighting.
-    "godlygeek/tabular",
-    "preservim/vim-markdown",
+    -- see below for full list of optional dependencies 👇
   },
   opts = {
     dir = "~/my-vault",  -- no need to call 'vim.fn.expand' here
@@ -121,6 +107,12 @@ return {
 ```lua
 use({
   "epwalsh/obsidian.nvim",
+  requires = {
+    -- Required.
+    "nvim-lua/plenary.nvim",
+
+    -- see below for full list of optional dependencies 👇
+  },
   config = function()
     require("obsidian").setup({
       dir = "~/my-vault",
@@ -130,6 +122,18 @@ use({
   end,
 })
 ```
+
+### Plugin dependencies
+
+The only required plugin dependency is [plenary.nvim](https://github.com/nvim-lua/plenary.nvim), but there are a number of optional dependencies that enhance the obsidian.nvim experience:
+
+- [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp): for completion of note references.
+- [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim): for search and quick-switch functionality.
+- [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): an alternative to telescope for search and quick-switch functionality.
+- [junegunn/fzf](https://github.com/junegunn/fzf) and [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim): another alternative to telescope for search and quick-switch functionality.
+- [godlygeek/tabular](https://github.com/godlygeek/tabular) and [preservim/vim-markdown](https://github.com/preservim/vim-markdown): alternative to nvim-treesitter for syntax highlighting.
+
+If you choose to use any of these you should include them in the "dependencies" or "requires" field of the obsidian.nvim plugin spec for your package manager.
 
 ### Configuration options
 
