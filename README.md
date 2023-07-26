@@ -16,8 +16,8 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   - [Install and configure](#install-and-configure)
   - [Plugin dependencies](#plugin-dependencies)
   - [Configuration options](#configuration-options)
-  - [Templates support](#templates-support)
-  - [Using nvim-treesitter](#using-nvim-treesitter)
+  - [Notes on configuration](#notes-on-configuration)
+  - [Using templates](#using-templates)
 - 🐞 [Known issues](#known-issues)
 - ➕ [Contributing](#contributing)
 
@@ -40,6 +40,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - `:ObsidianToday` to create a new daily note.
 - `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
 - `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives.
+  See ["using templates"](#using-templates) for more information.
 - `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim). 
   This command has one optional argument: a search query to start with.
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
@@ -234,12 +235,35 @@ This is a complete list of all of the options that can be passed to `require("ob
 }
 ```
 
-**❗ Notes**
+### Notes on configuration
 
-- obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
-- If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
-- The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
-- If you want the `gf` passthrough functionality but you've already overridden the `gf` keybinding, just change your `gf` mapping definition to something like this:
+#### Completion
+
+obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
+
+#### Syntax highlighting
+
+If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
+
+If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from obsidian.nvim's extra syntax improvements:
+
+```lua 
+require("nvim-treesitter.configs").setup({
+  ensure_installed = { "markdown", "markdown_inline", ... },
+  highlight = {
+    enable = true,
+    additional_vim_regex_highlighting = { "markdown" },
+  },
+})
+```
+
+#### Note naming and location
+
+The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
+
+#### `gf` passthrough
+
+If you want the `gf` passthrough functionality but you've already overridden the `gf` keybinding, just change your `gf` mapping definition to something like this:
 
   ```lua
   vim.keymap.set("n", "gf", function()
@@ -251,7 +275,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   end, { noremap = false, expr = true })
   ```
 
-### Templates support
+### Using templates
 
 To insert a template, run the command `:ObsidianTemplate`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported. 
 
@@ -284,20 +308,6 @@ Date created: 2023-03-01-Wed
 ```
 
 above the cursor position.
-
-### Using nvim-treesitter
-
-If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from obsidian.nvim's extra syntax improvements:
-
-```lua 
-require("nvim-treesitter.configs").setup({
-  ensure_installed = { "markdown", "markdown_inline", ... },
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = { "markdown" },
-  },
-})
-```
 
 ## Known Issues 
 
