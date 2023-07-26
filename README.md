@@ -1,4 +1,4 @@
-# Obsidian.nvim
+# obsidian.nvim
 
 A Neovim plugin for writing and navigating an [Obsidian](https://obsidian.md) vault, written in Lua.
 
@@ -59,11 +59,11 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - If you want completion and search features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
-Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see below).
+Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see [plugin dependencies](#plugin-dependencies) below).
 
 ### Install and configure
 
-To configure Obsidian.nvim you just need to call `require("obsidian").setup({ ... })` with the desired options.
+To configure obsidian.nvim you just need to call `require("obsidian").setup({ ... })` with the desired options.
 Here are some examples using different plugin managers. The full set of [plugin dependencies](#plugin-dependencies) and [configuration options](#configuration-options) are listed below.
 
 #### Using [`lazy.nvim`](https://github.com/folke/lazy.nvim)
@@ -89,7 +89,7 @@ return {
   config = function(_, opts)
     require("obsidian").setup(opts)
 
-    -- Optional, override the 'gf' keymap to utilize Obsidian's search functionality.
+    -- Optional, override the 'gf' keymap to utilize obsidian.nvim's search functionality.
     -- see also: 'follow_url_func' config option below.
     vim.keymap.set("n", "gf", function()
       if require("obsidian").util.cursor_on_markdown_link() then
@@ -147,7 +147,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, if you keep notes in a specific subdirectory of your vault.
   notes_subdir = "notes",
 
-  -- Optional, set the log level for Obsidian. This is an integer corresponding to one of the log
+  -- Optional, set the log level for obsidian.nvim. This is an integer corresponding to one of the log
   -- levels defined by "vim.log.levels.*" or nil, which is equivalent to DEBUG (1).
   log_level = vim.log.levels.DEBUG,
 
@@ -192,7 +192,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     return tostring(os.time()) .. "-" .. suffix
   end,
 
-  -- Optional, set to true if you don't want Obsidian to manage frontmatter.
+  -- Optional, set to true if you don't want obsidian.nvim to manage frontmatter.
   disable_frontmatter = false,
 
   -- Optional, alternatively you can customize the frontmatter data.
@@ -243,7 +243,7 @@ This is a complete list of all of the options that can be passed to `require("ob
 
 **❗ Notes**
 
-- Obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
+- obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
 - If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
 - The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
 
@@ -283,7 +283,7 @@ above the cursor position.
 
 ### Using nvim-treesitter
 
-If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from Obsidian.nvim's extra syntax improvements:
+If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from obsidian.nvim's extra syntax improvements:
 
 ```lua 
 require("nvim-treesitter.configs").setup({
