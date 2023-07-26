@@ -91,6 +91,24 @@ obsidian.setup = function(opts)
       end
       cmp.setup.buffer { sources = sources }
     end
+
+    -- Keybindings...
+    -- 'gf' passthrough
+    if opts.keybindings.gf_passthrough then
+      local gf_set_by = vim.fn.mapcheck("gf", "n")
+      if gf_set_by == "" then
+        -- 'gf' has not been overridden by user or other plugin so we can safely set it.
+        vim.keymap.set("n", "gf", function()
+          if require("obsidian").util.cursor_on_markdown_link() then
+            return "<cmd>ObsidianFollowLink<CR>"
+          else
+            return "gf"
+          end
+        end, { noremap = false, expr = true, buffer = true })
+      elseif not string.find(gf_set_by, "obsidian") then
+        echo.warn("Obsidian cannot override 'gf' keybinding since 'gf' is already set by " .. gf_set_by, opts.log_level)
+      end
+    end
   end
 
   --- @type fun(match: string): boolean

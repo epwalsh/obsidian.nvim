@@ -86,19 +86,6 @@ return {
 
     -- see below for full list of options 👇
   },
-  config = function(_, opts)
-    require("obsidian").setup(opts)
-
-    -- Optional, override the 'gf' keymap to utilize obsidian.nvim's search functionality.
-    -- see also: 'follow_url_func' config option below.
-    vim.keymap.set("n", "gf", function()
-      if require("obsidian").util.cursor_on_markdown_link() then
-        return "<cmd>ObsidianFollowLink<CR>"
-      else
-        return "gf"
-      end
-    end, { noremap = false, expr = true })
-  end,
 }
 ```
 
@@ -172,6 +159,12 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- Whether to add the output of the node_id_func to new notes in autocompletion.
     -- E.g. "[[Foo" completes to "[[foo|Foo]]" assuming "foo" is the ID of the note.
     prepend_note_id = true
+  },
+
+  -- Optional, keybindings.
+  keybindings = {
+    -- Overrides the 'gf' keybinding to work on markdown/wiki links within your vault.
+    gf_passthrough = true,
   },
 
   -- Optional, customize how names/IDs for new notes are created.

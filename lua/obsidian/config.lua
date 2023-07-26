@@ -15,6 +15,7 @@ local config = {}
 ---@field note_frontmatter_func function|?
 ---@field disable_frontmatter boolean|?
 ---@field completion obsidian.config.CompletionOpts
+---@field keybindings obsidian.config.KeyBindingOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
@@ -34,6 +35,7 @@ config.ClientOpts.default = function()
     note_frontmatter_func = nil,
     disable_frontmatter = false,
     completion = config.CompletionOpts.default(),
+    keybindings = config.KeyBindingOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
@@ -48,6 +50,7 @@ end
 config.ClientOpts.normalize = function(opts)
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
+  opts.keybindings = vim.tbl_extend("force", config.KeyBindingOpts.default(), opts.keybindings)
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.dir = vim.fs.normalize(tostring(opts.dir))
   return opts
@@ -69,6 +72,18 @@ config.CompletionOpts.default = function()
     min_chars = 2,
     new_notes_location = "current_dir",
     prepend_note_id = true,
+  }
+end
+
+---@class obsidian.config.KeyBindingOpts
+---@field gf_passthrough boolean
+config.KeyBindingOpts = {}
+
+---Get defaults.
+---@return obsidian.config.KeyBindingOpts
+config.KeyBindingOpts.default = function()
+  return {
+    gf_passthrough = true,
   }
 end
 
