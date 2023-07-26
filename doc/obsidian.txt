@@ -109,19 +109,6 @@ USING LAZY.NVIM ~
     
         -- see below for full list of options 👇
       },
-      config = function(_, opts)
-        require("obsidian").setup(opts)
-    
-        -- Optional, override the 'gf' keymap to utilize obsidian.nvim's search functionality.
-        -- see also: 'follow_url_func' config option below.
-        vim.keymap.set("n", "gf", function()
-          if require("obsidian").util.cursor_on_markdown_link() then
-            return "<cmd>ObsidianFollowLink<CR>"
-          else
-            return "gf"
-          end
-        end, { noremap = false, expr = true })
-      end,
     }
 <
 
@@ -204,6 +191,12 @@ This is a complete list of all of the options that can be passed to
         prepend_note_id = true
       },
     
+      -- Optional, key mappings.
+      mappings = {
+        -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
+        ["gf"] = require("obsidian.mapping").gf_passthrough(),
+      },
+    
       -- Optional, customize how names/IDs for new notes are created.
       note_id_func = function(title)
         -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
@@ -273,9 +266,28 @@ This is a complete list of all of the options that can be passed to
 
 **❗ Notes**
 
-- obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
-- If you use `vim-markdown` you’ll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I’ve found doesn’t work very well.
-- The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
+- obsidian.nvim will set itself up as an nvim-cmp source automatically when you
+    enter a markdown buffer within your vault directory, you do **not** need to
+    specify this plugin as a cmp source manually.
+- If you use `vim-markdown` you’ll probably want to disable its frontmatter
+    syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I’ve found
+    doesn’t work very well.
+- The `notes_subdir` and `note_id_func` options are not mutually exclusive. You
+    can use them both. For example, using a combination of both of the above
+    settings, a new note called "My new note" will assigned a path like
+    `notes/1657296016-my-new-note.md`.
+- If you want the `gf` passthrough functionality but you’ve already overridden
+    the `gf` keybinding, just change your `gf` mapping definition to something like
+    this:
+    >lua
+        vim.keymap.set("n", "gf", function()
+          if require("obsidian").util.cursor_on_markdown_link() then
+            return "<cmd>ObsidianFollowLink<CR>"
+          else
+            return "gf"
+          end
+        end, { noremap = false, expr = true })
+    <
 
 
 TEMPLATES SUPPORT                                 *obsidian-templates-support*
