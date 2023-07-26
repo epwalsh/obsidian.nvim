@@ -20,7 +20,7 @@ describe("Note", function()
     local note = Note.from_file "README.md"
     assert.equals(note.id, "README")
     assert.equals(#note.aliases, 1)
-    assert.equals(note.aliases[1], "Obsidian.nvim")
+    assert.equals(note.aliases[1], "obsidian.nvim")
     assert.equals(#note.tags, 0)
     assert.equals(note:fname(), "README.md")
     assert.is_false(note:should_save_frontmatter())

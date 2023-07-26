@@ -15,6 +15,7 @@ local config = {}
 ---@field note_frontmatter_func function|?
 ---@field disable_frontmatter boolean|?
 ---@field completion obsidian.config.CompletionOpts
+---@field mappings obsidian.config.MappingOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
@@ -34,6 +35,7 @@ config.ClientOpts.default = function()
     note_frontmatter_func = nil,
     disable_frontmatter = false,
     completion = config.CompletionOpts.default(),
+    mappings = config.MappingOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
@@ -48,6 +50,7 @@ end
 config.ClientOpts.normalize = function(opts)
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
+  opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.dir = vim.fs.normalize(tostring(opts.dir))
   return opts
@@ -69,6 +72,17 @@ config.CompletionOpts.default = function()
     min_chars = 2,
     new_notes_location = "current_dir",
     prepend_note_id = true,
+  }
+end
+
+---@class obsidian.config.MappingOpts
+config.MappingOpts = {}
+
+---Get defaults.
+---@return obsidian.config.MappingOpts
+config.MappingOpts.default = function()
+  return {
+    ["gf"] = require("obsidian.mapping").gf_passthrough(),
   }
 end
 

@@ -9,6 +9,7 @@ obsidian.VERSION = "1.12.0"
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
+obsidian.mapping = require "obsidian.mapping"
 
 ---@class obsidian.Client
 ---@field dir Path
@@ -90,6 +91,24 @@ obsidian.setup = function(opts)
         end
       end
       cmp.setup.buffer { sources = sources }
+    end
+
+    -- Mappings...
+    for mapping_keys, mapping_config in pairs(opts.mappings) do
+      local mapping_set_by = vim.fn.mapcheck(mapping_keys, "n")
+      if mapping_set_by == "" then
+        vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
+      elseif not string.find(mapping_set_by, "obsidian") then
+        echo.warn(
+          "Obsidian cannot override '"
+            .. mapping_keys
+            .. "' keybinding since '"
+            .. mapping_keys
+            .. "' has been set by "
+            .. mapping_set_by,
+          opts.log_level
+        )
+      end
     end
   end
 
