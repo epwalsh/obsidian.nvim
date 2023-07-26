@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - (internal) Refactored daily note creation.
-- obsidian.nvim will now automatically enable the 'gf' passthrough keybinding within your vault unless the 'gf' keybinding has already been overridden you or another plugin or you set 'keybindings.gf_passthrough = false' in your obsidian.nvim config.
+- obsidian.nvim will now automatically enable the 'gf' passthrough keybinding within your vault unless the 'gf' keybinding has already been overridden you or another plugin or you set 'mappings.gf_passthrough = false' in your obsidian.nvim config.
 
 ## [v1.12.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.12.0) - 2023-07-15
 

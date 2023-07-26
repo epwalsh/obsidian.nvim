@@ -94,7 +94,7 @@ obsidian.setup = function(opts)
 
     -- Keybindings...
     -- 'gf' passthrough
-    if opts.keybindings.gf_passthrough then
+    if opts.mappings.gf_passthrough then
       local gf_set_by = vim.fn.mapcheck("gf", "n")
       if gf_set_by == "" then
         -- 'gf' has not been overridden by user or other plugin so we can safely set it.

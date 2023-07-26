@@ -161,9 +161,9 @@ This is a complete list of all of the options that can be passed to `require("ob
     prepend_note_id = true
   },
 
-  -- Optional, keybindings.
-  keybindings = {
-    -- Overrides the 'gf' keybinding to work on markdown/wiki links within your vault.
+  -- Optional, key mappings.
+  mappings = {
+    -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
     gf_passthrough = true,
   },
 
