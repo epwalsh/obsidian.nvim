@@ -50,7 +50,7 @@ end
 config.ClientOpts.normalize = function(opts)
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
-  opts.mappings = vim.tbl_extend("force", config.MappingOpts.default(), opts.mappings)
+  opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.dir = vim.fs.normalize(tostring(opts.dir))
   return opts
@@ -76,14 +76,13 @@ config.CompletionOpts.default = function()
 end
 
 ---@class obsidian.config.MappingOpts
----@field gf_passthrough boolean
 config.MappingOpts = {}
 
 ---Get defaults.
 ---@return obsidian.config.MappingOpts
 config.MappingOpts.default = function()
   return {
-    gf_passthrough = true,
+    ["gf"] = require("obsidian.mapping").gf_passthrough(),
   }
 end
 

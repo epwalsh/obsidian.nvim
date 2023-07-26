@@ -164,7 +164,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, key mappings.
   mappings = {
     -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
-    gf_passthrough = true,
+    ["gf"] = require("obsidian.mapping").gf_passthrough(),
   },
 
   -- Optional, customize how names/IDs for new notes are created.
