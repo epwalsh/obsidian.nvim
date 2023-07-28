@@ -323,6 +323,23 @@ this:
     end, { noremap = false, expr = true })
 <
 
+Then make sure to comment out the `gf` keybinding in your obsidian.nvim config:
+
+>lua
+    mappings = {
+      -- ["gf"] = require("obsidian.mapping").gf_passthrough(),
+    },
+<
+
+Or alternatively you could map obsidian.nvim’s follow functionality to a
+different key:
+
+>lua
+    mappings = {
+      ["fo"] = require("obsidian.mapping").gf_passthrough(),
+    },
+<
+
 
 USING TEMPLATES                                     *obsidian-using-templates*
 
