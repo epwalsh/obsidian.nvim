@@ -265,15 +265,31 @@ The `notes_subdir` and `note_id_func` options are not mutually exclusive. You ca
 
 If you want the `gf` passthrough functionality but you've already overridden the `gf` keybinding, just change your `gf` mapping definition to something like this:
 
-  ```lua
-  vim.keymap.set("n", "gf", function()
-    if require("obsidian").util.cursor_on_markdown_link() then
-      return "<cmd>ObsidianFollowLink<CR>"
-    else
-      return "gf"
-    end
-  end, { noremap = false, expr = true })
-  ```
+```lua
+vim.keymap.set("n", "gf", function()
+  if require("obsidian").util.cursor_on_markdown_link() then
+    return "<cmd>ObsidianFollowLink<CR>"
+  else
+    return "gf"
+  end
+end, { noremap = false, expr = true })
+```
+
+Then make sure to comment out the `gf` keybinding in your obsidian.nvim config:
+
+```lua
+mappings = {
+  -- ["gf"] = require("obsidian.mapping").gf_passthrough(),
+},
+```
+
+Or alternatively you could map obsidian.nvim's follow functionality to a different key:
+
+```lua
+mappings = {
+  ["fo"] = require("obsidian.mapping").gf_passthrough(),
+},
+```
 
 ### Using templates
 
