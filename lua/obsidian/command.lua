@@ -78,7 +78,7 @@ end
 ---@param _ table
 command.yesterday_vertical = function(client, _)
   local note = client:yesterday()
-  vim.api.nvim_command("vert e " .. tostring(note.path))
+  vim.api.nvim_command("vsp " .. tostring(note.path))
 end
 
 ---Create a new note.
@@ -108,7 +108,7 @@ command.new_vertical = function(client, data)
   else
     note = client:new_note()
   end
-  vim.api.nvim_command("vert e " .. tostring(note.path))
+  vim.api.nvim_command("vsp " .. tostring(note.path))
 end
 
 ---Open a note in the Obsidian app.
