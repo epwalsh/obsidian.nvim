@@ -38,11 +38,11 @@ obsidian.new = function(opts)
   end
 
   if not current_workspace then
-    current_workspace = '.'
+    current_workspace = "."
     opts.workspaces[current_workspace] = cwd
   end
 
-  echo.info('current_workspace: ' .. current_workspace .. ' @ ' .. opts.workspaces[current_workspace], opts.log_level)
+  echo.info("current_workspace: " .. current_workspace .. " @ " .. opts.workspaces[current_workspace], opts.log_level)
 
   self.dir = Path:new(opts.workspaces[current_workspace])
   self.opts = opts
@@ -57,7 +57,7 @@ end
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
   local opts = config.ClientOpts.default()
-  vim.tbl_extend('force', opts.workspaces, { vim.fs.normalize(dir) })
+  vim.tbl_extend("force", opts.workspaces, { vim.fs.normalize(dir) })
   return obsidian.new(opts)
 end
 

@@ -653,7 +653,7 @@ end
 
 command.switch_workspace = function(client, data)
   if not util.contains_key(client.opts.workspaces, data.args) then
-    echo.err("Workspace '" .. data.args .. "' does not exist", client.opts.log_level);
+    echo.err("Workspace '" .. data.args .. "' does not exist", client.opts.log_level)
     return
   end
 
