@@ -545,4 +545,8 @@ util.implementation_unavailable = function()
   error(IMPLEMENTATION_UNAVAILABLE)
 end
 
+util.escape_magic_characters = function(text)
+  return text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+end
+
 return util

@@ -118,8 +118,7 @@ obsidian.setup = function(opts)
   local is_template
   if self.opts.templates ~= nil then
     local templates_pattern = tostring(self.dir / self.opts.templates.subdir)
-    -- escape special characters
-    templates_pattern = templates_pattern:gsub("([%(%)%.%%%+%-%*%?%[%^%$])", "%%%1")
+    templates_pattern = obsidian.util.escape_magic_characters(templates_pattern)
     templates_pattern = "^" .. templates_pattern .. ".*"
     is_template = function(match)
       return string.find(match, templates_pattern) ~= nil
