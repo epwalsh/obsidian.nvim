@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added option `prepend_note_id` to allow disabling id generation for new notes.
 - Added `mappings` configuration field.
+- Added `open_notes_in` configuration field
 
 ### Changed
 

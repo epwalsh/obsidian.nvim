@@ -232,6 +232,11 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- is not installed, or if it the command does not support it, the
   -- remaining finders will be attempted in the original order.
   finder = "telescope.nvim",
+
+  -- Optional, determines whether to open notes in a horizontal split, a vertical split,
+  -- or replacing the current buffer (default)
+  -- Accepted values are "current", "hsplit" and "vsplit"
+  open_notes_in = "current"
 }
 ```
 
