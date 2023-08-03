@@ -20,6 +20,7 @@ local config = {}
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
 ---@field finder string|?
+---@field open_notes_in "current"|"vsplit"|"hsplit"
 config.ClientOpts = {}
 
 ---Get defaults.
@@ -40,6 +41,7 @@ config.ClientOpts.default = function()
     use_advanced_uri = nil,
     open_app_foreground = false,
     finder = nil,
+    open_notes_in = "current",
   }
 end
 

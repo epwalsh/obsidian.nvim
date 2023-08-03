@@ -51,16 +51,8 @@ end
 ---@param _ table
 command.today = function(client, _)
   local note = client:today()
-  vim.api.nvim_command("e " .. tostring(note.path))
-end
-
----Create a new daily note in a vertical split.
----
----@param client obsidian.Client
----@param _ table
-command.today_vertical = function(client, _)
-  local note = client:today()
-  vim.api.nvim_command("vsp " .. tostring(note.path))
+  local open_in = util.get_open_strategy(client.opts.open_notes_in)
+  vim.api.nvim_command(open_in .. tostring(note.path))
 end
 
 ---Create (or open) the daily note from the last weekday.
@@ -69,16 +61,8 @@ end
 ---@param _ table
 command.yesterday = function(client, _)
   local note = client:yesterday()
-  vim.api.nvim_command("e " .. tostring(note.path))
-end
-
----Create (or open) the daily note from the last weekday in a vertical split.
----
----@param client obsidian.Client
----@param _ table
-command.yesterday_vertical = function(client, _)
-  local note = client:yesterday()
-  vim.api.nvim_command("vsp " .. tostring(note.path))
+  local open_in = util.get_open_strategy(client.opts.open_notes_in)
+  vim.api.nvim_command(open_in .. tostring(note.path))
 end
 
 ---Create a new note.
@@ -88,27 +72,13 @@ end
 command.new = function(client, data)
   ---@type obsidian.Note
   local note
+  local open_in = util.get_open_strategy(client.opts.open_notes_in)
   if data.args:len() > 0 then
-    note = client:new_note(data.args)
+    note = client:new_note(data.args[1])
   else
     note = client:new_note()
   end
-  vim.api.nvim_command("e " .. tostring(note.path))
-end
-
----Create a new note in a vertical split.
----
----@param client obsidian.Client
----@param data table
-command.new_vertical = function(client, data)
-  ---@type obsidian.Note
-  local note
-  if data.args:len() > 0 then
-    note = client:new_note(data.args)
-  else
-    note = client:new_note()
-  end
-  vim.api.nvim_command("vsp " .. tostring(note.path))
+  vim.api.nvim_command(open_in .. tostring(note.path))
 end
 
 ---Open a note in the Obsidian app.
@@ -679,12 +649,9 @@ local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianTemplate = { func = command.template, opts = { nargs = "?" } },
   ObsidianToday = { func = command.today, opts = { nargs = 0 } },
-  ObsidianTodayVertical = { func = command.today_vertical, opts = { nargs = 0 } },
   ObsidianYesterday = { func = command.yesterday, opts = { nargs = 0 } },
-  ObsidianYesterdayVertical = { func = command.yesterday_vertical, opts = { nargs = 0 } },
   ObsidianOpen = { func = command.open, opts = { nargs = "?" }, complete = command.complete_args },
   ObsidianNew = { func = command.new, opts = { nargs = "?" } },
-  ObsidianNewVertical = { func = command.new_vertical, opts = { nargs = "?" } },
   ObsidianQuickSwitch = { func = command.quick_switch, opts = { nargs = 0 } },
   ObsidianBacklinks = { func = command.backlinks, opts = { nargs = 0 } },
   ObsidianSearch = { func = command.search, opts = { nargs = "?" } },

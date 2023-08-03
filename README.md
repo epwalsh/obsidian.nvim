@@ -34,15 +34,11 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew` to create a new note.
   This command has one optional argument: the title of the new note.
-- `:ObsidianNewVertical` to create a new note in a vertical split.
-  This command has one optional argument: the title of the new note.
 - `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
 - `:ObsidianToday` to create a new daily note.
-- `:ObsidianTodayVertical` to create a new daily note in a vertical split.
 - `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
-- `:ObsidianYesterdayVertical` to open (eventually creating) the daily note for the previous working day in a vertical split.
 - `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives.
   See ["using templates"](#using-templates) for more information.
 - `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim). 
@@ -236,6 +232,11 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- is not installed, or if it the command does not support it, the
   -- remaining finders will be attempted in the original order.
   finder = "telescope.nvim",
+
+  -- Optional, determines whether to open notes in a horizontal split, a vertical split,
+  -- or replacing the current buffer (default)
+  -- Accepted values are "current", "hsplit" and "vsplit"
+  open_notes_in = "current"
 }
 ```
 
