@@ -24,7 +24,27 @@ local client = {}
 ---@return obsidian.Client
 obsidian.new = function(opts)
   local self = setmetatable({}, { __index = client })
-  self.dir = Path:new(vim.fs.normalize(tostring(opts.dir and opts.dir or "./")))
+  local cwd = vim.fn.getcwd()
+  local current_workspace = nil
+  if not opts.default_workspace then
+    for key, value in pairs(opts.workspaces) do
+      if value == cwd then
+        current_workspace = key
+        break
+      end
+    end
+  else
+    current_workspace = opts.default_workspace
+  end
+
+  if not current_workspace then
+    current_workspace = '.'
+    opts.workspaces[current_workspace] = cwd
+  end
+
+  echo.info('current_workspace: ' .. current_workspace .. ' @ ' .. opts.workspaces[current_workspace], opts.log_level)
+
+  self.dir = Path:new(opts.workspaces[current_workspace])
   self.opts = opts
   self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
 

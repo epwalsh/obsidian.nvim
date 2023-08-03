@@ -6,7 +6,7 @@ local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field workspaces table
----@field dir string
+---@field default_workspace string
 ---@field log_level integer|?
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
@@ -31,8 +31,8 @@ config.ClientOpts = {}
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.default = function()
   return {
-    workspaces = { "./" },
-    dir = nil,
+    workspaces = {},
+    default_workspace = nil,
     log_level = nil,
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
@@ -72,15 +72,10 @@ config.ClientOpts.normalize = function(opts)
     echo.err("invalid 'sort_by' option '" .. opts.sort_by .. "'")
   end
 
-  for _, value in pairs(opts.workspaces) do
-    local normalized_dir = vim.fs.normalize(tostring(value))
-    if normalized_dir == vim.fn.getcwd() then
-      opts.dir = normalized_dir
-      break;
-    end
+  for key, value in pairs(opts.workspaces) do
+    opts.workspaces[key] = vim.fs.normalize(tostring(value))
   end
 
-  print('dir: ' .. tostring(opts.dir))
   return opts
 end
 
