@@ -651,6 +651,16 @@ command.check_health = function(client, _)
   end
 end
 
+command.switch_workspace = function(client, data)
+  if not util.contains_key(client.opts.workspaces, data.args) then
+    echo.err("Workspace '" .. data.args .. "' does not exist", client.opts.log_level);
+    return
+  end
+
+  echo.info("Switching to workspace '" .. data.args .. "' (" .. client.opts.workspaces[data.args] .. ")")
+  client.dir = client.opts.workspaces[data.args]
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianTemplate = { func = command.template, opts = { nargs = "?" } },
@@ -665,6 +675,7 @@ local commands = {
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
   ObsidianCheckHealth = { func = command.check_health, opts = { nargs = 0 } },
+  ObsidianWorkspace = { func = command.switch_workspace, opts = { nargs = 1 } },
 }
 
 ---Register all commands.
