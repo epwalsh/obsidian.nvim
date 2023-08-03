@@ -60,7 +60,7 @@ end
 ---@param _ table
 command.today_vertical = function(client, _)
   local note = client:today()
-  vim.api.nvim_command("e -O " .. tostring(note.path))
+  vim.api.nvim_command("vsp " .. tostring(note.path))
 end
 
 ---Create (or open) the daily note from the last weekday.
