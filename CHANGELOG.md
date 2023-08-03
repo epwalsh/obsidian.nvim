@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The `overwrite_mappings` option, which sets the mappings in the config even if they already exist
+- Added support for multiple vaults (#128)
+- Added command to switch between vaults (#60)
 
 ### Fixed
 
-- Eliminated silent runtime errors on validation errors in note.from_lines 
+- Eliminated silent runtime errors on validation errors in note.from_lines
 
 ## [v1.14.2](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.14.2) - 2023-09-25
 
