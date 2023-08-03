@@ -117,7 +117,9 @@ obsidian.setup = function(opts)
   --- @type fun(match: string): boolean
   local is_template
   if self.opts.templates ~= nil then
-    local templates_pattern = "^" .. tostring(self.dir / self.opts.templates.subdir / ".*")
+    local templates_pattern = tostring(self.dir / self.opts.templates.subdir)
+    templates_pattern = obsidian.util.escape_magic_characters(templates_pattern)
+    templates_pattern = "^" .. templates_pattern .. ".*"
     is_template = function(match)
       return string.find(match, templates_pattern) ~= nil
     end
