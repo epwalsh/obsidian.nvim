@@ -46,6 +46,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
+- `:ObsidianWorkspace` to switch to another workspace.
 
 ### Demo
 
@@ -86,7 +87,11 @@ return {
     -- see below for full list of optional dependencies 👇
   },
   opts = {
-    dir = "~/my-vault",  -- no need to call 'vim.fn.expand' here
+    workspaces = {
+      personal = "~/vaults/personal", -- no need to call 'vim.fn.expand' here
+      work = "~/vaults/work",
+    },
+    default_workspace = personal,
 
     -- see below for full list of options 👇
   },
@@ -106,7 +111,11 @@ use({
   },
   config = function()
     require("obsidian").setup({
-      dir = "~/my-vault",
+      workspaces = {
+        personal = "~/vaults/personal", -- no need to call 'vim.fn.expand' here
+        work = "~/vaults/work",
+      },
+      default_workspace = personal,
 
       -- see below for full list of options 👇
     })
@@ -132,8 +141,14 @@ This is a complete list of all of the options that can be passed to `require("ob
 
 ```lua
 {
-  -- Required, the path to your vault directory.
-  dir = "~/my-vault",
+  -- Optional, list of vault names and paths.
+  workspaces = {
+    personal = "~/vaults/personal",
+    work = "~/vaults/work",
+  },
+
+  -- Optional, default vault to open when the plugin loads
+  default_workspace = personal,
 
   -- Optional, if you keep notes in a specific subdirectory of your vault.
   notes_subdir = "notes",
