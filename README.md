@@ -91,7 +91,7 @@ return {
       personal = "~/vaults/personal", -- no need to call 'vim.fn.expand' here
       work = "~/vaults/work",
     },
-    default_workspace = personal,
+    default_workspace = 'personal',
 
     -- see below for full list of options 👇
   },
@@ -115,7 +115,7 @@ use({
         personal = "~/vaults/personal", -- no need to call 'vim.fn.expand' here
         work = "~/vaults/work",
       },
-      default_workspace = personal,
+      default_workspace = 'personal',
 
       -- see below for full list of options 👇
     })
@@ -147,8 +147,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     work = "~/vaults/work",
   },
 
-  -- Optional, default vault to open when the plugin loads
-  default_workspace = personal,
+  -- Optional, name of the default vault to open when the plugin loads
+  default_workspace = 'personal',
 
   -- Optional, if you keep notes in a specific subdirectory of your vault.
   notes_subdir = "notes",
