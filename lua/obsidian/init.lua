@@ -57,7 +57,8 @@ end
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
   local opts = config.ClientOpts.default()
-  vim.tbl_extend("force", opts.workspaces, { vim.fs.normalize(dir) })
+  opts.workspaces = vim.tbl_extend("force", opts.workspaces, { test_vault = vim.fs.normalize(dir) })
+  opts.default_workspace = "test_vault"
   return obsidian.new(opts)
 end
 
