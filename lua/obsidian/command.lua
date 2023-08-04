@@ -653,7 +653,7 @@ end
 
 command.switch_workspace = function(client, data)
   if not data.args or #data.args == 0 then
-    echo.info("Current workspace: " .. client.current_workspace .. ' @ ' .. tostring(client.dir), client.opts.log_level)
+    echo.info("Current workspace: " .. client.current_workspace .. " @ " .. tostring(client.dir), client.opts.log_level)
     return
   end
 
@@ -662,7 +662,10 @@ command.switch_workspace = function(client, data)
     return
   end
 
-  echo.info("Switching to workspace '" .. data.args .. "' (" .. client.opts.workspaces[data.args] .. ")", client.opts.log_level)
+  echo.info(
+    "Switching to workspace '" .. data.args .. "' (" .. client.opts.workspaces[data.args] .. ")",
+    client.opts.log_level
+  )
   client.dir = Path:new(client.opts.workspaces[data.args])
 end
 
