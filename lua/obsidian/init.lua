@@ -12,6 +12,7 @@ obsidian.util = require "obsidian.util"
 obsidian.mapping = require "obsidian.mapping"
 
 ---@class obsidian.Client
+---@field current_workspace string
 ---@field dir Path
 ---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
@@ -42,8 +43,7 @@ obsidian.new = function(opts)
     opts.workspaces[current_workspace] = cwd
   end
 
-  echo.info("current_workspace: " .. current_workspace .. " @ " .. opts.workspaces[current_workspace], opts.log_level)
-
+  self.current_workspace = current_workspace
   self.dir = Path:new(opts.workspaces[current_workspace])
   self.opts = opts
   self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
