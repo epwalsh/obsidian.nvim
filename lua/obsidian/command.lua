@@ -74,7 +74,7 @@ command.new = function(client, data)
   local note
   local open_in = util.get_open_strategy(client.opts.open_notes_in)
   if data.args:len() > 0 then
-    note = client:new_note(data.args[1])
+    note = client:new_note(data.args)
   else
     note = client:new_note()
   end
