@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `template_pattern` not escaping special characters.
 - Fixed new notes not getting passed args correctly
+- Fixed `:ObsidianOpen` when note is in a subdirectory with the same name as the root vault directory.
 
 ## [v1.12.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.12.0) - 2023-07-15
 
