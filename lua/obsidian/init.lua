@@ -41,8 +41,7 @@ end
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
   local opts = config.ClientOpts.default()
-  opts.workspaces = vim.tbl_extend("force", obsidian.workspace.new("test_vault", dir), opts.workspaces)
-  opts.detect_cwd = false
+  opts.workspaces = vim.tbl_extend("force", { obsidian.workspace.new("test_vault", dir) }, opts.workspaces)
   return obsidian.new(opts)
 end
 
