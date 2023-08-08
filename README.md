@@ -88,10 +88,15 @@ return {
   },
   opts = {
     workspaces = {
-      personal = "~/vaults/personal", -- no need to call 'vim.fn.expand' here
-      work = "~/vaults/work",
+      {
+        name = "personal",
+        path = "~/vaults/personal",
+      },
+      {
+        name = "work",
+        path = "~/vaults/work",
+      },
     },
-    default_workspace = 'personal',
 
     -- see below for full list of options 👇
   },
@@ -112,10 +117,15 @@ use({
   config = function()
     require("obsidian").setup({
       workspaces = {
-        personal = "~/vaults/personal", -- no need to call 'vim.fn.expand' here
-        work = "~/vaults/work",
+        {
+          name = "personal",
+          path = "~/vaults/personal",
+        },
+        {
+          name = "work",
+          path = "~/vaults/work",
+        },
       },
-      default_workspace = 'personal',
 
       -- see below for full list of options 👇
     })
@@ -143,12 +153,19 @@ This is a complete list of all of the options that can be passed to `require("ob
 {
   -- Optional, list of vault names and paths.
   workspaces = {
-    personal = "~/vaults/personal",
-    work = "~/vaults/work",
+    {
+      name = "personal",
+      path = "~/vaults/personal",
+    },
+    {
+      name = "work",
+      path = "~/vaults/work",
+    },
   },
 
-  -- Optional, name of the default vault to open when the plugin loads
-  default_workspace = 'personal',
+  -- Optional, set to true to use the current directory as a vault; otherwise,
+  -- the first workspace is opened by default
+  detect_cwd = false,
 
   -- Optional, if you keep notes in a specific subdirectory of your vault.
   notes_subdir = "notes",
