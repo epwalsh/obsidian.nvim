@@ -53,7 +53,7 @@ end
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Workspace
 workspace.get_from_opts = function(opts)
-  local current_workspace = nil
+  local current_workspace
 
   if opts.detect_cwd then
     current_workspace = workspace.get_workspace_from_cwd(opts.workspaces)
