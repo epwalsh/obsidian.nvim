@@ -10,9 +10,10 @@ obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
 obsidian.mapping = require "obsidian.mapping"
+obsidian.workspace = require "obsidian.workspace"
 
 ---@class obsidian.Client
----@field current_workspace string
+---@field current_workspace obsidian.Workspace
 ---@field dir Path
 ---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
@@ -25,26 +26,9 @@ local client = {}
 ---@return obsidian.Client
 obsidian.new = function(opts)
   local self = setmetatable({}, { __index = client })
-  local cwd = vim.fn.getcwd()
-  local current_workspace = nil
-  if not opts.default_workspace then
-    for key, value in pairs(opts.workspaces) do
-      if value == cwd then
-        current_workspace = key
-        break
-      end
-    end
-  else
-    current_workspace = opts.default_workspace
-  end
 
-  if not current_workspace then
-    current_workspace = "."
-    opts.workspaces[current_workspace] = cwd
-  end
-
-  self.current_workspace = current_workspace
-  self.dir = Path:new(opts.workspaces[current_workspace])
+  self.current_workspace = obsidian.workspace.get_from_opts(opts)
+  self.dir = Path:new(self.current_workspace.path)
   self.opts = opts
   self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
 
@@ -57,8 +41,8 @@ end
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
   local opts = config.ClientOpts.default()
-  opts.workspaces = vim.tbl_extend("force", opts.workspaces, { test_vault = vim.fs.normalize(dir) })
-  opts.default_workspace = "test_vault"
+  opts.workspaces = vim.tbl_extend("force", obsidian.workspace.new('test_vault', dir), opts.workspaces)
+  opts.detect_cwd = false
   return obsidian.new(opts)
 end
 

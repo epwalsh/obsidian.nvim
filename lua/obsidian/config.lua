@@ -6,7 +6,7 @@ local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field workspaces table
----@field default_workspace string
+---@field detect_cwd boolean
 ---@field log_level integer|?
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
@@ -32,7 +32,7 @@ config.ClientOpts = {}
 config.ClientOpts.default = function()
   return {
     workspaces = {},
-    default_workspace = nil,
+    detect_cwd = false,
     log_level = nil,
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
@@ -73,7 +73,7 @@ config.ClientOpts.normalize = function(opts)
   end
 
   for key, value in pairs(opts.workspaces) do
-    opts.workspaces[key] = vim.fs.normalize(tostring(value))
+    opts.workspaces[key].path = vim.fs.normalize(tostring(value.path))
   end
 
   return opts

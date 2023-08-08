@@ -653,20 +653,29 @@ end
 
 command.switch_workspace = function(client, data)
   if not data.args or #data.args == 0 then
-    echo.info("Current workspace: " .. client.current_workspace .. " @ " .. tostring(client.dir), client.opts.log_level)
+    echo.info("Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.dir), client.opts.log_level)
     return
   end
 
-  if not util.contains_key(client.opts.workspaces, data.args) then
+  local workspace = nil
+  for _, value in pairs(client.opts.workspaces) do
+    if data.args == value.name then
+      workspace = value
+    end
+  end
+
+  if not workspace then
     echo.err("Workspace '" .. data.args .. "' does not exist", client.opts.log_level)
     return
   end
 
+  client.current_workspace = workspace
+
   echo.info(
-    "Switching to workspace '" .. data.args .. "' (" .. client.opts.workspaces[data.args] .. ")",
+    "Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")",
     client.opts.log_level
   )
-  client.dir = Path:new(client.opts.workspaces[data.args])
+  client.dir = Path:new(workspace.path)
 end
 
 local commands = {
