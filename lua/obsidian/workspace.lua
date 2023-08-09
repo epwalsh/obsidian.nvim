@@ -25,7 +25,7 @@ end
 
 ---Determines if cwd is a workspace
 ---
----@param workspaces table
+---@param workspaces table<obsidian.Workspace>
 ---@return obsidian.Workspace|nil
 workspace.get_workspace_from_cwd = function(workspaces)
   local cwd = vim.fn.getcwd()
@@ -41,7 +41,7 @@ end
 
 ---Returns the default workspace
 ---
----@param workspaces table
+---@param workspaces table<obsidian.Workspace>
 ---@return obsidian.Workspace|nil
 workspace.get_default_workspace = function(workspaces)
   local _, value = next(workspaces)
