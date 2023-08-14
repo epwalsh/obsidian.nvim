@@ -14,6 +14,7 @@ local config = {}
 ---@field follow_url_func function|?
 ---@field note_frontmatter_func function|?
 ---@field disable_frontmatter boolean|?
+---@field backlinks obsidian.config.BacklinksOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
@@ -35,6 +36,7 @@ config.ClientOpts.default = function()
     follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
+    backlinks = config.BacklinksOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
@@ -51,11 +53,26 @@ end
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.normalize = function(opts)
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
+  opts.backlinks = vim.tbl_extend("force", config.BacklinksOpts.default(), opts.backlinks)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
   opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.dir = vim.fs.normalize(tostring(opts.dir))
   return opts
+end
+
+---@class obsidian.config.BacklinksOpts
+---@field height integer
+---@field wrap boolean
+config.BacklinksOpts = {}
+
+---Get defaults.
+---@return obsidian.config.BacklinksOpts
+config.BacklinksOpts.default = function()
+  return {
+    height = 10,
+    wrap = true,
+  }
 end
 
 ---@class obsidian.config.CompletionOpts

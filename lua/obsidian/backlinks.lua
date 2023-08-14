@@ -125,7 +125,7 @@ backlinks.view = function(self)
   -- Clear any existing backlinks buffer.
   wipe_rogue_buffer()
 
-  vim.api.nvim_command "botright 10split ObsidianBacklinks"
+  vim.api.nvim_command("botright " .. tostring(self.client.opts.backlinks.height) .. "split ObsidianBacklinks")
 
   -- Configure buffer.
   vim.cmd "setlocal nonu"
@@ -137,7 +137,7 @@ backlinks.view = function(self)
   vim.api.nvim_buf_set_option(0, "buflisted", false)
   vim.api.nvim_buf_set_var(0, "obsidian_vault_dir", tostring(self.client.dir))
   vim.api.nvim_buf_set_var(0, "obsidian_parent_win", self.winnr)
-  vim.api.nvim_win_set_option(0, "wrap", false)
+  vim.api.nvim_win_set_option(0, "wrap", self.client.opts.backlinks.wrap)
   vim.api.nvim_win_set_option(0, "spell", false)
   vim.api.nvim_win_set_option(0, "list", false)
   vim.api.nvim_win_set_option(0, "signcolumn", "no")
