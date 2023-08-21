@@ -5,6 +5,24 @@ local echo = require "obsidian.echo"
 local util = require "obsidian.util"
 
 local command = {}
+local attach_find_command = function(client, opts)
+  -- sort_by is:
+  -- "none"
+  -- "path"
+  -- "modified"
+  -- "accessed"
+  -- "created"
+  local sort_by = client.opts.sort_by
+  if sort_by == nil then
+    return opts
+  end
+  local order_by = client.opts.order_by
+  if order_by == nil then
+    order_by = "sortr" -- default order by is reverse
+  end
+  opts.find_command = { "rg", "--files", "--" .. order_by, sort_by }
+  return opts
+end
 
 ---Check the directory for notes with missing/invalid frontmatter.
 ---
@@ -313,6 +331,7 @@ command.template = function(client, data)
             return true
           end,
         }
+        opts = attach_find_command(client, opts)
         require("telescope.builtin").find_files(opts)
       end
       choose_template()
@@ -380,7 +399,8 @@ command.quick_switch = function(client, data)
         util.implementation_unavailable()
       end
       -- Search with telescope.nvim
-      telescope.find_files { cwd = dir, search_file = "*.md" }
+      local opts = attach_find_command(client, { cwd = dir, search_file = "*.md" })
+      telescope.find_files(opts)
     end,
     ["fzf-lua"] = function()
       local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
