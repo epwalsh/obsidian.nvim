@@ -270,6 +270,12 @@ This is a complete list of all of the options that can be passed to
       -- is not installed, or if it the command does not support it, the
       -- remaining finders will be attempted in the original order.
       finder = "telescope.nvim",
+
+      -- Optional, `:ObsidianQuickSwitch` sort by `path` `modified` `accessed` `created`
+      -- The recommend value is `modified` and `sortr`, `:ObsidianQuickSwitch` will show the notes sorted by latest modified time
+      sort_by = "modified",
+      -- Optional, `:ObsidianQuickSwitch` order by `sort` `sortr`, default value is sortr
+      order_by = "sortr"
     
       -- Optional, determines whether to open notes in a horizontal split, a vertical split,
       -- or replacing the current buffer (default)
