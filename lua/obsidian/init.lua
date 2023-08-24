@@ -303,7 +303,11 @@ client.new_note = function(self, title, id, dir, aliases)
 
   -- Create Note object and save.
   local note = obsidian.note.new(new_id, aliases, {}, path)
-  note:save(nil, not self.opts.disable_frontmatter)
+  local frontmatter = nil
+  if self.opts.note_frontmatter_func ~= nil then
+    frontmatter = self.opts.note_frontmatter_func(note)
+  end
+  note:save(nil, not self.opts.disable_frontmatter, frontmatter)
   echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
 
   return note
@@ -350,7 +354,11 @@ client._daily = function(self, datetime)
   -- Create Note object and save if it doesn't already exist.
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
-    note:save(nil, not self.opts.disable_frontmatter)
+    local frontmatter = nil
+    if self.opts.note_frontmatter_func ~= nil then
+      frontmatter = self.opts.note_frontmatter_func(note)
+    end
+    note:save(nil, not self.opts.disable_frontmatter, frontmatter)
     echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
   end
 
