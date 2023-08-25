@@ -371,7 +371,8 @@ end
 ---
 ---@param path string|Path|?
 ---@param insert_frontmatter boolean|?
-note.save = function(self, path, insert_frontmatter)
+---@param frontmatter table|?
+note.save = function(self, path, insert_frontmatter, frontmatter)
   if self.path == nil then
     echo.fail "note path cannot be nil"
     error()
@@ -409,7 +410,7 @@ note.save = function(self, path, insert_frontmatter)
   -- Replace frontmatter.
   local new_lines = {}
   if insert_frontmatter ~= false then
-    new_lines = self:frontmatter_lines(true)
+    new_lines = self:frontmatter_lines(true, frontmatter)
   end
 
   -- Add remaining original lines.
