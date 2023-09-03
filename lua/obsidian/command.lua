@@ -571,7 +571,7 @@ command.follow = function(client, _)
   end
 
   -- Remove header link from the end if there is one.
-  local header_link = note_file_name:match "#[%a%d-_]+$"
+  local header_link = note_file_name:match "#[%a%d -_]+$"
   if header_link ~= nil then
     note_file_name = note_file_name:sub(1, -header_link:len() - 1)
   end
