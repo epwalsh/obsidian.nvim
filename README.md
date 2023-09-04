@@ -73,9 +73,9 @@ Here are some examples using different plugin managers. The full set of [plugin 
 return {
   "epwalsh/obsidian.nvim",
   lazy = true,
-  event = { "BufReadPre path/to/my-vault/**.md" },
+  event = { "BufEnter path/to/my-vault/**.md" },
   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand':
-  -- event = { "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md" },
+  -- event = { "BufEnter " .. vim.fn.expand "~" .. "/my-vault/**.md" },
   dependencies = {
     -- Required.
     "nvim-lua/plenary.nvim",
