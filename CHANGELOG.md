@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- A but when following links when headers have a space.
+- A bug when following links when headers have a space.
+- Fixed `ObsidianFollowLink` when the note path contains a block link (e.g. `[[foo#^Bar]]`).
 
 ## [v1.13.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.13.0) - 2023-08-24
 
@@ -39,7 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed new notes not getting passed args correctly
 - Fixed `:ObsidianOpen` when note is in a subdirectory with the same name as the root vault directory.
 - Fixed issue where `note_frontmatter_func` option was not used when creating new notes.
-- Fixed `ObsidianFollowLink` when the note path contains a block link (e.g. `[[foo#^Bar]]`).
 
 ## [v1.12.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.12.0) - 2023-07-15
 
