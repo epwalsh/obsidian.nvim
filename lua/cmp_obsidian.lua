@@ -62,6 +62,13 @@ source.complete = function(self, request, callback)
               },
             },
           })
+
+          if client.opts.completion.max_suggestions ~= nil and #items >= client.opts.completion.max_suggestions then
+            return callback {
+              items = items,
+              isIncomplete = true,
+            }
+          end
         end
       end
     end

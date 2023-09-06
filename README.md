@@ -163,6 +163,9 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- Whether to add the output of the node_id_func to new notes in autocompletion.
     -- E.g. "[[Foo" completes to "[[foo|Foo]]" assuming "foo" is the ID of the note.
     prepend_note_id = true
+
+    -- Limit the number of completion suggestions.
+    max_suggestions = nil,
   },
 
   -- Optional, key mappings.

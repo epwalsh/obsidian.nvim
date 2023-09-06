@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added configuration option `completion.max_suggestions` (`integer|?`) to limit the number of completion suggestions.
+
 ### Fixed
 
 - A bug when following links when headers have a space.
