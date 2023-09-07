@@ -270,7 +270,6 @@ client.new_note = function(self, title, id, dir, aliases)
     -- Pull out any parent dirs from title.
     local parts = vim.split(title, Path.path.sep)
     if #parts > 1 then
-      title_is_path = true
       -- 'title' will just be the final part of the path.
       title = parts[#parts]
       -- Add the other parts to the base_dir.
