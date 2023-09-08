@@ -144,8 +144,13 @@ command.open = function(client, data)
   local cmd = nil
   local args = {}
   local sysname = vim.loop.os_uname().sysname
+  local release = vim.loop.os_uname().release
   if sysname == "Linux" then
-    cmd = "xdg-open"
+    if string.find(release, "microsoft") then
+      cmd = "wsl-open"
+    else
+      cmd = "xdg-open"
+    end
     args = { uri }
   elseif sysname == "Darwin" then
     cmd = "open"
