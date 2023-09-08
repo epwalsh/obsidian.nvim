@@ -246,21 +246,27 @@ client.new_note_id = function(self, title)
   end
 end
 
----Create and save a new note.
+---Parse the title, ID, and path for a new note.
 ---
 ---@param title string|?
 ---@param id string|?
 ---@param dir string|Path|?
----@param aliases string[]|?
 ---
----@return obsidian.Note
-client.new_note = function(self, title, id, dir, aliases)
+---@return string|?,string,Path
+client.parse_title_id_path = function(self, title, id, dir)
   ---@type Path
   local base_dir = dir == nil and Path:new(self.dir) or Path:new(dir)
   local title_is_path = false
 
   -- Clean up title and guess the right base_dir.
   if title ~= nil then
+    -- Trim whitespace.
+    title = title:match "^%s*(.-)%s*$"
+
+    if title == "" then
+      title = nil
+    end
+
     -- Remove suffix.
     if title:match "%.md" then
       title = title:sub(1, title:len() - 3)
@@ -281,23 +287,42 @@ client.new_note = function(self, title, id, dir, aliases)
     base_dir = base_dir / self.opts.notes_subdir
   end
 
+  if title == "" then
+    title = nil
+  end
+
   -- Generate new ID if needed.
   local new_id = id and id or (title_is_path and title or self:new_note_id(title))
-  if new_id == tostring(os.date "%Y-%m-%d") then
-    return self:today()
-  end
 
   -- Get path.
   ---@type Path
   ---@diagnostic disable-next-line: assign-type-mismatch
   local path = base_dir / (new_id .. ".md")
 
+  return title, new_id, path
+end
+
+---Create and save a new note.
+---
+---@param title string|?
+---@param id string|?
+---@param dir string|Path|?
+---@param aliases string[]|?
+---
+---@return obsidian.Note
+client.new_note = function(self, title, id, dir, aliases)
+  local new_title, new_id, path = self:parse_title_id_path(title, id, dir)
+
+  if new_id == tostring(os.date "%Y-%m-%d") then
+    return self:today()
+  end
+
   -- Add title as an alias.
   ---@type string[]
   ---@diagnostic disable-next-line: assign-type-mismatch
   aliases = aliases == nil and {} or aliases
-  if title ~= nil and title:len() > 0 and not obsidian.util.contains(aliases, title) then
-    aliases[#aliases + 1] = title
+  if new_title ~= nil and new_title:len() > 0 and not obsidian.util.contains(aliases, new_title) then
+    aliases[#aliases + 1] = new_title
   end
 
   -- Create Note object and save.
