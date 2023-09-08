@@ -75,6 +75,7 @@ REQUIREMENTS                                           *obsidian-requirements*
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
 - If you want completion and search features (recommended) you’ll also need ripgrep <https://github.com/BurntSushi/ripgrep> to be installed and on your `$PATH`.
     See ripgrep#installation <https://github.com/BurntSushi/ripgrep> for install options.
+- If you using WSL, you’ll also need wsl-open <https://gitlab.com/4U6U57/wsl-open>
 
 Search functionality (e.g. via the `:ObsidianSearch` and
 `:ObsidianQuickSwitch` commands) also requires telescope.nvim
