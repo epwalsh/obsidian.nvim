@@ -108,6 +108,8 @@ end
 ---@class obsidian.config.DailyNotesOpts
 ---@field folder string|?
 ---@field date_format string|?
+---@field aliases string[]|?
+---@field tags string[]|?
 config.DailyNotesOpts = {}
 
 ---Get defaults.
@@ -116,6 +118,8 @@ config.DailyNotesOpts.default = function()
   return {
     folder = nil,
     date_format = nil,
+    aliases = nil,
+    tags = nil,
   }
 end
 
