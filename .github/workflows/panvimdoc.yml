@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     name: pandoc to vimdoc
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
 
