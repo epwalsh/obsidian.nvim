@@ -21,7 +21,13 @@ source.complete = function(self, request, callback)
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local items = {}
     for note in client:search(search, "--ignore-case") do
-      local aliases = util.unique { note.id, note:display_name(), unpack(note.aliases) }
+      local aliases = {}
+      for _, alias in pairs(util.unique { note.id, note:display_name(), unpack(note.aliases) }) do
+        if util.str_contains(alias, search, true) then
+          table.insert(aliases, alias)
+        end
+      end
+
       for _, alias in pairs(aliases) do
         local options = {}
 
@@ -64,6 +70,9 @@ source.complete = function(self, request, callback)
           })
 
           if client.opts.completion.max_suggestions ~= nil and #items >= client.opts.completion.max_suggestions then
+            for _, item in pairs(items) do
+              print(item.sortText)
+            end
             return callback {
               items = items,
               isIncomplete = true,

@@ -252,6 +252,20 @@ util.match_case = function(prefix, key)
   return table.concat(out_chars, "")
 end
 
+---Check if a string 's' contains the search term.
+---
+---@param s string
+---@param search string
+---@param ignore_case boolean|?
+---@return boolean
+util.str_contains = function(s, search, ignore_case)
+  if ignore_case == true then
+    s = string.lower(s)
+    search = string.lower(search)
+  end
+  return string.find(s, search, 0, true) ~= nil
+end
+
 ---Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
 ---
 ---@param s string
