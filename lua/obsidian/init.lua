@@ -372,8 +372,15 @@ client._daily = function(self, datetime)
   else
     id = tostring(os.date("%Y-%m-%d", datetime))
   end
-  local alias = tostring(os.date("%B %-d, %Y", datetime))
+
   local path = self:daily_note_path(id)
+
+  local alias
+  if self.opts.daily_notes.alias_format ~= nil then
+    alias = tostring(os.date(self.opts.daily_notes.alias_format, datetime))
+  else
+    alias = tostring(os.date("%B %-d, %Y", datetime))
+  end
 
   -- Create Note object and save if it doesn't already exist.
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
