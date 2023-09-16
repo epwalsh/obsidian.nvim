@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added an extra option for daily notes to allow changing the default title from "%B %-d, %Y" to other strings.
+- Added an option for daily notes to automatically load a template.
+- Adding an option for custom template variables.
+  - Currently, only supported in the daily note template insertion.
 
 ### Changed
 

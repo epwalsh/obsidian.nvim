@@ -109,6 +109,7 @@ end
 ---@field folder string|?
 ---@field date_format string|?
 ---@field alias_format string|?
+---@field template string|?
 config.DailyNotesOpts = {}
 
 ---Get defaults.

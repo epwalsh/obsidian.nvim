@@ -458,6 +458,61 @@ util.get_active_window_cursor_location = function()
   return location
 end
 
+---Substitute Variables inside a given Text
+---
+---@param text string  - name of a template in the configured templates folder
+---@param client obsidian.Client
+---@param title string|nil
+---@return string
+util.substitute_template_variables = function(text, client, title)
+  local methods = client.opts.templates.custom or {}
+  if not methods["date"] then
+    methods["date"] = function()
+      local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+      return tostring(os.date(date_format))
+    end
+  end
+  if not methods["time"] then
+    methods["time"] = function()
+      local time_format = client.opts.templates.time_format or "%Y-%m-%d"
+      return tostring(os.date(time_format))
+    end
+  end
+  if title then
+    methods["title"] = function()
+      return title
+    end
+  end
+  for key, value in pairs(methods) do
+    text = string.gsub(text, "{{" .. key .. "}}", value())
+  end
+  return text
+end
+
+---Clone Template
+---
+---@param template_name string  - name of a template in the configured templates folder
+---@param note_path string
+---@param client obsidian.Client
+---@param title string
+util.clone_template = function(template_name, note_path, client, title)
+  local template_path = Path:new(client.templates_dir) / template_name
+  local template_file = io.open(tostring(template_path), "r")
+  local note_file = io.open(tostring(note_path), "wb")
+  if not template_file then
+    return error("Unable to read template at " .. template_path)
+  end
+  if not note_file then
+    return error("Unable to write note at " .. note_path)
+  end
+  for line in template_file:lines "L" do
+    line = util.substitute_template_variables(line, client, title)
+    note_file:write(line)
+  end
+  template_file:close()
+  note_file:close()
+end
+
 ---Insert a template at the given location.
 ---
 ---@param name string - name of a template in the configured templates folder

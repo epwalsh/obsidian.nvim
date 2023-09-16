@@ -150,6 +150,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     date_format = "%Y-%m-%d",
     -- Optional, if you want to change the date format of the default alias of daily notes.
     alias_format = "%B %-d, %Y"
+    -- Optional, if you want to automaticly insert a template from your template directory like 'daily.md'
+    template = nil
   },
 
   -- Optional, completion.
@@ -214,6 +216,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     subdir = "templates",
     date_format = "%Y-%m-%d-%a",
     time_format = "%H:%M",
+	-- A map for custom variables, the key should be the variable and the value a function
+	custom = {}
   },
 
   -- Optional, customize the backlinks interface.
@@ -323,7 +327,8 @@ For example, with the following configuration
   templates = {
       subdir = "my-templates-folder",
       date_format = "%Y-%m-%d-%a",
-      time_format = "%H:%M"
+      time_format = "%H:%M",
+      custom = {}
   },
 }
 ```
@@ -344,7 +349,22 @@ Date created: 2023-03-01-Wed
 
 above the cursor position.
 
-## Known Issues 
+To further customize to your personal preferences, you can supply a custom map with your on template variables.
+
+```lua
+{
+    -- other fields ...
+   templates = {
+        custom = {
+            yesterday = function()
+                return os.date("%Y-%m-%d", os.time() - 86400)
+            end
+        }
+    }
+}
+```
+
+## Known Issues
 
 ### Configuring vault directory behind a link
 

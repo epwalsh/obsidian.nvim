@@ -385,6 +385,10 @@ client._daily = function(self, datetime)
   -- Create Note object and save if it doesn't already exist.
   local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
+    if self.opts.daily_notes.template then
+      obsidian.util.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
+      note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
+    end
     local frontmatter = nil
     if self.opts.note_frontmatter_func ~= nil then
       frontmatter = self.opts.note_frontmatter_func(note)
