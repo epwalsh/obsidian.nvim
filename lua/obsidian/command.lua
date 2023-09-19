@@ -16,11 +16,12 @@ local attach_find_command = function(client, opts)
   if sort_by == nil then
     return opts
   end
-  local order_by = client.opts.order_by
-  if order_by == nil then
-    order_by = "sortr" -- default order by is reverse
+  local sort_reversed = client.opts.sort_reversed
+  local sort = "sortr" -- default sort is reverse
+  if sort_reversed == false then
+    sort = "sort"
   end
-  opts.find_command = { "rg", "--files", "--" .. order_by, sort_by }
+  opts.find_command = { "rg", "--files", "--" .. sort, sort_by }
   return opts
 end
 
