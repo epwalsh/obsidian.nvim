@@ -162,8 +162,13 @@ command.open = function(client, data)
   local cmd = nil
   local args = {}
   local sysname = vim.loop.os_uname().sysname
+  local release = vim.loop.os_uname().release
   if sysname == "Linux" then
-    cmd = "xdg-open"
+    if string.find(release, "microsoft") then
+      cmd = "wsl-open"
+    else
+      cmd = "xdg-open"
+    end
     args = { uri }
   elseif sysname == "Darwin" then
     cmd = "open"
@@ -590,8 +595,8 @@ command.follow = function(client, _)
     return
   end
 
-  -- Remove header link from the end if there is one.
-  local header_link = note_file_name:match "#[%a%d-_]+$"
+  -- Remove links from the end if there are any.
+  local header_link = note_file_name:match "#[%a%d%s-_^]+$"
   if header_link ~= nil then
     note_file_name = note_file_name:sub(1, -header_link:len() - 1)
   end

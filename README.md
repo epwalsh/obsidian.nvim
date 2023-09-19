@@ -59,6 +59,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
 - If you want completion and search features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
 See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
+- If you using WSL, you'll also need [wsl-open](https://gitlab.com/4U6U57/wsl-open)
 
 Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see [plugin dependencies](#plugin-dependencies) below).
 
@@ -73,9 +74,12 @@ Here are some examples using different plugin managers. The full set of [plugin 
 return {
   "epwalsh/obsidian.nvim",
   lazy = true,
-  event = { "BufReadPre path/to/my-vault/**.md" },
-  -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand':
-  -- event = { "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md" },
+  event = {
+    -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
+    -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
+    "BufReadPre path/to/my-vault/**.md",
+    "BufNewFile path/to/my-vault/**.md",
+  },
   dependencies = {
     -- Required.
     "nvim-lua/plenary.nvim",
@@ -142,8 +146,10 @@ This is a complete list of all of the options that can be passed to `require("ob
   daily_notes = {
     -- Optional, if you keep daily notes in a separate directory.
     folder = "notes/dailies",
-    -- Optional, if you want to change the date format for daily notes.
-    date_format = "%Y-%m-%d"
+    -- Optional, if you want to change the date format for the ID of daily notes.
+    date_format = "%Y-%m-%d",
+    -- Optional, if you want to change the date format of the default alias of daily notes.
+    alias_format = "%B %-d, %Y"
   },
 
   -- Optional, completion.
