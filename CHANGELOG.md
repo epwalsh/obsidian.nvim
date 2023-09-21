@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `:ObsidianOpen` doesn't work in WSL2
     - Use [wsl-open](https://gitlab.com/4U6U57/wsl-open)
 - Improved completion start pattern to trigger anytime `[[` is typed.
+- Fixed issue with parsing inline lists in YAML frontmatter when the items aren't wrapped in quotes.
 
 ## [v1.13.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.13.0) - 2023-08-24
 
