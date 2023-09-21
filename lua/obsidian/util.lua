@@ -465,7 +465,7 @@ end
 ---@param title string|nil
 ---@return string
 util.substitute_template_variables = function(text, client, title)
-  local methods = client.opts.templates.custom or {}
+  local methods = client.opts.templates.substitutions or {}
   if not methods["date"] then
     methods["date"] = function()
       local date_format = client.opts.templates.date_format or "%Y-%m-%d"
@@ -521,10 +521,6 @@ end
 util.insert_template = function(name, client, location)
   local buf, win, row, col = unpack(location)
   local template_path = Path:new(client.templates_dir) / name
-  local date_format = client.opts.templates.date_format or "%Y-%m-%d"
-  local time_format = client.opts.templates.time_format or "%H:%M"
-  local date = tostring(os.date(date_format))
-  local time = tostring(os.date(time_format))
   local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
 
   local insert_lines = {}
@@ -532,9 +528,7 @@ util.insert_template = function(name, client, location)
   if template_file then
     local lines = template_file:lines()
     for line in lines do
-      line = string.gsub(line, "{{date}}", date)
-      line = string.gsub(line, "{{time}}", time)
-      line = string.gsub(line, "{{title}}", title)
+      line = util.substitute_template_variables(line, client, title)
       table.insert(insert_lines, line)
     end
     template_file:close()
