@@ -149,6 +149,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     date_format = "%Y-%m-%d",
     -- Optional, if you want to change the date format of the default alias of daily notes.
     alias_format = "%B %-d, %Y"
+    -- Optional, if you want to automatically insert a template from your template directory like 'daily.md'
+    template = nil
   },
 
   -- Optional, completion.
@@ -213,6 +215,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     subdir = "templates",
     date_format = "%Y-%m-%d-%a",
     time_format = "%H:%M",
+    -- A map for custom variables, the key should be the variable and the value a function
+    substitutions = {}
   },
 
   -- Optional, customize the backlinks interface.
@@ -328,7 +332,7 @@ For example, with the following configuration
   templates = {
       subdir = "my-templates-folder",
       date_format = "%Y-%m-%d-%a",
-      time_format = "%H:%M"
+      time_format = "%H:%M",
   },
 }
 ```
@@ -350,6 +354,20 @@ Date created: 2023-03-01-Wed
 ```
 
 above the cursor position.
+
+You can also define custom template substitutions with the configuration field `templates.substitutions`. For example, to automatically substitute the template variable `{{yesterday}}` when inserting a template, you could add this to your config:
+
+```lua
+{
+-- other fields ...
+templates = {
+  substitutions = {
+    yesterday = function()
+      return os.date("%Y-%m-%d", os.time() - 86400)
+    end
+  }
+}
+```
 
 ## Known Issues
 

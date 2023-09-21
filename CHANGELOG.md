@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added config option `sort_by` to allow setting search result order by "path", "modified", "accessed", or "created".
 - Added config option `sort_reversed` to allow setting search result sort reversed order. The default is `true`.
 - Added an extra option for daily notes to allow changing the default title from "%B %-d, %Y" to other strings.
+- Added a configuration option `daily_notes.template` for automatically using a specific template when creating a new daily note.
+- Adding a configuration option `templates.substitutions` for defining custom template substitutions.
 
 ### Changed
 
