@@ -213,7 +213,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, for templates (see below).
   templates = {
     subdir = "templates",
-    date_format = "%Y-%m-%d-%a",
+    date_format = "%Y-%m-%d",
     time_format = "%H:%M",
     -- A map for custom variables, the key should be the variable and the value a function
     substitutions = {}
