@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added config option `sort_by` to allow setting search result order by "path", "modified", "accessed", or "created".
+- Added config option `sort_reversed` to allow setting search result sort reversed order. The default is `true`.
 - Added an extra option for daily notes to allow changing the default title from "%B %-d, %Y" to other strings.
 
 ### Changed
@@ -23,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A bug when following links when headers have a space.
 - Fixed `ObsidianFollowLink` when the note path contains a block link (e.g. `[[foo#^Bar]]`).
 - Fixed `:ObsidianOpen` doesn't work in WSL2
-    - Use [wsl-open](https://gitlab.com/4U6U57/wsl-open)
+  - Use [wsl-open](https://gitlab.com/4U6U57/wsl-open)
 - Improved completion start pattern to trigger anytime `[[` is typed.
 - Fixed issue with parsing inline lists in YAML frontmatter when the items aren't wrapped in quotes.
 
@@ -35,14 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `mappings` configuration field.
 - Added `open_notes_in` configuration field
 - Added `backlinks` options to the config. The default is
-    ```lua
-    backlinks = {
-      -- The default height of the backlinks pane.
-      height = 10,
-      -- Whether or not to wrap lines.
-      wrap = true,
-    },
-    ```
+  ```lua
+  backlinks = {
+    -- The default height of the backlinks pane.
+    height = 10,
+    -- Whether or not to wrap lines.
+    wrap = true,
+  },
+  ```
 
 ### Changed
 
