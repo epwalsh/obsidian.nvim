@@ -459,7 +459,7 @@ util.substitute_template_variables = function(text, client, title)
   end
   if not methods["time"] then
     methods["time"] = function()
-      local time_format = client.opts.templates.time_format or "%Y-%m-%d"
+      local time_format = client.opts.templates.time_format or "%H:%M"
       return tostring(os.date(time_format))
     end
   end

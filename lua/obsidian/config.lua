@@ -8,10 +8,7 @@ local config = {}
 ---@field dir string
 ---@field log_level integer|?
 ---@field notes_subdir string|?
----@field templates table|?
----@field templates.subdir string
----@field templates.date_format string
----@field templates.time_format string
+---@field templates obsidian.config.TemplateOpts
 ---@field note_id_func function|?
 ---@field follow_url_func function|?
 ---@field note_frontmatter_func function|?
@@ -35,7 +32,7 @@ config.ClientOpts.default = function()
     dir = vim.fs.normalize "./",
     log_level = nil,
     notes_subdir = nil,
-    templates = nil,
+    templates = config.TemplateOpts.default(),
     note_id_func = nil,
     follow_url_func = nil,
     note_frontmatter_func = nil,
@@ -64,6 +61,7 @@ config.ClientOpts.normalize = function(opts)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
   opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
+  opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
   opts.dir = vim.fs.normalize(tostring(opts.dir))
 
   -- Validate.
@@ -132,6 +130,23 @@ config.DailyNotesOpts.default = function()
     folder = nil,
     date_format = nil,
     alias_format = nil,
+  }
+end
+
+---@class obsidian.config.TemplateOpts
+---@field subdir string
+---@field date_format string|?
+---@field time_format string|?
+---@field substitutions table|?
+config.TemplateOpts = {}
+
+---Get defaults.
+---@return obsidian.config.TemplateOpts
+config.TemplateOpts.default = function()
+  return {
+    date_format = nil,
+    time_format = nil,
+    substitutions = {},
   }
 end
 
