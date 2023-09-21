@@ -1,3 +1,5 @@
+local echo = require "obsidian.echo"
+
 local config = {}
 
 ---[[ Options specs ]]---
@@ -21,6 +23,8 @@ local config = {}
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
 ---@field finder string|?
+---@field sort_by string|?
+---@field sort_reversed boolean|?
 ---@field open_notes_in "current"|"vsplit"|"hsplit"
 config.ClientOpts = {}
 
@@ -43,6 +47,8 @@ config.ClientOpts.default = function()
     use_advanced_uri = nil,
     open_app_foreground = false,
     finder = nil,
+    sort_by = "modified",
+    sort_reversed = true,
     open_notes_in = "current",
   }
 end
@@ -52,12 +58,19 @@ end
 ---@param opts table<string, any>
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.normalize = function(opts)
+  ---@type obsidian.config.ClientOpts
   opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
   opts.backlinks = vim.tbl_extend("force", config.BacklinksOpts.default(), opts.backlinks)
   opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
   opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.dir = vim.fs.normalize(tostring(opts.dir))
+
+  -- Validate.
+  if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
+    echo.err("invalid 'sort_by' option '" .. opts.sort_by .. "'")
+  end
+
   return opts
 end
 

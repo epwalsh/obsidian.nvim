@@ -246,11 +246,11 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- remaining finders will be attempted in the original order.
   finder = "telescope.nvim",
 
-  -- Optional, `:ObsidianQuickSwitch` sort by `path` `modified` `accessed` `created`
-  -- The recommend value is `modified` and `true`, `:ObsidianQuickSwitch` will show the notes sorted by latest modified time
+  -- Optional, sort search results by "path", "modified", "accessed", or "created".
+  -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example `:ObsidianQuickSwitch`
+  -- will show the notes sorted by latest modified time
   sort_by = "modified",
-  -- Optional, `:ObsidianQuickSwitch` result sort reversed order, default value is `true`
-  sort_reversed = true
+  sort_reversed = true,
 
   -- Optional, determines whether to open notes in a horizontal split, a vertical split,
   -- or replacing the current buffer (default)

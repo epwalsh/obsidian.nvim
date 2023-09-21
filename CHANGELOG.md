@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added option `sort_by` to allow set `ObsidianQuickSwitch` result sort by `path` or `modified` or `accessed` or `created`.
-- Added option `sort_reversed` to allow set `ObsidianQuickSwitch` result sort reversed order. The default is `true`.
+- Added config option `sort_by` to allow setting search result order by "path", "modified", "accessed", or "created".
+- Added config option `sort_reversed` to allow setting search result sort reversed order. The default is `true`.
 - Added an extra option for daily notes to allow changing the default title from "%B %-d, %Y" to other strings.
 
 ### Changed
