@@ -36,4 +36,42 @@ describe("obsidian.yaml", function()
   it("should dump tables with empty array", function()
     assert.equals(yaml.dumps { a = {} }, "a: []")
   end)
+  it("should parse inline lists with quotes on items", function()
+    local data = yaml.loads 'aliases: ["Foo", "Bar", "Foo Baz"]'
+    assert.equals(type(data), "table")
+    assert.equals(type(data.aliases), "table")
+    assert.equals(#data.aliases, 3)
+    assert.equals(data.aliases[3], "Foo Baz")
+
+    data = yaml.loads 'aliases: ["Foo"]'
+    assert.equals(type(data), "table")
+    assert.equals(type(data.aliases), "table")
+    assert.equals(#data.aliases, 1)
+    assert.equals(data.aliases[1], "Foo")
+
+    data = yaml.loads 'aliases: ["Foo Baz"]'
+    assert.equals(type(data), "table")
+    assert.equals(type(data.aliases), "table")
+    assert.equals(#data.aliases, 1)
+    assert.equals(data.aliases[1], "Foo Baz")
+  end)
+  it("should parse inline lists without quotes on items", function()
+    local data = yaml.loads "aliases: [Foo, Bar, Foo Baz]"
+    assert.equals(type(data), "table")
+    assert.equals(type(data.aliases), "table")
+    assert.equals(#data.aliases, 3)
+    assert.equals(data.aliases[3], "Foo Baz")
+
+    data = yaml.loads "aliases: [Foo]"
+    assert.equals(type(data), "table")
+    assert.equals(type(data.aliases), "table")
+    assert.equals(#data.aliases, 1)
+    assert.equals(data.aliases[1], "Foo")
+
+    data = yaml.loads "aliases: [Foo Baz]"
+    assert.equals(type(data), "table")
+    assert.equals(type(data.aliases), "table")
+    assert.equals(#data.aliases, 1)
+    assert.equals(data.aliases[1], "Foo Baz")
+  end)
 end)
