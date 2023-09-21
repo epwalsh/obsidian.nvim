@@ -496,18 +496,31 @@ end
 
 Parser.parseInlineList = function(self)
   local list = {}
-  local i = 0
+  local item = {}
+
+  local maybe_add_item = function()
+    if #item > 0 then
+      list[#list + 1] = table.concat(item, " ")
+      item = {}
+    end
+  end
+
   self:accept "["
-  while not self:accept "]" do
-    self:ignoreSpace()
-    if i > 0 then
-      self:expect(",", "expected comma")
+  while true do
+    if self:accept "]" then
+      maybe_add_item()
+      -- End of list
+      break
+    end
+
+    if self:accept "," and #item > 0 then
+      -- End of item
+      maybe_add_item()
+      self:ignoreSpace()
     end
 
     self:ignoreSpace()
-    list[#list + 1] = self:parse()
-    self:ignoreSpace()
-    i = i + 1
+    item[#item + 1] = self:parse()
   end
 
   return list

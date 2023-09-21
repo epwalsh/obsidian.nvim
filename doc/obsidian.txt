@@ -277,6 +277,12 @@ This is a complete list of all of the options that can be passed to
       -- remaining finders will be attempted in the original order.
       finder = "telescope.nvim",
     
+      -- Optional, sort search results by "path", "modified", "accessed", or "created".
+      -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example `:ObsidianQuickSwitch`
+      -- will show the notes sorted by latest modified time
+      sort_by = "modified",
+      sort_reversed = true,
+    
       -- Optional, determines whether to open notes in a horizontal split, a vertical split,
       -- or replacing the current buffer (default)
       -- Accepted values are "current", "hsplit" and "vsplit"
@@ -386,6 +392,7 @@ and the file `~/my-vault/my-templates-folder/note template.md`:
 
 >markdown
     # {{title}}
+    
     Date created: {{date}}
 <
 
