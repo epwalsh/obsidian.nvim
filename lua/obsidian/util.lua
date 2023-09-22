@@ -1,5 +1,6 @@
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"
+local echo = require "obsidian.echo"
 
 local util = {}
 
@@ -481,6 +482,10 @@ end
 ---@param client obsidian.Client
 ---@param title string
 util.clone_template = function(template_name, note_path, client, title)
+  if client.templates_dir == nil then
+    echo.err("Templates folder is not defined or does not exist", client.opts.log_level)
+    return
+  end
   local template_path = Path:new(client.templates_dir) / template_name
   local template_file = io.open(tostring(template_path), "r")
   local note_file = io.open(tostring(note_path), "wb")
@@ -504,6 +509,10 @@ end
 ---@param client obsidian.Client
 ---@param location table - a tuple with {bufnr, winnr, row, col}
 util.insert_template = function(name, client, location)
+  if client.templates_dir == nil then
+    echo.err("Templates folder is not defined or does not exist", client.opts.log_level)
+    return
+  end
   local buf, win, row, col = unpack(location)
   local template_path = Path:new(client.templates_dir) / name
   local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()

@@ -144,6 +144,7 @@ config.TemplateOpts = {}
 ---@return obsidian.config.TemplateOpts
 config.TemplateOpts.default = function()
   return {
+    subdir = nil,
     date_format = nil,
     time_format = nil,
     substitutions = {},

@@ -273,12 +273,10 @@ end
 ---@param client obsidian.Client
 ---@param data table
 command.template = function(client, data)
-  if not client.opts.templates.subdir then
-    echo.err("No templates folder defined in setup()", client.opts.log_level)
+  if client.templates_dir == nil then
+    echo.err("Templates folder is not defined or does not exist", client.opts.log_level)
     return
   end
-
-  local templates_dir = client.templates_dir
 
   -- We need to get this upfront before
   -- Telescope hijacks the current window
@@ -290,7 +288,7 @@ command.template = function(client, data)
 
   if string.len(data.args) > 0 then
     local template_name = data.args
-    local path = Path:new(templates_dir) / template_name
+    local path = Path:new(client.templates_dir) / template_name
     if path:is_file() then
       insert_template(data.args)
     else
@@ -308,7 +306,7 @@ command.template = function(client, data)
       end
       local choose_template = function()
         local opts = {
-          cwd = tostring(templates_dir),
+          cwd = tostring(client.templates_dir),
           attach_mappings = function(_, map)
             map({ "i", "n" }, "<CR>", function(prompt_bufnr)
               local template = require("telescope.actions.state").get_selected_entry()
@@ -332,7 +330,7 @@ command.template = function(client, data)
       local cmd = util.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
       fzf_lua.files {
         cmd = util.table_params_to_str(cmd),
-        cwd = tostring(templates_dir),
+        cwd = tostring(client.templates_dir),
         file_icons = false,
         actions = {
           ["default"] = function(entry)
@@ -356,7 +354,7 @@ command.template = function(client, data)
           vim.api.nvim_del_user_command "ApplyTemplate"
         end, { nargs = 1, bang = true })
 
-        local cmd = util.build_find_cmd(tostring(templates_dir), client.opts.sort_by, client.opts.sort_reversed)
+        local cmd = util.build_find_cmd(tostring(client.templates_dir), client.opts.sort_by, client.opts.sort_reversed)
         local fzf_options = { source = util.table_params_to_str(cmd), sink = "ApplyTemplate" }
         vim.api.nvim_call_function("fzf#run", {
           vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
