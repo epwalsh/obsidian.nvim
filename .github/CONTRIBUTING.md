@@ -2,6 +2,20 @@
 
 Thanks for considering contributing! Please read this document to learn the various steps you should take before submitting a pull request.
 
+## Local development
+
+If you're using the [Lua Language Server](https://luals.github.io) (LuaLS) you'll probably want to add `plenary.nvim` as a workspace library since we rely heavily on plenary throughout the codebase. You can do this by adding a `.luarc.json` configuration file that looks like this:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+  "workspace.library": ["~/.local/share/nvim/lazy/plenary.nvim/"],
+  "runtime.version": "Lua 5.1"
+}
+```
+
+Make sure that the path there to plenary is correct for you.
+
 ## Keeping the CHANGELOG up-to-date
 
 This project tries hard to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and we maintain a [`CHANGELOG`](https://github.com/epwalsh/obsidian.nvim/blob/main/CHANGELOG.md) with a format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). 
