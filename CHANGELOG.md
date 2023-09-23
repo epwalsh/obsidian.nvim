@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Added back missing `util.find()` function.
+
 ## [v1.14.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.14.0) - 2023-09-22
 
 ### Added

@@ -129,15 +129,16 @@ util.urlencode = function(str)
 end
 
 util.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
-util.FIND_CMD = { "rg", "--no-config", "--fixed-strings", "--files", "--type=md" }
+util.FIND_CMD = { "rg", "--no-config", "--files", "--type=md" }
 
 ---Build the 'rg' command for finding files.
 ---
 ---@param path string|?
 ---@param sort_by string|?
 ---@param sort_reversed boolean|?
+---@param term string|?
 ---@return string[]
-util.build_find_cmd = function(path, sort_by, sort_reversed)
+util.build_find_cmd = function(path, sort_by, sort_reversed, term)
   local additional_opts = {}
   if sort_by ~= nil then
     local sort = "sortr" -- default sort is reverse
@@ -146,6 +147,10 @@ util.build_find_cmd = function(path, sort_by, sort_reversed)
     end
     additional_opts[#additional_opts + 1] = "--" .. sort
     additional_opts[#additional_opts + 1] = sort_by
+  end
+  if term ~= nil then
+    additional_opts[#additional_opts + 1] = "-g"
+    additional_opts[#additional_opts + 1] = util.quote("*" .. term .. "*.md")
   end
   if path ~= nil and path ~= "." then
     additional_opts[#additional_opts + 1] = tostring(path)
@@ -203,6 +208,33 @@ util.search = function(dir, term, opts)
         return match_data
       end
     end
+  end
+end
+
+---Find markdown files in a directory matching a given term. Return an iterator
+---over file names.
+---
+---@param dir string|Path
+---@param term string
+---@param sort_by string|?
+---@param sort_reversed boolean|?
+---@return function
+util.find = function(dir, term, sort_by, sort_reversed)
+  local norm_dir = vim.fs.normalize(tostring(dir))
+  local cmd_args = util.build_find_cmd(util.quote(norm_dir), sort_by, sort_reversed, term)
+  local cmd = table.concat(cmd_args, " ")
+
+  local handle = assert(io.popen(cmd, "r"))
+
+  ---Iterator over matches.
+  ---
+  ---@return MatchData|?
+  return function()
+    local line = handle:read "*l"
+    if line == nil then
+      return nil
+    end
+    return line
   end
 end
 

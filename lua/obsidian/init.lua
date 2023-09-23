@@ -195,7 +195,7 @@ end
 client.search = function(self, search, search_opts)
   search_opts = search_opts and (search_opts .. " ") or ""
   local search_results = obsidian.util.search(self.dir, search, search_opts .. "-m 1")
-  local find_results = obsidian.util.find(self.dir, search)
+  local find_results = obsidian.util.find(self.dir, search, self.opts.sort_by, self.opts.sort_reversed)
 
   local found = {}
   local note = nil
