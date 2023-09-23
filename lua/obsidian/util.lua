@@ -206,6 +206,36 @@ util.search = function(dir, term, opts)
   end
 end
 
+---Find markdown files in a directory matching a given term. Return an iterator
+---over file names.
+---
+---@param dir string|Path
+---@param term string
+---@return function
+util.find = function(dir, term)
+  local norm_dir = vim.fs.normalize(tostring(dir))
+  local cmd_args = vim.tbl_flatten {
+    util.FIND_CMD,
+    {
+      util.quote(norm_dir),
+    },
+  }
+  local cmd = table.concat(cmd_args, " ")
+
+  local handle = assert(io.popen(cmd, "r"))
+
+  ---Iterator over matches.
+  ---
+  ---@return MatchData|?
+  return function()
+    local line = handle:read "*l"
+    if line == nil then
+      return nil
+    end
+    return line
+  end
+end
+
 ---Create a new unique Zettel ID.
 ---
 ---@return string
