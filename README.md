@@ -179,7 +179,6 @@ This is a complete list of all of the options that can be passed to `require("ob
       opts = { noremap = false, expr = true, buffer = true },
     },
   },
-  },
 
   -- Optional, customize how names/IDs for new notes are created.
   note_id_func = function(title)
