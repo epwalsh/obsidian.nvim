@@ -108,7 +108,9 @@ obsidian.setup = function(opts)
             .. mapping_keys
             .. "' has been set by: "
             .. mapping_set_by
-            .. "\nTo avoid this warning remove the 'gf' mapping in the 'mappings' section of your obsidian.nvim config."
+            .. "\nTo avoid this warning remove the '"
+            .. mapping_keys
+            .. "' mapping in the 'mappings' section of your obsidian.nvim config."
             .. "\nSee https://github.com/epwalsh/obsidian.nvim/issues/162 for more information.",
           opts.log_level
         )
