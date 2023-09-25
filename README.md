@@ -180,7 +180,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     },
   },
 
-  -- Optional, if set to true, the spcified mappings in the `mappings`
+  -- Optional, if set to true, the specified mappings in the `mappings`
   -- table will overwrite existing ones. Otherwise a warning is printed
   -- and the mappings are not applied.
   overwrite_mappings = false,
