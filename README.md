@@ -172,7 +172,13 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, key mappings.
   mappings = {
     -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
-    ["gf"] = require("obsidian.mapping").gf_passthrough(),
+    ["gf"] = {
+      action = function()
+        return require("obsidian").util.gf_passthrough()
+      end,
+      opts = { noremap = false, expr = true, buffer = true },
+    },
+  },
   },
 
   -- Optional, customize how names/IDs for new notes are created.
@@ -307,7 +313,7 @@ Then make sure to comment out the `gf` keybinding in your obsidian.nvim config:
 
 ```lua
 mappings = {
-  -- ["gf"] = require("obsidian.mapping").gf_passthrough(),
+  -- ["gf"] = ...
 },
 ```
 
@@ -315,7 +321,12 @@ Or alternatively you could map obsidian.nvim's follow functionality to a differe
 
 ```lua
 mappings = {
-  ["fo"] = require("obsidian.mapping").gf_passthrough(),
+  ["fo"] = {
+    action = function()
+      return require("obsidian").util.gf_passthrough()
+    end,
+    opts = { noremap = false, expr = true, buffer = true },
+  },
 },
 ```
 

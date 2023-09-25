@@ -638,4 +638,12 @@ util.escape_magic_characters = function(text)
   return text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
 end
 
+util.gf_passthrough = function()
+  if require("obsidian").util.cursor_on_markdown_link() then
+    return "<cmd>ObsidianFollowLink<CR>"
+  else
+    return "gf"
+  end
+end
+
 return util
