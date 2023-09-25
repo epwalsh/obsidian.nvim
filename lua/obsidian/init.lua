@@ -5,7 +5,7 @@ local config = require "obsidian.config"
 
 local obsidian = {}
 
-obsidian.VERSION = "1.14.1"
+obsidian.VERSION = "1.14.2"
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
@@ -108,9 +108,10 @@ obsidian.setup = function(opts)
             .. mapping_keys
             .. "' has been set by: "
             .. mapping_set_by
-            .. "\nTo avoid this warning remove the 'gf' mapping in the 'mappings' section of your obsidian.nvim config."
-            .. "\nSee https://github.com/epwalsh/obsidian.nvim/issues/162 for more information."
-            .. "\nAlternatively, set the overwrite_mappings option to true.",
+            .. "\nTo avoid this warning remove the '"
+            .. mapping_keys
+            .. "' mapping in the 'mappings' section of your obsidian.nvim config."
+            .. "\nSee https://github.com/epwalsh/obsidian.nvim/issues/162 for more information.",
           opts.log_level
         )
       end

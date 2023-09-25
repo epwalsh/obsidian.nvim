@@ -6,16 +6,7 @@ local mapping = {}
 
 ---@return obsidian.mapping.MappingConfig
 mapping.gf_passthrough = function()
-  local action = function()
-    if require("obsidian").util.cursor_on_markdown_link() then
-      return "<cmd>ObsidianFollowLink<CR>"
-    else
-      return "gf"
-    end
-  end
-
-  local opts = { noremap = false, expr = true, buffer = true }
-  return { action = action, opts = opts }
+  return { action = require("obsidian").util.gf_passthrough, opts = { noremap = false, expr = true, buffer = true } }
 end
 
 return mapping
