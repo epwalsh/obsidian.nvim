@@ -16,6 +16,7 @@ local config = {}
 ---@field backlinks obsidian.config.BacklinksOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
+---@field overwrite_mappings boolean|?
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
@@ -40,6 +41,7 @@ config.ClientOpts.default = function()
     backlinks = config.BacklinksOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
+    overwrite_mappings = false,
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
