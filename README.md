@@ -175,6 +175,11 @@ This is a complete list of all of the options that can be passed to `require("ob
     ["gf"] = require("obsidian.mapping").gf_passthrough(),
   },
 
+  -- Optional, if set to true, the spcified mappings in the `mappings`
+  -- table will overwrite existing ones. Otherwise a warning is printed
+  -- and the mappings are not applied.
+  overwrite_mappings = false,
+
   -- Optional, customize how names/IDs for new notes are created.
   note_id_func = function(title)
     -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.

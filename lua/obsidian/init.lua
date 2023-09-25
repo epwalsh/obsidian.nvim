@@ -98,7 +98,7 @@ obsidian.setup = function(opts)
     -- Mappings...
     for mapping_keys, mapping_config in pairs(opts.mappings) do
       local mapping_set_by = vim.fn.mapcheck(mapping_keys, "n")
-      if mapping_set_by == "" then
+      if mapping_set_by == "" or opts.overwrite_mappings then
         vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
       elseif not string.find(mapping_set_by, "obsidian") then
         echo.warn(
@@ -109,7 +109,8 @@ obsidian.setup = function(opts)
             .. "' has been set by: "
             .. mapping_set_by
             .. "\nTo avoid this warning remove the 'gf' mapping in the 'mappings' section of your obsidian.nvim config."
-            .. "\nSee https://github.com/epwalsh/obsidian.nvim/issues/162 for more information.",
+            .. "\nSee https://github.com/epwalsh/obsidian.nvim/issues/162 for more information."
+            .. "\nAlternatively, set the overwrite_mappings option to true.",
           opts.log_level
         )
       end
