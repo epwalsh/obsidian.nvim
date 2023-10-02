@@ -218,7 +218,7 @@ note.from_lines = function(lines, path, root)
           if type(v) == "string" then
             id = v
           else
-            echo.warn("Invalid 'id' in frontmatter for " .. path)
+            echo.warn("Invalid 'id' in frontmatter for " .. tostring(path))
           end
         elseif k == "aliases" then
           if type(v) == "table" then
@@ -236,7 +236,7 @@ note.from_lines = function(lines, path, root)
               end
             end
           else
-            echo.warn("Invalid 'aliases' in frontmatter for " .. path)
+            echo.warn("Invalid 'aliases' in frontmatter for " .. tostring(path))
           end
         elseif k == "tags" then
           if type(v) == "table" then
@@ -246,7 +246,7 @@ note.from_lines = function(lines, path, root)
               else
                 echo.warn(
                   "Invalid tag value found in frontmatter for "
-                    .. path
+                    .. tostring(path)
                     .. ". Expected string, found "
                     .. type(tag)
                     .. "."
@@ -256,7 +256,7 @@ note.from_lines = function(lines, path, root)
           elseif type(v) == "string" then
             tags = vim.split(v, " ")
           else
-            echo.warn("Invalid 'tags' in frontmatter for " .. path)
+            echo.warn("Invalid 'tags' in frontmatter for " .. tostring(path))
           end
         else
           if metadata == nil then
