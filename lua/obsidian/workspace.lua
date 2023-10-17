@@ -24,7 +24,7 @@ workspace.new_from_cwd = function()
 end
 
 workspace.new_from_dir = function(dir)
-  return workspace.new(vim.fn.fnamemodify(dir, ':t'), dir)
+  return workspace.new(vim.fn.fnamemodify(dir, ":t"), dir)
 end
 
 ---Determines if cwd is a workspace
