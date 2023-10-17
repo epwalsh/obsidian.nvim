@@ -20,7 +20,7 @@ workspace.new = function(name, path)
 end
 
 workspace.new_from_cwd = function()
-  return workspace.new(".", vim.fn.getcwd())
+  return workspace.new_from_dir(vim.fn.getcwd())
 end
 
 workspace.new_from_dir = function(dir)
