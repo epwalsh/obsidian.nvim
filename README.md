@@ -151,6 +151,8 @@ This is a complete list of all of the options that can be passed to `require("ob
 
 ```lua
 {
+  -- Optional, and for backward compatibility. Setting this will use it as the default workspace
+  -- dir = "~/vaults/other",
   -- Optional, list of vault names and paths.
   workspaces = {
     {
