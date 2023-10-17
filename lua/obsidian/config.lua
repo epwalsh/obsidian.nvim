@@ -81,7 +81,7 @@ config.ClientOpts.normalize = function(opts)
 
   if opts.dir ~= nil then
     -- NOTE: path will be normalized in workspace.new() fn
-    vim.tbl_extend("force", opts.workspaces, workspace.new("dir", opts.dir))
+    table.insert(opts.workspaces, 1, workspace.new("dir", opts.dir))
   end
 
   return opts
