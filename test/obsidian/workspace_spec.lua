@@ -28,7 +28,7 @@ describe("Workspace", function()
   it("should be able to initialize from cwd", function()
     local ws = workspace.new_from_cwd()
     local cwd = os.getenv "PWD"
-    assert.equals(".", ws.name)
+    assert.equals(vim.fn.fnamemodify(vim.fn.getcwd(), ":t"), ws.name)
     assert.equals(cwd, ws.path)
   end)
 
