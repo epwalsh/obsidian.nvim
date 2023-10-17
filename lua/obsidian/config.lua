@@ -1,10 +1,12 @@
 local echo = require "obsidian.echo"
+local workspace = require "obsidian.workspace"
 
 local config = {}
 
 ---[[ Options specs ]]---
 
 ---@class obsidian.config.ClientOpts
+---@field dir string|?
 ---@field workspaces table
 ---@field detect_cwd boolean
 ---@field log_level integer|?
@@ -31,6 +33,7 @@ config.ClientOpts = {}
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.default = function()
   return {
+    dir = nil,
     workspaces = {},
     detect_cwd = false,
     log_level = nil,
@@ -74,6 +77,11 @@ config.ClientOpts.normalize = function(opts)
 
   for key, value in pairs(opts.workspaces) do
     opts.workspaces[key].path = vim.fs.normalize(tostring(value.path))
+  end
+
+  if opts.dir ~= nil then
+    -- NOTE: path will be normalized in workspace.new() fn
+    vim.tbl_extend("force", opts.workspaces, workspace.new("dir", opts.dir))
   end
 
   return opts
