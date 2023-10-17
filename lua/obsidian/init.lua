@@ -28,6 +28,7 @@ obsidian.new = function(opts)
   local self = setmetatable({}, { __index = client })
 
   self.current_workspace = obsidian.workspace.get_from_opts(opts)
+  -- NOTE: workspace.path has already been normalized
   self.dir = Path:new(self.current_workspace.path)
   self.opts = opts
   self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"

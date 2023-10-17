@@ -675,6 +675,7 @@ command.switch_workspace = function(client, data)
   client.current_workspace = workspace
 
   echo.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")", client.opts.log_level)
+  -- NOTE: workspace.path has already been normalized
   client.dir = Path:new(workspace.path)
 end
 

@@ -6,8 +6,8 @@ local workspace = {}
 
 ---Create a new workspace
 ---
----@param name string
----@param path string
+---@param name string Workspace name
+---@param path string Workspace path (will be normalized)
 ---
 ---@return obsidian.Workspace
 workspace.new = function(name, path)
