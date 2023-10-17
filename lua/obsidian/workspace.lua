@@ -23,6 +23,10 @@ workspace.new_from_cwd = function()
   return workspace.new(".", vim.fn.getcwd())
 end
 
+workspace.new_from_dir = function(dir)
+  return workspace.new(vim.fn.fnamemodify(dir, ':t'), dir)
+end
+
 ---Determines if cwd is a workspace
 ---
 ---@param workspaces table<obsidian.Workspace>
