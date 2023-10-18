@@ -7,7 +7,7 @@ local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field dir string|?
----@field workspaces table
+---@field workspaces obsidian.Workspace[]|?
 ---@field detect_cwd boolean
 ---@field log_level integer|?
 ---@field notes_subdir string|?

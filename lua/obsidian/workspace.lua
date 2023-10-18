@@ -1,7 +1,6 @@
 ---@class obsidian.Workspace
 ---@field name string
 ---@field path string
----@return obsidian.Workspace
 local workspace = {}
 
 ---Create a new workspace
