@@ -10,8 +10,10 @@ obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
 obsidian.mapping = require "obsidian.mapping"
+obsidian.workspace = require "obsidian.workspace"
 
 ---@class obsidian.Client
+---@field current_workspace obsidian.Workspace
 ---@field dir Path
 ---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
@@ -24,7 +26,10 @@ local client = {}
 ---@return obsidian.Client
 obsidian.new = function(opts)
   local self = setmetatable({}, { __index = client })
-  self.dir = Path:new(vim.fs.normalize(tostring(opts.dir and opts.dir or "./")))
+
+  self.current_workspace = obsidian.workspace.get_from_opts(opts)
+  -- NOTE: workspace.path has already been normalized
+  self.dir = Path:new(self.current_workspace.path)
   self.opts = opts
   self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
 
@@ -37,7 +42,7 @@ end
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
   local opts = config.ClientOpts.default()
-  opts.dir = vim.fs.normalize(dir)
+  opts.workspaces = vim.tbl_extend("force", { obsidian.workspace.new_from_dir(dir) }, opts.workspaces)
   return obsidian.new(opts)
 end
 

@@ -32,6 +32,20 @@ util.contains = function(table, val)
   return false
 end
 
+---Check if a table (list) contains a key.
+---
+---@param table table
+---@param needle any
+---@return boolean
+util.contains_key = function(table, needle)
+  for key, _ in pairs(table) do
+    if key == needle then
+      return true
+    end
+  end
+  return false
+end
+
 ---Return a new table (list) with only the unique values of the original.
 ---
 ---@param table table

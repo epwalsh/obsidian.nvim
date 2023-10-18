@@ -1,11 +1,14 @@
 local echo = require "obsidian.echo"
+local workspace = require "obsidian.workspace"
 
 local config = {}
 
 ---[[ Options specs ]]---
 
 ---@class obsidian.config.ClientOpts
----@field dir string
+---@field dir string|?
+---@field workspaces obsidian.Workspace[]|?
+---@field detect_cwd boolean
 ---@field log_level integer|?
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
@@ -30,7 +33,9 @@ config.ClientOpts = {}
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.default = function()
   return {
-    dir = vim.fs.normalize "./",
+    dir = nil,
+    workspaces = {},
+    detect_cwd = false,
     log_level = nil,
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
@@ -64,11 +69,19 @@ config.ClientOpts.normalize = function(opts)
   opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
-  opts.dir = vim.fs.normalize(tostring(opts.dir))
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
     echo.err("invalid 'sort_by' option '" .. opts.sort_by .. "'")
+  end
+
+  for key, value in pairs(opts.workspaces) do
+    opts.workspaces[key].path = vim.fs.normalize(tostring(value.path))
+  end
+
+  if opts.dir ~= nil then
+    -- NOTE: path will be normalized in workspace.new() fn
+    table.insert(opts.workspaces, 1, workspace.new("dir", opts.dir))
   end
 
   return opts

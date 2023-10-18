@@ -651,6 +651,34 @@ command.check_health = function(client, _)
   end
 end
 
+command.switch_workspace = function(client, data)
+  if not data.args or #data.args == 0 then
+    echo.info(
+      "Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.dir),
+      client.opts.log_level
+    )
+    return
+  end
+
+  local workspace = nil
+  for _, value in pairs(client.opts.workspaces) do
+    if data.args == value.name then
+      workspace = value
+    end
+  end
+
+  if not workspace then
+    echo.err("Workspace '" .. data.args .. "' does not exist", client.opts.log_level)
+    return
+  end
+
+  client.current_workspace = workspace
+
+  echo.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")", client.opts.log_level)
+  -- NOTE: workspace.path has already been normalized
+  client.dir = Path:new(workspace.path)
+end
+
 local commands = {
   ObsidianCheck = { func = command.check, opts = { nargs = 0 } },
   ObsidianTemplate = { func = command.template, opts = { nargs = "?" } },
@@ -665,6 +693,7 @@ local commands = {
   ObsidianLinkNew = { func = command.link_new, opts = { nargs = "?", range = true } },
   ObsidianFollowLink = { func = command.follow, opts = { nargs = 0 } },
   ObsidianCheckHealth = { func = command.check_health, opts = { nargs = 0 } },
+  ObsidianWorkspace = { func = command.switch_workspace, opts = { nargs = "?" } },
 }
 
 ---Register all commands.
