@@ -2,13 +2,13 @@ local util = require "obsidian.util"
 
 local yaml = {}
 
-yaml.engines = {
+yaml.parsers = {
   ["native"] = require "obsidian.yaml.native",
   ["yq"] = require "obsidian.yaml.yq",
 }
 
 ---@return string
-local detect_engine = function()
+local detect_parser = function()
   if vim.fn.executable "yq" then
     return "yq"
   else
@@ -16,32 +16,24 @@ local detect_engine = function()
   end
 end
 
-yaml.engine = detect_engine()
+yaml.parser = detect_parser()
 
----Set the YAML parser engine to use.
----@param engine string
-yaml.set_engine = function(engine)
-  yaml.engine = engine
+---Set the YAML parser to use.
+---@param parser string
+yaml.set_parser = function(parser)
+  yaml.parser = parser
 end
 
----Reset to the default engine.
-yaml.reset_engine = function()
-  yaml.engine = detect_engine()
-end
-
-yaml.list_engines = function()
-  local engines = {}
-  for key, _ in pairs(yaml.engines) do
-    engines[#engines + 1] = key
-  end
-  return engines
+---Reset to the default parser.
+yaml.reset_parser = function()
+  yaml.parser = detect_parser()
 end
 
 ---Deserialize a YAML string.
 ---@param str string
 ---@return any
 yaml.loads = function(str)
-  return yaml.engines[yaml.engine].loads(str)
+  return yaml.parsers[yaml.parser].loads(str)
 end
 
 ---@return string[]

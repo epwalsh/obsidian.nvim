@@ -1,7 +1,7 @@
 local yaml = require "obsidian.yaml"
 
 describe("obsidian.yaml.dumps", function()
-  yaml.set_engine "native"
+  yaml.set_parser "native"
   it("should dump numbers", function()
     assert.equals(yaml.dumps(1), "1")
   end)
@@ -92,7 +92,7 @@ describe("obsidian.yaml.native", function()
 end)
 
 describe("obsidian.yaml.yq", function()
-  yaml.set_engine "yq"
+  yaml.set_parser "yq"
   for key, data in pairs {
     ["numbers"] = 1,
     ["strings"] = "hi there",
