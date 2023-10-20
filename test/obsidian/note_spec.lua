@@ -70,11 +70,11 @@ describe("Note", function()
       table.concat(note:frontmatter_lines(), "\n"),
       table.concat({
         "---",
-        'id: "note_with_additional_metadata"',
+        "id: note_with_additional_metadata",
         "aliases:",
-        '  - "Note with additional metadata"',
+        "  - Note with additional metadata",
         "tags: []",
-        'foo: "bar"',
+        "foo: bar",
         "---",
       }, "\n")
     )
