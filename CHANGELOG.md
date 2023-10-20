@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `overwrite_mappings` option, which sets the mappings in the config even if they already exist
 - Added support for multiple vaults (#128)
 - Added command to switch between vaults (#60)
+- Added configuration option `yaml_parser` (a string value of either "native" or "yq") to change the YAML parser.
 
 ### Fixed
 
