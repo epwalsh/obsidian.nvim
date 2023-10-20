@@ -5,7 +5,7 @@ local config = require "obsidian.config"
 
 local obsidian = {}
 
-obsidian.VERSION = "1.14.2"
+obsidian.VERSION = "1.15.0"
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"

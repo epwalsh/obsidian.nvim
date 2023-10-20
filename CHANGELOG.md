@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.15.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.15.0) - 2023-10-20
+
 ### Added
 
 - The `overwrite_mappings` option, which sets the mappings in the config even if they already exist
