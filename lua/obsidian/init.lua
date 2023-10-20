@@ -9,6 +9,7 @@ obsidian.VERSION = "1.14.2"
 obsidian.completion = require "obsidian.completion"
 obsidian.note = require "obsidian.note"
 obsidian.util = require "obsidian.util"
+obsidian.yaml = require "obsidian.yaml"
 obsidian.mapping = require "obsidian.mapping"
 obsidian.workspace = require "obsidian.workspace"
 
@@ -32,6 +33,9 @@ obsidian.new = function(opts)
   self.dir = Path:new(self.current_workspace.path)
   self.opts = opts
   self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
+  if self.opts.yaml_parser ~= nil then
+    obsidian.yaml.set_parser(self.opts.yaml_parser)
+  end
 
   return self
 end
