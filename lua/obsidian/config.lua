@@ -55,7 +55,7 @@ config.ClientOpts.default = function()
     sort_by = "modified",
     sort_reversed = true,
     open_notes_in = "current",
-    yaml_parser = nil,
+    yaml_parser = "native",
   }
 end
 

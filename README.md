@@ -309,10 +309,9 @@ This is a complete list of all of the options that can be passed to `require("ob
 
   -- Optional, set the YAML parser to use. The valid options are:
   --  * "native" - uses a pure Lua parser that's fast but not very robust.
-  --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is much more robust
-  --    but needs to be installed separately.
-  -- If left 'nil', Obsidian.nvim will use yq if it's installed, otherwise native.
-  yaml_parser = nil,
+  --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is more robust
+  --    but slower and needs to be installed separately.
+  yaml_parser = "native",
 }
 ```
 
