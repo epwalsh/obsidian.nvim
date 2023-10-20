@@ -15,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Eliminated silent runtime errors on validation errors in note.from_lines
+- Eliminated silent runtime errors on validation errors in `note.from_lines`.
+- Fixed parsing YAML boolean values in frontmatter.
+- Fixed parsing implicit null values in YAML frontmatter.
 
 ## [v1.14.2](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.14.2) - 2023-09-25
 

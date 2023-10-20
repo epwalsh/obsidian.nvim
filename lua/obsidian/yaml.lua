@@ -45,7 +45,7 @@ local context = function(str)
 end
 
 local word = function(w)
-  return "^(" .. w .. ")([%s$%c])"
+  return "^(" .. w .. ")([%s%c])"
 end
 
 local tokens = {
@@ -542,9 +542,52 @@ end
 
 local yaml = {}
 
+local count_indent = function(str)
+  local indent = 0
+  for i = 1, #str do
+    if string.sub(i, i) == " " then
+      indent = indent + 1
+    else
+      break
+    end
+  end
+  return indent
+end
+
+local preprocess = function(str)
+  local lines = {}
+  local current_indent = 0
+  for line in str:gmatch "[^\r\n]+" do
+    line = string.gsub(line, "%s+$", "")
+    local indent = count_indent(line)
+
+    -- HACK: If the previous line is something like 'foo:' and the current line has the same indent
+    -- but is not a list item, then we change the previous line to 'foo: nil' since otherwise the parser
+    -- would not parse that correctly.
+    if
+      indent == current_indent
+      and lines[#lines] ~= nil
+      and lines[#lines]:sub(#lines[#lines]) == ":"
+      and not line:match "^%s*-"
+    then
+      lines[#lines] = lines[#lines] .. " null"
+    end
+
+    table.insert(lines, line)
+    current_indent = indent
+  end
+  str = table.concat(lines, "\n")
+  if str:sub(#str) ~= "\n" then
+    -- Need a new line at the end for some parsing to work.
+    str = str .. "\n"
+  end
+  return str
+end
+
 ---Deserialize a YAML string.
 yaml.loads = function(str)
-  return Parser:new(tokenize(str)):parse()
+  local parser = Parser:new(tokenize(preprocess(str)))
+  return parser:parse()
 end
 
 ---@return string[]

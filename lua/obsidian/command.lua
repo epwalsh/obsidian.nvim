@@ -189,7 +189,7 @@ command.backlinks = function(client, _)
   end)
   if ok then
     echo.info(
-      ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(backlinks.note.id),
+      ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(tostring(backlinks.note.id)),
       client.opts.log_level
     )
     backlinks:view()
@@ -440,7 +440,7 @@ command.link_new = function(client, data)
 
   line = string.sub(line, 1, cscol - 1)
     .. "[["
-    .. note.id
+    .. tostring(note.id)
     .. "|"
     .. string.sub(line, cscol, cecol)
     .. "]]"
@@ -480,7 +480,7 @@ command.link = function(client, data)
 
   line = string.sub(line, 1, cscol - 1)
     .. "[["
-    .. note.id
+    .. tostring(note.id)
     .. "|"
     .. string.sub(line, cscol, cecol)
     .. "]]"

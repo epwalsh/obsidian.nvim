@@ -96,7 +96,7 @@ backlinks.gather = function(self)
   local backlink_matches = {}
   local last_path = nil
   local last_note = nil
-  for match in util.search(self.client.dir, "[[" .. self.note.id) do
+  for match in util.search(self.client.dir, "[[" .. tostring(self.note.id)) do
     if match == nil then
       break
     elseif is_valid_backlink(match) then
@@ -189,7 +189,7 @@ backlinks.view = function(self)
     -- Add highlights for all refs in the text.
     for i, ref_idx in ipairs(ref_indices) do
       local ref_str = ref_strs[i]
-      if string.find(ref_str, self.note.id, 1, true) ~= nil then
+      if string.find(ref_str, tostring(self.note.id), 1, true) ~= nil then
         table.insert(highlights, {
           group = "Search",
           line = #view_lines - 1,

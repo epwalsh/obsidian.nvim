@@ -21,7 +21,7 @@ source.complete = function(self, request, callback)
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local items = {}
     for note in client:search(search, "--ignore-case") do
-      local aliases = util.unique { note.id, note:display_name(), unpack(note.aliases) }
+      local aliases = util.unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
       for _, alias in pairs(aliases) do
         local options = {}
 
@@ -37,8 +37,8 @@ source.complete = function(self, request, callback)
         table.insert(options, alias)
 
         for _, option in pairs(options) do
-          local label = "[[" .. note.id
-          if option ~= note.id then
+          local label = "[[" .. tostring(note.id)
+          if option ~= tostring(note.id) then
             label = label .. "|" .. option .. "]]"
           else
             label = label .. "]]"

@@ -6,7 +6,7 @@ local echo = require "obsidian.echo"
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
 ---@class obsidian.Note
----@field id string
+---@field id string|integer
 ---@field aliases string[]
 ---@field tags string[]
 ---@field path Path|?
@@ -17,7 +17,7 @@ local note = {}
 
 ---Create new note.
 ---
----@param id string
+---@param id string|number
 ---@param aliases string[]
 ---@param tags string[]
 ---@param path string|Path|?
@@ -147,7 +147,7 @@ note.display_name = function(self)
   if #self.aliases > 0 then
     return self.aliases[#self.aliases]
   end
-  return self.id
+  return tostring(self.id)
 end
 
 ---Initialize a note from an iterator of lines.
@@ -215,7 +215,7 @@ note.from_lines = function(lines, path, root)
       ---@diagnostic disable-next-line: param-type-mismatch
       for k, v in pairs(data) do
         if k == "id" then
-          if type(v) == "string" then
+          if type(v) == "string" or type(v) == "number" then
             id = v
           else
             echo.warn("Invalid 'id' in frontmatter for " .. tostring(path))

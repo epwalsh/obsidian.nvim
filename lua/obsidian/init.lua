@@ -272,12 +272,8 @@ client.parse_title_id_path = function(self, title, id, dir)
     -- Trim whitespace.
     title = title:match "^%s*(.-)%s*$"
 
-    if title == "" then
-      title = nil
-    end
-
-    -- Remove suffix.
     if title:match "%.md" then
+      -- Remove suffix.
       title = title:sub(1, title:len() - 3)
       title_is_path = true
     end
