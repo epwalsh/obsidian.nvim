@@ -63,6 +63,8 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see [plugin dependencies](#plugin-dependencies) below).
 
+You may also want to install [`yq`](https://github.com/mikefarah/yq) for more robust frontmatter YAML parsing.
+
 ### Install and configure
 
 To configure obsidian.nvim you just need to call `require("obsidian").setup({ ... })` with the desired options.
@@ -304,6 +306,13 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- or replacing the current buffer (default)
   -- Accepted values are "current", "hsplit" and "vsplit"
   open_notes_in = "current"
+
+  -- Optional, set the YAML parser to use. The valid options are:
+  --  * "native" - uses a pure Lua parser that's fast but not very robust.
+  --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is much more robust
+  --    but needs to be installed separately.
+  -- If left 'nil', Obsidian.nvim will use yq if it's installed, otherwise native.
+  yaml_parser = nil,
 }
 ```
 

@@ -27,6 +27,7 @@ local config = {}
 ---@field sort_by string|?
 ---@field sort_reversed boolean|?
 ---@field open_notes_in "current"|"vsplit"|"hsplit"
+---@field yaml_parser string|?
 config.ClientOpts = {}
 
 ---Get defaults.
@@ -54,6 +55,7 @@ config.ClientOpts.default = function()
     sort_by = "modified",
     sort_reversed = true,
     open_notes_in = "current",
+    yaml_parser = nil,
   }
 end
 
