@@ -7,7 +7,7 @@ local completion = {}
 completion._find_search_start = function(input)
   for i = string.len(input), 1, -1 do
     local substr = string.sub(input, i)
-    if vim.endswith(substr, "]") then
+    if vim.startswith(substr, "]") or vim.endswith(substr, "]") then
       return nil
     elseif vim.startswith(substr, "[[") then
       return substr
