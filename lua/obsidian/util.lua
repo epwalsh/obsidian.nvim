@@ -660,4 +660,9 @@ util.gf_passthrough = function()
   end
 end
 
+-- This function removes a single backslash within double square brackets
+util.unescape_single_backslash = function(text)
+  return text:gsub("(%[%[[^\\]+)\\(%|[^\\]+]])", "%1%2")
+end
+
 return util

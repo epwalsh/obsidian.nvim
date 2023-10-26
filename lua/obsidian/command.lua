@@ -546,6 +546,9 @@ command.follow = function(client, _)
   end
 
   local note_name = current_line:sub(open, close)
+
+  note_name = util.unescape_single_backslash(note_name)
+
   if note_name:match "^%[.-%]%(.*%)$" then
     -- transform markdown link to wiki link
     note_name = note_name:gsub("^%[(.-)%]%((.*)%)$", "%2|%1")
