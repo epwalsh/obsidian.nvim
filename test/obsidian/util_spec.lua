@@ -92,6 +92,6 @@ describe("obsidian.util", function()
   it("should correctly remove single backslash", function()
     -- [[123\|NOTE1]] should get [[123|NOTE1]] in markdown file
     -- in lua, it needs to be with double backslash '\\'
-    assert.equal(util.unescape_single_backslash "[[foo\\|bar]]", "[[foo|bar]]")
+    assert.equals(util.unescape_single_backslash "[[foo\\|bar]]", "[[foo|bar]]")
   end)
 end)
