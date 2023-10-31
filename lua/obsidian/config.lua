@@ -19,7 +19,6 @@ local config = {}
 ---@field backlinks obsidian.config.BacklinksOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
----@field overwrite_mappings boolean|?
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
@@ -47,7 +46,6 @@ config.ClientOpts.default = function()
     backlinks = config.BacklinksOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
-    overwrite_mappings = false,
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
@@ -74,7 +72,12 @@ config.ClientOpts.normalize = function(opts)
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
-    echo.err("invalid 'sort_by' option '" .. opts.sort_by .. "'")
+    error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
+  end
+
+  ---@diagnostic disable-next-line undefined-field
+  if opts.overwrite_mappings ~= nil then
+    echo.warn_once "the 'overwrite_mappings' config option is deprecated and no longer has any affect"
   end
 
   for key, value in pairs(opts.workspaces) do

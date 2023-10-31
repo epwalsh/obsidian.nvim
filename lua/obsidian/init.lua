@@ -86,45 +86,9 @@ obsidian.setup = function(opts)
   -- Register commands.
   require("obsidian.command").register_all(self)
 
-  -- Complete the lazy setup only when entering a buffer in the vault.
-  local lazy_setup = function()
-    -- Configure completion...
-    if opts.completion.nvim_cmp then
-      -- Add source.
-      local cmp = require "cmp"
-      local sources = {
-        { name = "obsidian", option = opts },
-        { name = "obsidian_new", option = opts },
-      }
-      for _, source in pairs(cmp.get_config().sources) do
-        if source.name ~= "obsidian" and source.name ~= "obsidian_new" then
-          table.insert(sources, source)
-        end
-      end
-      cmp.setup.buffer { sources = sources }
-    end
-
-    -- Mappings...
-    for mapping_keys, mapping_config in pairs(opts.mappings) do
-      local mapping_set_by = vim.fn.mapcheck(mapping_keys, "n")
-      if mapping_set_by == "" or opts.overwrite_mappings then
-        vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
-      elseif not string.find(mapping_set_by, "obsidian") then
-        echo.warn(
-          "Obsidian cannot override '"
-            .. mapping_keys
-            .. "' keybinding since '"
-            .. mapping_keys
-            .. "' has been set by: "
-            .. mapping_set_by
-            .. "\nTo avoid this warning remove the '"
-            .. mapping_keys
-            .. "' mapping in the 'mappings' section of your obsidian.nvim config."
-            .. "\nSee https://github.com/epwalsh/obsidian.nvim/issues/162 for more information.",
-          opts.log_level
-        )
-      end
-    end
+  -- Register mappings.
+  for mapping_keys, mapping_config in pairs(opts.mappings) do
+    vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
   end
 
   --- @type fun(match: string): boolean
@@ -142,15 +106,32 @@ obsidian.setup = function(opts)
     end
   end
 
-  -- Autocommands...
+  -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
-  -- Complete lazy setup on BufEnter
-  vim.api.nvim_create_autocmd({ "BufEnter" }, {
-    group = group,
-    pattern = tostring(self.dir / "**.md"),
-    callback = lazy_setup,
-  })
+  if opts.completion.nvim_cmp then
+    -- Inject Obsidian as a cmp source when reading a buffer in the vault.
+    local cmp_setup = function()
+      echo.info "installing cmp source"
+      local cmp = require "cmp"
+      local sources = {
+        { name = "obsidian", option = opts },
+        { name = "obsidian_new", option = opts },
+      }
+      for _, source in pairs(cmp.get_config().sources) do
+        if source.name ~= "obsidian" and source.name ~= "obsidian_new" then
+          table.insert(sources, source)
+        end
+      end
+      cmp.setup.buffer { sources = sources }
+    end
+
+    vim.api.nvim_create_autocmd({ "BufRead" }, {
+      group = group,
+      pattern = tostring(self.dir / "**.md"),
+      callback = cmp_setup,
+    })
+  end
 
   -- Add missing frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
