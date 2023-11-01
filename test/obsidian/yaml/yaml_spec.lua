@@ -1,7 +1,6 @@
 local yaml = require "obsidian.yaml"
 
 describe("obsidian.yaml.dumps", function()
-  yaml.set_parser "native"
   it("should dump numbers", function()
     assert.equals(yaml.dumps(1), "1")
   end)
@@ -40,6 +39,7 @@ describe("obsidian.yaml.dumps", function()
 end)
 
 describe("obsidian.yaml.native", function()
+  yaml.set_parser "native"
   it("should parse inline lists with quotes on items", function()
     local data = yaml.loads 'aliases: ["Foo", "Bar", "Foo Baz"]'
     assert.equals(type(data), "table")

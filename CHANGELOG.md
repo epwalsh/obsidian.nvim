@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Re-implemented the native Lua YAML parser (`obsidian.yaml.native`). This should be faster and more robust now. 🤠
+
 ### Fixed
 
 - Fixed a completion bug (#212).
