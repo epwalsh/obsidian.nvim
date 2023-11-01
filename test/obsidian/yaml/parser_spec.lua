@@ -192,4 +192,12 @@ describe("Parser class", function()
     }, "\n"))
     assert.are_same({ foo = { bar = 1, baz = "Baz" } }, result)
   end)
+
+  it("should parse array item strings with ':' in them", function()
+    local result = parser:parse(table.concat({
+      "aliases:",
+      ' - "Research project: staged training"',
+    }, "\n"))
+    assert.are_same({ aliases = { "Research project: staged training" } }, result)
+  end)
 end)

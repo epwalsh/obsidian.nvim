@@ -146,7 +146,13 @@ Parser._parse_next = function(self, lines, i, text)
     text = util.strip_comments(line.content)
   end
 
-  local ok, value
+  local _, ok, value
+
+  -- First just check for a string enclosed in quotes.
+  if util.has_enclosing_chars(text) then
+    _, _, value = self:_parse_string(i, text)
+    return i + 1, value, YamlType.Scalar
+  end
 
   -- Check for array item, like `- foo`.
   ok, i, value = self:_try_parse_array_item(lines, i, text)
