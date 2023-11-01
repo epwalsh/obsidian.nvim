@@ -303,9 +303,11 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_notes_in = "current"
 
   -- Optional, set the YAML parser to use. The valid options are:
-  --  * "native" - uses a pure Lua parser that's fast but not very robust.
+  --  * "native" - uses a pure Lua parser that's fast but potentially misses some edge cases.
   --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is more robust
-  --    but slower and needs to be installed separately.
+  --    but much slower and needs to be installed separately.
+  -- In general you should be using the native parser unless you run into a bug with it, in which
+  -- case you can temporarily switch to the "yq" parser.
   yaml_parser = "native",
 }
 ```
