@@ -370,29 +370,22 @@ util.find_and_replace_refs = function(s, patterns)
   return table.concat(pieces, ""), indices, refs
 end
 
+---Check if an object is an array-like table.
+---@param t any
+---@return boolean
 util.is_array = function(t)
   if type(t) ~= "table" then
     return false
   end
 
-  --check if all the table keys are numerical and count their number
-  local count = 0
-  for k, _ in pairs(t) do
-    if type(k) ~= "number" then
-      return false
-    else
-      count = count + 1
-    end
-  end
+  return vim.tbl_islist(t)
+end
 
-  --all keys are numerical. now let's see if they are sequential and start with 1
-  for i = 1, count do
-    --Hint: the VALUE might be "nil", in that case "not t[i]" isn't enough, that's why we check the type
-    if not t[i] and type(t[i]) ~= "nil" then
-      return false
-    end
-  end
-  return true
+---Check if an object is an non-array table.
+---@param t any
+---@return boolean
+util.is_mapping = function(t)
+  return type(t) == "table" and (vim.tbl_isempty(t) or not util.is_array(t))
 end
 
 ---Helper function to convert a table with the list of table_params
@@ -663,6 +656,201 @@ end
 -- This function removes a single backslash within double square brackets
 util.unescape_single_backslash = function(text)
   return text:gsub("(%[%[[^\\]+)\\(%|[^\\]+]])", "%1%2")
+end
+
+util.string_enclosing_chars = { [["]], [[']] }
+
+---Count the indentation of a line.
+---@param str string
+---@return integer
+util.count_indent = function(str)
+  local indent = 0
+  for i = 1, #str do
+    local c = string.sub(str, i, i)
+    -- space or tab both count as 1 indent
+    if c == " " or c == "	" then
+      indent = indent + 1
+    else
+      break
+    end
+  end
+  return indent
+end
+
+---Check if a string is only whitespace.
+---@param str string
+---@return boolean
+util.is_whitespace = function(str)
+  return string.match(str, "^%s+$") ~= nil
+end
+
+---Get the substring of `str` starting from the first character and up to the stop character,
+---ignoring any enclosing characters (like double quotes) and stop characters that are within the
+---enclosing characters. For example, if `str = [=["foo", "bar"]=]` and `stop_char = ","`, this
+---would return the string `[=[foo]=]`.
+---
+---@param str string
+---@param stop_chars string[]
+---@param keep_stop_char boolean|?
+---@return string|?, string
+util.next_item = function(str, stop_chars, keep_stop_char)
+  local og_str = str
+
+  -- Check for enclosing characters.
+  local enclosing_char = nil
+  local first_char = string.sub(str, 1, 1)
+  for _, c in ipairs(util.string_enclosing_chars) do
+    if first_char == c then
+      enclosing_char = c
+      str = string.sub(str, 2)
+      break
+    end
+  end
+
+  local result
+  local hits
+
+  for _, stop_char in ipairs(stop_chars) do
+    -- First check for next item when `stop_char` is present.
+    if enclosing_char ~= nil then
+      result, hits = string.gsub(
+        str,
+        "([^" .. enclosing_char .. "]+)([^\\]?)" .. enclosing_char .. "%s*" .. stop_char .. ".*",
+        "%1%2"
+      )
+      result = enclosing_char .. result .. enclosing_char
+    else
+      result, hits = string.gsub(str, "([^" .. stop_char .. "]+)" .. stop_char .. ".*", "%1")
+    end
+    if hits ~= 0 then
+      local i = string.find(str, stop_char, string.len(result), true)
+      if keep_stop_char then
+        return result .. stop_char, string.sub(str, i + 1)
+      else
+        return result, string.sub(str, i + 1)
+      end
+    end
+
+    -- Now check for next item without the `stop_char` after.
+    if not keep_stop_char and enclosing_char ~= nil then
+      result, hits = string.gsub(str, "([^" .. enclosing_char .. "]+)([^\\]?)" .. enclosing_char .. "%s*$", "%1%2")
+      result = enclosing_char .. result .. enclosing_char
+    elseif not keep_stop_char then
+      result = str
+      hits = 1
+    else
+      result = nil
+      hits = 0
+    end
+    if hits ~= 0 then
+      if keep_stop_char then
+        result = result .. stop_char
+      end
+      return result, ""
+    end
+  end
+
+  return nil, og_str
+end
+
+---Strip whitespace from the ends of a string.
+---@param str string
+---@return string
+util.strip_whitespace = function(str)
+  return util.rstrip_whitespace(util.lstrip_whitespace(str))
+end
+
+---Strip whitespace from the right end of a string.
+---@param str string
+---@return string
+util.rstrip_whitespace = function(str)
+  str = string.gsub(str, "%s+$", "")
+  return str
+end
+
+---Strip whitespace from the left end of a string.
+---@param str string
+---@param limit integer|?
+---@return string
+util.lstrip_whitespace = function(str, limit)
+  if limit ~= nil then
+    local num_found = 0
+    while num_found < limit do
+      str = string.gsub(str, "^%s", "")
+      num_found = num_found + 1
+    end
+  else
+    str = string.gsub(str, "^%s+", "")
+  end
+  return str
+end
+
+---Strip enclosing characters like quotes from a string.
+---@param str string
+---@return string
+util.strip_enclosing_chars = function(str)
+  local c_start = string.sub(str, 1, 1)
+  local c_end = string.sub(str, #str, #str)
+  for _, enclosing_char in ipairs(util.string_enclosing_chars) do
+    if c_start == enclosing_char and c_end == enclosing_char then
+      str = string.sub(str, 2, #str - 1)
+      break
+    end
+  end
+  return str
+end
+
+---Check if a string has enclosing characters like quotes.
+---@param str string
+---@return boolean
+util.has_enclosing_chars = function(str)
+  local c_start = string.sub(str, 1, 1)
+  local c_end = string.sub(str, #str, #str)
+  for _, enclosing_char in ipairs(util.string_enclosing_chars) do
+    if c_start == enclosing_char and c_end == enclosing_char then
+      return true
+    end
+  end
+  return false
+end
+
+---Strip YAML comments from a string.
+---@param str string
+---@return string
+util.strip_comments = function(str)
+  if not util.has_enclosing_chars(str) then
+    for i = 1, #str do
+      -- TODO: handle case where '#' is escaped
+      local c = string.sub(str, i, i)
+      if c == "#" then
+        str = util.rstrip_whitespace(string.sub(str, 1, i - 1))
+        break
+      end
+    end
+  end
+  return str
+end
+
+---Check if a mapping contains a key.
+---@param map table
+---@param key string
+---@return boolean
+util.mapping_has_key = function(map, key)
+  for k, _ in pairs(map) do
+    if key == k then
+      return true
+    end
+  end
+  return false
+end
+
+---Check if a string contains a substring.
+---@param str string
+---@param substr string
+---@return boolean
+util.string_contains = function(str, substr)
+  local i = string.find(str, substr, 1, true)
+  return i ~= nil
 end
 
 return util

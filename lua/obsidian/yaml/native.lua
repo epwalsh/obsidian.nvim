@@ -1,591 +1,623 @@
----Adapted from https://github.com/exosite/lua-yaml.git
+local util = require "obsidian.util"
+local Line = require "obsidian.yaml.line"
 
+local m = {}
+
+---@class obsidian.yaml.ParserOpts
+---@field luanil boolean
+local ParserOpts = {}
+m.ParserOpts = ParserOpts
+
+---@return obsidian.yaml.ParserOpts
+ParserOpts.default = function()
+  return {
+    luanil = true,
+  }
+end
+
+---@param opts table
+---@return obsidian.yaml.ParserOpts
+ParserOpts.normalize = function(opts)
+  ---@type obsidian.yaml.ParserOpts
+  opts = vim.tbl_extend("force", ParserOpts.default(), opts)
+  return opts
+end
+
+---@class obsidian.yaml.Parser
+---@field opts obsidian.yaml.ParserOpts
 local Parser = {}
+m.Parser = Parser
 
-function Parser.new(self, tokens)
-  self.tokens = tokens
-  self.parse_stack = {}
-  self.refs = {}
-  self.current = 0
+local YamlType = {}
+YamlType.Scalar = "Scalar" -- a boolean, string, number, or NULL
+YamlType.Mapping = "Mapping"
+YamlType.Array = "Array"
+YamlType.ArrayItem = "ArrayItem"
+YamlType.EmptyLine = "EmptyLine"
+m.YamlType = YamlType
+
+---@class vim.NIL
+
+---Create a new Parser.
+---@param opts obsidian.yaml.ParserOpts|?
+---@return obsidian.yaml.Parser
+m.new = function(opts)
+  local self = setmetatable({}, { __index = Parser })
+  self.opts = ParserOpts.normalize(opts and opts or {})
   return self
 end
 
-local string_trim = function(s, what)
-  what = what or " "
-  return s:gsub("^[" .. what .. "]*(.-)[" .. what .. "]*$", "%1")
-end
-
-local table_clone = function(t)
-  local clone = {}
-  for k, v in pairs(t) do
-    clone[k] = v
-  end
-  return clone
-end
-
-local push = function(stack, item)
-  stack[#stack + 1] = item
-end
-
-local pop = function(stack)
-  local item = stack[#stack]
-  stack[#stack] = nil
-  return item
-end
-
-local context = function(str)
-  if type(str) ~= "string" then
-    return ""
-  end
-
-  str = str:sub(0, 25):gsub("\n", "\\n"):gsub('"', '\\"')
-  return ', near "' .. str .. '"'
-end
-
-local word = function(w)
-  return "^(" .. w .. ")([%s%c])"
-end
-
-local tokens = {
-  { "comment", "^#[^\n]*" },
-  { "indent", "^\n( *)" },
-  { "space", "^ +" },
-  { "true", word "enabled", const = true, value = true },
-  { "true", word "true", const = true, value = true },
-  { "true", word "yes", const = true, value = true },
-  { "true", word "on", const = true, value = true },
-  { "false", word "disabled", const = true, value = false },
-  { "false", word "false", const = true, value = false },
-  { "false", word "no", const = true, value = false },
-  { "false", word "off", const = true, value = false },
-  { "null", word "null", const = true, value = nil },
-  { "null", word "Null", const = true, value = nil },
-  { "null", word "NULL", const = true, value = nil },
-  { "null", word "~", const = true, value = nil },
-  { "id", '^"([^"]-)" *(:[%s%c])' },
-  { "id", "^'([^']-)' *(:[%s%c])" },
-  { "string", '^"([^"]-)"', force_text = true },
-  { "string", "^'([^']-)'", force_text = true },
-  { "timestamp", "^(%d%d%d%d)-(%d%d?)-(%d%d?)%s+(%d%d?):(%d%d):(%d%d)%s+(%-?%d%d?):(%d%d)" },
-  { "timestamp", "^(%d%d%d%d)-(%d%d?)-(%d%d?)%s+(%d%d?):(%d%d):(%d%d)%s+(%-?%d%d?)" },
-  { "timestamp", "^(%d%d%d%d)-(%d%d?)-(%d%d?)%s+(%d%d?):(%d%d):(%d%d)" },
-  { "timestamp", "^(%d%d%d%d)-(%d%d?)-(%d%d?)%s+(%d%d?):(%d%d)" },
-  { "timestamp", "^(%d%d%d%d)-(%d%d?)-(%d%d?)%s+(%d%d?)" },
-  { "timestamp", "^(%d%d%d%d)-(%d%d?)-(%d%d?)" },
-  { "doc", "^%-%-%-[^%c]*" },
-  { ",", "^," },
-  { "string", "^%b{} *[^,%c]+", noinline = true },
-  { "{", "^{" },
-  { "}", "^}" },
-  { "string", "^%b[] *[^,%c]+", noinline = true },
-  { "[", "^%[" },
-  { "]", "^%]" },
-  { "-", "^%-", noinline = true },
-  { ":", "^:" },
-  { "pipe", "^(|)(%d*[+%-]?)", sep = "\n" },
-  { "pipe", "^(>)(%d*[+%-]?)", sep = " " },
-  { "id", "^([%w][%w %-_]*)(:[%s%c])" },
-  { "string", "^[^%c]+", noinline = true },
-  { "string", "^[^,%]}%c ]+" },
-}
-
-local tokenize = function(str)
-  local token
-  local row = 0
-  local ignore
-  local indents = 0
-  local lastIndents
-  local stack = {}
-  local indentAmount = 0
-  local inline = false
-  str = str:gsub("\r\n", "\010")
-
-  while #str > 0 do
-    for i in ipairs(tokens) do
-      local captures = {}
-      if not inline or tokens[i].noinline == nil then
-        captures = { str:match(tokens[i][2]) }
-      end
-
-      if #captures > 0 then
-        captures.input = str:sub(0, 25)
-        token = table_clone(tokens[i])
-        token[2] = captures
-        local str2 = str:gsub(tokens[i][2], "", 1)
-        token.raw = str:sub(1, #str - #str2)
-        str = str2
-
-        if token[1] == "{" or token[1] == "[" then
-          inline = true
-        elseif token.const then
-          -- Since word pattern contains last char we're re-adding it
-          str = token[2][2] .. str
-          token.raw = token.raw:sub(1, #token.raw - #token[2][2])
-        elseif token[1] == "id" then
-          -- Since id pattern contains last semi-colon we're re-adding it
-          str = token[2][2] .. str
-          token.raw = token.raw:sub(1, #token.raw - #token[2][2])
-          -- Trim
-          token[2][1] = string_trim(token[2][1])
-        elseif token[1] == "string" then
-          -- Finding numbers
-          local snip = token[2][1]
-          if not token.force_text then
-            if snip:match "^(-?%d+%.%d+)$" or snip:match "^(-?%d+)$" then
-              token[1] = "number"
-            end
-          end
-        elseif token[1] == "comment" then
-          ignore = true
-        elseif token[1] == "indent" then
-          row = row + 1
-          inline = false
-          lastIndents = indents
-          if indentAmount == 0 then
-            indentAmount = #token[2][1]
-          end
-
-          if indentAmount ~= 0 then
-            indents = (#token[2][1] / indentAmount)
-          else
-            indents = 0
-          end
-
-          if indents == lastIndents then
-            ignore = true
-          elseif indents > lastIndents + 2 then
-            error(
-              "SyntaxError: invalid indentation, got "
-                .. tostring(indents)
-                .. " instead of "
-                .. tostring(lastIndents)
-                .. context(token[2].input)
-            )
-          elseif indents > lastIndents + 1 then
-            push(stack, token)
-          elseif indents < lastIndents then
-            local input = token[2].input
-            token = { "dedent", { "", input = "" } }
-            token.input = input
-            while lastIndents > indents + 1 do
-              lastIndents = lastIndents - 1
-              push(stack, token)
-            end
-          end
-        end -- if token[1] == XXX
-        token.row = row
-        break
-      end -- if #captures > 0
-    end
-
-    if not ignore then
-      if token then
-        push(stack, token)
-        token = nil
-      else
-        error("SyntaxError " .. context(str))
-      end
-    end
-
-    ignore = false
-  end
-
-  return stack
-end
-
-Parser.peek = function(self, offset)
-  offset = offset or 1
-  return self.tokens[offset + self.current]
-end
-
-Parser.advance = function(self)
-  self.current = self.current + 1
-  return self.tokens[self.current]
-end
-
-Parser.advanceValue = function(self)
-  return self:advance()[2][1]
-end
-
-Parser.accept = function(self, type)
-  if self:peekType(type) then
-    return self:advance()
-  end
-end
-
-Parser.expect = function(self, type, msg)
-  return self:accept(type) or error(msg .. context(self:peek()[1].input))
-end
-
-Parser.expectDedent = function(self, msg)
-  return self:accept "dedent" or (self:peek() == nil) or error(msg .. context(self:peek()[2].input))
-end
-
-Parser.peekType = function(self, val, offset)
-  return self:peek(offset) and self:peek(offset)[1] == val
-end
-
-Parser.ignore = function(self, items)
-  local advanced
-  repeat
-    advanced = false
-    for _, v in pairs(items) do
-      if self:peekType(v) then
-        self:advance()
-        advanced = true
-      end
-    end
-  until advanced == false
-end
-
-Parser.ignoreSpace = function(self)
-  self:ignore { "space" }
-end
-
-Parser.ignoreWhitespace = function(self)
-  self:ignore { "space", "indent", "dedent" }
-end
-
-Parser.parse = function(self)
-  local ref = nil
-  if self:peekType "string" and not self:peek().force_text then
-    local char = self:peek()[2][1]:sub(1, 1)
-    if char == "&" then
-      ref = self:peek()[2][1]:sub(2)
-      self:advanceValue()
-      self:ignoreSpace()
-    elseif char == "*" then
-      ref = self:peek()[2][1]:sub(2)
-      return self.refs[ref]
-    end
-  end
-
-  local result
-  local c = {
-    indent = self:accept "indent" and 1 or 0,
-    token = self:peek(),
-  }
-  push(self.parse_stack, c)
-
-  if c.token[1] == "doc" then
-    result = self:parseDoc()
-  elseif c.token[1] == "-" then
-    result = self:parseList()
-  elseif c.token[1] == "{" then
-    result = self:parseInlineHash()
-  elseif c.token[1] == "[" then
-    result = self:parseInlineList()
-  elseif c.token[1] == "id" then
-    result = self:parseHash()
-  elseif c.token[1] == "string" then
-    result = self:parseString()
-  elseif c.token[1] == "timestamp" then
-    result = self:parseTimestamp()
-  elseif c.token[1] == "number" then
-    result = tonumber(self:advanceValue())
-  elseif c.token[1] == "pipe" then
-    result = self:parsePipe()
-  elseif c.token.const == true then
-    self:advanceValue()
-    result = c.token.value
-  else
-    error("ParseError: unexpected token '" .. c.token[1] .. "'" .. context(c.token.input))
-  end
-
-  pop(self.parse_stack)
-  while c.indent > 0 do
-    c.indent = c.indent - 1
-    local term = "term " .. c.token[1] .. ": '" .. c.token[2][1] .. "'"
-    self:expectDedent("last " .. term .. " is not properly dedented")
-  end
-
-  if ref then
-    self.refs[ref] = result
-  end
-  return result
-end
-
-Parser.parseDoc = function(self)
-  self:accept "doc"
-  return self:parse()
-end
-
-Parser.inline = function(self)
-  local current = self:peek(0)
-  if not current then
-    return {}, 0
-  end
-
-  local inline = {}
-  local i = 0
-
-  while self:peek(i) and not self:peekType("indent", i) and current.row == self:peek(i).row do
-    inline[self:peek(i)[1]] = true
-    i = i - 1
-  end
-  return inline, -i
-end
-
-Parser.isInline = function(self)
-  local _, i = self:inline()
-  return i > 0
-end
-
-Parser.parent = function(self, level)
-  level = level or 1
-  return self.parse_stack[#self.parse_stack - level]
-end
-
-Parser.parentType = function(self, type, level)
-  return self:parent(level) and self:parent(level).token[1] == type
-end
-
-Parser.parseString = function(self)
-  if self:isInline() then
-    local result = self:advanceValue()
-
-    --[[
-      - a: this looks
-        flowing: but is
-        no: string
-    --]]
-    local types = self:inline()
-    if types["id"] and types["-"] then
-      if not self:peekType "indent" or not self:peekType("indent", 2) then
-        return result
-      end
-    end
-
-    --[[
-      a: 1
-      b: this is
-        a flowing string
-        example
-      c: 3
-    --]]
-    if self:peekType "indent" then
-      self:expect("indent", "text block needs to start with indent")
-      local addtl = self:accept "indent"
-
-      result = result .. "\n" .. self:parseTextBlock "\n"
-
-      self:expectDedent "text block ending dedent missing"
-      if addtl then
-        self:expectDedent "text block ending dedent missing"
-      end
-    end
-    return result
-  else
-    --[[
-      a: 1
-      b:
-        this is also
-        a flowing string
-        example
-      c: 3
-    --]]
-    return self:parseTextBlock "\n"
-  end
-end
-
-Parser.parsePipe = function(self)
-  local pipe = self:expect "pipe"
-  self:expect("indent", "text block needs to start with indent")
-  local result = self:parseTextBlock(pipe.sep)
-  self:expectDedent "text block ending dedent missing"
-  return result
-end
-
-Parser.parseTextBlock = function(self, sep)
-  local token = self:advance()
-  local result = string_trim(token.raw, "\n")
-  local indents = 0
-  while self:peek() ~= nil and (indents > 0 or not self:peekType "dedent") do
-    local newtoken = self:advance()
-    while token.row < newtoken.row do
-      result = result .. sep
-      token.row = token.row + 1
-    end
-    if newtoken[1] == "indent" then
-      indents = indents + 1
-    elseif newtoken[1] == "dedent" then
-      indents = indents - 1
-    else
-      result = result .. string_trim(newtoken.raw, "\n")
-    end
-  end
-  return result
-end
-
-Parser.parseHash = function(self, hash)
-  hash = hash or {}
-  local indents = 0
-
-  if self:isInline() then
-    local id = self:advanceValue()
-    self:expect(":", "expected semi-colon after id")
-    self:ignoreSpace()
-    if self:accept "indent" then
-      indents = indents + 1
-      hash[id] = self:parse()
-    else
-      hash[id] = self:parse()
-      if self:accept "indent" then
-        indents = indents + 1
-      end
-    end
-    self:ignoreSpace()
-  end
-
-  while self:peekType "id" do
-    local id = self:advanceValue()
-    self:expect(":", "expected semi-colon after id")
-    self:ignoreSpace()
-    hash[id] = self:parse()
-    self:ignoreSpace()
-  end
-
-  while indents > 0 do
-    self:expectDedent "expected dedent"
-    indents = indents - 1
-  end
-
-  return hash
-end
-
-Parser.parseInlineHash = function(self)
-  local id
-  local hash = {}
-  local i = 0
-
-  self:accept "{"
-  while not self:accept "}" do
-    self:ignoreSpace()
-    if i > 0 then
-      self:expect(",", "expected comma")
-    end
-
-    self:ignoreWhitespace()
-    if self:peekType "id" then
-      id = self:advanceValue()
-      if id then
-        self:expect(":", "expected semi-colon after id")
-        self:ignoreSpace()
-        hash[id] = self:parse()
-        self:ignoreWhitespace()
-      end
-    end
-
-    i = i + 1
-  end
-  return hash
-end
-
-Parser.parseList = function(self)
-  local list = {}
-  while self:accept "-" do
-    self:ignoreSpace()
-    list[#list + 1] = self:parse()
-
-    self:ignoreSpace()
-  end
-  return list
-end
-
-Parser.parseInlineList = function(self)
-  local list = {}
-  local item = {}
-
-  local maybe_add_item = function()
-    if #item > 0 then
-      list[#list + 1] = table.concat(item, " ")
-      item = {}
-    end
-  end
-
-  self:accept "["
-  while true do
-    if self:accept "]" then
-      maybe_add_item()
-      -- End of list
-      break
-    end
-
-    if self:accept "," and #item > 0 then
-      -- End of item
-      maybe_add_item()
-      self:ignoreSpace()
-    end
-
-    self:ignoreSpace()
-    item[#item + 1] = self:parse()
-  end
-
-  return list
-end
-
-Parser.parseTimestamp = function(self)
-  local capture = self:advance()[2]
-
-  return os.time {
-    year = capture[1],
-    month = capture[2],
-    day = capture[3],
-    hour = capture[4] or 0,
-    min = capture[5] or 0,
-    sec = capture[6] or 0,
-    isdst = false,
-  } - os.time { year = 1970, month = 1, day = 1, hour = 8 }
-end
-
-local yaml = {}
-
-local count_indent = function(str)
-  local indent = 0
-  for i = 1, #str do
-    if string.sub(i, i) == " " then
-      indent = indent + 1
-    else
-      break
-    end
-  end
-  return indent
-end
-
-local preprocess = function(str)
+---Parse a YAML string.
+---@param str string
+---@return any
+Parser.parse = function(self, str)
+  -- Collect and pre-process lines.
   local lines = {}
-  local current_indent = 0
-  for line in str:gmatch "[^\r\n]+" do
-    line = string.gsub(line, "%s+$", "")
-    local indent = count_indent(line)
+  local base_indent = 0
+  for raw_line in str:gmatch "[^\r\n]+" do
+    local ok, result = pcall(Line.new, raw_line, base_indent)
+    if ok then
+      local line = result
+      if #lines == 0 then
+        base_indent = line.indent
+        line.indent = 0
+      end
+      table.insert(lines, line)
+    else
+      local err = result
+      error(self:_error_msg(tostring(err), #lines + 1))
+    end
+  end
 
-    -- HACK: If the previous line is something like 'foo:' and the current line has the same indent
-    -- but is not a list item, then we change the previous line to 'foo: nil' since otherwise the parser
-    -- would not parse that correctly.
-    if
-      indent == current_indent
-      and lines[#lines] ~= nil
-      and lines[#lines]:sub(#lines[#lines]) == ":"
-      and not line:match "^%s*-"
-    then
-      lines[#lines] = lines[#lines] .. " null"
+  -- Now iterate over the root elements, differing to `self:_parse_next()` to recurse into child elements.
+  ---@type any
+  local root_value = nil
+  ---@type table|?
+  local parent = nil
+  local current_indent = 0
+  local i = 1
+  while i <= #lines do
+    local line = lines[i]
+
+    if line:is_empty() then
+      -- Empty line, skip it.
+      i = i + 1
+    elseif line.indent == current_indent then
+      local value
+      local value_type
+      i, value, value_type = self:_parse_next(lines, i)
+      assert(value_type ~= YamlType.EmptyLine)
+      if root_value == nil and line.indent == 0 then
+        -- Set the root value.
+        if value_type == YamlType.ArrayItem then
+          root_value = { value }
+        else
+          root_value = value
+        end
+
+        -- The parent must always be a table (array or mapping), so set that to the root value now
+        -- if we have a table.
+        if type(root_value) == "table" then
+          parent = root_value
+        end
+      elseif util.is_array(parent) and value_type == YamlType.ArrayItem then
+        -- Add value to parent array.
+        parent[#parent + 1] = value
+      elseif util.is_mapping(parent) and value_type == YamlType.Mapping then
+        assert(parent ~= nil) -- for type checking
+        -- Add value to parent mapping.
+        for key, item in pairs(value) do
+          -- Check for duplicate keys.
+          if util.mapping_has_key(parent, key) then
+            error(self:_error_msg("duplicate key '" .. key .. "' found in table", i, line.content))
+          else
+            parent[key] = item
+          end
+        end
+      else
+        error(self:_error_msg("unexpected value", i, line.content))
+      end
+    else
+      error(self:_error_msg("invalid indentation", i))
+    end
+    current_indent = line.indent
+  end
+
+  return root_value
+end
+
+---Parse the next single item, recursing to child blocks if necessary.
+---@param self obsidian.yaml.Parser
+---@param lines obsidian.yaml.Line[]
+---@param i integer
+---@param text string|?
+---@return integer, any, string
+Parser._parse_next = function(self, lines, i, text)
+  local line = lines[i]
+  if text == nil then
+    -- Skip empty lines.
+    while line:is_empty() and i <= #lines do
+      i = i + 1
+      line = lines[i]
+    end
+    if line:is_empty() then
+      return i, nil, YamlType.EmptyLine
+    end
+    text = util.strip_comments(line.content)
+  end
+
+  local _, ok, value
+
+  -- First just check for a string enclosed in quotes.
+  if util.has_enclosing_chars(text) then
+    _, _, value = self:_parse_string(i, text)
+    return i + 1, value, YamlType.Scalar
+  end
+
+  -- Check for array item, like `- foo`.
+  ok, i, value = self:_try_parse_array_item(lines, i, text)
+  if ok then
+    return i, value, YamlType.ArrayItem
+  end
+
+  -- Check for a block string field, like `foo: |`.
+  ok, i, value = self:_try_parse_block_string(lines, i, text)
+  if ok then
+    return i, value, YamlType.Mapping
+  end
+
+  -- Check for any other `key: value` fields.
+  ok, i, value = self:_try_parse_field(lines, i, text)
+  if ok then
+    return i, value, YamlType.Mapping
+  end
+
+  -- Otherwise we have an inline value.
+  local value_type
+  value, value_type = self:_parse_inline_value(i, text)
+  return i + 1, value, value_type
+end
+
+---@return vim.NIL|nil
+Parser._new_null = function(self)
+  if self.opts.luanil then
+    return nil
+  else
+    return vim.NIL
+  end
+end
+
+---@param self obsidian.yaml.Parser
+---@param msg string
+---@param line_num integer
+---@param line_text string|?
+---@return string
+---@diagnostic disable-next-line: unused-local
+Parser._error_msg = function(self, msg, line_num, line_text)
+  local full_msg = "[line=" .. tostring(line_num) .. "] " .. msg
+  if line_text ~= nil then
+    full_msg = full_msg .. " (text='" .. line_text .. "')"
+  end
+  return full_msg
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param lines obsidian.yaml.Line[]
+---@param text string|?
+---@return boolean, integer, any
+Parser._try_parse_field = function(self, lines, i, text)
+  local line = lines[i]
+  text = text and text or util.strip_comments(line.content)
+  local _, key, value
+  _, _, key, value = string.find(text, "([a-zA-Z0-9_-]+):(.*)")
+  value = value and util.strip_whitespace(value) or nil
+  if value == "" then
+    value = nil
+  end
+
+  if key ~= nil and value ~= nil then
+    -- This is a mapping, e.g. `foo: 1`.
+    local out = {}
+    value = self:_parse_inline_value(i, value)
+    local j = i + 1
+    -- Check for multi-line string here.
+    local next_line = lines[j]
+    if type(value) == "string" and next_line ~= nil and next_line.indent > line.indent then
+      local next_indent = next_line.indent
+      while next_line ~= nil and next_line.indent == next_indent do
+        local next_value_str = util.strip_comments(next_line.content)
+        if string.len(next_value_str) > 0 then
+          local next_value = self:_parse_inline_value(j, next_line.content)
+          if type(next_value) ~= "string" then
+            error(self:_error_msg("expected a string, found " .. type(next_value), j, next_line.content))
+          end
+          value = value .. " " .. next_value
+        end
+        j = j + 1
+        next_line = lines[j]
+      end
+    end
+    out[key] = value
+    return true, j, out
+  elseif key ~= nil then
+    local out = {}
+    local next_line = lines[i + 1]
+    local j = i + 1
+    if next_line ~= nil and next_line.indent >= line.indent and vim.startswith(next_line.content, "- ") then
+      -- This is the start of an array.
+      local array
+      j, array = self:_parse_array(lines, j)
+      out[key] = array
+    elseif next_line ~= nil and next_line.indent > line.indent then
+      -- This is the start of a mapping.
+      local mapping
+      j, mapping = self:_parse_mapping(j, lines)
+      out[key] = mapping
+    else
+      -- This is an implicit null field.
+      out[key] = self:_new_null()
+    end
+    return true, j, out
+  else
+    return false, i, nil
+  end
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param lines obsidian.yaml.Line[]
+---@param text string|?
+---@return boolean, integer, any
+Parser._try_parse_block_string = function(self, lines, i, text)
+  local line = lines[i]
+  text = text and text or util.strip_comments(line.content)
+  local _, _, block_key = string.find(text, "([a-zA-Z0-9_-]+):%s?|")
+  if block_key ~= nil then
+    local block_lines = {}
+    local j = i + 1
+    local next_line = lines[j]
+    if next_line == nil then
+      error(self:_error_msg("expected another line", i, text))
+    end
+    local item_indent = next_line.indent
+    while j <= #lines do
+      next_line = lines[j]
+      if next_line ~= nil and next_line.indent >= item_indent then
+        j = j + 1
+        table.insert(block_lines, util.lstrip_whitespace(next_line.raw_content, item_indent))
+      else
+        break
+      end
+    end
+    local out = {}
+    out[block_key] = table.concat(block_lines, "\n")
+    return true, j, out
+  else
+    return false, i, nil
+  end
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param lines obsidian.yaml.Line[]
+---@param text string|?
+---@return boolean, integer, any
+Parser._try_parse_array_item = function(self, lines, i, text)
+  local line = lines[i]
+  text = text and text or util.strip_comments(line.content)
+  if vim.startswith(text, "- ") then
+    local _, _, array_item_str = string.find(text, "- (.*)")
+    local value
+    -- Check for null entry.
+    if array_item_str == "" then
+      value = self:_new_null()
+      i = i + 1
+    else
+      i, value = self:_parse_next(lines, i, array_item_str)
+    end
+    return true, i, value
+  else
+    return false, i, nil
+  end
+end
+
+---@param self obsidian.yaml.Parser
+---@param lines obsidian.yaml.Line[]
+---@param i integer
+---@return integer, any[]
+Parser._parse_array = function(self, lines, i)
+  local out = {}
+  local item_indent = lines[i].indent
+  while i <= #lines do
+    local line = lines[i]
+    if line.indent == item_indent and vim.startswith(line.content, "- ") then
+      local is_array_item, value
+      is_array_item, i, value = self:_try_parse_array_item(lines, i)
+      assert(is_array_item)
+      out[#out + 1] = value
+    elseif line:is_empty() then
+      i = i + 1
+    else
+      break
+    end
+  end
+  if vim.tbl_isempty(out) then
+    error(self:_error_msg("tried to parse an array but didn't find any entries", i))
+  end
+  return i, out
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param lines obsidian.yaml.Line[]
+---@return integer, table
+Parser._parse_mapping = function(self, i, lines)
+  local out = {}
+  local item_indent = lines[i].indent
+  while i <= #lines do
+    local line = lines[i]
+    if line.indent == item_indent then
+      local value, value_type
+      i, value, value_type = self:_parse_next(lines, i)
+      if value_type == YamlType.Mapping then
+        for key, item in pairs(value) do
+          -- Check for duplicate keys.
+          if util.mapping_has_key(out, key) then
+            error(self:_error_msg("duplicate key '" .. key .. "' found in table", i))
+          else
+            out[key] = item
+          end
+        end
+      else
+        error(self:_error_msg("unexpected value found found in table", i))
+      end
+    else
+      break
+    end
+  end
+  if vim.tbl_isempty(out) then
+    error(self:_error_msg("tried to parse a mapping but didn't find any entries to parse", i))
+  end
+  return i, out
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param text string
+---@return any, string
+Parser._parse_inline_value = function(self, i, text)
+  for _, parse_func_and_type in ipairs {
+    { self._parse_number, YamlType.Scalar },
+    { self._parse_null, YamlType.Scalar },
+    { self._parse_boolean, YamlType.Scalar },
+    { self._parse_inline_array, YamlType.Array },
+    { self._parse_inline_mapping, YamlType.Mapping },
+    { self._parse_string, YamlType.Scalar },
+  } do
+    local parse_func, parse_type = unpack(parse_func_and_type)
+    local ok, errmsg, res = parse_func(self, i, text)
+    if ok then
+      return res, parse_type
+    elseif errmsg ~= nil then
+      error(errmsg)
+    end
+  end
+  -- Should never get here because we always fall back to parsing as a string.
+  error(self:_error_msg("unable to parse", i))
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param text string
+---@return boolean, string|?, any[]|?
+Parser._parse_inline_array = function(self, i, text)
+  local str
+  if vim.startswith(text, "[") then
+    str = string.sub(text, 2)
+  else
+    return false, nil, nil
+  end
+
+  if vim.endswith(str, "]") then
+    str = string.sub(str, 1, -2)
+  else
+    return false, self:_error_msg("invalid inline array", i, text), nil
+  end
+
+  local out = {}
+  while string.len(str) > 0 do
+    local item_str
+    if vim.startswith(str, "[") then
+      -- Nested inline array.
+      item_str, str = util.next_item(str, { "]" }, true)
+    elseif vim.startswith(str, "{") then
+      -- Nested inline mapping.
+      item_str, str = util.next_item(str, { "}" }, true)
+    else
+      -- Regular item.
+      item_str, str = util.next_item(str, { "," }, false)
+    end
+    if item_str == nil then
+      return false, self:_error_msg("invalid inline array", i, text), nil
+    end
+    out[#out + 1] = self:_parse_inline_value(i, item_str)
+
+    if vim.startswith(str, ",") then
+      str = string.sub(str, 2)
+    end
+    str = util.lstrip_whitespace(str)
+  end
+
+  return true, nil, out
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param text string
+---@return boolean, string|?, table|?
+Parser._parse_inline_mapping = function(self, i, text)
+  local str
+  if vim.startswith(text, "{") then
+    str = string.sub(text, 2)
+  else
+    return false, nil, nil
+  end
+
+  if vim.endswith(str, "}") then
+    str = string.sub(str, 1, -2)
+  else
+    return false, self:_error_msg("invalid inline mapping", i, text), nil
+  end
+
+  local out = {}
+  while string.len(str) > 0 do
+    -- Parse the key.
+    local key_str
+    key_str, str = util.next_item(str, { ":" }, false)
+    if key_str == nil then
+      return false, self:_error_msg("invalid inline mapping", i, text), nil
+    end
+    local _, _, key = self:_parse_string(i, key_str)
+
+    -- Parse the value.
+    str = util.lstrip_whitespace(str)
+    local value_str
+    if vim.startswith(str, "[") then
+      -- Nested inline array.
+      value_str, str = util.next_item(str, { "]" }, true)
+    elseif vim.startswith(str, "{") then
+      -- Nested inline mapping.
+      value_str, str = util.next_item(str, { "}" }, true)
+    else
+      -- Regular item.
+      value_str, str = util.next_item(str, { "," }, false)
+    end
+    if value_str == nil then
+      return false, self:_error_msg("invalid inline mapping", i, text), nil
+    end
+    local value = self:_parse_inline_value(i, value_str)
+    if not util.mapping_has_key(out, key) then
+      out[key] = value
+    else
+      return false, self:_error_msg("duplicate key '" .. key .. "' found in inline mapping", i, text), nil
     end
 
-    table.insert(lines, line)
-    current_indent = indent
+    if vim.startswith(str, ",") then
+      str = util.lstrip_whitespace(string.sub(str, 2))
+    end
   end
-  str = table.concat(lines, "\n")
-  if str:sub(#str) ~= "\n" then
-    -- Need a new line at the end for some parsing to work.
-    str = str .. "\n"
-  end
+
+  return true, nil, out
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param text string
+---@return boolean, string|?, string
+---@diagnostic disable-next-line: unused-local
+Parser._parse_string = function(self, i, text)
+  return true, nil, util.strip_enclosing_chars(util.strip_whitespace(text))
+end
+
+---Parse a string value.
+---@param self obsidian.yaml.Parser
+---@param text string
+---@return string
+Parser.parse_string = function(self, text)
+  local _, _, str = self:_parse_string(1, util.strip_comments(text))
   return str
 end
 
----Deserialize a YAML string.
-yaml.loads = function(str)
-  local parser = Parser:new(tokenize(preprocess(str)))
-  return parser:parse()
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param text string
+---@return boolean, string|?, number|?
+---@diagnostic disable-next-line: unused-local
+Parser._parse_number = function(self, i, text)
+  local out = tonumber(text)
+  if out == nil then
+    return false, nil, nil
+  else
+    return true, nil, out
+  end
 end
 
-return yaml
+---Parse a number value.
+---@param self obsidian.yaml.Parser
+---@param text string
+---@return number
+Parser.parse_number = function(self, text)
+  local ok, errmsg, res = self:_parse_number(1, util.strip_whitespace(util.strip_comments(text)))
+  if not ok then
+    errmsg = errmsg and errmsg or self:_error_msg("failed to parse a number", 1, text)
+    error(errmsg)
+  else
+    assert(res ~= nil)
+    return res
+  end
+end
+
+---@param self obsidian.yaml.Parser
+---@param i integer
+---@param text string
+---@return boolean, string|?, boolean|?
+---@diagnostic disable-next-line: unused-local
+Parser._parse_boolean = function(self, i, text)
+  if text == "true" then
+    return true, nil, true
+  elseif text == "false" then
+    return true, nil, false
+  else
+    return false, nil, nil
+  end
+end
+
+---Parse a boolean value.
+---@param self obsidian.yaml.Parser
+---@param text string
+---@return boolean
+Parser.parse_boolean = function(self, text)
+  local ok, errmsg, res = self:_parse_boolean(1, util.strip_whitespace(util.strip_comments(text)))
+  if not ok then
+    errmsg = errmsg and errmsg or self:_error_msg("failed to parse a boolean", 1, text)
+    error(errmsg)
+  else
+    assert(res ~= nil)
+    return res
+  end
+end
+
+---@param self obsidian.yaml.Parser
+---@param text string
+---@return boolean, string|?, vim.NIL|nil
+---@diagnostic disable-next-line: unused-local
+Parser._parse_null = function(self, i, text)
+  if text == "null" or text == "" then
+    return true, nil, self:_new_null()
+  else
+    return false, nil, nil
+  end
+end
+
+---Parse a NULL value.
+---@param self obsidian.yaml.Parser
+---@param text string
+---@return vim.NIL|nil
+Parser.parse_null = function(self, text)
+  local ok, errmsg, res = self:_parse_null(1, util.strip_whitespace(util.strip_comments(text)))
+  if not ok then
+    errmsg = errmsg and errmsg or self:_error_msg("failed to parse a null value", 1, text)
+    error(errmsg)
+  else
+    return res
+  end
+end
+
+---Deserialize a YAML string.
+m.loads = function(str)
+  local parser = m.new()
+  return parser:parse(str)
+end
+
+return m

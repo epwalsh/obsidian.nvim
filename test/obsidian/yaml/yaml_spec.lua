@@ -1,7 +1,6 @@
 local yaml = require "obsidian.yaml"
 
 describe("obsidian.yaml.dumps", function()
-  yaml.set_parser "native"
   it("should dump numbers", function()
     assert.equals(yaml.dumps(1), "1")
   end)
@@ -37,9 +36,16 @@ describe("obsidian.yaml.dumps", function()
   it("should dump tables with empty array", function()
     assert.equals(yaml.dumps { a = {} }, "a: []")
   end)
+  it("should quote strings that contain special characters", function()
+    assert.equals(yaml.dumps { a = "research project: staged training" }, 'a: "research project: staged training"')
+  end)
+  it("should escape double quotes in strings", function()
+    assert.equals(yaml.dumps { a = 'his name is "Winny the Poo"' }, 'a: "his name is \\"Winny the Poo\\""')
+  end)
 end)
 
 describe("obsidian.yaml.native", function()
+  yaml.set_parser "native"
   it("should parse inline lists with quotes on items", function()
     local data = yaml.loads 'aliases: ["Foo", "Bar", "Foo Baz"]'
     assert.equals(type(data), "table")

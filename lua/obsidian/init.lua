@@ -112,7 +112,6 @@ obsidian.setup = function(opts)
   if opts.completion.nvim_cmp then
     -- Inject Obsidian as a cmp source when reading a buffer in the vault.
     local cmp_setup = function()
-      echo.info "installing cmp source"
       local cmp = require "cmp"
       local sources = {
         { name = "obsidian", option = opts },

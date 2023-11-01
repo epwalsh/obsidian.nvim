@@ -42,10 +42,10 @@ dumps = function(x, indent, order)
   local indent_str = string.rep(" ", indent)
 
   if type(x) == "string" then
-    -- TODO: make this more robust
-    if string.match(x, "%w") then
+    if string.match(x, "^[%w%d%s'_]+$") then
       return { indent_str .. x }
     else
+      x = string.gsub(x, '"', '\\"')
       return { indent_str .. [["]] .. x .. [["]] }
     end
   end
