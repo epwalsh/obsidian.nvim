@@ -33,19 +33,20 @@ ThreadPoolExecutor.submit = function(self, fn, callback, ...)
   ctx:queue(...)
 end
 
----Map a function over an array of task args. The callback is called with an array of the results
+---Map a function over a generator or array of task args. The callback is called with an array of the results
 ---once all tasks have finished. The order of the results passed to the callback will be the same
 ---as the order of the corresponding task args.
 ---
 ---@param self obsidian.ThreadPoolExecutor
 ---@param fn function
 ---@param callback function|?
----@param task_args table[]
+---@param task_args table[]|function
 ---@diagnostic disable-next-line: unused-local
 ThreadPoolExecutor.map = function(self, fn, callback, task_args)
   local results = {}
-  local num_tasks = #task_args
+  local num_tasks = 0
   local tasks_completed = 0
+  local all_submitted = false
   local tx, rx = channel.oneshot()
 
   local function collect_results()
@@ -53,16 +54,32 @@ ThreadPoolExecutor.map = function(self, fn, callback, task_args)
     return results
   end
 
-  for i, args in ipairs(task_args) do
-    local function task_done(...)
+  local function get_task_done_fn(i)
+    return function(...)
       tasks_completed = tasks_completed + 1
       results[i] = { ... }
-      if tasks_completed == num_tasks then
+      if all_submitted and tasks_completed == num_tasks then
         tx()
       end
     end
+  end
 
-    self:submit(fn, task_done, unpack(args))
+  if type(task_args) == "table" then
+    num_tasks = #task_args
+
+    for i, args in ipairs(task_args) do
+      self:submit(fn, get_task_done_fn(i), unpack(args))
+    end
+  elseif type(task_args) == "function" then
+    local i = 0
+    local args = task_args()
+    while args ~= nil do
+      i = i + 1
+      num_tasks = num_tasks + 1
+      self:submit(fn, get_task_done_fn(i), unpack(args))
+      args = task_args()
+    end
+    all_submitted = true
   end
 
   async.run(collect_results, callback and callback or function(_) end)
