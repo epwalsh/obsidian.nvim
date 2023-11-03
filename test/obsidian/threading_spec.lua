@@ -18,7 +18,7 @@ describe("ThreadPoolExecutor.map()", function()
 
   it("should maintain order of results with a generator of args", function()
     local executor = ThreadPoolExecutor.new()
-    local task_args = { { 1 }, { 2 }, { 3 }, { 4 } }
+    local task_args = { 1, 2, 3, 4 }
     local i = 0
     local function task_args_gen()
       i = i + 1

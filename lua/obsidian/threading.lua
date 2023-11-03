@@ -72,12 +72,12 @@ ThreadPoolExecutor.map = function(self, fn, callback, task_args)
     end
   elseif type(task_args) == "function" then
     local i = 0
-    local args = task_args()
-    while args ~= nil do
+    local args = { task_args() }
+    while args[1] ~= nil do
       i = i + 1
       num_tasks = num_tasks + 1
       self:submit(fn, get_task_done_fn(i), unpack(args))
-      args = task_args()
+      args = { task_args() }
     end
     all_submitted = true
   end
