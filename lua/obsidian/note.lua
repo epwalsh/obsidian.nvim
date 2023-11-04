@@ -2,6 +2,8 @@ local Path = require "plenary.path"
 local yaml = require "obsidian.yaml"
 local util = require "obsidian.util"
 local echo = require "obsidian.echo"
+local with = require("plenary.context_manager").with
+local open = require("plenary.context_manager").open
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
@@ -102,15 +104,12 @@ note.from_file = function(path, root)
     echo.fail "note path cannot be nil"
     error()
   end
-  local f = io.open(vim.fs.normalize(tostring(path)))
-  if f == nil then
-    echo.fail("failed to read file at " .. tostring(path))
-    error()
-  end
-  local n = note.from_lines(function()
-    return f:lines()
-  end, path, root)
-  f:close()
+  local n
+  with(open(vim.fs.normalize(tostring(path))), function(reader)
+    n = note.from_lines(function()
+      return reader:lines()
+    end, path, root)
+  end)
   return n
 end
 
