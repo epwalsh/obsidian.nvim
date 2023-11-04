@@ -114,6 +114,25 @@ note.from_file = function(path, root)
   return n
 end
 
+---An async version of `.from_file()`.
+---
+---@param path string|Path
+---@param root string|Path|?
+---@return obsidian.Note
+note.from_file_async = function(path, root)
+  local File = require("obsidian.async").File
+  if path == nil then
+    echo.fail "note path cannot be nil"
+    error()
+  end
+  local f = File.open(vim.fs.normalize(tostring(path)))
+  local n = note.from_lines(function()
+    return f:lines()
+  end, path, root)
+  f:close()
+  return n
+end
+
 ---Initialize a note from a buffer.
 ---
 ---@param bufnr integer|?

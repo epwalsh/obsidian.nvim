@@ -238,7 +238,7 @@ client.search_async = function(self, search, search_opts, callback)
 
   local function task_fn(path, dir)
     local Note = require "obsidian.note"
-    return Note.from_file(path, dir)
+    return Note.from_file_async(path, dir)
   end
 
   local function task_gen()

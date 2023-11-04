@@ -173,4 +173,62 @@ ThreadPoolExecutor.submit = function(self, fn, callback, ...)
   ctx:queue(...)
 end
 
+---Represents a file.
+---@class obsidian.File
+---@field fd userdata
+local File = {}
+M.File = File
+
+---@param path string
+---@return obsidian.File
+File.open = function(path)
+  local self = setmetatable({}, { __index = File })
+  local err, fd = async.uv.fs_open(path, "r", 438)
+  assert(not err, err)
+  self.fd = fd
+  return self
+end
+
+---Close the file.
+---@param self obsidian.File
+File.close = function(self)
+  local err = async.uv.fs_close(self.fd)
+  assert(not err, err)
+end
+
+---Get at iterator over lines in the file.
+File.lines = function(self)
+  local offset = 0
+  local chunk_size = 1024
+  local buffer = ""
+  local eof_reached = false
+
+  local lines = function()
+    local idx = string.find(buffer, "[\r\n]")
+    while idx == nil and not eof_reached do
+      ---@diagnostic disable-next-line: redefined-local
+      local err, data
+      err, data = async.uv.fs_read(self.fd, chunk_size, offset)
+      assert(not err, err)
+      if string.len(data) == 0 then
+        eof_reached = true
+      else
+        buffer = buffer .. data
+        offset = offset + string.len(data)
+        idx = string.find(buffer, "[\r\n]")
+      end
+    end
+
+    if idx ~= nil then
+      local line = string.sub(buffer, 1, idx)
+      buffer = string.sub(buffer, idx + 1)
+      return line
+    else
+      return nil
+    end
+  end
+
+  return lines
+end
+
 return M
