@@ -178,42 +178,79 @@ client.vault = function(self)
   return nil
 end
 
+client._search_iter = function(self, search, search_opts)
+  search_opts = search_opts and (search_opts .. " ") or ""
+  local search_results = obsidian.util.search(self.dir, search, search_opts .. "-m 1")
+  local find_results = obsidian.util.find(self.dir, search, self.opts.sort_by, self.opts.sort_reversed)
+
+  local found = {}
+
+  return function()
+    local content_match = search_results()
+    if content_match ~= nil then
+      local path = vim.fs.normalize(content_match.path.text)
+      found[path] = true
+      return path
+    end
+
+    -- keep looking until we get a new match that we haven't seen yet.
+    while true do
+      local path_match = find_results()
+      if path_match ~= nil then
+        local path = vim.fs.normalize(path_match)
+        if not found[path] then
+          found[path] = true
+          return path
+        end
+      else
+        return nil
+      end
+    end
+  end
+end
+
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
 ---@param search_opts string|?
 ---@return function
 client.search = function(self, search, search_opts)
-  search_opts = search_opts and (search_opts .. " ") or ""
-  local search_results = obsidian.util.search(self.dir, search, search_opts .. "-m 1")
-  local find_results = obsidian.util.find(self.dir, search, self.opts.sort_by, self.opts.sort_reversed)
-
-  local found = {}
-  local note = nil
+  local next_path = self:_search_iter(search, search_opts)
 
   ---@return obsidian.Note|?
   return function()
-    local content_match = search_results()
-    if content_match ~= nil then
-      note = obsidian.note.from_file(content_match.path.text, self.dir)
-      found[#found + 1] = note.id
-      return note
+    local path = next_path()
+    if path ~= nil then
+      return obsidian.note.from_file(path, self.dir)
+    else
+      return nil
     end
-
-    local path_match = find_results()
-    note = path_match ~= nil and obsidian.note.from_file(path_match, self.dir) or nil
-    -- keep looking until we get a new match that we haven't seen yet.
-    while path_match ~= nil and note ~= nil and obsidian.util.contains(found, note.id) do
-      path_match = find_results()
-      note = path_match ~= nil and obsidian.note.from_file(path_match, self.dir) or nil
-    end
-
-    if note ~= nil then
-      return note
-    end
-
-    return nil
   end
+end
+
+---An async version of `search` that runs the callback with an array of all matching notes.
+---@param search string
+---@param search_opts string|?
+---@param callback function
+client.search_async = function(self, search, search_opts, callback)
+  local next_path = self:_search_iter(search, search_opts)
+  local executor = require("obsidian.async").AsyncExecutor.new()
+
+  local function task_fn(path, dir)
+    local Note = require "obsidian.note"
+    return Note.from_file(path, dir)
+  end
+
+  local function task_gen()
+    local path = next_path()
+    if path ~= nil then
+      return path, tostring(self.dir)
+    else
+      return nil
+    end
+  end
+
+  executor:map(task_fn, callback, task_gen)
 end
 
 ---Create a new Zettel ID
