@@ -178,9 +178,12 @@ client.vault = function(self)
   return nil
 end
 
+---@param search string
+---@param search_opts string[]|?
+---@return function
 client._search_iter = function(self, search, search_opts)
-  search_opts = search_opts and (search_opts .. " ") or ""
-  local search_results = obsidian.util.search(self.dir, search, search_opts .. "-m 1")
+  search_opts = search_opts and search_opts or {}
+  local search_results = obsidian.util.search(self.dir, search, vim.tbl_flatten { search_opts, "-m=1" })
   local find_results = obsidian.util.find(self.dir, search, self.opts.sort_by, self.opts.sort_reversed)
 
   local found = {}
@@ -212,7 +215,7 @@ end
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
----@param search_opts string|?
+---@param search_opts string[]|?
 ---@return function
 client.search = function(self, search, search_opts)
   local next_path = self:_search_iter(search, search_opts)
@@ -230,7 +233,7 @@ end
 
 ---An async version of `search` that runs the callback with an array of all matching notes.
 ---@param search string
----@param search_opts string|?
+---@param search_opts string[]|?
 ---@param callback function
 client.search_async = function(self, search, search_opts, callback)
   local next_path = self:_search_iter(search, search_opts)
@@ -250,7 +253,7 @@ client.search_async = function(self, search, search_opts, callback)
     end
   end
 
-  executor:map(task_fn, callback, task_gen)
+  executor:map(task_fn, task_gen, callback)
 end
 
 ---Create a new Zettel ID
@@ -472,7 +475,7 @@ client.resolve_note = function(self, query)
 
   local query_lwr = string.lower(query)
   local maybe_matches = {}
-  for note in self:search(query, "--ignore-case") do
+  for note in self:search(query, { "--ignore-case" }) do
     if query == note.id or query == note:display_name() or obsidian.util.contains(note.aliases, query) then
       -- Exact match! We're done!
       return note

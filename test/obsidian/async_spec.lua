@@ -10,13 +10,17 @@ describe("AsyncExecutor.map()", function()
     local executor = AsyncExecutor.new()
     local task_args = { { 1 }, { 2 }, { 3 }, { 4 } }
 
-    executor:map(function(id)
-      local uv = vim.loop
-      uv.sleep(100)
-      return id
-    end, function(results)
-      assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
-    end, task_args)
+    executor:map(
+      function(id)
+        local uv = vim.loop
+        uv.sleep(100)
+        return id
+      end,
+      task_args,
+      function(results)
+        assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
+      end
+    )
 
     executor:join(500)
   end)
@@ -30,13 +34,17 @@ describe("AsyncExecutor.map()", function()
       return task_args[i]
     end
 
-    executor:map(function(id)
-      local uv = vim.loop
-      uv.sleep(100)
-      return id
-    end, function(results)
-      assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
-    end, task_args_gen)
+    executor:map(
+      function(id)
+        local uv = vim.loop
+        uv.sleep(100)
+        return id
+      end,
+      task_args_gen,
+      function(results)
+        assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
+      end
+    )
 
     executor:join(500)
   end)
@@ -47,13 +55,17 @@ describe("ThreadPoolExecutor.map()", function()
     local executor = ThreadPoolExecutor.new()
     local task_args = { { 1 }, { 2 }, { 3 }, { 4 } }
 
-    executor:map(function(id)
-      local uv = vim.loop
-      uv.sleep(100)
-      return id
-    end, function(results)
-      assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
-    end, task_args)
+    executor:map(
+      function(id)
+        local uv = vim.loop
+        uv.sleep(100)
+        return id
+      end,
+      task_args,
+      function(results)
+        assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
+      end
+    )
 
     executor:join(500)
   end)
@@ -67,13 +79,17 @@ describe("ThreadPoolExecutor.map()", function()
       return task_args[i]
     end
 
-    executor:map(function(id)
-      local uv = vim.loop
-      uv.sleep(100)
-      return id
-    end, function(results)
-      assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
-    end, task_args_gen)
+    executor:map(
+      function(id)
+        local uv = vim.loop
+        uv.sleep(100)
+        return id
+      end,
+      task_args_gen,
+      function(results)
+        assert.are_same(results, { { 1 }, { 2 }, { 3 }, { 4 } })
+      end
+    )
 
     executor:join(500)
   end)

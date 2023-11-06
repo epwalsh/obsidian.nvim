@@ -1,5 +1,6 @@
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"
+local Job = require "plenary.job"
 local echo = require "obsidian.echo"
 
 local util = {}
@@ -172,6 +173,16 @@ util.build_find_cmd = function(path, sort_by, sort_reversed, term)
   return vim.tbl_flatten { util.FIND_CMD, additional_opts }
 end
 
+---@param dir string|Path
+---@param term string
+---@param opts string[]|?
+---@return string[]
+util.build_search_cmd = function(dir, term, opts)
+  local norm_dir = vim.fs.normalize(tostring(dir))
+  local cmd = vim.tbl_flatten { util.SEARCH_CMD, "--json", opts and opts or {}, util.quote(term), util.quote(norm_dir) }
+  return cmd
+end
+
 ---@class MatchPath
 ---@field text string
 
@@ -195,15 +206,10 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param opts string|?
+---@param opts string[]|?
 ---@return function
 util.search = function(dir, term, opts)
-  local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = table.concat(util.SEARCH_CMD, " ") .. " --json "
-  if opts ~= nil then
-    cmd = cmd .. opts .. " "
-  end
-  cmd = cmd .. util.quote(term) .. " " .. util.quote(norm_dir)
+  local cmd = table.concat(util.build_search_cmd(dir, term, opts), " ")
 
   local handle = assert(io.popen(cmd, "r"))
 
@@ -225,6 +231,28 @@ util.search = function(dir, term, opts)
   end
 end
 
+---An async version of `util.search()`. Each match is passed to the `on_match` callback.
+---
+---@param dir string|Path
+---@param term string
+---@param opts string[]|?
+---@param on_match function(MatchData)
+util.search_async = function(dir, term, opts, on_match)
+  local cmd = util.build_search_cmd(dir, term, opts)
+  Job:new({
+    command = cmd[1],
+    args = { unpack(cmd, 2) },
+    on_stdout = function(err, line)
+      assert(not err, err)
+      local data = vim.json.decode(line)
+      if data["type"] == "match" then
+        local match_data = data.data
+        on_match(match_data)
+      end
+    end,
+  }):start()
+end
+
 ---Find markdown files in a directory matching a given term. Return an iterator
 ---over file names.
 ---
@@ -235,8 +263,7 @@ end
 ---@return function
 util.find = function(dir, term, sort_by, sort_reversed)
   local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd_args = util.build_find_cmd(util.quote(norm_dir), sort_by, sort_reversed, term)
-  local cmd = table.concat(cmd_args, " ")
+  local cmd = table.concat(util.build_find_cmd(util.quote(norm_dir), sort_by, sort_reversed, term), " ")
 
   local handle = assert(io.popen(cmd, "r"))
 
@@ -250,6 +277,26 @@ util.find = function(dir, term, sort_by, sort_reversed)
     end
     return line
   end
+end
+
+---An async version of `util.find()`. Each matching path is passed to the `on_match` callback.
+---
+---@param dir string|Path
+---@param term string
+---@param sort_by string|?
+---@param sort_reversed boolean|?
+---@param on_match function(string)
+util.find_async = function(dir, term, sort_by, sort_reversed, on_match)
+  local norm_dir = vim.fs.normalize(tostring(dir))
+  local cmd = util.build_find_cmd(util.quote(norm_dir), sort_by, sort_reversed, term)
+  Job:new({
+    command = cmd[1],
+    args = { unpack(cmd, 2) },
+    on_stdout = function(err, line)
+      assert(not err, err)
+      on_match(line)
+    end,
+  }):start()
 end
 
 ---Create a new unique Zettel ID.

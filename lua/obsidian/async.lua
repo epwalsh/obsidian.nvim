@@ -32,10 +32,10 @@ end
 ---
 ---@param self obsidian.Executor
 ---@param fn function
----@param callback function|?
 ---@param task_args table[]|function
+---@param callback function|?
 ---@diagnostic disable-next-line: unused-local
-Executor.map = function(self, fn, callback, task_args)
+Executor.map = function(self, fn, task_args, callback)
   local results = {}
   local num_tasks = 0
   local tasks_completed = 0
