@@ -1,3 +1,5 @@
+local async = require "plenary.async"
+local channel = require("plenary.async.control").channel
 local Path = require "plenary.path"
 local Note = require "obsidian.note"
 local util = require "obsidian.util"
@@ -52,7 +54,7 @@ end
 ---@field winnr integer
 ---@field bufname string
 ---@field note obsidian.Note
-local backlinks = {}
+local Backlinks = {}
 
 ---Create a new backlinks object.
 ---
@@ -60,8 +62,8 @@ local backlinks = {}
 ---@param bufnr integer|?
 ---@param winnr integer|?
 ---@return obsidian.Backlinks
-backlinks.new = function(client, bufnr, winnr)
-  local self = setmetatable({}, { __index = backlinks })
+Backlinks.new = function(client, bufnr, winnr)
+  local self = setmetatable({}, { __index = Backlinks })
   self.client = client
   self.bufnr = bufnr and bufnr or vim.fn.bufnr()
   self.winnr = winnr and winnr or vim.fn.winnr()
@@ -78,7 +80,7 @@ end
 ---Gather backlinks to the buffer.
 ---
 ---@return BacklinkMatch[]
-backlinks.gather = function(self)
+Backlinks._gather = function(self)
   ---@param match_data MatchData
   ---@return boolean
   local is_valid_backlink = function(match_data)
@@ -96,10 +98,10 @@ backlinks.gather = function(self)
   local backlink_matches = {}
   local last_path = nil
   local last_note = nil
-  for match in util.search(self.client.dir, "[[" .. tostring(self.note.id)) do
-    if match == nil then
-      break
-    elseif is_valid_backlink(match) then
+  local tx, rx = channel.oneshot()
+
+  util.search_async(self.client.dir, "[[" .. tostring(self.note.id), {}, function(match)
+    if is_valid_backlink(match) then
       local path = match.path.text
       local src_note
       if path ~= last_path then
@@ -115,13 +117,28 @@ backlinks.gather = function(self)
       last_path = path
       last_note = src_note
     end
-  end
+  end, function(_, _, _)
+    tx()
+  end)
+
+  rx()
 
   return backlink_matches
 end
 
 ---Create a view for the backlinks.
-backlinks.view = function(self)
+Backlinks.view = function(self)
+  async.run(function()
+    return self:_gather()
+  end, function(backlink_matches)
+    vim.schedule(function()
+      self:_view(backlink_matches)
+    end)
+  end)
+end
+
+---@param backlink_matches BacklinkMatch[]
+Backlinks._view = function(self, backlink_matches)
   -- Clear any existing backlinks buffer.
   wipe_rogue_buffer()
 
@@ -161,7 +178,6 @@ backlinks.view = function(self)
   vim.api.nvim_buf_clear_namespace(0, self.client.backlinks_namespace, 0, -1)
 
   -- Render lines.
-  local backlink_matches = self:gather()
   local view_lines = {}
   local highlights = {}
   local folds = {}
@@ -229,7 +245,7 @@ backlinks.view = function(self)
   vim.api.nvim_buf_set_option(0, "modifiable", false)
 end
 
-backlinks.open = function()
+Backlinks.open = function()
   local vault_dir = Path:new(vim.api.nvim_buf_get_var(0, "obsidian_vault_dir"))
   local parent_win = vim.api.nvim_buf_get_var(0, "obsidian_parent_win")
   local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
@@ -245,7 +261,7 @@ backlinks.open = function()
   end
 end
 
-backlinks.foldtext = function()
+Backlinks.foldtext = function()
   local foldstart = vim.api.nvim_get_vvar "foldstart"
   local foldend = vim.api.nvim_get_vvar "foldend"
   local num_links = foldend - foldstart
@@ -256,4 +272,4 @@ backlinks.foldtext = function()
   return match
 end
 
-return backlinks
+return Backlinks
