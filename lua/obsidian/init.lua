@@ -2,12 +2,15 @@ local Path = require "plenary.path"
 
 local echo = require "obsidian.echo"
 local config = require "obsidian.config"
+local async = require "plenary.async"
+local channel = require("plenary.async.control").channel
+local Note = require "obsidian.note"
 
 local obsidian = {}
 
 obsidian.VERSION = "1.15.0"
 obsidian.completion = require "obsidian.completion"
-obsidian.note = require "obsidian.note"
+obsidian.Note = Note
 obsidian.util = require "obsidian.util"
 obsidian.yaml = require "obsidian.yaml"
 obsidian.mapping = require "obsidian.mapping"
@@ -142,7 +145,7 @@ obsidian.setup = function(opts)
       end
 
       local bufnr = vim.api.nvim_get_current_buf()
-      local note = obsidian.note.from_buffer(bufnr, self.dir)
+      local note = Note.from_buffer(bufnr, self.dir)
       if not note:should_save_frontmatter() or self.opts.disable_frontmatter == true then
         return
       end
@@ -212,6 +215,54 @@ client._search_iter = function(self, search, search_opts)
   end
 end
 
+---@param search string
+---@param search_opts string[]|?
+---@return function
+client._search_iter_async = function(self, search, search_opts)
+  local tx, rx = channel.mpsc()
+  local found = {}
+
+  local function on_exit(_)
+    tx.send(nil)
+  end
+
+  local function on_search_match(content_match)
+    local path = vim.fs.normalize(content_match.path.text)
+    if not found[path] then
+      found[path] = true
+      tx.send(path)
+    end
+  end
+
+  local function on_find_match(path_match)
+    local path = vim.fs.normalize(path_match)
+    if not found[path] then
+      found[path] = true
+      tx.send(path)
+    end
+  end
+
+  local cmds_done = 0
+  search_opts = search_opts and search_opts or {}
+  obsidian.util.search_async(self.dir, search, vim.tbl_flatten { search_opts, "-m=1" }, on_search_match, on_exit)
+  obsidian.util.find_async(self.dir, search, self.opts.sort_by, self.opts.sort_reversed, on_find_match, on_exit)
+
+  return function()
+    while true do
+      if cmds_done >= 2 then
+        return nil
+      end
+
+      local value = rx.recv()
+      if value == nil then
+        cmds_done = cmds_done + 1
+      else
+        return value
+      end
+    end
+  end
+end
+
 ---Search for notes. Returns an iterator over matching notes.
 ---
 ---@param search string
@@ -224,7 +275,7 @@ client.search = function(self, search, search_opts)
   return function()
     local path = next_path()
     if path ~= nil then
-      return obsidian.note.from_file(path, self.dir)
+      return Note.from_file(path, self.dir)
     else
       return nil
     end
@@ -236,24 +287,17 @@ end
 ---@param search_opts string[]|?
 ---@param callback function
 client.search_async = function(self, search, search_opts, callback)
-  local next_path = self:_search_iter(search, search_opts)
+  local next_path = self:_search_iter_async(search, search_opts)
   local executor = require("obsidian.async").AsyncExecutor.new()
+  local dir = tostring(self.dir)
 
-  local function task_fn(path, dir)
-    local Note = require "obsidian.note"
+  local function task_fn(path)
     return Note.from_file_async(path, dir)
   end
 
-  local function task_gen()
-    local path = next_path()
-    if path ~= nil then
-      return path, tostring(self.dir)
-    else
-      return nil
-    end
-  end
-
-  executor:map(task_fn, task_gen, callback)
+  async.run(function()
+    executor:map(task_fn, next_path, callback)
+  end, function(_) end)
 end
 
 ---Create a new Zettel ID
@@ -355,7 +399,7 @@ client.new_note = function(self, title, id, dir, aliases)
   end
 
   -- Create Note object and save.
-  local note = obsidian.note.new(new_id, aliases, {}, path)
+  local note = Note.new(new_id, aliases, {}, path)
   local frontmatter = nil
   if self.opts.note_frontmatter_func ~= nil then
     frontmatter = self.opts.note_frontmatter_func(note)
@@ -412,7 +456,7 @@ client._daily = function(self, datetime)
   end
 
   -- Create Note object and save if it doesn't already exist.
-  local note = obsidian.note.new(id, { alias }, { "daily-notes" }, path)
+  local note = Note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
     if self.opts.daily_notes.template then
       obsidian.util.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
@@ -453,7 +497,7 @@ client.resolve_note = function(self, query)
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     local full_path = self.dir / note_path
-    return obsidian.note.from_file(full_path, self.dir)
+    return Note.from_file(full_path, self.dir)
   end
 
   -- Query might be a path.
@@ -466,7 +510,7 @@ client.resolve_note = function(self, query)
   end
   for _, path in pairs(paths_to_check) do
     if path:is_file() then
-      local ok, note = pcall(obsidian.note.from_file, path)
+      local ok, note = pcall(Note.from_file, path)
       if ok then
         return note
       end

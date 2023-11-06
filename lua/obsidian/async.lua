@@ -71,11 +71,9 @@ Executor.map = function(self, fn, task_args, callback)
       if next_args[1] == nil then
         all_submitted = true
       end
-      if args[1] ~= nil then
-        i = i + 1
-        num_tasks = num_tasks + 1
-        self:submit(fn, get_task_done_fn(i), unpack(args))
-      end
+      i = i + 1
+      num_tasks = num_tasks + 1
+      self:submit(fn, get_task_done_fn(i), unpack(args))
       args = next_args
       next_args = { task_args() }
     end
@@ -197,7 +195,8 @@ File.close = function(self)
 end
 
 ---Get at iterator over lines in the file.
-File.lines = function(self)
+---@param include_new_line_char boolean
+File.lines = function(self, include_new_line_char)
   local offset = 0
   local chunk_size = 1024
   local buffer = ""
@@ -222,7 +221,11 @@ File.lines = function(self)
     if idx ~= nil then
       local line = string.sub(buffer, 1, idx)
       buffer = string.sub(buffer, idx + 1)
-      return line
+      if include_new_line_char then
+        return line
+      else
+        return string.sub(line, 1, -2)
+      end
     else
       return nil
     end

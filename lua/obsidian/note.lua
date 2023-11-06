@@ -126,7 +126,7 @@ Note.from_file_async = function(path, root)
   end
   local f = File.open(vim.fs.normalize(tostring(path)))
   local n = Note.from_lines(function()
-    return f:lines()
+    return f:lines(false)
   end, path, root)
   f:close()
   return n
