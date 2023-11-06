@@ -184,40 +184,6 @@ end
 ---@param search string
 ---@param search_opts string[]|?
 ---@return function
-client._search_iter = function(self, search, search_opts)
-  search_opts = search_opts and search_opts or {}
-  local search_results = obsidian.util.search(self.dir, search, vim.tbl_flatten { search_opts, "-m=1" })
-  local find_results = obsidian.util.find(self.dir, search, self.opts.sort_by, self.opts.sort_reversed)
-
-  local found = {}
-
-  return function()
-    local content_match = search_results()
-    if content_match ~= nil then
-      local path = vim.fs.normalize(content_match.path.text)
-      found[path] = true
-      return path
-    end
-
-    -- keep looking until we get a new match that we haven't seen yet.
-    while true do
-      local path_match = find_results()
-      if path_match ~= nil then
-        local path = vim.fs.normalize(path_match)
-        if not found[path] then
-          found[path] = true
-          return path
-        end
-      else
-        return nil
-      end
-    end
-  end
-end
-
----@param search string
----@param search_opts string[]|?
----@return function
 client._search_iter_async = function(self, search, search_opts)
   local tx, rx = channel.mpsc()
   local found = {}
@@ -242,7 +208,7 @@ client._search_iter_async = function(self, search, search_opts)
     end
   end
 
-  local cmds_done = 0
+  local cmds_done = 0 -- out of the two, one for 'search' and one for 'find'
   search_opts = search_opts and search_opts or {}
   obsidian.util.search_async(self.dir, search, vim.tbl_flatten { search_opts, "-m=1" }, on_search_match, on_exit)
   obsidian.util.find_async(self.dir, search, self.opts.sort_by, self.opts.sort_reversed, on_find_match, on_exit)
@@ -263,26 +229,30 @@ client._search_iter_async = function(self, search, search_opts)
   end
 end
 
----Search for notes. Returns an iterator over matching notes.
+---Search for notes.
 ---
 ---@param search string
 ---@param search_opts string[]|?
----@return function
+---@return obsidian.Note[]
 client.search = function(self, search, search_opts)
-  local next_path = self:_search_iter(search, search_opts)
+  local done = false
+  local results = {}
 
-  ---@return obsidian.Note|?
-  return function()
-    local path = next_path()
-    if path ~= nil then
-      return Note.from_file(path, self.dir)
-    else
-      return nil
-    end
+  local function collect_results(results_)
+    results = results_
+    done = true
   end
+
+  self:search_async(search, search_opts, collect_results)
+
+  while not done do
+    vim.wait(100)
+  end
+  return results
 end
 
----An async version of `search` that runs the callback with an array of all matching notes.
+---An async version of `search()` that runs the callback with an array of all matching notes.
+---
 ---@param search string
 ---@param search_opts string[]|?
 ---@param callback function

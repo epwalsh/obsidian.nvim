@@ -195,7 +195,7 @@ File.close = function(self)
 end
 
 ---Get at iterator over lines in the file.
----@param include_new_line_char boolean
+---@param include_new_line_char boolean|?
 File.lines = function(self, include_new_line_char)
   local offset = 0
   local chunk_size = 1024

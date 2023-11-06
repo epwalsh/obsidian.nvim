@@ -101,7 +101,7 @@ describe("File.lines()", function()
     local actual_lines = {}
     with(open(path), function(reader)
       for line in reader:lines() do
-        actual_lines[#actual_lines + 1] = line .. "\n"
+        actual_lines[#actual_lines + 1] = line
       end
     end)
 
@@ -109,7 +109,7 @@ describe("File.lines()", function()
     a.util.block_on(function()
       ---@diagnostic disable-next-line: redefined-local
       local f = File.open(path)
-      for line in f:lines() do
+      for line in f:lines(false) do
         lines[#lines + 1] = line
       end
       f:close()

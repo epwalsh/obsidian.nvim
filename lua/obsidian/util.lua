@@ -2,6 +2,7 @@ local scan = require "plenary.scandir"
 local Path = require "plenary.path"
 local Job = require "plenary.job"
 local echo = require "obsidian.echo"
+local Deque = require("plenary.async.structs").Deque
 
 local util = {}
 
@@ -224,23 +225,26 @@ end
 ---@param opts string[]|?
 ---@return function
 util.search = function(dir, term, opts)
-  local cmd = table.concat(util.build_search_cmd(dir, term, opts), " ")
+  local matches = Deque.new()
+  local done = false
 
-  local handle = assert(io.popen(cmd, "r"))
+  util.search_async(dir, term, opts, function(match_data)
+    matches:pushright(match_data)
+  end, function(_, _, _)
+    done = true
+  end)
 
   ---Iterator over matches.
   ---
   ---@return MatchData|?
   return function()
     while true do
-      local line = handle:read "*l"
-      if line == nil then
+      if not matches:is_empty() then
+        return matches:popleft()
+      elseif matches:is_empty() and done then
         return nil
-      end
-      local data = vim.json.decode(line)
-      if data["type"] == "match" then
-        local match_data = data.data
-        return match_data
+      else
+        vim.wait(100)
       end
     end
   end
@@ -283,20 +287,28 @@ end
 ---@param sort_reversed boolean|?
 ---@return function
 util.find = function(dir, term, sort_by, sort_reversed)
-  local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = table.concat(util.build_find_cmd(util.quote(norm_dir), sort_by, sort_reversed, term), " ")
+  local paths = Deque.new()
+  local done = false
 
-  local handle = assert(io.popen(cmd, "r"))
+  util.find_async(dir, term, sort_by, sort_reversed, function(path)
+    paths:pushright(path)
+  end, function(_, _, _)
+    done = true
+  end)
 
   ---Iterator over matches.
   ---
   ---@return MatchData|?
   return function()
-    local line = handle:read "*l"
-    if line == nil then
-      return nil
+    while true do
+      if not paths:is_empty() then
+        return paths:popleft()
+      elseif paths:is_empty() and done then
+        return nil
+      else
+        vim.wait(100)
+      end
     end
-    return line
   end
 end
 
