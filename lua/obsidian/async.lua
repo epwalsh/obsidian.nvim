@@ -88,6 +88,23 @@ Executor.map = function(self, fn, task_args, callback)
   end
 end
 
+---@param self obsidian.Executor
+---@param timeout integer|?
+---@param pause_fn function(integer)
+Executor._join = function(self, timeout, pause_fn)
+  local start_time = uv.uptime()
+  local pause_for = 100
+  if timeout ~= nil then
+    pause_for = math.min(timeout / 2, pause_for)
+  end
+  while self.tasks_running > 0 do
+    pause_fn(pause_for)
+    if timeout ~= nil and uv.uptime() - start_time > timeout then
+      error "Timeout error from AsyncExecutor.join()"
+    end
+  end
+end
+
 ---Block Neovim until all currently running tasks have completed, waiting at most `timeout` milliseconds
 ---before raising a timeout error.
 ---
@@ -96,17 +113,15 @@ end
 ---@param self obsidian.Executor
 ---@param timeout integer|?
 Executor.join = function(self, timeout)
-  local start_time = uv.uptime()
-  local pause_for = 100
-  if timeout ~= nil then
-    pause_for = math.min(timeout / 2, pause_for)
-  end
-  while self.tasks_running > 0 do
-    vim.wait(pause_for)
-    if timeout ~= nil and uv.uptime() - start_time > timeout then
-      error "Timeout error from AsyncExecutor.join()"
-    end
-  end
+  self:_join(timeout, vim.wait)
+end
+
+---An async version of `.join()`.
+---
+---@param self obsidian.Executor
+---@param timeout integer|?
+Executor.join_async = function(self, timeout)
+  self:_join(timeout, async.util.sleep)
 end
 
 ---An Executor that uses coroutines to run user functions concurrently.
