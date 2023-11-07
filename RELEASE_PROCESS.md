@@ -2,7 +2,7 @@
 
 ## Steps
 
-1. Update the `VERSION` field in `lua/obsidian/init.lua`.
+1. Update the version in `lua/obsidian/version.lua`.
 
 3. Run the release script:
 

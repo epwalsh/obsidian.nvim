@@ -1,21 +1,32 @@
-local Path = require "plenary.path"
+local module_lookups = {
+  async = "obsidian.async",
+  backlinks = "obsidian.backlinks",
+  command = "obsidian.command",
+  completion = "obsidian.completion",
+  config = "obsidian.config",
+  echo = "obsidian.echo",
+  mapping = "obsidian.mapping",
+  Note = "obsidian.note",
+  search = "obsidian.search",
+  util = "obsidian.util",
+  VERSION = "obsidian.version",
+  workspace = "obsidian.workspace",
+  yaml = "obsidian.yaml",
+}
 
-local echo = require "obsidian.echo"
-local config = require "obsidian.config"
-local async = require "plenary.async"
-local channel = require("plenary.async.control").channel
-local Note = require "obsidian.note"
+local obsidian = setmetatable({}, {
+  __index = function(t, k)
+    local require_path = module_lookups[k]
+    if not require_path then
+      return
+    end
 
-local obsidian = {}
+    local mod = require(require_path)
+    t[k] = mod
 
-obsidian.VERSION = "1.15.0"
-obsidian.completion = require "obsidian.completion"
-obsidian.Note = Note
-obsidian.util = require "obsidian.util"
-obsidian.search = require "obsidian.search"
-obsidian.yaml = require "obsidian.yaml"
-obsidian.mapping = require "obsidian.mapping"
-obsidian.workspace = require "obsidian.workspace"
+    return mod
+  end,
+})
 
 ---@class obsidian.Client
 ---@field current_workspace obsidian.Workspace
@@ -30,6 +41,8 @@ local client = {}
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 obsidian.new = function(opts)
+  local Path = require "plenary.path"
+
   local self = setmetatable({}, { __index = client })
 
   self.current_workspace = obsidian.workspace.get_from_opts(opts)
@@ -49,7 +62,7 @@ end
 ---@param dir string
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
-  local opts = config.ClientOpts.default()
+  local opts = obsidian.config.ClientOpts.default()
   opts.workspaces = vim.tbl_extend("force", { obsidian.workspace.new_from_dir(dir) }, opts.workspaces)
   return obsidian.new(opts)
 end
@@ -59,7 +72,9 @@ end
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 obsidian.setup = function(opts)
-  opts = config.ClientOpts.normalize(opts)
+  local Path = require "plenary.path"
+
+  opts = obsidian.config.ClientOpts.normalize(opts)
   local self = obsidian.new(opts)
 
   -- Ensure directories exist.
@@ -82,7 +97,10 @@ obsidian.setup = function(opts)
   if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
     self.templates_dir = Path:new(self.dir) / self.opts.templates.subdir
     if not self.templates_dir:is_dir() then
-      echo.err(string.format("%s is not a valid directory for templates", self.templates_dir), self.opts.log_level)
+      obsidian.echo.err(
+        string.format("%s is not a valid directory for templates", self.templates_dir),
+        self.opts.log_level
+      )
       self.templates_dir = nil
     end
   end
@@ -146,7 +164,7 @@ obsidian.setup = function(opts)
       end
 
       local bufnr = vim.api.nvim_get_current_buf()
-      local note = Note.from_buffer(bufnr, self.dir)
+      local note = obsidian.Note.from_buffer(bufnr, self.dir)
       if not note:should_save_frontmatter() or self.opts.disable_frontmatter == true then
         return
       end
@@ -157,7 +175,7 @@ obsidian.setup = function(opts)
       end
       local lines = note:frontmatter_lines(nil, frontmatter)
       vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
-      echo.info("Updated frontmatter", self.opts.log_level)
+      obsidian.echo.info("Updated frontmatter", self.opts.log_level)
     end,
   })
 
@@ -168,6 +186,8 @@ end
 ---
 ---@return string|?
 client.vault = function(self)
+  local Path = require "plenary.path"
+
   local vault_indicator_folder = ".obsidian"
   local dirs = self.dir:parents()
   table.insert(dirs, 0, self.dir:absolute())
@@ -186,6 +206,7 @@ end
 ---@param search_opts string[]|?
 ---@return function
 client._search_iter_async = function(self, search, search_opts)
+  local channel = require("plenary.async.control").channel
   local tx, rx = channel.mpsc()
   local found = {}
 
@@ -258,12 +279,13 @@ end
 ---@param search_opts string[]|?
 ---@param callback function
 client.search_async = function(self, search, search_opts, callback)
+  local async = require "plenary.async"
   local next_path = self:_search_iter_async(search, search_opts)
   local executor = require("obsidian.async").AsyncExecutor.new()
   local dir = tostring(self.dir)
 
   local function task_fn(path)
-    return Note.from_file_async(path, dir)
+    return obsidian.Note.from_file_async(path, dir)
   end
 
   async.run(function()
@@ -302,6 +324,8 @@ end
 ---
 ---@return string|?,string,Path
 client.parse_title_id_path = function(self, title, id, dir)
+  local Path = require "plenary.path"
+
   ---@type Path
   local base_dir = dir == nil and Path:new(self.dir) or Path:new(dir)
   local title_is_path = false
@@ -370,13 +394,13 @@ client.new_note = function(self, title, id, dir, aliases)
   end
 
   -- Create Note object and save.
-  local note = Note.new(new_id, aliases, {}, path)
+  local note = obsidian.Note.new(new_id, aliases, {}, path)
   local frontmatter = nil
   if self.opts.note_frontmatter_func ~= nil then
     frontmatter = self.opts.note_frontmatter_func(note)
   end
   note:save(nil, not self.opts.disable_frontmatter, frontmatter)
-  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
+  obsidian.echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
 
   return note
 end
@@ -386,6 +410,8 @@ end
 ---@param id string
 ---@return Path
 client.daily_note_path = function(self, id)
+  local Path = require "plenary.path"
+
   ---@type Path
   local path = Path:new(self.dir)
 
@@ -427,7 +453,7 @@ client._daily = function(self, datetime)
   end
 
   -- Create Note object and save if it doesn't already exist.
-  local note = Note.new(id, { alias }, { "daily-notes" }, path)
+  local note = obsidian.Note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
     if self.opts.daily_notes.template then
       obsidian.util.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
@@ -437,7 +463,7 @@ client._daily = function(self, datetime)
       frontmatter = self.opts.note_frontmatter_func(note)
     end
     note:save(nil, not self.opts.disable_frontmatter, frontmatter)
-    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
+    obsidian.echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
   end
 
   return note
@@ -462,13 +488,15 @@ end
 ---@param query string
 ---@return obsidian.Note|?
 client.resolve_note = function(self, query)
+  local Path = require "plenary.path"
+
   -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
   if count > 0 then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     local full_path = self.dir / note_path
-    return Note.from_file(full_path, self.dir)
+    return obsidian.Note.from_file(full_path, self.dir)
   end
 
   -- Query might be a path.
@@ -481,7 +509,7 @@ client.resolve_note = function(self, query)
   end
   for _, path in pairs(paths_to_check) do
     if path:is_file() then
-      local ok, note = pcall(Note.from_file, path)
+      local ok, note = pcall(obsidian.Note.from_file, path)
       if ok then
         return note
       end
@@ -526,7 +554,7 @@ client._run_with_finder_backend = function(self, command_name, implementations)
   local success, err = pcall(obsidian.util.run_first_supported, command_name, finders_order, implementations)
   if not success then
     if type(err) == "string" then
-      echo.err(err, client.opts.log_level)
+      obsidian.echo.err(err, client.opts.log_level)
     else
       error(err)
     end
