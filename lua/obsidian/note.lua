@@ -2,6 +2,8 @@ local Path = require "plenary.path"
 local yaml = require "obsidian.yaml"
 local util = require "obsidian.util"
 local echo = require "obsidian.echo"
+local with = require("plenary.context_manager").with
+local open = require("plenary.context_manager").open
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
@@ -13,7 +15,7 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 ---@field metadata table|?
 ---@field has_frontmatter boolean|?
 ---@field frontmatter_end_line integer|?
-local note = {}
+local Note = {}
 
 ---Create new note.
 ---
@@ -22,8 +24,8 @@ local note = {}
 ---@param tags string[]
 ---@param path string|Path|?
 ---@return obsidian.Note
-note.new = function(id, aliases, tags, path)
-  local self = setmetatable({}, { __index = note })
+Note.new = function(id, aliases, tags, path)
+  local self = setmetatable({}, { __index = Note })
   self.id = id
   self.aliases = aliases and aliases or {}
   self.tags = tags and tags or {}
@@ -37,7 +39,7 @@ end
 ---Check if the note exists on the file system.
 ---
 ---@return boolean
-note.exists = function(self)
+Note.exists = function(self)
   ---@diagnostic disable-next-line: return-type-mismatch
   return self.path ~= nil and self.path:is_file()
 end
@@ -45,7 +47,7 @@ end
 ---Get the filename associated with the note.
 ---
 ---@return string|?
-note.fname = function(self)
+Note.fname = function(self)
   if self.path == nil then
     return nil
   else
@@ -53,7 +55,7 @@ note.fname = function(self)
   end
 end
 
-note.should_save_frontmatter = function(self)
+Note.should_save_frontmatter = function(self)
   local fname = self:fname()
   return (fname ~= nil and not util.contains(SKIP_UPDATING_FRONTMATTER, fname))
 end
@@ -62,7 +64,7 @@ end
 ---
 ---@param alias string
 ---@return boolean
-note.has_alias = function(self, alias)
+Note.has_alias = function(self, alias)
   return util.contains(self.aliases, alias)
 end
 
@@ -70,14 +72,14 @@ end
 ---
 ---@param tag string
 ---@return boolean
-note.has_tag = function(self, tag)
+Note.has_tag = function(self, tag)
   return util.contains(self.tags, tag)
 end
 
 ---Add an alias to the note.
 ---
 ---@param alias string
-note.add_alias = function(self, alias)
+Note.add_alias = function(self, alias)
   if not self:has_alias(alias) then
     table.insert(self.aliases, alias)
   end
@@ -86,7 +88,7 @@ end
 ---Add a tag to the note.
 ---
 ---@param tag string
-note.add_tag = function(self, tag)
+Note.add_tag = function(self, tag)
   if not self:has_tag(tag) then
     table.insert(self.tags, tag)
   end
@@ -97,18 +99,34 @@ end
 ---@param path string|Path
 ---@param root string|Path|?
 ---@return obsidian.Note
-note.from_file = function(path, root)
+Note.from_file = function(path, root)
   if path == nil then
     echo.fail "note path cannot be nil"
     error()
   end
-  local f = io.open(vim.fs.normalize(tostring(path)))
-  if f == nil then
-    echo.fail("failed to read file at " .. tostring(path))
+  local n
+  with(open(vim.fs.normalize(tostring(path))), function(reader)
+    n = Note.from_lines(function()
+      return reader:lines()
+    end, path, root)
+  end)
+  return n
+end
+
+---An async version of `.from_file()`.
+---
+---@param path string|Path
+---@param root string|Path|?
+---@return obsidian.Note
+Note.from_file_async = function(path, root)
+  local File = require("obsidian.async").File
+  if path == nil then
+    echo.fail "note path cannot be nil"
     error()
   end
-  local n = note.from_lines(function()
-    return f:lines()
+  local f = File.open(vim.fs.normalize(tostring(path)))
+  local n = Note.from_lines(function()
+    return f:lines(false)
   end, path, root)
   f:close()
   return n
@@ -119,7 +137,7 @@ end
 ---@param bufnr integer|?
 ---@param root string|Path|?
 ---@return obsidian.Note
-note.from_buffer = function(bufnr, root)
+Note.from_buffer = function(bufnr, root)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local path = vim.api.nvim_buf_get_name(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -137,13 +155,13 @@ note.from_buffer = function(bufnr, root)
     end
   end
 
-  return note.from_lines(lines_iter, path, root)
+  return Note.from_lines(lines_iter, path, root)
 end
 
 ---Get the display name for note.
 ---
 ---@return string
-note.display_name = function(self)
+Note.display_name = function(self)
   if #self.aliases > 0 then
     return self.aliases[#self.aliases]
   end
@@ -156,7 +174,7 @@ end
 ---@param path string|Path
 ---@param root string|Path|?
 ---@return obsidian.Note
-note.from_lines = function(lines, path, root)
+Note.from_lines = function(lines, path, root)
   local cwd = tostring(root and root or "./")
 
   local id = nil
@@ -172,25 +190,25 @@ note.from_lines = function(lines, path, root)
   for line in lines() do
     line_idx = line_idx + 1
     if line_idx == 1 then
-      if note._is_frontmatter_boundary(line) then
+      if Note._is_frontmatter_boundary(line) then
         has_frontmatter = true
         in_frontmatter = true
       else
-        local maybe_title = note._parse_header(line)
+        local maybe_title = Note._parse_header(line)
         if maybe_title then
           title = maybe_title
           break
         end
       end
     elseif has_frontmatter and in_frontmatter then
-      if note._is_frontmatter_boundary(line) then
+      if Note._is_frontmatter_boundary(line) then
         in_frontmatter = false
         frontmatter_end_line = line_idx
       else
         table.insert(frontmatter_lines, line)
       end
     else
-      local maybe_title = note._parse_header(line)
+      local maybe_title = Note._parse_header(line)
       if maybe_title then
         title = maybe_title
         break
@@ -282,7 +300,7 @@ note.from_lines = function(lines, path, root)
     id = fname_no_ext
   end
 
-  local n = note.new(id, aliases, tags, path)
+  local n = Note.new(id, aliases, tags, path)
   n.metadata = metadata
   n.has_frontmatter = has_frontmatter
   n.frontmatter_end_line = frontmatter_end_line
@@ -293,7 +311,7 @@ end
 ---
 ---@param line string
 ---@return boolean
-note._is_frontmatter_boundary = function(line)
+Note._is_frontmatter_boundary = function(line)
   return line:match "^---+$" ~= nil
 end
 
@@ -301,13 +319,13 @@ end
 ---
 ---@param line string
 ---@return string|?
-note._parse_header = function(line)
+Note._parse_header = function(line)
   return line:match "^#+ (.+)$"
 end
 
 ---Get the frontmatter table to save.
 ---@return table
-note.frontmatter = function(self)
+Note.frontmatter = function(self)
   local out = { id = self.id, aliases = self.aliases, tags = self.tags }
   if self.metadata ~= nil and util.table_length(self.metadata) > 0 then
     for k, v in pairs(self.metadata) do
@@ -322,7 +340,7 @@ end
 ---@param eol boolean|?
 ---@param frontmatter table|?
 ---@return string[]
-note.frontmatter_lines = function(self, eol, frontmatter)
+Note.frontmatter_lines = function(self, eol, frontmatter)
   local new_lines = { "---" }
 
   local frontmatter_ = frontmatter and frontmatter or self:frontmatter()
@@ -372,7 +390,7 @@ end
 ---@param path string|Path|?
 ---@param insert_frontmatter boolean|?
 ---@param frontmatter table|?
-note.save = function(self, path, insert_frontmatter, frontmatter)
+Note.save = function(self, path, insert_frontmatter, frontmatter)
   if self.path == nil then
     echo.fail "note path cannot be nil"
     error()
@@ -390,12 +408,12 @@ note.save = function(self, path, insert_frontmatter, frontmatter)
     for idx, line in ipairs(vim.split(contents, "\n")) do
       table.insert(lines, line .. "\n")
       if idx == 1 then
-        if note._is_frontmatter_boundary(line) then
+        if Note._is_frontmatter_boundary(line) then
           has_frontmatter = true
           in_frontmatter = true
         end
       elseif has_frontmatter and in_frontmatter then
-        if note._is_frontmatter_boundary(line) then
+        if Note._is_frontmatter_boundary(line) then
           end_idx = idx
           in_frontmatter = false
         end
@@ -434,4 +452,4 @@ note.save = function(self, path, insert_frontmatter, frontmatter)
   return lines
 end
 
-return note
+return Note

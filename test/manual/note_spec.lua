@@ -5,12 +5,12 @@
 local obsidian = require "obsidian"
 
 -- Test note.new():
-local n1 = obsidian.note.new("FOO", { "foo", "foos" }, { "bar" })
+local n1 = obsidian.Note.new("FOO", { "foo", "foos" }, { "bar" })
 assert(n1.id == "FOO")
 assert(n1.aliases[1] == "foo")
 
 -- Test note.from_file():
-local n2 = obsidian.note.from_file "test_fixtures/notes/foo.md"
+local n2 = obsidian.Note.from_file "test_fixtures/notes/foo.md"
 assert(n2.id == "foo")
 assert(n2.aliases[1] == "foo")
 assert(n2.aliases[2] == "Foo")

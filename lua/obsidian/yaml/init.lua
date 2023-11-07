@@ -7,26 +7,21 @@ yaml.parsers = {
   ["yq"] = require "obsidian.yaml.yq",
 }
 
----@return string
-local detect_parser = function()
-  if vim.fn.executable "yq" then
-    return "yq"
-  else
-    return "native"
-  end
-end
-
-yaml.parser = detect_parser()
+yaml.parser = "native"
 
 ---Set the YAML parser to use.
 ---@param parser string
 yaml.set_parser = function(parser)
-  yaml.parser = parser
+  if yaml.parsers[parser] == nil then
+    error("Undefined parser " .. parser)
+  else
+    yaml.parser = parser
+  end
 end
 
 ---Reset to the default parser.
 yaml.reset_parser = function()
-  yaml.parser = detect_parser()
+  yaml.parser = "native"
 end
 
 ---Deserialize a YAML string.
