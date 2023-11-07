@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Re-implemented the native Lua YAML parser (`obsidian.yaml.native`). This should be faster and more robust now. 🤠
 - Re-implemented search/find functionality to utilize concurrency via `obsidian.async` and `plenary.async` for big performance gains. 🏎️
+- Submodules imported lazily.
+- Changes to internal module organization.
 
 ### Fixed
 
