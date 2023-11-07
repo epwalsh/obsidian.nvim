@@ -1,0 +1,28 @@
+local async = require "plenary.async"
+local channel = require("plenary.async.control").channel
+local search = require "obsidian.search"
+
+describe("search.find_notes_async()", function()
+  it("should recursively find notes in a directory given a file name", function()
+    async.util.block_on(function()
+      local tx, rx = channel.oneshot()
+      search.find_notes_async(".", "foo.md", function(matches)
+        assert.equals(#matches, 1)
+        assert.equals(tostring(matches[1]), "./test_fixtures/notes/foo.md")
+        tx()
+      end)
+      rx()
+    end, 2000)
+  end)
+  it("should recursively find notes in a directory given a partial path", function()
+    async.util.block_on(function()
+      local tx, rx = channel.oneshot()
+      search.find_notes_async(".", "notes/foo.md", function(matches)
+        assert.equals(#matches, 1)
+        assert.equals(tostring(matches[1]), "./test_fixtures/notes/foo.md")
+        tx()
+      end)
+      rx()
+    end, 2000)
+  end)
+end)
