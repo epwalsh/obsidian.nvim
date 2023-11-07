@@ -78,10 +78,8 @@ end
 ---
 ---@param dir string|Path
 ---@param note_file_name string
----@return Path[]
-util.find_note = function(dir, note_file_name)
-  local Note = require "obsidian.note"
-
+---@param callback function(Path[])
+util.find_notes_async = function(dir, note_file_name, callback)
   local notes = {}
   local root_dir = vim.fs.normalize(tostring(dir))
 
@@ -90,10 +88,7 @@ util.find_note = function(dir, note_file_name)
     ---@diagnostic disable-next-line: assign-type-mismatch
     local note_path = Path:new(entry) / note_file_name
     if note_path:is_file() then
-      local ok, _ = pcall(Note.from_file, note_path, root_dir)
-      if ok then
-        table.insert(notes, note_path)
-      end
+      notes[#notes + 1] = note_path
     end
   end
 
@@ -101,15 +96,16 @@ util.find_note = function(dir, note_file_name)
   -- skip it, but Obsidian does allow root-level notes.
   visit_dir(root_dir)
 
-  scan.scan_dir(root_dir, {
+  scan.scan_dir_async(root_dir, {
     hidden = false,
     add_dirs = false,
     only_dirs = true,
     respect_gitignore = true,
     on_insert = visit_dir,
+    on_exit = function(_)
+      callback(notes)
+    end,
   })
-
-  return notes
 end
 
 ---Quote a string for safe command-line usage.

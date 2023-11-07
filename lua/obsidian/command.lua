@@ -589,19 +589,23 @@ command.follow = function(client, _)
   end
 
   -- Search for matching notes.
-  local notes = util.find_note(client.dir, note_file_name)
-
-  if #notes < 1 then
-    local aliases = note_name == note_file_name and {} or { note_name }
-    local note = client:new_note(note_file_name, nil, nil, aliases)
-    vim.api.nvim_command("e " .. tostring(note.path))
-  elseif #notes == 1 then
-    local path = notes[1]
-    vim.api.nvim_command("e " .. tostring(path))
-  else
-    echo.err("Multiple notes with this name exist", client.opts.log_level)
-    return
-  end
+  util.find_notes_async(client.dir, note_file_name, function(notes)
+    if #notes < 1 then
+      local aliases = note_name == note_file_name and {} or { note_name }
+      local note = client:new_note(note_file_name, nil, nil, aliases)
+      vim.schedule(function()
+        vim.api.nvim_command("e " .. tostring(note.path))
+      end)
+    elseif #notes == 1 then
+      local path = notes[1]
+      vim.schedule(function()
+        vim.api.nvim_command("e " .. tostring(path))
+      end)
+    else
+      echo.err("Multiple notes with this name exist", client.opts.log_level)
+      return
+    end
+  end)
 end
 
 ---Run a health check.
