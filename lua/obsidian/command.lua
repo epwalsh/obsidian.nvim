@@ -3,6 +3,7 @@ local Job = require "plenary.job"
 local Note = require "obsidian.note"
 local echo = require "obsidian.echo"
 local util = require "obsidian.util"
+local search = require "obsidian.search"
 
 local command = {}
 
@@ -203,7 +204,8 @@ end
 ---@param client obsidian.Client
 ---@param data table
 command.search = function(client, data)
-  local base_cmd = vim.tbl_flatten { util.SEARCH_CMD, { "--smart-case", "--column", "--line-number", "--no-heading" } }
+  local base_cmd =
+    vim.tbl_flatten { search.SEARCH_CMD, { "--smart-case", "--column", "--line-number", "--no-heading" } }
 
   client:_run_with_finder_backend(":ObsidianSearch", {
     ["telescope.nvim"] = function()
@@ -489,13 +491,13 @@ command.link = function(client, data)
 end
 
 command.complete_args = function(client, _, cmd_line, _)
-  local search
+  local search_
   local cmd_arg, _ = util.strip(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
   if string.len(cmd_arg) > 0 then
     if string.find(cmd_arg, "|", 1, true) then
       return {}
     else
-      search = cmd_arg
+      search_ = cmd_arg
     end
   else
     local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
@@ -511,12 +513,12 @@ command.complete_args = function(client, _, cmd_line, _)
       return {}
     end
 
-    search = table.concat(lines, " ")
+    search_ = table.concat(lines, " ")
   end
 
   local completions = {}
-  local search_lwr = string.lower(search)
-  for note in client:search(search) do
+  local search_lwr = string.lower(search_)
+  for note in client:search(search_) do
     local note_path = tostring(note.path:make_relative(tostring(client.dir)))
     if string.find(note:display_name(), search_lwr, 1, true) then
       table.insert(completions, note:display_name() .. "  " .. note_path)
@@ -589,7 +591,7 @@ command.follow = function(client, _)
   end
 
   -- Search for matching notes.
-  util.find_notes_async(client.dir, note_file_name, function(notes)
+  search.find_notes_async(client.dir, note_file_name, function(notes)
     if #notes < 1 then
       local aliases = note_name == note_file_name and {} or { note_name }
       local note = client:new_note(note_file_name, nil, nil, aliases)

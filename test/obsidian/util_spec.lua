@@ -1,5 +1,3 @@
-local async = require "plenary.async"
-local channel = require("plenary.async.control").channel
 local util = require "obsidian.util"
 
 describe("util.get_open_strategy()", function()
@@ -63,31 +61,6 @@ describe("util.table_params_to_str()", function()
   it("should convert a list of params into a string", function()
     local as_string = util.table_params_to_str { "find", "/home/user/obsidian", "-name", "*.md" }
     assert.equals(as_string, "find /home/user/obsidian -name *.md")
-  end)
-end)
-
-describe("util.find_notes_async()", function()
-  it("should recursively find notes in a directory given a file name", function()
-    async.util.block_on(function()
-      local tx, rx = channel.oneshot()
-      util.find_notes_async(".", "foo.md", function(matches)
-        assert.equals(#matches, 1)
-        assert.equals(tostring(matches[1]), "./test_fixtures/notes/foo.md")
-        tx()
-      end)
-      rx()
-    end, 2000)
-  end)
-  it("should recursively find notes in a directory given a partial path", function()
-    async.util.block_on(function()
-      local tx, rx = channel.oneshot()
-      util.find_notes_async(".", "notes/foo.md", function(matches)
-        assert.equals(#matches, 1)
-        assert.equals(tostring(matches[1]), "./test_fixtures/notes/foo.md")
-        tx()
-      end)
-      rx()
-    end, 2000)
   end)
 end)
 

@@ -12,6 +12,7 @@ obsidian.VERSION = "1.15.0"
 obsidian.completion = require "obsidian.completion"
 obsidian.Note = Note
 obsidian.util = require "obsidian.util"
+obsidian.search = require "obsidian.search"
 obsidian.yaml = require "obsidian.yaml"
 obsidian.mapping = require "obsidian.mapping"
 obsidian.workspace = require "obsidian.workspace"
@@ -210,8 +211,8 @@ client._search_iter_async = function(self, search, search_opts)
 
   local cmds_done = 0 -- out of the two, one for 'search' and one for 'find'
   search_opts = search_opts and search_opts or {}
-  obsidian.util.search_async(self.dir, search, vim.tbl_flatten { search_opts, "-m=1" }, on_search_match, on_exit)
-  obsidian.util.find_async(self.dir, search, self.opts.sort_by, self.opts.sort_reversed, on_find_match, on_exit)
+  obsidian.search.search_async(self.dir, search, vim.tbl_flatten { search_opts, "-m=1" }, on_search_match, on_exit)
+  obsidian.search.find_async(self.dir, search, self.opts.sort_by, self.opts.sort_reversed, on_find_match, on_exit)
 
   return function()
     while true do

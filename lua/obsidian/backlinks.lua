@@ -3,6 +3,7 @@ local channel = require("plenary.async.control").channel
 local Path = require "plenary.path"
 local Note = require "obsidian.note"
 local util = require "obsidian.util"
+local search = require "obsidian.search"
 
 ---Parse path and line number from a line in an ObsidianBacklinks buffer.
 ---@param line string
@@ -100,7 +101,7 @@ Backlinks._gather = function(self)
   local last_note = nil
   local tx, rx = channel.oneshot()
 
-  util.search_async(self.client.dir, "[[" .. tostring(self.note.id), {}, function(match)
+  search.search_async(self.client.dir, "[[" .. tostring(self.note.id), {}, function(match)
     if is_valid_backlink(match) then
       local path = match.path.text
       local src_note
