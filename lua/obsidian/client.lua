@@ -301,12 +301,16 @@ Client._daily = function(self, datetime)
   -- Create Note object and save if it doesn't already exist.
   local note = Note.new(id, { alias }, { "daily-notes" }, path)
   if not note:exists() then
+    local write_frontmatter = true
     if self.opts.daily_notes.template then
       util.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
+      note = Note.from_file(path, self.dir)
+      if note.has_frontmatter then
+        write_frontmatter = false
+      end
     end
-    local frontmatter = nil
-    note = Note.from_file(path, self.dir)
-    if not note.has_frontmatter then
+    if write_frontmatter then
+      local frontmatter = nil
       if self.opts.note_frontmatter_func ~= nil then
         frontmatter = self.opts.note_frontmatter_func(note)
       end
