@@ -305,10 +305,13 @@ Client._daily = function(self, datetime)
       util.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
     end
     local frontmatter = nil
-    if self.opts.note_frontmatter_func ~= nil then
-      frontmatter = self.opts.note_frontmatter_func(note)
+    note = Note.from_file(path, self.dir)
+    if not note.has_frontmatter then
+      if self.opts.note_frontmatter_func ~= nil then
+        frontmatter = self.opts.note_frontmatter_func(note)
+      end
+      note:save(nil, not self.opts.disable_frontmatter, frontmatter)
     end
-    note:save(nil, not self.opts.disable_frontmatter, frontmatter)
     echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
   end
 
