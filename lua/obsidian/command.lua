@@ -317,7 +317,7 @@ command.template = function(client, data)
             end)
             return true
           end,
-          find_command = util.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
+          find_command = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
         }
         require("telescope.builtin").find_files(opts)
       end
@@ -329,7 +329,7 @@ command.template = function(client, data)
       if not has_fzf_lua then
         util.implementation_unavailable()
       end
-      local cmd = util.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
+      local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
       fzf_lua.files {
         cmd = util.table_params_to_str(cmd),
         cwd = tostring(client.templates_dir),
@@ -356,7 +356,8 @@ command.template = function(client, data)
           vim.api.nvim_del_user_command "ApplyTemplate"
         end, { nargs = 1, bang = true })
 
-        local cmd = util.build_find_cmd(tostring(client.templates_dir), client.opts.sort_by, client.opts.sort_reversed)
+        local cmd =
+          search.build_find_cmd(tostring(client.templates_dir), client.opts.sort_by, client.opts.sort_reversed)
         local fzf_options = { source = util.table_params_to_str(cmd), sink = "ApplyTemplate" }
         vim.api.nvim_call_function("fzf#run", {
           vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
@@ -387,7 +388,7 @@ command.quick_switch = function(client, _)
       telescope.find_files {
         cwd = dir,
         search_file = "*.md",
-        find_command = util.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
+        find_command = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
       }
     end,
     ["fzf-lua"] = function()
@@ -396,13 +397,13 @@ command.quick_switch = function(client, _)
       if not has_fzf_lua then
         util.implementation_unavailable()
       end
-      local cmd = util.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
+      local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
       fzf_lua.files { cmd = util.table_params_to_str(cmd), cwd = tostring(client.dir) }
     end,
     ["fzf.vim"] = function()
       -- Fall back to trying with fzf.vim
       local has_fzf, _ = pcall(function()
-        local cmd = util.build_find_cmd(dir, client.opts.sort_by, client.opts.sort_reversed)
+        local cmd = search.build_find_cmd(dir, client.opts.sort_by, client.opts.sort_reversed)
         local fzf_options = { source = util.table_params_to_str(cmd), sink = "e" }
         vim.api.nvim_call_function("fzf#run", {
           vim.api.nvim_call_function("fzf#wrap", { fzf_options }),

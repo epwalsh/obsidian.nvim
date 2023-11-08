@@ -398,7 +398,7 @@ Client._run_with_finder_backend = function(self, command_name, implementations)
   local success, err = pcall(util.run_first_supported, command_name, finders_order, implementations)
   if not success then
     if type(err) == "string" then
-      echo.err(err, Client.opts.log_level)
+      echo.err(err, self.opts.log_level)
     else
       error(err)
     end
