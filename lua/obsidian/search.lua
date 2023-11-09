@@ -117,7 +117,7 @@ M.FIND_CMD = { "rg", "--no-config", "--files", "--type=md" }
 ---@param term string|?
 ---@param quote boolean|?
 ---@return string[]
-M.build_find_cmd = function(path, sort_by, sort_reversed, term, quote)
+M.build_find_cmd = function(path, sort_by, sort_reversed, term, opts, quote)
   if quote == nil then
     quote = true
   end
@@ -138,7 +138,7 @@ M.build_find_cmd = function(path, sort_by, sort_reversed, term, quote)
   if path ~= nil and path ~= "." then
     additional_opts[#additional_opts + 1] = tostring(path)
   end
-  return vim.tbl_flatten { M.FIND_CMD, additional_opts }
+  return vim.tbl_flatten { M.FIND_CMD, opts and opts or {}, additional_opts }
 end
 
 ---Find markdown files in a directory matching a given term. Return an iterator
@@ -148,12 +148,13 @@ end
 ---@param term string
 ---@param sort_by string|?
 ---@param sort_reversed boolean|?
+---@param opts string[]|?
 ---@return function
-M.find = function(dir, term, sort_by, sort_reversed)
+M.find = function(dir, term, sort_by, sort_reversed, opts)
   local paths = Deque.new()
   local done = false
 
-  M.find_async(dir, term, sort_by, sort_reversed, function(path)
+  M.find_async(dir, term, sort_by, sort_reversed, opts, function(path)
     paths:pushright(path)
   end, function(_, _, _)
     done = true
@@ -181,11 +182,12 @@ end
 ---@param term string
 ---@param sort_by string|?
 ---@param sort_reversed boolean|?
+---@param opts string[]|?
 ---@param on_match function(string)
 ---@param on_exit function(integer) |?
-M.find_async = function(dir, term, sort_by, sort_reversed, on_match, on_exit)
+M.find_async = function(dir, term, sort_by, sort_reversed, opts, on_match, on_exit)
   local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = M.build_find_cmd(norm_dir, sort_by, sort_reversed, term, false)
+  local cmd = M.build_find_cmd(norm_dir, sort_by, sort_reversed, term, opts, false)
   Job:new({
     command = cmd[1],
     args = { unpack(cmd, 2) },
