@@ -435,25 +435,38 @@ Client.resolve_note = function(self, query)
   return nil
 end
 
-Client._run_with_finder_backend = function(self, command_name, implementations)
-  local finders_order = { "telescope.nvim", "fzf-lua", "fzf.vim" }
+Client._run_with_finder_backend = function(self, implementations)
   if self.opts.finder then
-    for idx, finder in ipairs(finders_order) do
-      if finder == self.opts.finder then
-        table.remove(finders_order, idx)
-        break
+    if implementations[self.opts.finder] ~= nil then
+      local ok, res = pcall(implementations[self.opts.finder])
+      if not ok then
+        echo.err("error running finder '" .. self.opts.finder .. "':\n" .. tostring(res), self.opts.log_level)
+        return
+      elseif res == false then
+        echo.err(
+          "unable to load finder '" .. self.opts.finder .. "'. Are you sure it's installed?",
+          self.opts.log_level
+        )
+        return
+      else
+        return res
+      end
+    else
+      echo.err("invalid finder '" .. self.opts.finder .. "' in config", self.opts.log_level)
+      return
+    end
+  end
+
+  for _, finder in ipairs { "telescope.nvim", "fzf-lua", "fzf.vim" } do
+    if implementations[finder] ~= nil then
+      local has_finder, res = implementations[finder]()
+      if has_finder then
+        return res
       end
     end
-    table.insert(finders_order, 1, self.opts.finder)
   end
-  local success, err = pcall(util.run_first_supported, command_name, finders_order, implementations)
-  if not success then
-    if type(err) == "string" then
-      echo.err(err, self.opts.log_level)
-    else
-      error(err)
-    end
-  end
+
+  echo.err "No finders available. One of 'telescope.nvim', 'fzf-lua', or 'fzf.vim' is required."
 end
 
 return Client
