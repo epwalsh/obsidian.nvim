@@ -52,8 +52,9 @@ end
 
 ---@param search string
 ---@param search_opts string[]|?
+---@param find_opts string[]|?
 ---@return function
-Client._search_iter_async = function(self, search, search_opts)
+Client._search_iter_async = function(self, search, search_opts, find_opts)
   local channel = require("plenary.async.control").channel
   local search_async = require("obsidian.search").search_async
   local find_async = require("obsidian.search").find_async
@@ -82,8 +83,13 @@ Client._search_iter_async = function(self, search, search_opts)
 
   local cmds_done = 0 -- out of the two, one for 'search' and one for 'find'
   search_opts = search_opts and search_opts or {}
+  find_opts = find_opts and find_opts or {}
+  if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
+    search_opts[#search_opts + 1] = "-g!" .. self.opts.templates.subdir
+    find_opts[#find_opts + 1] = "-g!" .. self.opts.templates.subdir
+  end
   search_async(self.dir, search, vim.tbl_flatten { search_opts, "-m=1" }, on_search_match, on_exit)
-  find_async(self.dir, search, self.opts.sort_by, self.opts.sort_reversed, on_find_match, on_exit)
+  find_async(self.dir, search, self.opts.sort_by, self.opts.sort_reversed, find_opts, on_find_match, on_exit)
 
   return function()
     while true do
