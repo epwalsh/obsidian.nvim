@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a completion bug (#212).
 - Fixed a bug where the frontmatter of daily note template would be overwritten upon inserting the template.
 - Skip templates directory when searching for notes.
+- Fixed a compatibility issue with the latest `fzf.vim` and made running finders more robust in general.
 
 ### Removed
 

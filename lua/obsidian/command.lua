@@ -207,13 +207,14 @@ command.search = function(client, data)
   local base_cmd =
     vim.tbl_flatten { search.SEARCH_CMD, { "--smart-case", "--column", "--line-number", "--no-heading" } }
 
-  client:_run_with_finder_backend(":ObsidianSearch", {
+  client:_run_with_finder_backend {
     ["telescope.nvim"] = function()
       local has_telescope, telescope = pcall(require, "telescope.builtin")
 
       if not has_telescope then
-        util.implementation_unavailable()
+        return false
       end
+
       -- Search with telescope.nvim
       local vimgrep_arguments =
         vim.tbl_flatten { base_cmd, {
@@ -230,44 +231,52 @@ command.search = function(client, data)
       else
         telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
       end
+
+      return true
     end,
     ["fzf-lua"] = function()
       local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
-
       if not has_fzf_lua then
-        util.implementation_unavailable()
+        return false
       end
+
       if data.args:len() > 0 then
         fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
       else
         fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
       end
+
+      return true
     end,
     ["fzf.vim"] = function()
-      -- Fall back to trying with fzf.vim
-      local has_fzf, _ = pcall(function()
-        local grep_cmd = vim.tbl_flatten {
-          base_cmd,
-          {
-            "--color=always",
-            "--",
-            vim.fn.shellescape(data.args),
-            tostring(client.dir),
-          },
-        }
+      local grep_cmd = vim.tbl_flatten {
+        base_cmd,
+        {
+          "--color=always",
+          "--",
+          util.quote(data.args),
+          tostring(client.dir),
+        },
+      }
 
+      local ok, res = pcall(function()
         vim.api.nvim_call_function("fzf#vim#grep", {
           table.concat(grep_cmd, " "),
-          true,
           vim.api.nvim_call_function("fzf#vim#with_preview", {}),
-          false,
         })
       end)
-      if not has_fzf then
-        util.implementation_unavailable()
+
+      if not ok then
+        if string.find(tostring(res), "Unknown function", 1, true) ~= nil then
+          return false
+        else
+          error(res)
+        end
       end
+
+      return true
     end,
-  })
+  }
 end
 
 --- Insert a template
@@ -299,13 +308,14 @@ command.template = function(client, data)
     return
   end
 
-  client:_run_with_finder_backend(":ObsidianTemplate", {
+  client:_run_with_finder_backend {
     ["telescope.nvim"] = function()
       -- try with telescope.nvim
       local has_telescope, _ = pcall(require, "telescope.builtin")
       if not has_telescope then
-        util.implementation_unavailable()
+        return false
       end
+
       local choose_template = function()
         local opts = {
           cwd = tostring(client.templates_dir),
@@ -321,14 +331,18 @@ command.template = function(client, data)
         }
         require("telescope.builtin").find_files(opts)
       end
+
       choose_template()
+
+      return true
     end,
     ["fzf-lua"] = function()
       -- try with fzf-lua
       local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
       if not has_fzf_lua then
-        util.implementation_unavailable()
+        return false
       end
+
       local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
       fzf_lua.files {
         cmd = util.table_params_to_str(cmd),
@@ -344,30 +358,38 @@ command.template = function(client, data)
           end,
         },
       }
+
+      return true
     end,
     ["fzf.vim"] = function()
-      -- try with fzf
-      local has_fzf, _ = pcall(function()
-        vim.api.nvim_create_user_command("ApplyTemplate", function(path)
-          -- remove escaped whitespace and extract the file name
-          local file_path = string.gsub(path.args, "\\ ", " ")
-          local template = vim.fs.basename(file_path)
-          insert_template(template)
-          vim.api.nvim_del_user_command "ApplyTemplate"
-        end, { nargs = 1, bang = true })
+      vim.api.nvim_create_user_command("ApplyTemplate", function(path)
+        -- remove escaped whitespace and extract the file name
+        local file_path = string.gsub(path.args, "\\ ", " ")
+        local template = vim.fs.basename(file_path)
+        insert_template(template)
+        vim.api.nvim_del_user_command "ApplyTemplate"
+      end, { nargs = 1, bang = true })
 
-        local cmd =
-          search.build_find_cmd(tostring(client.templates_dir), client.opts.sort_by, client.opts.sort_reversed)
-        local fzf_options = { source = util.table_params_to_str(cmd), sink = "ApplyTemplate" }
+      local cmd = search.build_find_cmd(tostring(client.templates_dir), client.opts.sort_by, client.opts.sort_reversed)
+      local fzf_options = { source = util.table_params_to_str(cmd), sink = "ApplyTemplate" }
+
+      local ok, res = pcall(function()
         vim.api.nvim_call_function("fzf#run", {
           vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
         })
       end)
-      if not has_fzf then
-        util.implementation_unavailable()
+
+      if not ok then
+        if string.find(tostring(res), "Unknown function", 1, true) ~= nil then
+          return false
+        else
+          error(res)
+        end
       end
+
+      return true
     end,
-  })
+  }
 end
 
 ---Quick switch to an obsidian note
@@ -377,12 +399,11 @@ end
 command.quick_switch = function(client, _)
   local dir = tostring(client.dir)
 
-  client:_run_with_finder_backend(":ObsidianQuickSwitch", {
+  client:_run_with_finder_backend {
     ["telescope.nvim"] = function()
       local has_telescope, telescope = pcall(require, "telescope.builtin")
-
       if not has_telescope then
-        util.implementation_unavailable()
+        return false
       end
       -- Search with telescope.nvim
       telescope.find_files {
@@ -390,30 +411,41 @@ command.quick_switch = function(client, _)
         search_file = "*.md",
         find_command = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
       }
+
+      return true
     end,
     ["fzf-lua"] = function()
       local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
-
       if not has_fzf_lua then
-        util.implementation_unavailable()
+        return false
       end
+
       local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
       fzf_lua.files { cmd = util.table_params_to_str(cmd), cwd = tostring(client.dir) }
+
+      return true
     end,
     ["fzf.vim"] = function()
-      -- Fall back to trying with fzf.vim
-      local has_fzf, _ = pcall(function()
-        local cmd = search.build_find_cmd(dir, client.opts.sort_by, client.opts.sort_reversed)
-        local fzf_options = { source = util.table_params_to_str(cmd), sink = "e" }
+      local cmd = search.build_find_cmd(dir, client.opts.sort_by, client.opts.sort_reversed)
+      local fzf_options = { source = util.table_params_to_str(cmd), sink = "e" }
+
+      local ok, res = pcall(function()
         vim.api.nvim_call_function("fzf#run", {
           vim.api.nvim_call_function("fzf#wrap", { fzf_options }),
         })
       end)
-      if not has_fzf then
-        util.implementation_unavailable()
+
+      if not ok then
+        if string.find(tostring(res), "Unknown function", 1, true) ~= nil then
+          return false
+        else
+          error(res)
+        end
       end
+
+      return true
     end,
-  })
+  }
 end
 
 command.link_new = function(client, data)
