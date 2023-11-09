@@ -300,7 +300,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, determines whether to open notes in a horizontal split, a vertical split,
   -- or replacing the current buffer (default)
   -- Accepted values are "current", "hsplit" and "vsplit"
-  open_notes_in = "current"
+  open_notes_in = "current",
 
   -- Optional, set the YAML parser to use. The valid options are:
   --  * "native" - uses a pure Lua parser that's fast but potentially misses some edge cases.
