@@ -139,13 +139,51 @@ Client.search_async = function(self, search, search_opts, callback)
   local next_path = self:_search_iter_async(search, search_opts)
   local executor = require("obsidian.async").AsyncExecutor.new()
   local dir = tostring(self.dir)
+  local err_count = 0
+  local first_err
+  local first_err_path
 
   local function task_fn(path)
-    return Note.from_file_async(path, dir)
+    local ok, res = pcall(Note.from_file_async, path, dir)
+    if ok then
+      return res
+    else
+      err_count = err_count + 1
+      if first_err == nil then
+        first_err = res
+        first_err_path = path
+      end
+      return nil
+    end
   end
 
   async.run(function()
-    executor:map(task_fn, next_path, callback)
+    executor:map(task_fn, next_path, function(results)
+      local results_ = results
+
+      -- Check for errors.
+      if first_err ~= nil and first_err_path ~= nil then
+        echo.err(
+          tostring(err_count)
+            .. " error(s) occurred during search. First error from note at "
+            .. tostring(first_err_path)
+            .. ":\n"
+            .. tostring(first_err),
+          self.opts.log_level
+        )
+
+        -- Filter out error results (nils).
+        results_ = {}
+        for _, res in ipairs(results) do
+          if res[1] ~= nil then
+            results_[#results_ + 1] = res
+          end
+        end
+      end
+
+      -- Execute callback.
+      callback(results_)
+    end)
   end, function(_) end)
 end
 
