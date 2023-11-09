@@ -284,7 +284,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_app_foreground = false,
 
   -- Optional, by default commands like `:ObsidianSearch` will attempt to use
-  -- telescope.nvim, fzf-lua, and fzf.nvim (in that order), and use the
+  -- telescope.nvim, fzf-lua, and fzf.vim (in that order), and use the
   -- first one they find. By setting this option to your preferred
   -- finder you can attempt it first. Note that if the specified finder
   -- is not installed, or if it the command does not support it, the
@@ -300,7 +300,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, determines whether to open notes in a horizontal split, a vertical split,
   -- or replacing the current buffer (default)
   -- Accepted values are "current", "hsplit" and "vsplit"
-  open_notes_in = "current"
+  open_notes_in = "current",
 
   -- Optional, set the YAML parser to use. The valid options are:
   --  * "native" - uses a pure Lua parser that's fast but potentially misses some edge cases.
