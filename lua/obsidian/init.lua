@@ -29,6 +29,35 @@ local obsidian = setmetatable({}, {
   end,
 })
 
+---Print general information about the current installation of Obsidian.nvim.
+obsidian.info = function()
+  local info = obsidian.util.get_plugin_info()
+  if info ~= nil then
+    print("[obsidian.nvim (v" .. obsidian.VERSION .. ")] " .. info)
+  else
+    print(
+      "ERROR: could not find path to obsidian.nvim installation.\n"
+        .. "Please ensure obsidian.nvim loads upfront (e.g. by setting 'lazy=false' with your plugin manager) "
+        .. "and then run this again."
+    )
+    return
+  end
+
+  for _, plugin in ipairs { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "fzf.vim", "vim-markdown" } do
+    local plugin_info = obsidian.util.get_plugin_info(plugin)
+    if plugin_info ~= nil then
+      print("[" .. plugin .. "] " .. plugin_info)
+    end
+  end
+
+  for _, cmd in ipairs { "rg" } do
+    local cmd_info = obsidian.util.get_external_depency_info(cmd)
+    if cmd_info ~= nil then
+      print(cmd_info)
+    end
+  end
+end
+
 ---Create a new Obsidian client without additional setup.
 ---
 ---@param opts obsidian.config.ClientOpts

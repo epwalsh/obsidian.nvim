@@ -624,4 +624,54 @@ util.string_contains = function(str, substr)
   return i ~= nil
 end
 
+---Get the path to where a plugin is installed.
+---@param name string|?
+---@return string|?
+util.get_src_root = function(name)
+  name = name and name or "obsidian.nvim"
+  for _, path in ipairs(vim.api.nvim_list_runtime_paths()) do
+    if vim.endswith(path, name) then
+      return path
+    end
+  end
+  return nil
+end
+
+---Get info about a plugin.
+---@param name string|?
+---@return string|?
+util.get_plugin_info = function(name)
+  name = name and name or "obsidian.nvim"
+  local src_root = util.get_src_root(name)
+
+  if src_root ~= nil then
+    local Job = require "plenary.job"
+    local output, exit_code = Job:new({
+      command = "git",
+      args = { "rev-parse", "HEAD" },
+      cwd = src_root,
+      enable_recording = true,
+    }):sync(1000)
+
+    if exit_code == 0 then
+      return "Commit SHA: " .. output[1]
+    end
+  end
+end
+
+---@param cmd string
+---@return string|?
+util.get_external_depency_info = function(cmd)
+  local Job = require "plenary.job"
+  local output, exit_code = Job:new({
+    command = cmd,
+    args = { "--version" },
+    enable_recording = true,
+  }):sync(1000)
+
+  if exit_code == 0 then
+    return output[1]
+  end
+end
+
 return util

@@ -38,10 +38,11 @@ body:
       
       ```sh
       nvim --version
-      nvim --headless -c 'lua print("Obsidian v" .. require("obsidian").VERSION)' -c q
+      nvim --headless -c 'lua require("obsidian").info()' -c q
       ```
-      
-      In addition, please include the versions of any other relevant plugins. Or simply include your `lazy-lock.json` file if you use [lazy.nvim](https://github.com/folke/lazy.nvim) as your plugin manager.
+
+      Note that you'll have to ensure obsidian.nvim loads up front for that command to be able to gather all of the information it needs, which means ensuring your plugin manager does not load obsidian.nvim lazily.
+      Alternatively, if you use [lazy.nvim](https://github.com/folke/lazy.nvim) as your plugin manager you can simply include your `lazy-lock.json` file.
   validations:
     required: true
 - type: markdown
