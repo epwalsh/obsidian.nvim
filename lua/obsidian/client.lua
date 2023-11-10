@@ -123,9 +123,10 @@ Client.search = function(self, search, search_opts)
 
   self:search_async(search, search_opts, collect_results)
 
-  while not done do
-    vim.wait(100)
-  end
+  vim.wait(2000, function()
+    return done
+  end, 20, false)
+
   return results
 end
 
@@ -383,13 +384,38 @@ end
 ---@param query string
 ---@return obsidian.Note|?
 Client.resolve_note = function(self, query)
+  local maybe_note
+  local done = false
+
+  self:resolve_note_async(query, function(res)
+    maybe_note = res
+    done = true
+  end)
+
+  vim.wait(2000, function()
+    return done
+  end, 20, false)
+
+  return maybe_note
+end
+
+---An async vesion of `resolve_note()`.
+---
+---@param query string
+---@param callback function(obsidian.Note|?)
+---@return obsidian.Note|?
+Client.resolve_note_async = function(self, query, callback)
+  local async = require "plenary.async"
+
   -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
   if count > 0 then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     local full_path = self.dir / note_path
-    return Note.from_file(full_path, self.dir)
+    return async.run(function()
+      return Note.from_file_async(full_path, self.dir)
+    end, callback)
   end
 
   -- Query might be a path.
@@ -401,36 +427,37 @@ Client.resolve_note = function(self, query)
     table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / query)
   end
   for _, path in pairs(paths_to_check) do
-    if path:is_file() then
-      local ok, note = pcall(Note.from_file, path)
-      if ok then
-        return note
+    if path:is_file() and vim.endswith(tostring(path), ".md") then
+      return async.run(function()
+        return Note.from_file_async(path)
+      end, callback)
+    end
+  end
+
+  self:search_async(query, { "--ignore-case" }, function(results)
+    local query_lwr = string.lower(query)
+    local maybe_matches = {}
+    for _, note in ipairs(results) do
+      if query == note.id or query == note:display_name() or util.contains(note.aliases, query) then
+        -- Exact match! We're done!
+        return callback(note)
+      end
+
+      for _, alias in pairs(note.aliases) do
+        if query_lwr == string.lower(alias) then
+          -- Lower case match, save this one for later.
+          table.insert(maybe_matches, note)
+          break
+        end
       end
     end
-  end
 
-  local query_lwr = string.lower(query)
-  local maybe_matches = {}
-  for _, note in ipairs(self:search(query, { "--ignore-case" })) do
-    if query == note.id or query == note:display_name() or util.contains(note.aliases, query) then
-      -- Exact match! We're done!
-      return note
+    if #maybe_matches > 0 then
+      return callback(maybe_matches[1])
+    else
+      return callback(nil)
     end
-
-    for _, alias in pairs(note.aliases) do
-      if query_lwr == string.lower(alias) then
-        -- Lower case match, save this one for later.
-        table.insert(maybe_matches, note)
-        break
-      end
-    end
-  end
-
-  if #maybe_matches > 0 then
-    return maybe_matches[1]
-  end
-
-  return nil
+  end)
 end
 
 Client._run_with_finder_backend = function(self, implementations)
