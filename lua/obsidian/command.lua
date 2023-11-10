@@ -175,11 +175,18 @@ command.open = function(client, data)
   Job:new({
     command = cmd,
     args = args,
-    on_exit = vim.schedule_wrap(function(_, return_code)
+    on_stderr = function(err, line)
+      if err then
+        echo.err("error opening Obsidian app to note\n" .. err, client.opts.log_level)
+      else
+        echo.warn("captured stderr output while opening Obsidian app to note:\n" .. line, client.opts.log_level)
+      end
+    end,
+    on_exit = function(_, return_code)
       if return_code > 0 then
         echo.err("failed opening Obsidian app to note", client.opts.log_level)
       end
-    end),
+    end,
   }):start()
 end
 
