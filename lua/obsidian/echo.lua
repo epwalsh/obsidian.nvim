@@ -63,6 +63,14 @@ echo.err = function(msg, log_level)
 end
 
 ---@param msg any
+---@param log_level integer|?
+echo.err_once = function(msg, log_level)
+  if log_level == nil or log_level <= vim.log.levels.ERROR then
+    echo.echo_once(msg, vim.log.levels.ERROR)
+  end
+end
+
+---@param msg any
 echo.fail = function(msg)
   error("[Obsidian] " .. msg)
 end

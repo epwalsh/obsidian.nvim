@@ -1,9 +1,9 @@
 local Path = require "plenary.path"
-local Job = require "plenary.job"
 local Note = require "obsidian.note"
 local echo = require "obsidian.echo"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
+local run_job = require("obsidian.async").run_job
 
 local command = {}
 
@@ -109,6 +109,7 @@ command.open = function(client, data)
     -- bufname is an absolute path to the buffer.
     local bufname = vim.api.nvim_buf_get_name(0)
     local vault_name_escaped = vault_name:gsub("%W", "%%%0") .. "%/"
+    ---@diagnostic disable-next-line: undefined-field
     if vim.loop.os_uname().sysname == "Windows_NT" then
       bufname = bufname:gsub("/", "\\")
       vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
@@ -172,15 +173,7 @@ command.open = function(client, data)
     return
   end
 
-  Job:new({
-    command = cmd,
-    args = args,
-    on_exit = vim.schedule_wrap(function(_, return_code)
-      if return_code > 0 then
-        echo.err("failed opening Obsidian app to note", client.opts.log_level)
-      end
-    end),
-  }):start()
+  run_job(cmd, args)
 end
 
 ---Get backlinks to a note.

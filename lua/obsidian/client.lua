@@ -134,7 +134,7 @@ end
 ---
 ---@param search string
 ---@param search_opts string[]|?
----@param callback function
+---@param callback function (obsidian.Note[]) -> nil
 Client.search_async = function(self, search, search_opts, callback)
   local async = require "plenary.async"
   local next_path = self:_search_iter_async(search, search_opts)
