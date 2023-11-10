@@ -20,7 +20,9 @@ jobs:
     if: github.event_name == 'pull_request'
 
     steps:
-    - uses: actions/checkout@v1  # needs v1 for now
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Check that CHANGELOG has been updated
       run: |
