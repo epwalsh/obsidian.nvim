@@ -92,7 +92,9 @@ command.open = function(client, data)
     echo.err("couldn't find an Obsidian vault", client.opts.log_level)
     return
   end
+
   local vault_name = vim.fs.basename(vault)
+  assert(vault_name)
 
   local path
   if data.args:len() > 0 then
