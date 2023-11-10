@@ -31,17 +31,36 @@ yaml.loads = function(str)
   return yaml.parsers[yaml.parser].loads(str)
 end
 
+---@param s string
+---@return boolean
+local should_quote = function(s)
+  -- TODO: this probably doesn't cover all edge cases.
+  -- See https://www.yaml.info/learn/quote.html
+  -- Check if it starts with a special character.
+  if string.match(s, [[^["'\\[{&!-].*]]) then
+    return true
+  -- Check if it looks like a number.
+  elseif string.match(s, "^[%d.-]+$") then
+    return true
+  -- Check if it's an empty string.
+  elseif s == "" or string.match(s, "^[%s]+$") then
+    return true
+  else
+    return false
+  end
+end
+
 ---@return string[]
 local dumps
 dumps = function(x, indent, order)
   local indent_str = string.rep(" ", indent)
 
   if type(x) == "string" then
-    if string.match(x, "^[%w%d%s'_]+$") then
-      return { indent_str .. x }
-    else
+    if should_quote(x) then
       x = string.gsub(x, '"', '\\"')
       return { indent_str .. [["]] .. x .. [["]] }
+    else
+      return { indent_str .. x }
     end
   end
 
