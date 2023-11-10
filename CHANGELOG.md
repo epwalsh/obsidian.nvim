@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.16.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.16.0) - 2023-11-10
+
+Major internal refactoring to bring performance improvements through async execution of search/find functionality, and general robustness improvements. 🏎️🤠
+
 ### Added
 
 - Added `obsidian.async` module for internal use.
 
 ### Changed
 
-- Re-implemented the native Lua YAML parser (`obsidian.yaml.native`). This should be faster and more robust now. 🤠
-- Re-implemented search/find functionality to utilize concurrency via `obsidian.async` and `plenary.async` for big performance gains. 🏎️
+- Re-implemented the native Lua YAML parser (`obsidian.yaml.native`). This should be faster and more robust now.
+- Re-implemented search/find functionality to utilize concurrency via `obsidian.async` and `plenary.async` for big performance gains.
 - Made how run shell commands more robust, and we also log stderr lines now.
 - Submodules imported lazily.
 - Changes to internal module organization.
