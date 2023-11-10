@@ -5,7 +5,14 @@ local echo = {}
 ---@param msg any
 ---@param level integer|?
 echo.echo = function(msg, level)
-  vim.notify("[Obsidian] " .. tostring(msg), level)
+  msg = "[Obsidian] " .. tostring(msg)
+  if vim.in_fast_event() then
+    vim.schedule(function()
+      vim.notify(msg, level)
+    end)
+  else
+    vim.notify(msg, level)
+  end
 end
 
 ---Echo a message with a highlight group.
@@ -13,7 +20,14 @@ end
 ---@param msg any
 ---@param level integer|?
 echo.echo_once = function(msg, level)
-  vim.notify_once("[Obsidian] " .. tostring(msg), level)
+  msg = "[Obsidian] " .. tostring(msg)
+  if vim.in_fast_event() then
+    vim.schedule(function()
+      vim.notify_once(msg, level)
+    end)
+  else
+    vim.notify_once(msg, level)
+  end
 end
 
 ---@param msg string
