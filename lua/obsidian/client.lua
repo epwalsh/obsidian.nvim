@@ -159,8 +159,6 @@ Client.search_async = function(self, search, search_opts, callback)
 
   async.run(function()
     executor:map(task_fn, next_path, function(results)
-      local results_ = results
-
       -- Check for errors.
       if first_err ~= nil and first_err_path ~= nil then
         echo.err(
@@ -171,13 +169,13 @@ Client.search_async = function(self, search, search_opts, callback)
             .. tostring(first_err),
           self.opts.log_level
         )
+      end
 
-        -- Filter out error results (nils).
-        results_ = {}
-        for _, res in ipairs(results) do
-          if res[1] ~= nil then
-            results_[#results_ + 1] = res
-          end
+      -- Filter out error results (nils), and unpack the ok results.
+      local results_ = {}
+      for _, res in ipairs(results) do
+        if res[1] ~= nil then
+          results_[#results_ + 1] = res[1]
         end
       end
 
@@ -413,8 +411,7 @@ Client.resolve_note = function(self, query)
 
   local query_lwr = string.lower(query)
   local maybe_matches = {}
-  for _, res in ipairs(self:search(query, { "--ignore-case" })) do
-    local note = res[1]
+  for _, note in ipairs(self:search(query, { "--ignore-case" })) do
     if query == note.id or query == note:display_name() or util.contains(note.aliases, query) then
       -- Exact match! We're done!
       return note

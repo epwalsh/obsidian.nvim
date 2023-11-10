@@ -538,6 +538,7 @@ command.complete_args = function(client, _, cmd_line, _)
     local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
     local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
     local lines = vim.fn.getline(csrow, cerow)
+    assert(type(lines) == "table")
 
     if #lines > 1 then
       lines[1] = string.sub(lines[1], cscol)
@@ -553,7 +554,7 @@ command.complete_args = function(client, _, cmd_line, _)
 
   local completions = {}
   local search_lwr = string.lower(search_)
-  for note in client:search(search_) do
+  for _, note in ipairs(client:search(search_)) do
     local note_path = tostring(note.path:make_relative(tostring(client.dir)))
     if string.find(note:display_name(), search_lwr, 1, true) then
       table.insert(completions, note:display_name() .. "  " .. note_path)

@@ -21,8 +21,7 @@ source.complete = function(self, request, callback)
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local function search_callback(results)
       local items = {}
-      for _, result in ipairs(results) do
-        local note = result[1]
+      for _, note in ipairs(results) do
         local aliases = util.unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
         for _, alias in pairs(aliases) do
           local options = {}
