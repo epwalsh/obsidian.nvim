@@ -1,5 +1,7 @@
+local Job = require "plenary.job"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
+local echo = require "obsidian.echo"
 local uv = vim.loop
 
 local M = {}
@@ -92,6 +94,7 @@ end
 ---@param timeout integer|?
 ---@param pause_fn function(integer)
 Executor._join = function(self, timeout, pause_fn)
+  ---@diagnostic disable-next-line: undefined-field
   local start_time = uv.uptime()
   local pause_for = 100
   if timeout ~= nil then
@@ -99,8 +102,9 @@ Executor._join = function(self, timeout, pause_fn)
   end
   while self.tasks_running > 0 do
     pause_fn(pause_for)
+    ---@diagnostic disable-next-line: undefined-field
     if timeout ~= nil and uv.uptime() - start_time > timeout then
-      error "Timeout error from AsyncExecutor.join()"
+      return echo.fail "Timeout error from AsyncExecutor.join()"
     end
   end
 end
@@ -177,6 +181,7 @@ end
 ---@diagnostic disable-next-line: unused-local
 ThreadPoolExecutor.submit = function(self, fn, callback, ...)
   self.tasks_running = self.tasks_running + 1
+  ---@diagnostic disable-next-line: undefined-field
   local ctx = uv.new_work(fn, function(...)
     self.tasks_running = self.tasks_running - 1
     if callback ~= nil then
@@ -247,6 +252,81 @@ File.lines = function(self, include_new_line_char)
   end
 
   return lines
+end
+
+---@param cmd string
+---@param args string[]
+---@param on_stdout function|? (string) -> nil
+---@param on_exit function|? (integer) -> nil
+---@return Job
+local init_job = function(cmd, args, on_stdout, on_exit)
+  local stderr_lines = {}
+
+  return Job:new {
+    command = cmd,
+    args = args,
+    on_stdout = function(err, line)
+      if err ~= nil then
+        return echo.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
+      end
+      if on_stdout ~= nil then
+        on_stdout(line)
+      end
+    end,
+    on_stderr = function(err, line)
+      if err then
+        return echo.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
+      elseif line ~= nil then
+        stderr_lines[#stderr_lines + 1] = line
+      end
+    end,
+    on_exit = function(_, code, _)
+      --- NOTE: commands like `rg` return a non-zero exit code when there are no matches, which is okay.
+      --- So we only log no-zero exit codes as errors when there's also stderr lines.
+      if code > 0 and #stderr_lines > 0 then
+        echo.err(
+          "Command '"
+            .. cmd
+            .. "' with arguments "
+            .. vim.inspect(args)
+            .. " exited with non-zero exit code "
+            .. code
+            .. "\n\n[stderr]\n\n"
+            .. table.concat(stderr_lines, "\n")
+        )
+      elseif #stderr_lines > 0 then
+        echo.warn(
+          "Captured stderr output while running command '"
+            .. cmd
+            .. " with arguments "
+            .. vim.inspect(args)
+            .. ":\n"
+            .. table.concat(stderr_lines)
+        )
+      end
+      if on_exit ~= nil then
+        on_exit(code)
+      end
+    end,
+  }
+end
+
+---@param cmd string
+---@param args string[]
+---@param on_stdout function|? (string) -> nil
+---@param on_exit function|? (integer) -> nil
+M.run_job = function(cmd, args, on_stdout, on_exit)
+  local job = init_job(cmd, args, on_stdout, on_exit)
+  job:sync()
+end
+
+---@param cmd string
+---@param args string[]
+---@param on_stdout function|? (string) -> nil
+---@param on_exit function|? (integer) -> nil
+M.run_job_async = function(cmd, args, on_stdout, on_exit)
+  local job = init_job(cmd, args, on_stdout, on_exit)
+  job:start()
 end
 
 return M

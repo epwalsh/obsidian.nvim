@@ -1,8 +1,8 @@
 local Path = require "plenary.path"
-local Job = require "plenary.job"
 local Deque = require("plenary.async.structs").Deque
 local scan = require "plenary.scandir"
 local util = require "obsidian.util"
+local run_job_async = require("obsidian.async").run_job_async
 
 local M = {}
 
@@ -84,27 +84,21 @@ end
 ---@param dir string|Path
 ---@param term string
 ---@param opts string[]|?
----@param on_match function(MatchData)
----@param on_exit function(integer) |?
+---@param on_match function (match: MatchData) -> nil
+---@param on_exit function|? (exit_code: integer) -> nil
 M.search_async = function(dir, term, opts, on_match, on_exit)
   local cmd = M.build_search_cmd(dir, term, opts, false)
-  Job:new({
-    command = cmd[1],
-    args = { unpack(cmd, 2) },
-    on_stdout = function(err, line)
-      assert(not err, err)
-      local data = vim.json.decode(line)
-      if data["type"] == "match" then
-        local match_data = data.data
-        on_match(match_data)
-      end
-    end,
-    on_exit = function(_, code, _)
-      if on_exit ~= nil then
-        on_exit(code)
-      end
-    end,
-  }):start()
+  run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
+    local data = vim.json.decode(line)
+    if data["type"] == "match" then
+      local match_data = data.data
+      on_match(match_data)
+    end
+  end, function(code)
+    if on_exit ~= nil then
+      on_exit(code)
+    end
+  end)
 end
 
 M.FIND_CMD = { "rg", "--no-config", "--files", "--type=md" }
@@ -183,24 +177,18 @@ end
 ---@param sort_by string|?
 ---@param sort_reversed boolean|?
 ---@param opts string[]|?
----@param on_match function(string)
----@param on_exit function(integer) |?
+---@param on_match function (string) -> nil
+---@param on_exit function|? (integer) -> nil
 M.find_async = function(dir, term, sort_by, sort_reversed, opts, on_match, on_exit)
   local norm_dir = vim.fs.normalize(tostring(dir))
   local cmd = M.build_find_cmd(norm_dir, sort_by, sort_reversed, term, opts, false)
-  Job:new({
-    command = cmd[1],
-    args = { unpack(cmd, 2) },
-    on_stdout = function(err, line)
-      assert(not err, err)
-      on_match(line)
-    end,
-    on_exit = function(_, code, _)
-      if on_exit ~= nil then
-        on_exit(code)
-      end
-    end,
-  }):start()
+  run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
+    on_match(line)
+  end, function(code)
+    if on_exit ~= nil then
+      on_exit(code)
+    end
+  end)
 end
 
 ---Find all notes with the given file_name recursively in a directory.
