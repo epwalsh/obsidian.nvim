@@ -35,5 +35,5 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_user_name: github-actions[bot]
-          commit_message: 'chore: auto generate docs'
+          commit_message: 'chore(docs): auto generate docs'
           branch: ${{ github.head_ref }}
