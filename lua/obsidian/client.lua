@@ -413,7 +413,7 @@ Client.resolve_note = function(self, query)
 
   local query_lwr = string.lower(query)
   local maybe_matches = {}
-  for note in self:search(query, { "--ignore-case" }) do
+  for _, note in ipairs(self:search(query, { "--ignore-case" })) do
     if query == note.id or query == note:display_name() or util.contains(note.aliases, query) then
       -- Exact match! We're done!
       return note
