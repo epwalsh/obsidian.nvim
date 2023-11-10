@@ -91,12 +91,18 @@ end
 ---Check the directory for notes with missing/invalid frontmatter.
 M.register("ObsidianCheck", {
   opts = { nargs = 0 },
+  ---@param client obsidian.Client
   func = function(client, _)
     local scan = require "plenary.scandir"
 
+    local skip_dirs = {}
+    if client.opts.templates ~= nil and client.opts.templates.subdir ~= nil then
+      skip_dirs[#skip_dirs + 1] = Path:new(client.opts.templates.subdir)
+    end
+
     local count = 0
-    local err_count = 0
-    local warn_count = 0
+    local errors = {}
+    local warnings = {}
 
     scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
       hidden = false,
@@ -104,26 +110,41 @@ M.register("ObsidianCheck", {
       respect_gitignore = true,
       search_pattern = ".*%.md",
       on_insert = function(entry)
+        local relative_path = Path:new(entry):make_relative(tostring(client.dir))
+        for _, skip_dir in ipairs(skip_dirs) do
+          if vim.startswith(relative_path, tostring(skip_dir) .. skip_dir._sep) then
+            return
+          end
+        end
+
         count = count + 1
         Note.from_file(entry, client.dir)
         local ok, note = pcall(Note.from_file, entry, client.dir)
         if not ok then
-          err_count = err_count + 1
-          echo.err("Failed to parse note at " .. entry, client.opts.log_level)
+          errors[#errors + 1] = "Failed to parse note '" .. relative_path .. "'"
         elseif note.has_frontmatter == false then
-          warn_count = warn_count + 1
-          echo.warn(tostring(entry) .. " is missing frontmatter", client.opts.log_level)
+          warnings[#warnings + 1] = "'" .. relative_path .. "' missing frontmatter"
         end
       end,
     })
 
-    echo.info("Found " .. tostring(count) .. " notes total", client.opts.log_level)
-    if warn_count > 0 then
-      echo.warn("There were " .. tostring(warn_count) .. " warnings", client.opts.log_level)
+    local messages = { "Found " .. tostring(count) .. " notes" }
+    local log_level = vim.log.levels.INFO
+    if #warnings > 0 then
+      messages[#messages + 1] = "There were " .. tostring(#warnings) .. " warnings:"
+      log_level = vim.log.levels.WARN
+      for _, warning in ipairs(warnings) do
+        messages[#messages + 1] = "  " .. warning
+      end
     end
-    if err_count > 0 then
-      echo.err("There were " .. tostring(err_count) .. " errors", client.opts.log_level)
+    if #errors > 0 then
+      messages[#messages + 1] = "There were " .. tostring(#errors) .. " errors:"
+      for _, err in ipairs(errors) do
+        messages[#messages + 1] = "  " .. err
+      end
+      log_level = vim.log.levels.ERROR
     end
+    echo.echo(table.concat(messages, "\n"), log_level)
   end,
 })
 
