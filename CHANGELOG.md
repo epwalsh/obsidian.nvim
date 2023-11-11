@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Refactored commands module, improved `:ObsidianCheck`.
+
 ## [v1.16.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.16.0) - 2023-11-10
 
 Major internal refactoring to bring performance improvements through async execution of search/find functionality, and general robustness improvements. 🏎️🤠
