@@ -117,6 +117,9 @@ M.register("ObsidianCheck", {
       count = count + 1
     end
 
+    ---@diagnostic disable-next-line: undefined-field
+    local start_time = vim.loop.hrtime()
+
     scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
       hidden = false,
       add_dirs = false,
@@ -134,7 +137,9 @@ M.register("ObsidianCheck", {
     })
 
     executor:join_and_then(5000, function()
-      local messages = { "Found " .. tostring(count) .. " notes" }
+      ---@diagnostic disable-next-line: undefined-field
+      local runtime = math.floor((vim.loop.hrtime() - start_time) / 1000000)
+      local messages = { "Checked " .. tostring(count) .. " notes in " .. runtime .. "ms" }
       local log_level = vim.log.levels.INFO
       if #warnings > 0 then
         messages[#messages + 1] = "\nThere were " .. tostring(#warnings) .. " warning(s):"
