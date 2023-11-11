@@ -137,14 +137,14 @@ M.register("ObsidianCheck", {
       local messages = { "Found " .. tostring(count) .. " notes" }
       local log_level = vim.log.levels.INFO
       if #warnings > 0 then
-        messages[#messages + 1] = "There were " .. tostring(#warnings) .. " warnings:"
+        messages[#messages + 1] = "\nThere were " .. tostring(#warnings) .. " warning(s):"
         log_level = vim.log.levels.WARN
         for _, warning in ipairs(warnings) do
           messages[#messages + 1] = "  " .. warning
         end
       end
       if #errors > 0 then
-        messages[#messages + 1] = "There were " .. tostring(#errors) .. " errors:"
+        messages[#messages + 1] = "\nThere were " .. tostring(#errors) .. " error(s):"
         for _, err in ipairs(errors) do
           messages[#messages + 1] = "  " .. err
         end
