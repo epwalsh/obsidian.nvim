@@ -93,6 +93,7 @@ M.register("ObsidianCheck", {
   opts = { nargs = 0 },
   ---@param client obsidian.Client
   func = function(client, _)
+    local AsyncExecutor = require("obsidian.async").AsyncExecutor
     local scan = require "plenary.scandir"
 
     local skip_dirs = {}
@@ -100,9 +101,21 @@ M.register("ObsidianCheck", {
       skip_dirs[#skip_dirs + 1] = Path:new(client.opts.templates.subdir)
     end
 
+    local executor = AsyncExecutor.new(20)
     local count = 0
     local errors = {}
     local warnings = {}
+
+    ---@param path Path
+    local function check_note(path, relative_path)
+      local ok, res = pcall(Note.from_file_async, path, client.dir)
+      if not ok then
+        errors[#errors + 1] = "Failed to parse note '" .. relative_path .. "': " .. tostring(res)
+      elseif res.has_frontmatter == false then
+        warnings[#warnings + 1] = "'" .. relative_path .. "' missing frontmatter"
+      end
+      count = count + 1
+    end
 
     scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
       hidden = false,
@@ -116,35 +129,29 @@ M.register("ObsidianCheck", {
             return
           end
         end
-
-        count = count + 1
-        Note.from_file(entry, client.dir)
-        local ok, note = pcall(Note.from_file, entry, client.dir)
-        if not ok then
-          errors[#errors + 1] = "Failed to parse note '" .. relative_path .. "'"
-        elseif note.has_frontmatter == false then
-          warnings[#warnings + 1] = "'" .. relative_path .. "' missing frontmatter"
-        end
+        executor:submit(check_note, nil, entry, relative_path)
       end,
     })
 
-    local messages = { "Found " .. tostring(count) .. " notes" }
-    local log_level = vim.log.levels.INFO
-    if #warnings > 0 then
-      messages[#messages + 1] = "There were " .. tostring(#warnings) .. " warnings:"
-      log_level = vim.log.levels.WARN
-      for _, warning in ipairs(warnings) do
-        messages[#messages + 1] = "  " .. warning
+    executor:join_and_then(5000, function()
+      local messages = { "Found " .. tostring(count) .. " notes" }
+      local log_level = vim.log.levels.INFO
+      if #warnings > 0 then
+        messages[#messages + 1] = "There were " .. tostring(#warnings) .. " warnings:"
+        log_level = vim.log.levels.WARN
+        for _, warning in ipairs(warnings) do
+          messages[#messages + 1] = "  " .. warning
+        end
       end
-    end
-    if #errors > 0 then
-      messages[#messages + 1] = "There were " .. tostring(#errors) .. " errors:"
-      for _, err in ipairs(errors) do
-        messages[#messages + 1] = "  " .. err
+      if #errors > 0 then
+        messages[#messages + 1] = "There were " .. tostring(#errors) .. " errors:"
+        for _, err in ipairs(errors) do
+          messages[#messages + 1] = "  " .. err
+        end
+        log_level = vim.log.levels.ERROR
       end
-      log_level = vim.log.levels.ERROR
-    end
-    echo.echo(table.concat(messages, "\n"), log_level)
+      echo.echo(table.concat(messages, "\n"), log_level)
+    end)
   end,
 })
 
