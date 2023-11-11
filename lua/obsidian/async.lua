@@ -97,7 +97,7 @@ end
 ---@param pause_fn function(integer)
 Executor._join = function(self, timeout, pause_fn)
   ---@diagnostic disable-next-line: undefined-field
-  local start_time = uv.uptime()
+  local start_time = uv.hrtime() / 1000000 -- ns -> ms
   local pause_for = 100
   if timeout ~= nil then
     pause_for = math.min(timeout / 2, pause_for)
@@ -105,7 +105,7 @@ Executor._join = function(self, timeout, pause_fn)
   while self.tasks_pending > 0 or self.tasks_running > 0 do
     pause_fn(pause_for)
     ---@diagnostic disable-next-line: undefined-field
-    if timeout ~= nil and uv.uptime() - start_time > timeout then
+    if timeout ~= nil and (uv.hrtime() / 1000000) - start_time > timeout then
       return echo.fail "Timeout error from AsyncExecutor.join()"
     end
   end
@@ -172,9 +172,9 @@ AsyncExecutor.submit = function(self, fn, callback, ...)
       while self.tasks_running >= self.max_workers do
         async.util.sleep(20)
       end
-      self.tasks_pending = self.tasks_pending - 1
-      self.tasks_running = self.tasks_running + 1
     end
+    self.tasks_pending = self.tasks_pending - 1
+    self.tasks_running = self.tasks_running + 1
     return fn(unpack(args))
   end, function(...)
     self.tasks_running = self.tasks_running - 1
