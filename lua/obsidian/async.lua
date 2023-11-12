@@ -20,7 +20,7 @@ Executor.new = function()
   return self
 end
 
----Submit a one-off function with a callback to the thread pool.
+---Submit a one-off function with a callback for the executor to run.
 ---
 ---@param self obsidian.Executor
 ---@param fn function
@@ -106,7 +106,7 @@ Executor._join = function(self, timeout, pause_fn)
     pause_fn(pause_for)
     ---@diagnostic disable-next-line: undefined-field
     if timeout ~= nil and (uv.hrtime() / 1000000) - start_time > timeout then
-      return echo.fail "Timeout error from AsyncExecutor.join()"
+      return echo.fail "Timeout error from Executor.join()"
     end
   end
 end
