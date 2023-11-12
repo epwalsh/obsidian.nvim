@@ -9,12 +9,14 @@ local M = {}
 ---An abstract class that mimics Python's `concurrent.futures.Executor` class.
 ---@class obsidian.Executor
 ---@field tasks_running integer
+---@field tasks_pending integer
 local Executor = {}
 
 ---@return obsidian.Executor
 Executor.new = function()
   local self = setmetatable({}, { __index = Executor })
   self.tasks_running = 0
+  self.tasks_pending = 0
   return self
 end
 
@@ -95,15 +97,15 @@ end
 ---@param pause_fn function(integer)
 Executor._join = function(self, timeout, pause_fn)
   ---@diagnostic disable-next-line: undefined-field
-  local start_time = uv.uptime()
+  local start_time = uv.hrtime() / 1000000 -- ns -> ms
   local pause_for = 100
   if timeout ~= nil then
     pause_for = math.min(timeout / 2, pause_for)
   end
-  while self.tasks_running > 0 do
+  while self.tasks_pending > 0 or self.tasks_running > 0 do
     pause_fn(pause_for)
     ---@diagnostic disable-next-line: undefined-field
-    if timeout ~= nil and uv.uptime() - start_time > timeout then
+    if timeout ~= nil and (uv.hrtime() / 1000000) - start_time > timeout then
       return echo.fail "Timeout error from AsyncExecutor.join()"
     end
   end
@@ -128,16 +130,31 @@ Executor.join_async = function(self, timeout)
   self:_join(timeout, async.util.sleep)
 end
 
+---Run the callback when the executor finishes all tasks.
+---@param self obsidian.Executor
+---@param timeout integer|?
+---@param callback function
+Executor.join_and_then = function(self, timeout, callback)
+  async.run(function()
+    self:join_async(timeout)
+  end, callback)
+end
+
 ---An Executor that uses coroutines to run user functions concurrently.
 ---@class obsidian.AsyncExecutor : obsidian.Executor
+---@field max_workers integer|?
 ---@field tasks_running integer
+---@field tasks_pending integer
 local AsyncExecutor = Executor.new()
 M.AsyncExecutor = AsyncExecutor
 
+---@param max_workers integer|?
 ---@return obsidian.AsyncExecutor
-AsyncExecutor.new = function()
+AsyncExecutor.new = function(max_workers)
   local self = setmetatable({}, { __index = AsyncExecutor })
+  self.max_workers = max_workers
   self.tasks_running = 0
+  self.tasks_pending = 0
   return self
 end
 
@@ -148,9 +165,16 @@ end
 ---@param callback function|?
 ---@diagnostic disable-next-line: unused-local
 AsyncExecutor.submit = function(self, fn, callback, ...)
-  self.tasks_running = self.tasks_running + 1
+  self.tasks_pending = self.tasks_pending + 1
   local args = { ... }
   async.run(function()
+    if self.max_workers ~= nil then
+      while self.tasks_running >= self.max_workers do
+        async.util.sleep(20)
+      end
+    end
+    self.tasks_pending = self.tasks_pending - 1
+    self.tasks_running = self.tasks_running + 1
     return fn(unpack(args))
   end, function(...)
     self.tasks_running = self.tasks_running - 1
@@ -170,6 +194,7 @@ M.ThreadPoolExecutor = ThreadPoolExecutor
 ThreadPoolExecutor.new = function()
   local self = setmetatable({}, { __index = ThreadPoolExecutor })
   self.tasks_running = 0
+  self.tasks_pending = 0
   return self
 end
 

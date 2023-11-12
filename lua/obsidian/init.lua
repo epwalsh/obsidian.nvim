@@ -114,8 +114,8 @@ obsidian.setup = function(opts)
     end
   end
 
-  -- Register commands.
-  obsidian.command.register_all(client)
+  -- Install commands.
+  obsidian.command.install(client)
 
   -- Register mappings.
   for mapping_keys, mapping_config in pairs(opts.mappings) do

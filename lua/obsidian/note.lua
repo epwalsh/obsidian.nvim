@@ -102,7 +102,7 @@ end
 Note.from_file = function(path, root)
   if path == nil then
     echo.fail "note path cannot be nil"
-    error()
+    error() -- unreachable
   end
   local n
   with(open(vim.fs.normalize(tostring(path))), function(reader)
@@ -125,11 +125,15 @@ Note.from_file_async = function(path, root)
     error()
   end
   local f = File.open(vim.fs.normalize(tostring(path)))
-  local n = Note.from_lines(function()
+  local ok, res = pcall(Note.from_lines, function()
     return f:lines(false)
   end, path, root)
   f:close()
-  return n
+  if ok then
+    return res
+  else
+    error(res)
+  end
 end
 
 ---Initialize a note from a buffer.
