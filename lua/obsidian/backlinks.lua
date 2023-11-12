@@ -2,8 +2,9 @@ local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local Path = require "plenary.path"
 local Note = require "obsidian.note"
-local util = require "obsidian.util"
 local search = require "obsidian.search"
+local util = require "obsidian.util"
+local iter = util.iter
 
 ---Parse path and line number from a line in an ObsidianBacklinks buffer.
 ---@param line string
@@ -21,7 +22,7 @@ end
 
 ---Find a rogue backlinks buffer that might have been spawned by i.e. a session.
 local function find_rogue_buffer()
-  for _, v in ipairs(vim.api.nvim_list_bufs()) do
+  for v in iter(vim.api.nvim_list_bufs()) do
     if vim.fn.bufname(v) == "ObsidianBacklinks" then
       return v
     end
@@ -36,7 +37,7 @@ local function wipe_rogue_buffer()
   local bn = find_rogue_buffer()
   if bn then
     local win_ids = vim.fn.win_findbuf(bn)
-    for _, id in ipairs(win_ids) do
+    for id in iter(win_ids) do
       if vim.fn.win_gettype(id) ~= "autocmd" and vim.api.nvim_win_is_valid(id) then
         vim.api.nvim_win_close(id, true)
       end

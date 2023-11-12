@@ -674,4 +674,69 @@ util.get_external_depency_info = function(cmd)
   end
 end
 
+---Create an iterator from an iterable type such as a table/array, or string.
+---For mapping tables the behavior matches Python where the return iterator is over keys.
+---For convenience this also accepts iterator functions, in which case it returns the original function as is.
+---@param iterable table|string|function
+---@return function
+util.iter = function(iterable)
+  if type(iterable) == "function" then
+    return iterable
+  elseif type(iterable) == "string" then
+    local i = 1
+    local n = string.len(iterable)
+
+    return function()
+      if i > n then
+        return nil
+      else
+        local c = string.sub(iterable, i, i)
+        i = i + 1
+        return c
+      end
+    end
+  elseif type(iterable) == "table" then
+    if vim.tbl_isempty(iterable) then
+      return function()
+        return nil
+      end
+    elseif vim.tbl_islist(iterable) then
+      local i = 1
+      local n = #iterable
+
+      return function()
+        if i > n then
+          return nil
+        else
+          local x = iterable[i]
+          i = i + 1
+          return x
+        end
+      end
+    else
+      return util.iter(vim.tbl_keys(iterable))
+    end
+  else
+    error("unexpected type '" .. type(iterable) .. "'")
+  end
+end
+
+---Create an enumeration iterator over an iterable.
+---@param iterable table|string|function
+---@return function
+util.enumerate = function(iterable)
+  local iterator = util.iter(iterable)
+  local i = 0
+
+  return function()
+    local next = iterator()
+    if next == nil then
+      return nil, nil
+    else
+      i = i + 1
+      return i, next
+    end
+  end
+end
+
 return util

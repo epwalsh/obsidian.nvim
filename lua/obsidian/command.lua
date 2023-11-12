@@ -4,6 +4,7 @@ local echo = require "obsidian.echo"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
 local run_job = require("obsidian.async").run_job
+local iter = util.iter
 
 local M = {
   commands = {},
@@ -71,7 +72,7 @@ M.complete_args = function(client, _, cmd_line, _)
 
   local completions = {}
   local search_lwr = string.lower(search_)
-  for _, note in ipairs(client:search(search_)) do
+  for note in iter(client:search(search_)) do
     local note_path = tostring(note.path:make_relative(tostring(client.dir)))
     if string.find(note:display_name(), search_lwr, 1, true) then
       table.insert(completions, note:display_name() .. "  " .. note_path)
@@ -127,7 +128,7 @@ M.register("ObsidianCheck", {
       search_pattern = ".*%.md",
       on_insert = function(entry)
         local relative_path = Path:new(entry):make_relative(tostring(client.dir))
-        for _, skip_dir in ipairs(skip_dirs) do
+        for skip_dir in iter(skip_dirs) do
           if vim.startswith(relative_path, tostring(skip_dir) .. skip_dir._sep) then
             return
           end
@@ -144,13 +145,13 @@ M.register("ObsidianCheck", {
       if #warnings > 0 then
         messages[#messages + 1] = "\nThere were " .. tostring(#warnings) .. " warning(s):"
         log_level = vim.log.levels.WARN
-        for _, warning in ipairs(warnings) do
+        for warning in iter(warnings) do
           messages[#messages + 1] = "  " .. warning
         end
       end
       if #errors > 0 then
         messages[#messages + 1] = "\nThere were " .. tostring(#errors) .. " error(s):"
-        for _, err in ipairs(errors) do
+        for err in iter(errors) do
           messages[#messages + 1] = "  " .. err
         end
         log_level = vim.log.levels.ERROR
@@ -432,7 +433,7 @@ M.register("ObsidianTemplate", {
             attach_mappings = function(_, map)
               -- NOTE: in newer versions of Telescope we can make a single call to `map()` with
               -- `mode = { "i", "n" }`, but older versions expect mode to be string, not a table.
-              for _, mode in ipairs { "i", "n" } do
+              for mode in iter { "i", "n" } do
                 map(mode, "<CR>", function(prompt_bufnr)
                   local template = require("telescope.actions.state").get_selected_entry()
                   require("telescope.actions").close(prompt_bufnr)

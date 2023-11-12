@@ -2,6 +2,7 @@ local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
 local util = require "obsidian.util"
+local iter = util.iter
 
 local source = {}
 
@@ -21,9 +22,9 @@ source.complete = function(self, request, callback)
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local function search_callback(results)
       local items = {}
-      for _, note in ipairs(results) do
+      for note in iter(results) do
         local aliases = util.unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
-        for _, alias in pairs(aliases) do
+        for alias in iter(aliases) do
           local options = {}
 
           local alias_case_matched = util.match_case(search, alias)
@@ -37,7 +38,7 @@ source.complete = function(self, request, callback)
 
           table.insert(options, alias)
 
-          for _, option in pairs(options) do
+          for option in iter(options) do
             local label = "[[" .. tostring(note.id)
             if option ~= tostring(note.id) then
               label = label .. "|" .. option .. "]]"

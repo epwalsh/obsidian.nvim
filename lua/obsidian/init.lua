@@ -31,6 +31,8 @@ local obsidian = setmetatable({}, {
 
 ---Print general information about the current installation of Obsidian.nvim.
 obsidian.info = function()
+  local iter = obsidian.util.iter
+
   local info = obsidian.util.get_plugin_info()
   if info ~= nil then
     print("[obsidian.nvim (v" .. obsidian.VERSION .. ")] " .. info)
@@ -43,14 +45,14 @@ obsidian.info = function()
     return
   end
 
-  for _, plugin in ipairs { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "fzf.vim", "vim-markdown" } do
+  for plugin in iter { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "fzf.vim", "vim-markdown" } do
     local plugin_info = obsidian.util.get_plugin_info(plugin)
     if plugin_info ~= nil then
       print("[" .. plugin .. "] " .. plugin_info)
     end
   end
 
-  for _, cmd in ipairs { "rg" } do
+  for cmd in iter { "rg" } do
     local cmd_info = obsidian.util.get_external_depency_info(cmd)
     if cmd_info ~= nil then
       print(cmd_info)
