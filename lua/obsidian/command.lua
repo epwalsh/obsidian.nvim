@@ -430,11 +430,15 @@ M.register("ObsidianTemplate", {
           local opts = {
             cwd = tostring(client.templates_dir),
             attach_mappings = function(_, map)
-              map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-                local template = require("telescope.actions.state").get_selected_entry()
-                require("telescope.actions").close(prompt_bufnr)
-                insert_template(template[1])
-              end)
+              -- NOTE: in newer versions of Telescope we can make a single call to `map()` with
+              -- `mode = { "i", "n" }`, but older versions expect mode to be string, not a table.
+              for _, mode in ipairs { "i", "n" } do
+                map(mode, "<CR>", function(prompt_bufnr)
+                  local template = require("telescope.actions.state").get_selected_entry()
+                  require("telescope.actions").close(prompt_bufnr)
+                  insert_template(template[1])
+                end)
+              end
               return true
             end,
             find_command = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
