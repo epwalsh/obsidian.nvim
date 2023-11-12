@@ -1,8 +1,9 @@
 local Path = require "plenary.path"
-local workspace = require "obsidian.workspace"
-local util = require "obsidian.util"
-local echo = require "obsidian.echo"
 local Note = require "obsidian.note"
+local workspace = require "obsidian.workspace"
+local echo = require "obsidian.echo"
+local util = require "obsidian.util"
+local iter = util.iter
 
 ---@class obsidian.Client
 ---@field current_workspace obsidian.Workspace
@@ -174,7 +175,7 @@ Client.search_async = function(self, search, search_opts, callback)
 
       -- Filter out error results (nils), and unpack the ok results.
       local results_ = {}
-      for _, res in ipairs(results) do
+      for res in iter(results) do
         if res[1] ~= nil then
           results_[#results_ + 1] = res[1]
         end
@@ -437,13 +438,13 @@ Client.resolve_note_async = function(self, query, callback)
   self:search_async(query, { "--ignore-case" }, function(results)
     local query_lwr = string.lower(query)
     local maybe_matches = {}
-    for _, note in ipairs(results) do
+    for note in iter(results) do
       if query == note.id or query == note:display_name() or util.contains(note.aliases, query) then
         -- Exact match! We're done!
         return callback(note)
       end
 
-      for _, alias in pairs(note.aliases) do
+      for alias in iter(note.aliases) do
         if query_lwr == string.lower(alias) then
           -- Lower case match, save this one for later.
           table.insert(maybe_matches, note)
@@ -482,7 +483,7 @@ Client._run_with_finder_backend = function(self, implementations)
     end
   end
 
-  for _, finder in ipairs { "telescope.nvim", "fzf-lua", "fzf.vim" } do
+  for finder in iter { "telescope.nvim", "fzf-lua", "fzf.vim" } do
     if implementations[finder] ~= nil then
       local has_finder, res = implementations[finder]()
       if has_finder then

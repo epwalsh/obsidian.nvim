@@ -1,9 +1,10 @@
 local Path = require "plenary.path"
-local yaml = require "obsidian.yaml"
-local util = require "obsidian.util"
-local echo = require "obsidian.echo"
 local with = require("plenary.context_manager").with
 local open = require("plenary.context_manager").open
+local yaml = require "obsidian.yaml"
+local echo = require "obsidian.echo"
+local util = require "obsidian.util"
+local iter = util.iter
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
@@ -244,7 +245,7 @@ Note.from_lines = function(lines, path, root)
           end
         elseif k == "aliases" then
           if type(v) == "table" then
-            for _, alias in ipairs(v) do
+            for alias in iter(v) do
               if type(alias) == "string" then
                 table.insert(aliases, alias)
               else
@@ -262,7 +263,7 @@ Note.from_lines = function(lines, path, root)
           end
         elseif k == "tags" then
           if type(v) == "table" then
-            for _, tag in ipairs(v) do
+            for tag in iter(v) do
               if type(tag) == "string" then
                 table.insert(tags, tag)
               else
@@ -348,8 +349,8 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
   local new_lines = { "---" }
 
   local frontmatter_ = frontmatter and frontmatter or self:frontmatter()
-  for _, line in
-    ipairs(yaml.dumps_lines(frontmatter_, function(a, b)
+  for line in
+    iter(yaml.dumps_lines(frontmatter_, function(a, b)
       local a_idx = nil
       local b_idx = nil
       for i, k in ipairs { "id", "aliases", "tags" } do

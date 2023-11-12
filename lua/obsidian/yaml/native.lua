@@ -1,5 +1,6 @@
-local util = require "obsidian.util"
 local Line = require "obsidian.yaml.line"
+local util = require "obsidian.util"
+local iter = util.iter
 
 local m = {}
 
@@ -387,7 +388,7 @@ end
 ---@param text string
 ---@return any, string
 Parser._parse_inline_value = function(self, i, text)
-  for _, parse_func_and_type in ipairs {
+  for parse_func_and_type in iter {
     { self._parse_number, YamlType.Scalar },
     { self._parse_null, YamlType.Scalar },
     { self._parse_boolean, YamlType.Scalar },
