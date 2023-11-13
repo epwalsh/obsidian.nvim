@@ -850,7 +850,9 @@ M.register("ObsidianRename", {
         .. "' to '"
         .. new_note_id
         .. "'...\n"
-        .. "This will write all buffers, continue? [Y/n] ",
+        .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
+        .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
+        .. "Do you want to continue? [Y/n] ",
     })
     if not (confirmation == "y" or confirmation == "yes") then
       echo.warn "Rename canceled, doing nothing"
