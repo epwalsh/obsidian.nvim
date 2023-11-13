@@ -2,6 +2,8 @@ local Job = require "plenary.job"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local echo = require "obsidian.echo"
+local util = require "obsidian.util"
+local iter = util.iter
 local uv = vim.loop
 
 local M = {}
@@ -152,6 +154,13 @@ M.AsyncExecutor = AsyncExecutor
 ---@return obsidian.AsyncExecutor
 AsyncExecutor.new = function(max_workers)
   local self = setmetatable({}, { __index = AsyncExecutor })
+  if max_workers == nil then
+    max_workers = 10
+  elseif max_workers < 0 then
+    max_workers = nil
+  elseif max_workers == 0 then
+    max_workers = 1
+  end
   self.max_workers = max_workers
   self.tasks_running = 0
   self.tasks_pending = 0
@@ -223,10 +232,11 @@ local File = {}
 M.File = File
 
 ---@param path string
+---@param mode string|?
 ---@return obsidian.File
-File.open = function(path)
+File.open = function(path, mode)
   local self = setmetatable({}, { __index = File })
-  local err, fd = async.uv.fs_open(path, "r", 438)
+  local err, fd = async.uv.fs_open(path, mode and mode or "r", 438)
   assert(not err, err)
   self.fd = fd
   return self
@@ -277,6 +287,17 @@ File.lines = function(self, include_new_line_char)
   end
 
   return lines
+end
+
+---Write all lines to the file.
+---@param lines string[]|function
+File.write_lines = function(self, lines)
+  for line in iter(lines) do
+    if not string.find(line, "[\r\n]") then
+      line = line .. "\n"
+    end
+    async.uv.fs_write(self.fd, line)
+  end
 end
 
 ---@param cmd string

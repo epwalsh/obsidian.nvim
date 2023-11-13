@@ -2,6 +2,7 @@ local Path = require "plenary.path"
 local Deque = require("plenary.async.structs").Deque
 local scan = require "plenary.scandir"
 local util = require "obsidian.util"
+local iter = util.iter
 local run_job_async = require("obsidian.async").run_job_async
 
 local M = {}
@@ -9,7 +10,7 @@ local M = {}
 M.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
 
 ---@param dir string|Path
----@param term string
+---@param term string|string[]
 ---@param opts string[]|?
 ---@param quote boolean|?
 ---@return string[]
@@ -17,12 +18,24 @@ M.build_search_cmd = function(dir, term, opts, quote)
   if quote == nil then
     quote = true
   end
+
+  local search_terms
+  if type(term) == "string" then
+    search_terms = { "-e", quote and util.quote(term) or term }
+  else
+    search_terms = {}
+    for t in iter(term) do
+      search_terms[#search_terms + 1] = "-e"
+      search_terms[#search_terms + 1] = quote and util.quote(t) or t
+    end
+  end
+
   local norm_dir = vim.fs.normalize(tostring(dir))
   local cmd = vim.tbl_flatten {
     M.SEARCH_CMD,
     "--json",
     opts and opts or {},
-    quote and util.quote(term) or term,
+    search_terms,
     quote and util.quote(norm_dir) or norm_dir,
   }
   return cmd
@@ -82,7 +95,7 @@ end
 ---An async version of `.search()`. Each match is passed to the `on_match` callback.
 ---
 ---@param dir string|Path
----@param term string
+---@param term string|string[]
 ---@param opts string[]|?
 ---@param on_match function (match: MatchData) -> nil
 ---@param on_exit function|? (exit_code: integer) -> nil

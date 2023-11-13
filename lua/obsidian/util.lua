@@ -286,6 +286,40 @@ util.cursor_on_markdown_link = function(line, col)
   return open, close
 end
 
+---Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
+---
+---@returns string|?, string|?
+util.cursor_link = function(line, col)
+  local open, close = util.cursor_on_markdown_link(line, col)
+  if open == nil or close == nil then
+    return
+  end
+
+  local current_line = vim.api.nvim_get_current_line()
+  local link = current_line:sub(open, close)
+  link = util.unescape_single_backslash(link)
+
+  if link:match "^%[.-%]%(.*%)$" then
+    -- transform markdown link into the "meat" of a wiki link, e.g. '[YYY](XXX)' -> 'XXX|YYY'
+    link = link:gsub("^%[(.-)%]%((.*)%)$", "%2|%1")
+  else
+    -- wiki link, remove boundary brackets, e.g. '[[XXX|YYY]]' -> 'XXX|YYY'
+    link = link:sub(3, #link - 2)
+  end
+
+  local link_location, link_name
+  if link:match "|[^%]]*" then
+    local split_idx = link:find "|"
+    link_location = link:sub(1, split_idx - 1)
+    link_name = link:sub(split_idx + 1)
+  else
+    link_location = link
+    link_name = link
+  end
+
+  return link_location, link_name
+end
+
 ---Determines if the given date is a working day (not weekend)
 ---
 ---@param time integer
@@ -637,6 +671,34 @@ util.get_src_root = function(name)
   return nil
 end
 
+---Replace up to `n` occurrences of `what` in `s` with `with`.
+---@param s string
+---@param what string
+---@param with string
+---@param n integer|?
+---@return string
+---@return integer
+util.string_replace = function(s, what, with, n)
+  local count = 0
+
+  local function replace(s_)
+    if n ~= nil and count >= n then
+      return s_
+    end
+
+    local b_idx, e_idx = string.find(s_, what, 1, true)
+    if b_idx == nil or e_idx == nil then
+      return s_
+    end
+
+    count = count + 1
+    return string.sub(s_, 1, b_idx - 1) .. with .. replace(string.sub(s_, e_idx + 1))
+  end
+
+  s = replace(s)
+  return s, count
+end
+
 ---Get info about a plugin.
 ---@param name string|?
 ---@return string|?
@@ -735,6 +797,47 @@ util.enumerate = function(iterable)
     else
       i = i + 1
       return i, next
+    end
+  end
+end
+
+---Zip two iterables together.
+---@param iterable1 table|string|function
+---@param iterable2 table|string|function
+---@return function
+util.zip = function(iterable1, iterable2)
+  local iterator1 = util.iter(iterable1)
+  local iterator2 = util.iter(iterable2)
+
+  return function()
+    local next1 = iterator1()
+    local next2 = iterator2()
+    if next1 == nil or next2 == nil then
+      return nil
+    else
+      return next1, next2
+    end
+  end
+end
+
+---Get an iterator of (bufnr, bufname) over all named buffers. The buffer names will be absolute paths.
+---
+---@return function () -> (integer, string)|?
+util.get_named_buffers = function()
+  local bufnr = 0
+  local max_bufnr = vim.fn.bufnr "$"
+
+  ---@return integer|?
+  ---@return string|?
+  return function()
+    bufnr = bufnr + 1
+    while bufnr <= max_bufnr and (vim.fn.bufexists(bufnr) == 0 or vim.fn.bufname(bufnr) == "") do
+      bufnr = bufnr + 1
+    end
+    if bufnr > max_bufnr then
+      return nil
+    else
+      return bufnr, vim.api.nvim_buf_get_name(bufnr)
     end
   end
 end

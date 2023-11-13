@@ -47,6 +47,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
 - `:ObsidianWorkspace` to switch to another workspace.
+- `:ObsidianRename` to rename the note of the current buffer or reference under the cursor, updating all references to the note in the vault.
 
 ### Demo
 
