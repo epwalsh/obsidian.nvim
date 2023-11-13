@@ -806,6 +806,7 @@ M.register("ObsidianRename", {
     local AsyncExecutor = require("obsidian.async").AsyncExecutor
     local File = require("obsidian.async").File
 
+    -- Validate args.
     local dry_run = false
     local arg = util.strip_whitespace(data.args)
     if vim.endswith(arg, " --dry-run") then
@@ -845,12 +846,23 @@ M.register("ObsidianRename", {
       end
     end
 
-    -- TODO: handle case where new_note_id is a path containing one or more directories.
-    local new_note_id = arg
-    if vim.endswith(new_note_id, ".md") then
+    -- Parse new note ID / path from args.
+    local parts = vim.split(arg, "/", { plain = true })
+    local new_note_id = parts[#parts]
+    if new_note_id == "" then
+      echo.err("Invalid new note ID", client.opts.log_level)
+      return
+    elseif vim.endswith(new_note_id, ".md") then
       new_note_id = string.sub(new_note_id, 1, -4)
     end
-    local new_note_path = vim.fs.joinpath(dirname, new_note_id .. ".md")
+
+    local new_note_path
+    if #parts > 1 then
+      parts[#parts] = nil
+      new_note_path = vim.fs.joinpath(unpack(vim.tbl_flatten { tostring(client.dir), parts, new_note_id .. ".md" }))
+    else
+      new_note_path = vim.fs.joinpath(dirname, new_note_id .. ".md")
+    end
 
     if new_note_id == cur_note_id then
       echo.warn "New note ID is the same, doing nothing"
