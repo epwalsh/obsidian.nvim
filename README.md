@@ -12,7 +12,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   - [Commands](#commands)
   - [Demo](#demo)
 - ⚙️ [Setup](#setup)
-  - [Requirements](#requirements)
+  - [System requirements](#system-requirements)
   - [Install and configure](#install-and-configure)
   - [Plugin dependencies](#plugin-dependencies)
   - [Configuration options](#configuration-options)
@@ -33,14 +33,14 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew` to create a new note.
   This command has one optional argument: the title of the new note.
-- `:ObsidianQuickSwitch` to quickly switch to another notes in your vault, searching by its name using [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
 - `:ObsidianToday` to create a new daily note.
 - `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
-- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives.
+- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
   See ["using templates"](#using-templates) for more information.
-- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim).
+- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
   This command has one optional argument: a search query to start with.
 - `:ObsidianLink` to link an in-line visual selection of text to a note.
   This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
@@ -55,16 +55,14 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 ## Setup
 
-### Requirements
+### System requirements
 
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
-- If you want completion and search features (recommended) you'll also need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
+- If you want completion and search features (recommended) you'll need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
   See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
-- If you using WSL, you'll also need [wsl-open](https://gitlab.com/4U6U57/wsl-open)
+- If you using WSL, you'll need [wsl-open](https://gitlab.com/4U6U57/wsl-open)
 
 Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see [plugin dependencies](#plugin-dependencies) below).
-
-You may also want to install [`yq`](https://github.com/mikefarah/yq) for more robust frontmatter YAML parsing.
 
 ### Install and configure
 
