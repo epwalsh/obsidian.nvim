@@ -837,7 +837,7 @@ util.get_named_buffers = function()
     if bufnr > max_bufnr then
       return nil
     else
-      return bufnr, vim.api.nvim_buf_get_name(bufnr)
+      return bufnr, vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
     end
   end
 end

@@ -813,27 +813,36 @@ M.register("ObsidianRename", {
       arg = util.strip_whitespace(string.sub(arg, 1, -string.len " --dry-run" - 1))
     end
 
+    -- Resolve the note to rename.
     local is_current_buf
+    local cur_note_bufnr
     local cur_note_path
+    local cur_note
     local dirname
     local cur_note_id = util.cursor_link()
     if cur_note_id == nil then
       is_current_buf = true
-      local bufpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
-      cur_note_path = bufpath
-      local note = Note.from_file(bufpath)
-      cur_note_id = tostring(note.id)
-      dirname = vim.fs.dirname(bufpath)
+      cur_note_bufnr = vim.fn.bufnr()
+      cur_note_path = vim.fs.normalize(vim.api.nvim_buf_get_name(cur_note_bufnr))
+      cur_note = Note.from_file(cur_note_path)
+      cur_note_id = tostring(cur_note.id)
+      dirname = vim.fs.dirname(cur_note_path)
     else
       is_current_buf = false
-      local note = client:resolve_note(cur_note_id)
-      if note == nil then
+      cur_note = client:resolve_note(cur_note_id)
+      if cur_note == nil then
         echo.err("Could not resolve note '" .. cur_note_id .. "'")
         return
       end
-      cur_note_id = tostring(note.id)
-      cur_note_path = tostring(note.path:absolute())
+      cur_note_id = tostring(cur_note.id)
+      cur_note_path = vim.fs.normalize(tostring(cur_note.path:absolute()))
       dirname = vim.fs.dirname(cur_note_path)
+      for bufnr, bufpath in util.get_named_buffers() do
+        if bufpath == cur_note_path then
+          cur_note_bufnr = bufnr
+          break
+        end
+      end
     end
 
     -- TODO: handle case where new_note_id is a path containing one or more directories.
@@ -890,19 +899,46 @@ M.register("ObsidianRename", {
     end
 
     -- Write all buffers.
-    -- TODO: is there a way to only write markdown buffers in the vault dir?
     quietly(vim.cmd.wall)
 
-    -- If we're renaming the note of the current buffer, save as the new path.
-    -- TODO: handle case where we're renaming the note of another buffer.
-    if is_current_buf then
-      if not dry_run then
-        quietly(vim.cmd.saveas, new_note_path)
-        vim.fn.delete(cur_note_path)
+    -- Rename the note file and remove or rename the corresponding buffer, if there is one.
+    if cur_note_bufnr ~= nil then
+      if is_current_buf then
+        -- If we're renaming the note of a current buffer, save as the new path.
+        if not dry_run then
+          quietly(vim.cmd.saveas, new_note_path)
+          vim.fn.delete(cur_note_path)
+        else
+          echo.info("Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file")
+        end
       else
-        echo.info(
-          "Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file '" .. cur_note_path .. "'"
-        )
+        -- For the non-current buffer the best we can do is delete the buffer (we've already saved it above)
+        -- and then make a file-system call to rename the file.
+        if not dry_run then
+          quietly(vim.cmd.bdelete, cur_note_bufnr)
+          assert(vim.loop.fs_rename(cur_note_path, new_note_path)) ---@diagnostic disable-line: undefined-field
+        else
+          echo.info("Dry run: removing buffer '" .. cur_note_path .. "' and renaming file to '" .. new_note_path .. "'")
+        end
+      end
+    else
+      -- When the note is not loaded into a buffer we just need to rename the file.
+      if not dry_run then
+        assert(vim.loop.fs_rename(cur_note_path, new_note_path)) ---@diagnostic disable-line: undefined-field
+      else
+        echo.info("Dry run: renaming file '" .. cur_note_path .. "' to '" .. new_note_path .. "'")
+      end
+    end
+
+    if not is_current_buf then
+      -- When the note to rename is not the current buffer we need to update its frontmatter
+      -- to account for the rename.
+      cur_note.id = new_note_id
+      cur_note.path = Path:new(new_note_path)
+      if not dry_run then
+        cur_note:save()
+      else
+        echo.info("Dry run: updating frontmatter of '" .. new_note_path .. "'")
       end
     end
 
