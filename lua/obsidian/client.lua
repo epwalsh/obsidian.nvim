@@ -11,6 +11,7 @@ local iter = util.iter
 ---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
 ---@field backlinks_namespace integer
+---@field _quiet boolean
 local Client = {}
 
 ---Create a new Obsidian client without additional setup.
@@ -25,6 +26,7 @@ Client.new = function(opts)
   self.dir = Path:new(self.current_workspace.path)
   self.opts = opts
   self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
+  self._quiet = false
   if self.opts.yaml_parser ~= nil then
     local yaml = require "obsidian.yaml"
     yaml.set_parser(self.opts.yaml_parser)

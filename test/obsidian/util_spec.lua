@@ -200,6 +200,22 @@ describe("util.strip_comments()", function()
   end)
 end)
 
+describe("util.string_replace()", function()
+  it("replace all instances", function()
+    assert.equals(
+      "the link is [[bar|Foo]] or [[bar]], right?",
+      util.string_replace("the link is [[foo|Foo]] or [[foo]], right?", "[[foo", "[[bar")
+    )
+  end)
+
+  it("not replace more than requested", function()
+    assert.equals(
+      "the link is [[bar|Foo]] or [[foo]], right?",
+      util.string_replace("the link is [[foo|Foo]] or [[foo]], right?", "[[foo", "[[bar", 1)
+    )
+  end)
+end)
+
 describe("util.enumerate()", function()
   local function collect(iterator)
     local results = {}

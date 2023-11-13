@@ -43,7 +43,7 @@ end
 
 ---@param client obsidian.Client
 ---@return string[]
-M.complete_args = function(client, _, cmd_line, _)
+M.complete_args_search = function(client, _, cmd_line, _)
   local search_
   local cmd_arg, _ = util.strip(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
   if string.len(cmd_arg) > 0 then
@@ -89,6 +89,21 @@ M.complete_args = function(client, _, cmd_line, _)
   return completions
 end
 
+M.complete_args_id = function(_, _, cmd_line, _)
+  local cmd_arg, _ = util.strip(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
+  if string.len(cmd_arg) > 0 then
+    return {}
+  else
+    local note_id = util.cursor_link()
+    if note_id == nil then
+      local bufpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
+      local note = Note.from_file(bufpath)
+      note_id = note.id
+    end
+    return { note_id }
+  end
+end
+
 ---Check the directory for notes with missing/invalid frontmatter.
 M.register("ObsidianCheck", {
   opts = { nargs = 0 },
@@ -102,7 +117,7 @@ M.register("ObsidianCheck", {
       skip_dirs[#skip_dirs + 1] = Path:new(client.opts.templates.subdir)
     end
 
-    local executor = AsyncExecutor.new(20)
+    local executor = AsyncExecutor.new()
     local count = 0
     local errors = {}
     local warnings = {}
@@ -200,7 +215,7 @@ M.register("ObsidianNew", {
 ---Open a note in the Obsidian app.
 M.register("ObsidianOpen", {
   opts = { nargs = "?" },
-  complete = M.complete_args,
+  complete = M.complete_args_search,
   func = function(client, data)
     local vault = client:vault()
     if vault == nil then
@@ -606,7 +621,7 @@ M.register("ObsidianLinkNew", {
 
 M.register("ObsidianLink", {
   opts = { nargs = "?", range = true },
-  complete = M.complete_args,
+  complete = M.complete_args_search,
   func = function(client, data)
     local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
     local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
@@ -652,31 +667,9 @@ M.register("ObsidianLink", {
 M.register("ObsidianFollowLink", {
   opts = { nargs = 0 },
   func = function(client, _)
-    local open, close = util.cursor_on_markdown_link()
-    local current_line = vim.api.nvim_get_current_line()
-
-    if open == nil or close == nil then
-      echo.err("Cursor is not on a reference!", client.opts.log_level)
+    local note_file_name, note_name = util.cursor_link()
+    if note_file_name == nil then
       return
-    end
-
-    local note_name = current_line:sub(open, close)
-
-    note_name = util.unescape_single_backslash(note_name)
-
-    if note_name:match "^%[.-%]%(.*%)$" then
-      -- transform markdown link to wiki link
-      note_name = note_name:gsub("^%[(.-)%]%((.*)%)$", "%2|%1")
-    else
-      -- wiki link
-      note_name = note_name:sub(3, #note_name - 2)
-    end
-
-    -- Split note file name/path from note name/alias.
-    local note_file_name = note_name
-    if note_name:match "|[^%]]*" then
-      note_file_name = note_file_name:sub(1, note_file_name:find "|" - 1)
-      note_name = note_name:sub(note_name:find "|" + 1, note_name:len())
     end
 
     -- Check if it's a URL.
@@ -803,6 +796,219 @@ M.register("ObsidianWorkspace", {
     echo.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")", client.opts.log_level)
     -- NOTE: workspace.path has already been normalized
     client.dir = Path:new(workspace.path)
+  end,
+})
+
+M.register("ObsidianRename", {
+  opts = { nargs = 1 },
+  complete = M.complete_args_id,
+  func = function(client, data)
+    local AsyncExecutor = require("obsidian.async").AsyncExecutor
+    local File = require("obsidian.async").File
+
+    local dry_run = false
+    local arg = util.strip_whitespace(data.args)
+    if vim.endswith(arg, " --dry-run") then
+      dry_run = true
+      arg = util.strip_whitespace(string.sub(arg, 1, -string.len " --dry-run" - 1))
+    end
+
+    local is_current_buf
+    local cur_note_path
+    local dirname
+    local cur_note_id = util.cursor_link()
+    if cur_note_id == nil then
+      is_current_buf = true
+      local bufpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
+      cur_note_path = bufpath
+      local note = Note.from_file(bufpath)
+      cur_note_id = tostring(note.id)
+      dirname = vim.fs.dirname(bufpath)
+    else
+      is_current_buf = false
+      local note = client:resolve_note(cur_note_id)
+      if note == nil then
+        echo.err("Could not resolve note '" .. cur_note_id .. "'")
+        return
+      end
+      cur_note_id = tostring(note.id)
+      cur_note_path = tostring(note.path:absolute())
+      dirname = vim.fs.dirname(cur_note_path)
+    end
+
+    -- TODO: handle case where new_note_id is a path containing one or more directories.
+    local new_note_id = arg
+    if vim.endswith(new_note_id, ".md") then
+      new_note_id = string.sub(new_note_id, 1, -4)
+    end
+    local new_note_path = vim.fs.joinpath(dirname, new_note_id .. ".md")
+
+    if new_note_id == cur_note_id then
+      echo.warn "New note ID is the same, doing nothing"
+      return
+    end
+
+    -- Get confirmation before continuing.
+    local confirmation
+    if not dry_run then
+      confirmation = string.lower(vim.fn.input {
+        prompt = "Renaming '"
+          .. cur_note_id
+          .. "' to '"
+          .. new_note_id
+          .. "'...\n"
+          .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
+          .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
+          .. "You can also do a dry run of this by running ':ObsidianRename "
+          .. arg
+          .. " --dry-run'.\n"
+          .. "Do you want to continue? [Y/n] ",
+      })
+    else
+      confirmation = string.lower(vim.fn.input {
+        prompt = "Dry run: renaming '"
+          .. cur_note_id
+          .. "' to '"
+          .. new_note_id
+          .. "'...\n"
+          .. "Do you want to continue? [Y/n] ",
+      })
+    end
+    if not (confirmation == "y" or confirmation == "yes") then
+      echo.warn "Rename canceled, doing nothing"
+      return
+    end
+
+    ---@param fn function
+    local function quietly(fn, ...)
+      client._quiet = true
+      local ok, res = pcall(fn, ...)
+      client._quiet = false
+      if not ok then
+        error(res)
+      end
+    end
+
+    -- Write all buffers.
+    -- TODO: is there a way to only write markdown buffers in the vault dir?
+    quietly(vim.cmd.wall)
+
+    -- If we're renaming the note of the current buffer, save as the new path.
+    -- TODO: handle case where we're renaming the note of another buffer.
+    if is_current_buf then
+      if not dry_run then
+        quietly(vim.cmd.saveas, new_note_path)
+        vim.fn.delete(cur_note_path)
+      else
+        echo.info(
+          "Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file '" .. cur_note_path .. "'"
+        )
+      end
+    end
+
+    local cur_note_rel_path = tostring(Path:new(cur_note_path):make_relative(tostring(client.dir)))
+    local new_note_rel_path = tostring(Path:new(new_note_path):make_relative(tostring(client.dir)))
+
+    -- Search notes on disk for any references to `cur_note_id`.
+    -- We look for the following forms of references:
+    -- * '[[cur_note_id]]'
+    -- * '[[cur_note_id|ALIAS]]'
+    -- * '[[cur_note_id\|ALIAS]]' (a wiki link within a table)
+    -- * '[ALIAS](cur_note_id)'
+    -- And all of the above with relative paths (from the vault root) to the note instead of just the note ID,
+    -- with and without the ".md" suffix.
+    -- Another possible form is [[ALIAS]], but we don't change the note's aliases when renaming
+    -- so those links will still be valid.
+    ---@param ref_link string
+    ---@return string[]
+    local function get_ref_forms(ref_link)
+      return { "[[" .. ref_link .. "]]", "[[" .. ref_link .. "|", "[[" .. ref_link .. "\\|", "](" .. ref_link .. ")" }
+    end
+
+    local reference_forms = vim.tbl_flatten {
+      get_ref_forms(cur_note_id),
+      get_ref_forms(cur_note_rel_path),
+      get_ref_forms(string.sub(cur_note_rel_path, 1, -4)),
+    }
+    local replace_with = vim.tbl_flatten {
+      get_ref_forms(new_note_id),
+      get_ref_forms(new_note_rel_path),
+      get_ref_forms(string.sub(new_note_rel_path, 1, -4)),
+    }
+
+    local executor = AsyncExecutor.new()
+
+    local file_count = 0
+    local replacement_count = 0
+    local all_tasks_submitted = false
+
+    ---@param path string
+    ---@return integer
+    local function replace_refs(path)
+      --- Read lines, replacing refs as we go.
+      local count = 0
+      local lines = {}
+      local f = File.open(path, "r")
+      for line_num, line in util.enumerate(f:lines(true)) do
+        for ref, replacement in util.zip(reference_forms, replace_with) do
+          local n
+          line, n = util.string_replace(line, ref, replacement)
+          if dry_run and n > 0 then
+            echo.info(
+              "Dry run: '"
+                .. path
+                .. "':"
+                .. line_num
+                .. " Replacing "
+                .. n
+                .. " occurrence(s) of '"
+                .. ref
+                .. "' with '"
+                .. replacement
+                .. "'"
+            )
+          end
+          count = count + n
+        end
+        lines[#lines + 1] = line
+      end
+      f:close()
+
+      --- Write the new lines back.
+      if not dry_run and count > 0 then
+        f = File.open(path, "w")
+        f:write_lines(lines)
+        f:close()
+      end
+
+      return count
+    end
+
+    local function on_search_match(match)
+      local path = vim.fs.normalize(match.path.text)
+      file_count = file_count + 1
+      executor:submit(replace_refs, function(count)
+        replacement_count = replacement_count + count
+      end, path)
+    end
+
+    search.search_async(client.dir, reference_forms, { "-m=1" }, on_search_match, function(_)
+      all_tasks_submitted = true
+    end)
+
+    -- Wait for all tasks to get submitted.
+    vim.wait(2000, function()
+      return all_tasks_submitted
+    end, 50, false)
+
+    -- Then block until all tasks are finished.
+    executor:join(2000)
+
+    local prefix = dry_run and "Dry run: replaced " or "Replaced "
+    echo.info(prefix .. replacement_count .. " reference(s) across " .. file_count .. " file(s)")
+
+    -- In case the files of any current buffers were changed.
+    vim.cmd.checktime()
   end,
 })
 

@@ -186,7 +186,9 @@ obsidian.setup = function(opts)
       end
       local lines = note:frontmatter_lines(nil, frontmatter)
       vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
-      obsidian.echo.info("Updated frontmatter", client.opts.log_level)
+      if not client._quiet then
+        obsidian.echo.info("Updated frontmatter", client.opts.log_level)
+      end
     end,
   })
 
