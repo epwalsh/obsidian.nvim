@@ -807,6 +807,11 @@ M.register("ObsidianRename", {
     local File = require("obsidian.async").File
 
     local dry_run = false
+    local arg = util.strip_whitespace(data.args)
+    if vim.endswith(arg, " --dry-run") then
+      dry_run = true
+      arg = util.strip_whitespace(string.sub(arg, 1, -string.len " --dry-run" - 1))
+    end
 
     local is_current_buf
     local cur_note_path
@@ -832,7 +837,7 @@ M.register("ObsidianRename", {
     end
 
     -- TODO: handle case where new_note_id is a path containing one or more directories.
-    local new_note_id = data.args
+    local new_note_id = arg
     if vim.endswith(new_note_id, ".md") then
       new_note_id = string.sub(new_note_id, 1, -4)
     end
@@ -844,16 +849,31 @@ M.register("ObsidianRename", {
     end
 
     -- Get confirmation before continuing.
-    local confirmation = string.lower(vim.fn.input {
-      prompt = "Renaming '"
-        .. cur_note_id
-        .. "' to '"
-        .. new_note_id
-        .. "'...\n"
-        .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
-        .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
-        .. "Do you want to continue? [Y/n] ",
-    })
+    local confirmation
+    if not dry_run then
+      confirmation = string.lower(vim.fn.input {
+        prompt = "Renaming '"
+          .. cur_note_id
+          .. "' to '"
+          .. new_note_id
+          .. "'...\n"
+          .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
+          .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
+          .. "You can also do a dry run of this by running ':ObsidianRename "
+          .. arg
+          .. " --dry-run'.\n"
+          .. "Do you want to continue? [Y/n] ",
+      })
+    else
+      confirmation = string.lower(vim.fn.input {
+        prompt = "Dry run: renaming '"
+          .. cur_note_id
+          .. "' to '"
+          .. new_note_id
+          .. "'...\n"
+          .. "Do you want to continue? [Y/n] ",
+      })
+    end
     if not (confirmation == "y" or confirmation == "yes") then
       echo.warn "Rename canceled, doing nothing"
       return
@@ -929,10 +949,25 @@ M.register("ObsidianRename", {
       local count = 0
       local lines = {}
       local f = File.open(path, "r")
-      for line in f:lines(true) do
+      for line_num, line in util.enumerate(f:lines(true)) do
         for ref, replacement in util.zip(reference_forms, replace_with) do
           local n
           line, n = util.string_replace(line, ref, replacement)
+          if dry_run and n > 0 then
+            echo.info(
+              "Dry run: '"
+                .. path
+                .. "':"
+                .. line_num
+                .. " Replacing "
+                .. n
+                .. " occurrence(s) of '"
+                .. ref
+                .. "' with '"
+                .. replacement
+                .. "'"
+            )
+          end
           count = count + n
         end
         lines[#lines + 1] = line
