@@ -334,7 +334,6 @@ end
 ---Determines the last working day before a given time
 ---
 ---@param time integer
----
 ---@return integer
 util.working_day_before = function(time)
   local previous_day = time - (24 * 60 * 60)
@@ -342,6 +341,19 @@ util.working_day_before = function(time)
     return previous_day
   else
     return util.working_day_before(previous_day)
+  end
+end
+
+---Determines the next working day before a given time
+---
+---@param time integer
+---@return integer
+util.working_day_after = function(time)
+  local next_day = time + (24 * 60 * 60)
+  if util.is_working_day(next_day) then
+    return next_day
+  else
+    return util.working_day_after(next_day)
   end
 end
 

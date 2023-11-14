@@ -178,9 +178,20 @@ M.register("ObsidianCheck", {
 
 ---Create or open a new daily note.
 M.register("ObsidianToday", {
-  opts = { nargs = 0 },
-  func = function(client, _)
-    local note = client:today()
+  opts = { nargs = "?" },
+  func = function(client, data)
+    local offset_days = 0
+    local arg = util.string_replace(data.args, " ", "")
+    if string.len(arg) > 0 then
+      local offset = tonumber(arg)
+      if offset == nil then
+        echo.err("Invalid argument, expected an integer offset", client.log.level)
+        return
+      else
+        offset_days = offset
+      end
+    end
+    local note = client:daily(offset_days)
     local open_in = util.get_open_strategy(client.opts.open_notes_in)
     vim.api.nvim_command(open_in .. tostring(note.path))
   end,
@@ -191,6 +202,16 @@ M.register("ObsidianYesterday", {
   opts = { nargs = 0 },
   func = function(client, _)
     local note = client:yesterday()
+    local open_in = util.get_open_strategy(client.opts.open_notes_in)
+    vim.api.nvim_command(open_in .. tostring(note.path))
+  end,
+})
+
+---Create (or open) the daily note for the next weekday.
+M.register("ObsidianTomorrow", {
+  opts = { nargs = 0 },
+  func = function(client, _)
+    local note = client:tomorrow()
     local open_in = util.get_open_strategy(client.opts.open_notes_in)
     vim.api.nvim_command(open_in .. tostring(note.path))
   end,

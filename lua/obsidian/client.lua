@@ -382,6 +382,20 @@ Client.yesterday = function(self)
   return self:_daily(util.working_day_before(os.time()))
 end
 
+---Open (or create) the daily note for the next weekday.
+---
+---@return obsidian.Note
+Client.tomorrow = function(self)
+  return self:_daily(util.working_day_after(os.time()))
+end
+
+---Open (or create) the daily note for today + `offset_days`.
+---
+---@return obsidian.Note
+Client.daily = function(self, offset_days)
+  return self:_daily(os.time() + (offset_days * 3600 * 24))
+end
+
 ---Resolve the query to a single note.
 ---
 ---@param query string

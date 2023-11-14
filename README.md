@@ -36,8 +36,9 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
-- `:ObsidianToday` to create a new daily note.
-- `:ObsidianYesterday` to open (eventually creating) the daily note for the previous working day.
+- `:ObsidianToday` to open/create a new daily note. This command also takes an optional offset in days, e.g. use `:ObsidianToday -1` to go to yesterday's note.
+- `:ObsidianYesterday` to open/create the daily note for the previous working day.
+- `:ObsidianTomorrow` to open/create the daily note for the next working day.
 - `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
   See ["using templates"](#using-templates) for more information.
 - `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
