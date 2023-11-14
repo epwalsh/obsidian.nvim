@@ -336,6 +336,15 @@ This is a complete list of all of the options that can be passed to
       -- Accepted values are "current", "hsplit" and "vsplit"
       open_notes_in = "current",
     
+      -- Optional, configure additional syntax highlighting.
+      syntax = {
+        enable = true,  -- set to false to disable
+        chars = {
+          todo = "󰄱",  -- change to "☐" if you don't have a patched font
+          done = "",  -- change to "✔" if you don't have a patched font
+        }
+      },
+    
       -- Optional, set the YAML parser to use. The valid options are:
       --  * "native" - uses a pure Lua parser that's fast but potentially misses some edge cases.
       --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is more robust
