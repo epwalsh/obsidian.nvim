@@ -169,7 +169,11 @@ obsidian.setup = function(opts)
     group = group,
     pattern = tostring(client.dir / "**.md"),
     callback = function()
-      if vim.b.current_syntax == nil then ---@diagnostic disable-line: undefined-field
+      if client.opts.syntax.enable and vim.b.current_syntax == nil then ---@diagnostic disable-line: undefined-field
+        ---@diagnostic disable-next-line: inject-field
+        vim.b.obsidian_todo_char = client.opts.syntax.chars.todo
+        ---@diagnostic disable-next-line: inject-field
+        vim.b.obsidian_todo_done_char = client.opts.syntax.chars.done
         vim.cmd.set "syntax=obsidian"
       end
     end,

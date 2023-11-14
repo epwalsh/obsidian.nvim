@@ -720,7 +720,7 @@ util.get_plugin_info = function(name)
 
   if src_root ~= nil then
     local Job = require "plenary.job"
-    local output, exit_code = Job:new({
+    local output, exit_code = Job:new({ ---@diagnostic disable-line: missing-fields
       command = "git",
       args = { "rev-parse", "HEAD" },
       cwd = src_root,
@@ -737,7 +737,7 @@ end
 ---@return string|?
 util.get_external_depency_info = function(cmd)
   local Job = require "plenary.job"
-  local output, exit_code = Job:new({
+  local output, exit_code = Job:new({ ---@diagnostic disable-line: missing-fields
     command = cmd,
     args = { "--version" },
     enable_recording = true,

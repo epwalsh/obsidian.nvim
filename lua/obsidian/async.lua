@@ -308,7 +308,7 @@ end
 local init_job = function(cmd, args, on_stdout, on_exit)
   local stderr_lines = {}
 
-  return Job:new {
+  return Job:new { ---@diagnostic disable-line: missing-fields
     command = cmd,
     args = args,
     on_stdout = function(err, line)

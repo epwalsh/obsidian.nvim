@@ -26,6 +26,7 @@ local config = {}
 ---@field sort_by string|?
 ---@field sort_reversed boolean|?
 ---@field open_notes_in "current"|"vsplit"|"hsplit"
+---@field syntax obsidian.config.SyntaxOpts
 ---@field yaml_parser string|?
 config.ClientOpts = {}
 
@@ -53,6 +54,7 @@ config.ClientOpts.default = function()
     sort_by = "modified",
     sort_reversed = true,
     open_notes_in = "current",
+    syntax = config.SyntaxOpts.default(),
     yaml_parser = "native",
   }
 end
@@ -69,6 +71,7 @@ config.ClientOpts.normalize = function(opts)
   opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
+  opts.syntax = vim.tbl_extend("force", config.SyntaxOpts.default(), opts.syntax)
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
@@ -168,6 +171,22 @@ config.TemplateOpts.default = function()
     date_format = nil,
     time_format = nil,
     substitutions = {},
+  }
+end
+
+---@class obsidian.config.SyntaxOpts
+---@field enable boolean
+---@field chars table<string, string>
+config.SyntaxOpts = {}
+
+---@return obsidian.config.SyntaxOpts
+config.SyntaxOpts.default = function()
+  return {
+    enable = true,
+    chars = {
+      todo = "󰄱",
+      done = "",
+    },
   }
 end
 

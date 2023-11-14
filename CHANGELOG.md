@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `:ObsidianRename` command.
 - Added `:ObsidianTomorrow` command.
 - Added optional offset to `:ObsidianToday` command. For example: `:ObsidianToday -1` to go to yesterday's daily note.
+- Added configuration option `syntax` for customizing obsidian.nvim's additional syntax highlighting.
 
 ### Fixed
 
