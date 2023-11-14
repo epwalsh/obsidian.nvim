@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `:ObsidianRename` command.
 
+### Fixed
+
+- Ensure additional syntax highlighting works with latest treesitter.
+
 ## [v1.16.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.16.1) - 2023-11-11
 
 ### Changed

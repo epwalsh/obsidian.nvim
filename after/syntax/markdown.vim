@@ -1,6 +1,6 @@
 " Vim syntax file.
 " Language:	Markdown
-" Remark:	Meant to complement existing Markdown syntax files, not replace.
+" Remark:	Meant to complement syntax file from vim-markdown.
 
 " Zettel date links '[[xxxx-xx-xx]]' and regular links '[[link|alias]]' in
 " headers:

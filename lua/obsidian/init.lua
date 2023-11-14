@@ -158,12 +158,22 @@ obsidian.setup = function(opts)
       cmp.setup.buffer { sources = sources }
     end
 
-    vim.api.nvim_create_autocmd({ "BufRead" }, {
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
       group = group,
       pattern = tostring(client.dir / "**.md"),
       callback = cmp_setup,
     })
   end
+
+  vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    group = group,
+    pattern = tostring(client.dir / "**.md"),
+    callback = function()
+      if vim.b.current_syntax == nil then ---@diagnostic disable-line: undefined-field
+        vim.cmd.set "syntax=obsidian"
+      end
+    end,
+  })
 
   -- Add missing frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {

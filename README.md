@@ -140,11 +140,12 @@ use({
 
 The only required plugin dependency is [plenary.nvim](https://github.com/nvim-lua/plenary.nvim), but there are a number of optional dependencies that enhance the obsidian.nvim experience:
 
+- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter): for base markdown syntax highlighting. See [syntax highlighting](#syntax-highlighting) for more details.
 - [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp): for completion of note references.
 - [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim): for search and quick-switch functionality.
 - [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): an alternative to telescope for search and quick-switch functionality.
 - [junegunn/fzf](https://github.com/junegunn/fzf) and [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim): another alternative to telescope for search and quick-switch functionality.
-- [godlygeek/tabular](https://github.com/godlygeek/tabular) and [preservim/vim-markdown](https://github.com/preservim/vim-markdown): alternative to nvim-treesitter for syntax highlighting.
+- [godlygeek/tabular](https://github.com/godlygeek/tabular) and [preservim/vim-markdown](https://github.com/preservim/vim-markdown): matching rules, mappings, and an alternative to nvim-treesitter for syntax highlighting (see [syntax highlighting](#syntax-highlighting) for more details).
 
 If you choose to use any of these you should include them in the "dependencies" or "requires" field of the obsidian.nvim plugin spec for your package manager.
 
@@ -321,19 +322,18 @@ obsidian.nvim will set itself up as an nvim-cmp source automatically when you en
 
 #### Syntax highlighting
 
-If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
-
-If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) and not [vim-markdown](https://github.com/preservim/vim-markdown), you'll probably want to enable `additional_vim_regex_highlighting` for markdown to benefit from obsidian.nvim's extra syntax improvements:
+If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) you're configuration should include both "markdown" and "markdown_inline" sources:
 
 ```lua
 require("nvim-treesitter.configs").setup({
   ensure_installed = { "markdown", "markdown_inline", ... },
   highlight = {
     enable = true,
-    additional_vim_regex_highlighting = { "markdown" },
   },
 })
 ```
+
+If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
 
 #### Note naming and location
 
