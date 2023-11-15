@@ -9,6 +9,7 @@ local module_lookups = {
   mapping = "obsidian.mapping",
   Note = "obsidian.note",
   search = "obsidian.search",
+  ui = "obsidian.ui",
   util = "obsidian.util",
   VERSION = "obsidian.version",
   workspace = "obsidian.workspace",
@@ -116,14 +117,6 @@ obsidian.setup = function(opts)
     end
   end
 
-  -- Install commands.
-  obsidian.command.install(client)
-
-  -- Register mappings.
-  for mapping_keys, mapping_config in pairs(opts.mappings) do
-    vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
-  end
-
   --- @type fun(match: string): boolean
   local is_template
   if client.templates_dir ~= nil then
@@ -142,53 +135,55 @@ obsidian.setup = function(opts)
   -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
-  if opts.completion.nvim_cmp then
-    -- Inject Obsidian as a cmp source when reading a buffer in the vault.
-    local cmp_setup = function()
-      local cmp = require "cmp"
-      local sources = {
-        { name = "obsidian", option = opts },
-        { name = "obsidian_new", option = opts },
-      }
-      for _, source in pairs(cmp.get_config().sources) do
-        if source.name ~= "obsidian" and source.name ~= "obsidian_new" then
-          table.insert(sources, source)
-        end
-      end
-      cmp.setup.buffer { sources = sources }
-    end
-
-    vim.api.nvim_create_autocmd({ "BufEnter" }, {
-      group = group,
-      pattern = tostring(client.dir / "**.md"),
-      callback = cmp_setup,
-    })
-  end
-
+  -- Only register commands, mappings, cmp source, etc when we enter a note buffer.
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,
     pattern = tostring(client.dir / "**.md"),
     callback = function()
-      if client.opts.syntax.enable and vim.b.current_syntax == nil then ---@diagnostic disable-line: undefined-field
-        ---@diagnostic disable-next-line: inject-field
-        vim.b.obsidian_todo_char = client.opts.syntax.chars.todo
-        ---@diagnostic disable-next-line: inject-field
-        vim.b.obsidian_todo_done_char = client.opts.syntax.chars.done
-        vim.cmd.set "syntax=obsidian"
+      -- Install commands.
+      obsidian.command.install(client)
+
+      -- Register mappings.
+      for mapping_keys, mapping_config in pairs(opts.mappings) do
+        vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
+      end
+
+      if opts.completion.nvim_cmp then
+        -- Inject Obsidian as a cmp source when reading a buffer in the vault.
+        local cmp = require "cmp"
+        local sources = {
+          { name = "obsidian", option = opts },
+          { name = "obsidian_new", option = opts },
+        }
+        for _, source in pairs(cmp.get_config().sources) do
+          if source.name ~= "obsidian" and source.name ~= "obsidian_new" then
+            table.insert(sources, source)
+          end
+        end
+        cmp.setup.buffer { sources = sources }
       end
     end,
   })
+
+  if client.opts.ui.enable then
+    -- UI updates.
+    vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI", "TextChangedP" }, {
+      group = group,
+      pattern = tostring(client.dir / "**.md"),
+      callback = obsidian.ui.get_autocmd_callback(client.opts.ui),
+    })
+  end
 
   -- Add missing frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = group,
     pattern = tostring(client.dir / "**.md"),
-    callback = function(args)
-      if is_template(args.match) then
+    callback = function(ev)
+      if is_template(ev.match) then
         return
       end
 
-      local bufnr = vim.api.nvim_get_current_buf()
+      local bufnr = ev.buf
       local note = obsidian.Note.from_buffer(bufnr, client.dir)
       if not note:should_save_frontmatter() or client.opts.disable_frontmatter == true then
         return

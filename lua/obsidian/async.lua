@@ -375,4 +375,44 @@ M.run_job_async = function(cmd, args, on_stdout, on_exit)
   job:start()
 end
 
+---@param fn function
+---@param timeout integer (milliseconds)
+M.throttle = function(fn, timeout)
+  local last_call = 0
+  local timer = nil
+
+  return function(...)
+    if timer ~= nil then
+      timer:stop()
+    end
+
+    ---@diagnostic disable-next-line undefined-field
+    local ms_remaining = timeout - (vim.loop.now() - last_call)
+
+    if ms_remaining > 0 then
+      if timer == nil then
+        ---@diagnostic disable-next-line: undefined-field
+        timer = vim.loop.new_timer()
+      end
+      local args = { ... }
+      timer:start(
+        ms_remaining,
+        0,
+        vim.schedule_wrap(function()
+          timer:stop()
+          timer:close()
+          timer = nil
+          ---@diagnostic disable-next-line: undefined-field
+          last_call = vim.loop.now()
+          fn(unpack(args))
+        end)
+      )
+    else
+      ---@diagnostic disable-next-line: undefined-field
+      last_call = vim.loop.now()
+      fn(...)
+    end
+  end
+end
+
 return M

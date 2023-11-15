@@ -25,7 +25,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 - ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
 - 🏃 Optional passthrough for `gf` to enable Obsidian links without interfering with existing functionality
-- 💅 Additional markdown syntax highlighting and concealing for references
+- 💅 Additional markdown syntax highlighting, concealing, and extmarks for references and check-boxes
 
 ### Commands
 
@@ -217,6 +217,13 @@ This is a complete list of all of the options that can be passed to `require("ob
       end,
       opts = { noremap = false, expr = true, buffer = true },
     },
+    -- Toggle check-boxes.
+    ["<leader>ch"] = {
+      action = function()
+        return require("obsidian").util.toggle_checkbox()
+      end,
+      opts = { buffer = true },
+    },
   },
 
   -- Optional, customize how names/IDs for new notes are created.
@@ -305,13 +312,32 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Accepted values are "current", "hsplit" and "vsplit"
   open_notes_in = "current",
 
-  -- Optional, configure additional syntax highlighting.
-  syntax = {
-    enable = true,  -- set to false to disable
+  -- Optional, configure additional syntax highlighting / extmarks.
+  ui = {
+    enable = true,  -- set to false to disable all additional syntax features
+    tick = 200,  -- update rate in milliseconds
     chars = {
-      todo = "󰄱",  -- change to "☐" if you don't have a patched font
-      done = "",  -- change to "✔" if you don't have a patched font
-    }
+      todo_box = "󰄱",
+      done_box = "",
+      right_arrow_box = "",
+      tilde_box = "󰰱",
+      url = "",
+    },
+    -- Change to this if you don't have a patched font:
+    -- chars = {
+    --   todo_box = "☐",
+    --   done_box = "✔",
+    --   right_arrow_box = "⇨",
+    --   tilde_box = "🅧",
+    --   url = "",
+    -- },
+    colors = {
+      todo_box = "#f78c6c",
+      done_box = "#89ddff",
+      right_arrow_box = "#f78c6c",
+      tilde_box = "#ff5370",
+      ref = "#c792ea",
+    },
   },
 
   -- Optional, set the YAML parser to use. The valid options are:
