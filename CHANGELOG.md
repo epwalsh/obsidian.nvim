@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+**Highlights:**
+
+The long awaited `:ObsidianRename` command is here along with big improvements to our syntax add-ons! Wiki links, external links, and checklists look much better now out-of-the-box and can be easily customized! 🥳
+
+I recommend you use treesitter as a base markdown syntax highlighter, but obsidian.nvim is also compatible with traditional regex syntax highlighting.
+
 ### Added
 
 - Added `:ObsidianRename` command.
