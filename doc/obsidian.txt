@@ -347,7 +347,9 @@ This is a complete list of all of the options that can be passed to
       ui = {
         enable = true,  -- set to false to disable all additional syntax features
         tick = 200,  -- update rate in milliseconds
+        -- Define how various check-boxes are displayed
         checkboxes = {
+          -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
           [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
           ["x"] = { char = "", hl_group = "ObsidianDone" },
           [">"] = { char = "", hl_group = "ObsidianRightArrow" },
@@ -355,10 +357,15 @@ This is a complete list of all of the options that can be passed to
           -- Replace the above with this if you don't have a patched font:
           -- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
           -- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
+    
+          -- You can also add more custom ones...
         },
         external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
+        -- Replace the above with this if you don't have a patched font:
+        -- external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
         reference_text = { hl_group = "ObsidianRefText" },
         hl_groups = {
+          -- The options are passed directly to `vim.api.nvim_set_hl()`. See `:help nvim_set_hl`.
           ObsidianTodo = { bold = true, fg = "#f78c6c" },
           ObsidianDone = { bold = true, fg = "#89ddff" },
           ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
