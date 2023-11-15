@@ -72,8 +72,6 @@ config.ClientOpts.normalize = function(opts)
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
   opts.ui = vim.tbl_extend("force", config.UIOpts.default(), opts.ui)
-  opts.ui.chars = vim.tbl_extend("force", config.UIOpts.default().chars, opts.ui.chars)
-  opts.ui.colors = vim.tbl_extend("force", config.UIOpts.default().colors, opts.ui.colors)
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
@@ -180,42 +178,39 @@ end
 ---@class obsidian.config.UIOpts
 ---@field enable boolean
 ---@field tick integer
----@field chars obsidian.config.UIChars
----@field colors obsidian.config.UIColors
+---@field checkboxes table{string, obsidian.config.UICharSpec}
+---@field external_link_icon obsidian.config.UICharSpec
+---@field reference_text obsidian.config.UIStyleSpec
+---@field hl_groups table{string, table}
 config.UIOpts = {}
 
----@class obsidian.config.UIChars
----@field todo_box string
----@field done_box string
----@field right_arrow_box string
----@field tilde_box string
----@field url string
+---@class obsidian.config.UICharSpec
+---@field char string
+---@field hl_group string
 
----@class obsidian.config.UIColors
----@field todo_box string
----@field done_box string
----@field right_arrow_box string
----@field tilde_box string
----@field ref string
+---@class obsidian.config.UIStyleSpec
+---@field hl_group string
 
 ---@return obsidian.config.UIOpts
 config.UIOpts.default = function()
   return {
     enable = true,
     tick = 200,
-    chars = {
-      todo_box = "󰄱",
-      done_box = "",
-      right_arrow_box = "",
-      tilde_box = "󰰱",
-      url = "",
+    checkboxes = {
+      [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
+      ["x"] = { char = "", hl_group = "ObsidianDone" },
+      [">"] = { char = "", hl_group = "ObsidianRightArrow" },
+      ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
     },
-    colors = {
-      todo_box = "#f78c6c",
-      done_box = "#89ddff",
-      right_arrow_box = "#f78c6c",
-      tilde_box = "#ff5370",
-      ref = "#c792ea",
+    external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
+    reference_text = { hl_group = "ObsidianRefText" },
+    hl_groups = {
+      ObsidianTodo = { bold = true, fg = "#f78c6c" },
+      ObsidianDone = { bold = true, fg = "#89ddff" },
+      ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
+      ObsidianTilde = { bold = true, fg = "#ff5370" },
+      ObsidianRefText = { underline = true, fg = "#c792ea" },
+      ObsidianExtLinkIcon = { fg = "#c792ea" },
     },
   }
 end

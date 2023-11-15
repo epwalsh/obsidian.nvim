@@ -3,23 +3,11 @@ local throttle = require("obsidian.async").throttle
 
 local M = {}
 
-local Groups = {
-  todo = "ObsidianTodo",
-  done = "ObsidianDone",
-  right_arrow = "ObsidianRightArrow",
-  tilde = "ObsidianTilde",
-  ref = "ObsidianRef",
-  url_marker = "ObsidianUrlMarker",
-}
-
 ---@param ui_opts obsidian.config.UIOpts
 M.install_hl_groups = function(ui_opts)
-  vim.api.nvim_set_hl(0, Groups.todo, { bold = true, fg = ui_opts.colors.todo_box })
-  vim.api.nvim_set_hl(0, Groups.done, { bold = true, fg = ui_opts.colors.done_box })
-  vim.api.nvim_set_hl(0, Groups.right_arrow, { bold = true, fg = ui_opts.colors.right_arrow_box })
-  vim.api.nvim_set_hl(0, Groups.tilde, { bold = true, fg = ui_opts.colors.tilde_box })
-  vim.api.nvim_set_hl(0, Groups.ref, { underline = true, fg = ui_opts.colors.ref })
-  vim.api.nvim_set_hl(0, Groups.url_marker, { fg = ui_opts.colors.ref })
+  for group_name, opts in pairs(ui_opts.hl_groups) do
+    vim.api.nvim_set_hl(0, group_name, opts)
+  end
 end
 
 ---@param bufnr integer
@@ -27,42 +15,18 @@ end
 ---@param lnum integer
 ---@param ui_opts obsidian.config.UIOpts
 local function update_line_check_extmarks(bufnr, ns_id, line, lnum, ui_opts)
-  if string.match(line, "^%s*- %[ %]") then
-    -- This is an empty checkbox '- [ ]'
-    local indent = util.count_indent(line)
-    vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, indent, {
-      end_row = lnum,
-      end_col = indent + 5,
-      conceal = ui_opts.chars.todo_box,
-      hl_group = Groups.todo,
-    })
-  elseif string.match(line, "^%s*- %[x%]") then
-    -- This is a checked box '- [x]'
-    local indent = util.count_indent(line)
-    vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, indent, {
-      end_row = lnum,
-      end_col = indent + 5,
-      conceal = ui_opts.chars.done_box,
-      hl_group = Groups.done,
-    })
-  elseif string.match(line, "^%s*- %[>%]") then
-    -- This is a box with a right arrow '- [>]'
-    local indent = util.count_indent(line)
-    vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, indent, {
-      end_row = lnum,
-      end_col = indent + 5,
-      conceal = ui_opts.chars.right_arrow_box,
-      hl_group = Groups.right_arrow,
-    })
-  elseif string.match(line, "^%s*- %[~%]") then
-    -- This is a box with a tilde '- [~]'
-    local indent = util.count_indent(line)
-    vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, indent, {
-      end_row = lnum,
-      end_col = indent + 5,
-      conceal = ui_opts.chars.tilde_box,
-      hl_group = Groups.tilde,
-    })
+  for char, opts in pairs(ui_opts.checkboxes) do
+    -- TODO: escape `char` if needed
+    if string.match(line, "^%s*- %[" .. char .. "%]") then
+      local indent = util.count_indent(line)
+      vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, indent, {
+        end_row = lnum,
+        end_col = indent + 5,
+        conceal = opts.char,
+        hl_group = opts.hl_group,
+      })
+      break
+    end
   end
 end
 
@@ -88,7 +52,7 @@ local function update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
       vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, pipe_loc, {
         end_row = lnum,
         end_col = m_end - 2,
-        hl_group = Groups.ref,
+        hl_group = ui_opts.reference_text.hl_group,
         spell = false,
       })
       -- Conceal the closing ']]'
@@ -109,7 +73,7 @@ local function update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
       vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, m_start + 1, {
         end_row = lnum,
         end_col = m_end - 2,
-        hl_group = Groups.ref,
+        hl_group = ui_opts.reference_text.hl_group,
         spell = false,
       })
       -- Conceal the closing ']]'
@@ -133,7 +97,7 @@ local function update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
       vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, m_start, {
         end_row = lnum,
         end_col = closing_bracket_loc - 1,
-        hl_group = Groups.ref,
+        hl_group = ui_opts.reference_text.hl_group,
         spell = false,
       })
       -- Conceal the ']('
@@ -146,8 +110,8 @@ local function update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
       vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, closing_bracket_loc + 1, {
         end_row = lnum,
         end_col = m_end - 1,
-        conceal = is_url and ui_opts.chars.url or "",
-        hl_group = Groups.url_marker,
+        conceal = is_url and ui_opts.external_link_icon.char or "",
+        hl_group = ui_opts.external_link_icon.hl_group,
       })
       -- Conceal the closing ')'
       vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, m_end - 1, {

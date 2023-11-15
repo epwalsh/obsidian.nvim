@@ -316,27 +316,24 @@ This is a complete list of all of the options that can be passed to `require("ob
   ui = {
     enable = true,  -- set to false to disable all additional syntax features
     tick = 200,  -- update rate in milliseconds
-    chars = {
-      todo_box = "󰄱",
-      done_box = "",
-      right_arrow_box = "",
-      tilde_box = "󰰱",
-      url = "",
+    checkboxes = {
+      [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
+      ["x"] = { char = "", hl_group = "ObsidianDone" },
+      [">"] = { char = "", hl_group = "ObsidianRightArrow" },
+      ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
+      -- Replace the above with this if you don't have a patched font:
+      -- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
+      -- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
     },
-    -- Change to this if you don't have a patched font:
-    -- chars = {
-    --   todo_box = "☐",
-    --   done_box = "✔",
-    --   right_arrow_box = "⇨",
-    --   tilde_box = "🅧",
-    --   url = "",
-    -- },
-    colors = {
-      todo_box = "#f78c6c",
-      done_box = "#89ddff",
-      right_arrow_box = "#f78c6c",
-      tilde_box = "#ff5370",
-      ref = "#c792ea",
+    external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
+    reference_text = { hl_group = "ObsidianRefText" },
+    hl_groups = {
+      ObsidianTodo = { bold = true, fg = "#f78c6c" },
+      ObsidianDone = { bold = true, fg = "#89ddff" },
+      ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
+      ObsidianTilde = { bold = true, fg = "#ff5370" },
+      ObsidianRefText = { underline = true, fg = "#c792ea" },
+      ObsidianExtLinkIcon = { fg = "#c792ea" },
     },
   },
 
