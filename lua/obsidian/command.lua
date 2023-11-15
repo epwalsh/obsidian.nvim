@@ -37,7 +37,7 @@ M.install = function(client)
       end
     end
 
-    vim.api.nvim_create_user_command(command_name, func, command_config.opts)
+    vim.api.nvim_buf_create_user_command(0, command_name, func, command_config.opts)
   end
 end
 

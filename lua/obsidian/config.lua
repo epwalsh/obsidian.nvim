@@ -26,7 +26,7 @@ local config = {}
 ---@field sort_by string|?
 ---@field sort_reversed boolean|?
 ---@field open_notes_in "current"|"vsplit"|"hsplit"
----@field syntax obsidian.config.SyntaxOpts
+---@field ui obsidian.config.UIOpts
 ---@field yaml_parser string|?
 config.ClientOpts = {}
 
@@ -54,7 +54,7 @@ config.ClientOpts.default = function()
     sort_by = "modified",
     sort_reversed = true,
     open_notes_in = "current",
-    syntax = config.SyntaxOpts.default(),
+    ui = config.UIOpts.default(),
     yaml_parser = "native",
   }
 end
@@ -71,7 +71,9 @@ config.ClientOpts.normalize = function(opts)
   opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
   opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
   opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
-  opts.syntax = vim.tbl_extend("force", config.SyntaxOpts.default(), opts.syntax)
+  opts.ui = vim.tbl_extend("force", config.UIOpts.default(), opts.ui)
+  opts.ui.chars = vim.tbl_extend("force", config.UIOpts.default().chars, opts.ui.chars)
+  opts.ui.colors = vim.tbl_extend("force", config.UIOpts.default().colors, opts.ui.colors)
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
@@ -136,6 +138,7 @@ config.MappingOpts = {}
 config.MappingOpts.default = function()
   return {
     ["gf"] = require("obsidian.mapping").gf_passthrough(),
+    ["<leader>ch"] = require("obsidian.mapping").toggle_checkbox(),
   }
 end
 
@@ -174,18 +177,45 @@ config.TemplateOpts.default = function()
   }
 end
 
----@class obsidian.config.SyntaxOpts
+---@class obsidian.config.UIOpts
 ---@field enable boolean
----@field chars table<string, string>
-config.SyntaxOpts = {}
+---@field tick integer
+---@field chars obsidian.config.UIChars
+---@field colors obsidian.config.UIColors
+config.UIOpts = {}
 
----@return obsidian.config.SyntaxOpts
-config.SyntaxOpts.default = function()
+---@class obsidian.config.UIChars
+---@field todo_box string
+---@field done_box string
+---@field right_arrow_box string
+---@field tilde_box string
+---@field url string
+
+---@class obsidian.config.UIColors
+---@field todo_box string
+---@field done_box string
+---@field right_arrow_box string
+---@field tilde_box string
+---@field ref string
+
+---@return obsidian.config.UIOpts
+config.UIOpts.default = function()
   return {
     enable = true,
+    tick = 200,
     chars = {
-      todo = "󰄱",
-      done = "",
+      todo_box = "󰄱",
+      done_box = "",
+      right_arrow_box = "",
+      tilde_box = "󰰱",
+      url = "",
+    },
+    colors = {
+      todo_box = "#f78c6c",
+      done_box = "#89ddff",
+      right_arrow_box = "#f78c6c",
+      tilde_box = "#ff5370",
+      ref = "#c792ea",
     },
   }
 end

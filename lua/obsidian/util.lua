@@ -91,6 +91,13 @@ util.urlencode = function(str)
   return url
 end
 
+---@param s string
+---@return boolean
+util.is_url = function(s)
+  s = util.strip_whitespace(s)
+  return vim.startswith(s, "http://") or vim.startswith(s, "https://")
+end
+
 ---Create a new unique Zettel ID.
 ---
 ---@return string
@@ -134,27 +141,31 @@ util.replace_refs = function(s)
   return out
 end
 
+util.RefTypes = {
+  WikiWithAlias = "wiki_with_alias",
+  Wiki = "wiki",
+  Markdown = "markdown",
+}
+
+util.ref_patterns = {
+  [util.RefTypes.WikiWithAlias] = "%[%[[^%|%]]+%|[^%]]+%]%]", -- [[xxx|yyy]]
+  [util.RefTypes.Wiki] = "%[%[[^%]%|]+%]%]", -- [[xxx]]
+  [util.RefTypes.Markdown] = "%[[^%]]+%]%([^%)]+%)", -- [yyy](xxx)
+}
+
 ---Find refs and URLs.
 ---
 ---@param s string
----@param patterns string[]|?
 ---@return table
-util.find_refs = function(s, patterns)
-  patterns = patterns and patterns
-    or {
-      "%[%[[^%|%]]+%|[^%]]+%]%]", -- [[xxx|xxx]]
-      "%[%[[^%]%|]+%]%]", -- [[xxx]]
-      "%[[^%]]+%]%([^%)]+%)", -- [xxx](xxx)
-    }
-
+util.find_refs = function(s)
   local matches = {}
-
-  for _, pattern in pairs(patterns) do
+  for pattern_name in util.iter { util.RefTypes.WikiWithAlias, util.RefTypes.Wiki, util.RefTypes.Markdown } do
+    local pattern = util.ref_patterns[pattern_name]
     local search_start = 1
     while search_start < #s do
       local m_start, m_end = string.find(s, pattern, search_start)
       if m_start ~= nil and m_end ~= nil then
-        table.insert(matches, { m_start, m_end })
+        table.insert(matches, { m_start, m_end, pattern_name })
         search_start = m_end
       else
         break
@@ -172,16 +183,15 @@ end
 ---Find all refs in a string and replace with their titles.
 ---
 ---@param s string
----@param patterns string[]|?
 --
 ---@return string
 ---@return table
 ---@return string[]
-util.find_and_replace_refs = function(s, patterns)
+util.find_and_replace_refs = function(s)
   local pieces = {}
   local refs = {}
   local is_ref = {}
-  local matches = util.find_refs(s, patterns)
+  local matches = util.find_refs(s)
   local last_end = 1
   for _, match in pairs(matches) do
     local m_start, m_end = unpack(match)
@@ -284,6 +294,23 @@ util.cursor_on_markdown_link = function(line, col)
   end
 
   return open, close
+end
+
+util.toggle_checkbox = function()
+  local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
+  local line = vim.api.nvim_get_current_line()
+  if string.match(line, "^%s*- %[ %].*") then
+    line = util.string_replace(line, "- [ ]", "- [x]", 1)
+  else
+    for check_char in util.iter { "x", "~", ">", "-" } do
+      if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
+        line = util.string_replace(line, "- [" .. check_char .. "]", "- [ ]", 1)
+        break
+      end
+    end
+  end
+  -- 0-indexed
+  vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
 end
 
 ---Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
@@ -463,7 +490,7 @@ util.escape_magic_characters = function(text)
 end
 
 util.gf_passthrough = function()
-  if require("obsidian").util.cursor_on_markdown_link() then
+  if util.cursor_on_markdown_link() then
     return "<cmd>ObsidianFollowLink<CR>"
   else
     return "gf"
