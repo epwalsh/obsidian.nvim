@@ -153,11 +153,36 @@ util.ref_patterns = {
   [util.RefTypes.Markdown] = "%[[^%]]+%]%([^%)]+%)", -- [yyy](xxx)
 }
 
+---@param s string
+---@param pattern string
+---@param init integer|?
+---@param plain boolean|?
+util.gfind = function(s, pattern, init, plain)
+  init = init and init or 1
+
+  return function()
+    if init < #s then
+      local m_start, m_end = string.find(s, pattern, init, plain)
+      if m_start ~= nil and m_end ~= nil then
+        init = m_end + 1
+        return m_start, m_end
+      end
+    end
+    return nil
+  end
+end
+
 ---Find refs and URLs.
 ---
 ---@param s string
 ---@return table
 util.find_refs = function(s)
+  -- First find all inline code blocks so we can skip reference matches inside of those.
+  local inline_code_blocks = {}
+  for m_start, m_end in util.gfind(s, "`[^`]*`") do
+    inline_code_blocks[#inline_code_blocks + 1] = { m_start, m_end }
+  end
+
   local matches = {}
   for pattern_name in util.iter { util.RefTypes.WikiWithAlias, util.RefTypes.Wiki, util.RefTypes.Markdown } do
     local pattern = util.ref_patterns[pattern_name]
@@ -165,7 +190,16 @@ util.find_refs = function(s)
     while search_start < #s do
       local m_start, m_end = string.find(s, pattern, search_start)
       if m_start ~= nil and m_end ~= nil then
-        table.insert(matches, { m_start, m_end, pattern_name })
+        local inside_code_block = false
+        for code_block_boundary in util.iter(inline_code_blocks) do
+          if code_block_boundary[1] < m_start and m_end < code_block_boundary[2] then
+            inside_code_block = true
+            break
+          end
+        end
+        if not inside_code_block then
+          table.insert(matches, { m_start, m_end, pattern_name })
+        end
         search_start = m_end
       else
         break
@@ -173,6 +207,7 @@ util.find_refs = function(s)
     end
   end
 
+  -- Sort results by position.
   table.sort(matches, function(a, b)
     return a[1] < b[1]
   end)

@@ -27,6 +27,8 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - 🏃 Optional passthrough for `gf` to enable Obsidian links without interfering with existing functionality
 - 💅 Additional markdown syntax highlighting, concealing, and extmarks for references and check-boxes
 
+[![See this screenshot here https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)
+
 ### Commands
 
 - `:ObsidianOpen` to open a note in the Obsidian app.

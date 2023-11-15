@@ -41,6 +41,17 @@ describe("util.find_refs()", function()
       assert.equals(match[2], expected[i][2])
     end
   end)
+
+  it("should ignore refs within an inline code block", function()
+    local s = "`[[Foo]]` [[foo|Bar]]"
+    local matches = util.find_refs(s)
+    local expected = { { 11, 21 } }
+    assert.equals(#matches, #expected)
+    for i, match in ipairs(matches) do
+      assert.equals(match[1], expected[i][1])
+      assert.equals(match[2], expected[i][2])
+    end
+  end)
 end)
 
 describe("util.find_and_replace_refs()", function()

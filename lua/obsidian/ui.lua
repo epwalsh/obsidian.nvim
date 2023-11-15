@@ -126,15 +126,21 @@ end
 ---@param bufnr integer
 ---@param ui_opts obsidian.config.UIOpts
 local function update_extmarks(bufnr, ns_id, ui_opts)
-  -- Iterate over lines, updating marks.
+  local inside_code_block = false
+  -- Iterate over lines (skipping code blocks) and update marks.
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   for i, line in ipairs(lines) do
     local lnum = i - 1
     -- Remove existing marks.
     -- TODO: can we cache these instead and only update when needed?
     vim.api.nvim_buf_clear_namespace(bufnr, ns_id, lnum, lnum + 1)
-    update_line_check_extmarks(bufnr, ns_id, line, lnum, ui_opts)
-    update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
+    -- Check if inside a code block or at code block boundary. If not, update marks.
+    if string.match(line, "^%s*```[^`]*$") then
+      inside_code_block = not inside_code_block
+    elseif not inside_code_block then
+      update_line_check_extmarks(bufnr, ns_id, line, lnum, ui_opts)
+      update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
+    end
   end
 end
 
