@@ -35,7 +35,7 @@ end
 ---@param lnum integer
 ---@param ui_opts obsidian.config.UIOpts
 local function update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
-  local matches = util.find_refs(line)
+  local matches = util.find_refs(line, true)
   for match in util.iter(matches) do
     local m_start, m_end, m_type = unpack(match)
     if m_type == util.RefTypes.WikiWithAlias then
@@ -118,6 +118,24 @@ local function update_line_ref_extmarks(bufnr, ns_id, line, lnum, ui_opts)
         end_row = lnum,
         end_col = m_end,
         conceal = is_url and " " or "",
+      })
+    elseif m_type == util.RefTypes.NakedUrl then
+      -- A "naked" URL is just a URL by itself, like 'https://github.com/'
+      local domain_start_loc = string.find(line, "://", m_start, true)
+      assert(domain_start_loc)
+      domain_start_loc = domain_start_loc + 3
+      -- Conceal the "https?://" part
+      vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, m_start - 1, {
+        end_row = lnum,
+        end_col = domain_start_loc - 1,
+        conceal = "",
+      })
+      -- Highlight the whole thing.
+      vim.api.nvim_buf_set_extmark(bufnr, ns_id, lnum, m_start - 1, {
+        end_row = lnum,
+        end_col = m_end,
+        hl_group = ui_opts.reference_text.hl_group,
+        spell = false,
       })
     end
   end

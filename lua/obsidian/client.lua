@@ -436,12 +436,16 @@ Client.resolve_note_async = function(self, query, callback)
   end
 
   -- Query might be a path.
-  local paths_to_check = { Path:new(query), self.dir / query }
+  local fname = query
+  if not vim.endswith(fname, ".md") then
+    fname = fname .. ".md"
+  end
+  local paths_to_check = { Path:new(fname), self.dir / fname }
   if self.opts.notes_subdir ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / query)
+    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / fname)
   end
   if self.opts.daily_notes.folder ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / query)
+    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / fname)
   end
   for _, path in pairs(paths_to_check) do
     if path:is_file() and vim.endswith(tostring(path), ".md") then

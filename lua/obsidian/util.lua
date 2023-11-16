@@ -94,8 +94,11 @@ end
 ---@param s string
 ---@return boolean
 util.is_url = function(s)
-  s = util.strip_whitespace(s)
-  return vim.startswith(s, "http://") or vim.startswith(s, "https://")
+  if string.match(util.strip_whitespace(s), util.ref_patterns[util.RefTypes.NakedUrl]) then
+    return true
+  else
+    return false
+  end
 end
 
 ---Create a new unique Zettel ID.
@@ -145,12 +148,14 @@ util.RefTypes = {
   WikiWithAlias = "wiki_with_alias",
   Wiki = "wiki",
   Markdown = "markdown",
+  NakedUrl = "naked_url",
 }
 
 util.ref_patterns = {
   [util.RefTypes.WikiWithAlias] = "%[%[[^%|%]]+%|[^%]]+%]%]", -- [[xxx|yyy]]
   [util.RefTypes.Wiki] = "%[%[[^%]%|]+%]%]", -- [[xxx]]
   [util.RefTypes.Markdown] = "%[[^%]]+%]%([^%)]+%)", -- [yyy](xxx)
+  [util.RefTypes.NakedUrl] = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
 }
 
 ---@param s string
@@ -175,16 +180,22 @@ end
 ---Find refs and URLs.
 ---
 ---@param s string
+---@param include_naked_urls boolean|?
 ---@return table
-util.find_refs = function(s)
+util.find_refs = function(s, include_naked_urls)
   -- First find all inline code blocks so we can skip reference matches inside of those.
   local inline_code_blocks = {}
   for m_start, m_end in util.gfind(s, "`[^`]*`") do
     inline_code_blocks[#inline_code_blocks + 1] = { m_start, m_end }
   end
 
+  local patterns = { util.RefTypes.WikiWithAlias, util.RefTypes.Wiki, util.RefTypes.Markdown }
+  if include_naked_urls then
+    patterns[#patterns + 1] = util.RefTypes.NakedUrl
+  end
+
   local matches = {}
-  for pattern_name in util.iter { util.RefTypes.WikiWithAlias, util.RefTypes.Wiki, util.RefTypes.Markdown } do
+  for pattern_name in util.iter(patterns) do
     local pattern = util.ref_patterns[pattern_name]
     local search_start = 1
     while search_start < #s do
@@ -305,30 +316,21 @@ end
 ---
 ---@param line string|nil - line to check or current line if nil
 ---@param col  integer|nil - column to check or current column if nil (1-indexed)
----@return integer|nil, integer|nil - start and end column of link (1-indexed)
-util.cursor_on_markdown_link = function(line, col)
-  local current_line = line or vim.api.nvim_get_current_line()
+---@param include_naked_urls boolean|?
+---@return integer|nil, integer|nil, string|? - start and end column of link (1-indexed)
+util.cursor_on_markdown_link = function(line, col, include_naked_urls)
+  local current_line = line and line or vim.api.nvim_get_current_line()
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
   cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
-  local find_boundaries = function(pattern)
-    local open, close = current_line:find(pattern)
-    while open ~= nil and close ~= nil do
-      if open <= cur_col and cur_col <= close then
-        return open, close
-      end
-      open, close = current_line:find(pattern, close + 1)
+  for match in util.iter(util.find_refs(current_line, include_naked_urls)) do
+    local open, close, m_type = unpack(match)
+    if open <= cur_col and cur_col <= close then
+      return open, close, m_type
     end
   end
 
-  -- wiki link
-  local open, close = find_boundaries "%[%[.-%]%]"
-  if open == nil or close == nil then
-    -- markdown link
-    open, close = find_boundaries "%[.-%]%(.-%)"
-  end
-
-  return open, close
+  return nil
 end
 
 util.toggle_checkbox = function()
@@ -350,36 +352,44 @@ end
 
 ---Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
 ---
----@returns string|?, string|?
-util.cursor_link = function(line, col)
-  local open, close = util.cursor_on_markdown_link(line, col)
+---@param line string|?
+---@param col integer|?
+---@param include_naked_urls boolean|?
+---@returns string|?, string|?, string|?
+util.cursor_link = function(line, col, include_naked_urls)
+  local current_line = line and line or vim.api.nvim_get_current_line()
+
+  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
   if open == nil or close == nil then
     return
   end
 
-  local current_line = vim.api.nvim_get_current_line()
   local link = current_line:sub(open, close)
-  link = util.unescape_single_backslash(link)
-
-  if link:match "^%[.-%]%(.*%)$" then
-    -- transform markdown link into the "meat" of a wiki link, e.g. '[YYY](XXX)' -> 'XXX|YYY'
-    link = link:gsub("^%[(.-)%]%((.*)%)$", "%2|%1")
-  else
-    -- wiki link, remove boundary brackets, e.g. '[[XXX|YYY]]' -> 'XXX|YYY'
-    link = link:sub(3, #link - 2)
-  end
-
   local link_location, link_name
-  if link:match "|[^%]]*" then
+  if link_type == util.RefTypes.Markdown then
+    link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")
+    link_name = link:gsub("^%[(.-)%]%((.*)%)$", "%1")
+  elseif link_type == util.RefTypes.NakedUrl then
+    link_location = link
+    link_name = link
+  elseif link_type == util.RefTypes.WikiWithAlias then
+    link = util.unescape_single_backslash(link)
+    -- remove boundary brackets, e.g. '[[XXX|YYY]]' -> 'XXX|YYY'
+    link = link:sub(3, #link - 2)
+    -- split on the "|"
     local split_idx = link:find "|"
     link_location = link:sub(1, split_idx - 1)
     link_name = link:sub(split_idx + 1)
-  else
+  elseif link_type == util.RefTypes.Wiki then
+    -- remove boundary brackets, e.g. '[[YYY]]' -> 'YYY'
+    link = link:sub(3, #link - 2)
     link_location = link
     link_name = link
+  else
+    error("not implemented for " .. link_type)
   end
 
-  return link_location, link_name
+  return link_location, link_name, link_type
 end
 
 ---Determines if the given date is a working day (not weekend)
@@ -525,7 +535,7 @@ util.escape_magic_characters = function(text)
 end
 
 util.gf_passthrough = function()
-  if util.cursor_on_markdown_link() then
+  if util.cursor_on_markdown_link(nil, nil, true) then
     return "<cmd>ObsidianFollowLink<CR>"
   else
     return "gf"

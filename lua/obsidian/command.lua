@@ -688,15 +688,15 @@ M.register("ObsidianLink", {
 M.register("ObsidianFollowLink", {
   opts = { nargs = 0 },
   func = function(client, _)
-    local note_file_name, note_name = util.cursor_link()
-    if note_file_name == nil then
+    local location, name, link_type = util.cursor_link(nil, nil, true)
+    if location == nil then
       return
     end
 
     -- Check if it's a URL.
-    if note_file_name:match "^[%a%d]*%:%/%/" then
+    if util.is_url(location) then
       if client.opts.follow_url_func ~= nil then
-        client.opts.follow_url_func(note_file_name)
+        client.opts.follow_url_func(location)
       else
         echo.warn(
           "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option.",
@@ -707,31 +707,37 @@ M.register("ObsidianFollowLink", {
     end
 
     -- Remove links from the end if there are any.
-    local header_link = note_file_name:match "#[%a%d%s-_^]+$"
+    local header_link = location:match "#[%a%d%s-_^]+$"
     if header_link ~= nil then
-      note_file_name = note_file_name:sub(1, -header_link:len() - 1)
-    end
-
-    -- Ensure file name ends with suffix.
-    if not note_file_name:match "%.md" then
-      note_file_name = note_file_name .. ".md"
+      location = location:sub(1, -header_link:len() - 1)
     end
 
     -- Search for matching notes.
-    search.find_notes_async(client.dir, note_file_name, function(notes)
-      if #notes < 1 then
-        local aliases = note_name == note_file_name and {} or { note_name }
-        local note = client:new_note(note_file_name, nil, nil, aliases)
+    -- TODO: handle case where there are multiple matches by prompting user to choose.
+    client:resolve_note_async(location, function(note)
+      if note == nil and (link_type == util.RefTypes.Wiki or link_type == util.RefTypes.WikiWithAlias) then
         vim.schedule(function()
-          vim.api.nvim_command("e " .. tostring(note.path))
+          local confirmation = string.lower(vim.fn.input {
+            prompt = "Create new note '" .. location .. "'? [Y/n] ",
+          })
+          if confirmation == "y" or confirmation == "yes" then
+            -- Create a new note.
+            local aliases = name == location and {} or { name }
+            note = client:new_note(location, nil, nil, aliases)
+            vim.api.nvim_command("e " .. tostring(note.path))
+          else
+            echo.warn("Aborting", client.opts.log_level)
+          end
         end)
-      elseif #notes == 1 then
-        local path = notes[1]
+      elseif note ~= nil then
+        -- Go to resolved note.
+        local path = note.path
+        assert(path)
         vim.schedule(function()
           vim.api.nvim_command("e " .. tostring(path))
         end)
       else
-        echo.err("Multiple notes with this name exist", client.opts.log_level)
+        echo.err("Failed to resolve note '" .. location .. "'", client.opts.log_level)
         return
       end
     end)

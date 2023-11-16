@@ -210,6 +210,10 @@ end
 ---@param note_file_name string
 ---@param callback function(Path[])
 M.find_notes_async = function(dir, note_file_name, callback)
+  if not vim.endswith(note_file_name, ".md") then
+    note_file_name = note_file_name .. ".md"
+  end
+
   local notes = {}
   local root_dir = vim.fs.normalize(tostring(dir))
 
