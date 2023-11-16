@@ -201,6 +201,7 @@ util.find_refs = function(s, include_naked_urls)
     while search_start < #s do
       local m_start, m_end = string.find(s, pattern, search_start)
       if m_start ~= nil and m_end ~= nil then
+        -- Check if we're inside a code block.
         local inside_code_block = false
         for code_block_boundary in util.iter(inline_code_blocks) do
           if code_block_boundary[1] < m_start and m_end < code_block_boundary[2] then
@@ -208,9 +209,23 @@ util.find_refs = function(s, include_naked_urls)
             break
           end
         end
+
         if not inside_code_block then
-          table.insert(matches, { m_start, m_end, pattern_name })
+          -- Check if this match overlaps with any others (e.g. a naked URL match would be contained in
+          -- a markdown URL).
+          local overlap = false
+          for match in util.iter(matches) do
+            if (match[1] <= m_start and m_start <= match[2]) or (match[1] <= m_end and m_end <= match[2]) then
+              overlap = true
+              break
+            end
+          end
+
+          if not overlap then
+            matches[#matches + 1] = { m_start, m_end, pattern_name }
+          end
         end
+
         search_start = m_end
       else
         break
