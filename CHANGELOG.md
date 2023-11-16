@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.0.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.0.0) - 2023-11-16
+
 **Highlights:**
 
 The long awaited `:ObsidianRename` command is here along with big improvements to our syntax add-ons! Wiki links, external links, and checklists look much better now out-of-the-box and can be easily customized! 🥳
