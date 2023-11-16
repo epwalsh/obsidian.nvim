@@ -132,6 +132,10 @@ obsidian.setup = function(opts)
     end
   end
 
+  -- Install commands.
+  -- These will be available across all buffers, not just note buffers in the vault.
+  obsidian.command.install(client)
+
   -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
@@ -140,9 +144,6 @@ obsidian.setup = function(opts)
     group = group,
     pattern = tostring(client.dir / "**.md"),
     callback = function()
-      -- Install commands.
-      obsidian.command.install(client)
-
       -- Register mappings.
       for mapping_keys, mapping_config in pairs(opts.mappings) do
         vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)

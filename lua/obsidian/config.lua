@@ -195,7 +195,7 @@ config.UIOpts = {}
 config.UIOpts.default = function()
   return {
     enable = true,
-    tick = 200,
+    tick = 200, -- TODO: 'update_debounce' would be a better name
     checkboxes = {
       [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
       ["x"] = { char = "", hl_group = "ObsidianDone" },
