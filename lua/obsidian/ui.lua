@@ -169,7 +169,7 @@ M.get_autocmd_callback = function(ui_opts)
   M.install_hl_groups(ui_opts)
   return throttle(function(ev)
     update_extmarks(ev.buf, ns_id, ui_opts)
-  end, ui_opts.tick)
+  end, ui_opts.update_debounce)
 end
 
 return M

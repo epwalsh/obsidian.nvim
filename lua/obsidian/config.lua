@@ -73,6 +73,12 @@ config.ClientOpts.normalize = function(opts)
   opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
   opts.ui = vim.tbl_extend("force", config.UIOpts.default(), opts.ui)
 
+  if opts.ui.tick ~= nil then
+    -- For backwards compatibility.
+    opts.ui.update_debounce = opts.ui.tick
+    opts.ui.tick = nil
+  end
+
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
     error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
@@ -178,6 +184,7 @@ end
 ---@class obsidian.config.UIOpts
 ---@field enable boolean
 ---@field tick integer
+---@field update_debounce integer
 ---@field checkboxes table{string, obsidian.config.UICharSpec}
 ---@field external_link_icon obsidian.config.UICharSpec
 ---@field reference_text obsidian.config.UIStyleSpec
@@ -195,7 +202,7 @@ config.UIOpts = {}
 config.UIOpts.default = function()
   return {
     enable = true,
-    tick = 200, -- TODO: 'update_debounce' would be a better name
+    update_debounce = 200,
     checkboxes = {
       [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
       ["x"] = { char = "", hl_group = "ObsidianDone" },

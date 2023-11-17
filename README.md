@@ -317,7 +317,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, configure additional syntax highlighting / extmarks.
   ui = {
     enable = true,  -- set to false to disable all additional syntax features
-    tick = 200,  -- update rate in milliseconds
+    update_debounce = 200,  -- update delay after a text change (in milliseconds)
     -- Define how various check-boxes are displayed
     checkboxes = {
       -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.

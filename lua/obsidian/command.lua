@@ -98,7 +98,7 @@ M.complete_args_id = function(_, _, cmd_line, _)
     if note_id == nil then
       local bufpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
       local note = Note.from_file(bufpath)
-      note_id = note.id
+      note_id = tostring(note.id)
     end
     return { note_id }
   end

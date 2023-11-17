@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Renamed `opts.ui.tick` to `opts.ui.update_debounce`, but the `tick` field will still be read for backwards compatibility.
+
 ### Fixed
 
 - Ensure commands available across all buffers, not just note buffers in the vault.
