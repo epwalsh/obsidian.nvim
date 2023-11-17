@@ -480,3 +480,7 @@ Link: ~/obsidian OR ~/parent
 ## Contributing
 
 Please read the [CONTRIBUTING](https://github.com/epwalsh/obsidian.nvim/blob/main/.github/CONTRIBUTING.md) guide before submitting a pull request.
+
+And if you're feeling especially generous I always appreciate some coffee funds! ❤️
+
+[![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/epwalsh)
