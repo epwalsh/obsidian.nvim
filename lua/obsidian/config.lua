@@ -64,17 +64,19 @@ end
 ---@param opts table<string, any>
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.normalize = function(opts)
+  local defaults = config.ClientOpts.default()
   ---@type obsidian.config.ClientOpts
-  opts = vim.tbl_extend("force", config.ClientOpts.default(), opts)
-  opts.backlinks = vim.tbl_extend("force", config.BacklinksOpts.default(), opts.backlinks)
-  opts.completion = vim.tbl_extend("force", config.CompletionOpts.default(), opts.completion)
-  opts.mappings = opts.mappings and opts.mappings or config.MappingOpts.default()
-  opts.daily_notes = vim.tbl_extend("force", config.DailyNotesOpts.default(), opts.daily_notes)
-  opts.templates = vim.tbl_extend("force", config.TemplateOpts.default(), opts.templates)
-  opts.ui = vim.tbl_extend("force", config.UIOpts.default(), opts.ui)
+  opts = vim.tbl_extend("force", defaults, opts)
 
+  opts.backlinks = vim.tbl_extend("force", defaults.backlinks, opts.backlinks)
+  opts.completion = vim.tbl_extend("force", defaults.completion, opts.completion)
+  opts.mappings = opts.mappings and opts.mappings or defaults.mappings
+  opts.daily_notes = vim.tbl_extend("force", defaults.daily_notes, opts.daily_notes)
+  opts.templates = vim.tbl_extend("force", defaults.templates, opts.templates)
+  opts.ui = vim.tbl_extend("force", defaults.ui, opts.ui)
+
+  -- Rename old fields for backwards compatibility.
   if opts.ui.tick ~= nil then
-    -- For backwards compatibility.
     opts.ui.update_debounce = opts.ui.tick
     opts.ui.tick = nil
   end
@@ -84,15 +86,20 @@ config.ClientOpts.normalize = function(opts)
     error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
   end
 
+  -- Warn about deprecated fields.
   ---@diagnostic disable-next-line undefined-field
   if opts.overwrite_mappings ~= nil then
     echo.warn_once "the 'overwrite_mappings' config option is deprecated and no longer has any affect"
+    ---@diagnostic disable-next-line
+    opts.overwrite_mappings = nil
   end
 
+  -- Normalize workspace paths.
   for key, value in pairs(opts.workspaces) do
     opts.workspaces[key].path = vim.fs.normalize(tostring(value.path))
   end
 
+  -- Convert dir to workspace format.
   if opts.dir ~= nil then
     -- NOTE: path will be normalized in workspace.new() fn
     table.insert(opts.workspaces, 1, workspace.new("dir", opts.dir))
