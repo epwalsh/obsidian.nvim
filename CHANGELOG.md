@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `:ObsidianPasteImg` for pasting images from the clipboard into notes. See the `attachments` configuration option for customizing the behavior of this command. Inspired by [md-img-paste.vim](https://github.com/ferrine/md-img-paste.vim) and [clipboard-image.nvim](https://github.com/ekickx/clipboard-image.nvim).
+- Added `completion.prepend_note_path` and `completion.use_path_only` options (mutually exclusive with each other and `completion.prepend_note_id`).
 
 ### Changed
 

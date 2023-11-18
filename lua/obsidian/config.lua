@@ -89,6 +89,14 @@ config.ClientOpts.normalize = function(opts)
     error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
   end
 
+  if
+    not opts.completion.prepend_note_id
+    and not opts.completion.prepend_note_path
+    and not opts.completion.use_path_only
+  then
+    error "invalid 'completion' options"
+  end
+
   -- Warn about deprecated fields.
   ---@diagnostic disable-next-line undefined-field
   if opts.overwrite_mappings ~= nil then
@@ -130,6 +138,8 @@ end
 ---@field min_chars integer
 ---@field new_notes_location "current_dir"|"notes_subdir"
 ---@field prepend_note_id boolean
+---@field prepend_note_path boolean
+---@field use_path_only boolean
 config.CompletionOpts = {}
 
 ---Get defaults.
@@ -141,6 +151,8 @@ config.CompletionOpts.default = function()
     min_chars = 2,
     new_notes_location = "current_dir",
     prepend_note_id = true,
+    prepend_note_path = false,
+    use_path_only = false,
   }
 end
 

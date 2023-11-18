@@ -20,36 +20,68 @@ source.complete = function(self, request, callback)
   local client = obsidian.new(opts)
   local can_complete, search, insert_start, insert_end = completion.can_complete(request)
 
-  if can_complete and search ~= nil and #search >= opts.completion.min_chars then
-    local new_id = client:new_note_id(search)
-    local items = {}
-    local new_title = search
-    if opts.completion.prepend_note_id then
-      new_title = new_id .. "|" .. search
+  ---@type string|Path|?
+  local dir = client.dir
+  if client.opts.completion.new_notes_location == nil then
+    dir = nil -- let the client decide
+  elseif client.opts.completion.new_notes_location == "notes_subdir" then
+    dir = Path:new(client.opts.dir)
+    if client.opts.notes_subdir ~= nil then
+      dir = dir / client.opts.notes_subdir
     end
-    table.insert(items, {
-      sortText = "[[" .. search,
-      label = "Create: [[" .. new_title .. "]]",
-      kind = 18,
-      textEdit = {
-        newText = "[[" .. new_title .. "]]",
-        range = {
-          start = {
-            line = request.context.cursor.row - 1,
-            character = insert_start,
-          },
-          ["end"] = {
-            line = request.context.cursor.row - 1,
-            character = insert_end,
+  elseif client.opts.completion.new_notes_location == "current_dir" then
+    dir = vim.fn.expand "%:p:h"
+  else
+    echo.err("Bad option value for 'completion.new_notes_location'. Skipping creating new note.", client.opts.log_level)
+    return
+  end
+
+  if can_complete and search ~= nil and #search >= opts.completion.min_chars then
+    local new_title, new_id, path, rel_path
+    new_id = client:new_note_id(search)
+    new_title, new_id, path = client:parse_title_id_path(search, new_id, dir)
+    rel_path = assert(client:vault_relative_path(path))
+    if vim.endswith(rel_path, ".md") then
+      rel_path = string.sub(rel_path, 1, -4)
+    end
+
+    if opts.completion.use_path_only then
+      new_title = rel_path
+    elseif opts.completion.prepend_note_path then
+      new_title = rel_path .. "|" .. new_title
+    elseif opts.completion.prepend_note_id then
+      new_title = new_id .. "|" .. new_title
+    else
+      echo.err("Invalid completion options", client.opts.log_level)
+      return
+    end
+
+    local items = {
+      {
+        sortText = "[[" .. search,
+        label = "Create: [[" .. new_title .. "]]",
+        kind = 18,
+        textEdit = {
+          newText = "[[" .. new_title .. "]]",
+          range = {
+            start = {
+              line = request.context.cursor.row - 1,
+              character = insert_start,
+            },
+            ["end"] = {
+              line = request.context.cursor.row - 1,
+              character = insert_end,
+            },
           },
         },
+        data = {
+          opts = opts,
+          id = new_id,
+          title = search,
+          dir = dir,
+        },
       },
-      data = {
-        opts = opts,
-        id = new_id,
-        title = search,
-      },
-    })
+    }
     return callback {
       items = items,
       isIncomplete = true,
@@ -64,26 +96,7 @@ source.execute = function(_, item, callback)
   ---@type obsidian.Client
   local client = obsidian.new(data.opts)
 
-  ---@type string|Path|?
-  local dir
-  if client.opts.completion.new_notes_location == nil then
-    dir = nil -- let the client decide
-  elseif client.opts.completion.new_notes_location == "notes_subdir" then
-    dir = Path:new(client.opts.dir)
-    if client.opts.notes_subdir ~= nil then
-      dir = dir / client.opts.notes_subdir
-    end
-  elseif client.opts.completion.new_notes_location == "current_dir" then
-    dir = vim.fn.expand "%:p:h"
-  else
-    echo.error(
-      "Bad option value for 'completion.new_notes_location'. Skipping creating new note.",
-      client.opts.log_level
-    )
-    return
-  end
-
-  client:new_note(data.title, data.id, dir)
+  client:new_note(data.title, data.id, data.dir)
   return callback {}
 end
 

@@ -1,6 +1,7 @@
 local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
+local echo = require "obsidian.echo"
 local util = require "obsidian.util"
 local iter = util.iter
 
@@ -23,7 +24,15 @@ source.complete = function(self, request, callback)
     local function search_callback(results)
       local items = {}
       for note in iter(results) do
-        local aliases = util.unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
+        local labels_seen = {}
+
+        local aliases
+        if client.opts.completion.use_path_only then
+          aliases = { note.id }
+        else
+          aliases = util.unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
+        end
+
         for alias in iter(aliases) do
           local options = {}
 
@@ -39,31 +48,55 @@ source.complete = function(self, request, callback)
           table.insert(options, alias)
 
           for option in iter(options) do
-            local label = "[[" .. tostring(note.id)
-            if option ~= tostring(note.id) then
-              label = label .. "|" .. option .. "]]"
-            else
-              label = label .. "]]"
+            local rel_path = assert(client:vault_relative_path(note.path))
+            if vim.endswith(rel_path, ".md") then
+              rel_path = string.sub(rel_path, 1, -4)
             end
 
-            table.insert(items, {
-              sortText = "[[" .. option,
-              label = label,
-              kind = 18,
-              textEdit = {
-                newText = label,
-                range = {
-                  start = {
-                    line = request.context.cursor.row - 1,
-                    character = insert_start,
-                  },
-                  ["end"] = {
-                    line = request.context.cursor.row - 1,
-                    character = insert_end,
+            ---@type string
+            local label
+            if client.opts.completion.use_path_only then
+              label = "[[" .. rel_path .. "]]"
+            elseif opts.completion.prepend_note_path then
+              label = "[[" .. rel_path
+              if option ~= tostring(note.id) then
+                label = label .. "|" .. option .. "]]"
+              else
+                label = label .. "]]"
+              end
+            elseif opts.completion.prepend_note_id then
+              label = "[[" .. tostring(note.id)
+              if option ~= tostring(note.id) then
+                label = label .. "|" .. option .. "]]"
+              else
+                label = label .. "]]"
+              end
+            else
+              echo.err("Invalid completion options", client.opts.log_level)
+              return
+            end
+
+            if not labels_seen[label] then
+              table.insert(items, {
+                sortText = "[[" .. option,
+                label = label,
+                kind = 18,
+                textEdit = {
+                  newText = label,
+                  range = {
+                    start = {
+                      line = request.context.cursor.row - 1,
+                      character = insert_start,
+                    },
+                    ["end"] = {
+                      line = request.context.cursor.row - 1,
+                      character = insert_end,
+                    },
                   },
                 },
-              },
-            })
+              })
+              labels_seen[label] = true
+            end
           end
         end
       end
