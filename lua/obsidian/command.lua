@@ -255,7 +255,7 @@ M.register("ObsidianOpen", {
       end
     else
       local cursor_link, _, ref_type = util.cursor_link()
-      if cursor_link ~= nil and (ref_type == util.RefTypes.Wiki or ref_type == util.RefTypes.WikiWithAlias) then
+      if cursor_link ~= nil and ref_type ~= util.RefTypes.NakedUrl then
         local note = client:resolve_note(cursor_link)
         if note ~= nil then
           path = assert(client:vault_relative_path(note.path))
@@ -326,7 +326,7 @@ M.register("ObsidianBacklinks", {
     ---@type obsidian.Note|?
     local note
     local cursor_link, _, ref_type = util.cursor_link()
-    if cursor_link ~= nil and (ref_type == util.RefTypes.Wiki or ref_type == util.RefTypes.WikiWithAlias) then
+    if cursor_link ~= nil and ref_type ~= util.RefTypes.NakedUrl then
       note = client:resolve_note(cursor_link)
       if note == nil then
         echo.err("Could not resolve link under cursor to a note ID, path, or alias", client.opts.log_level)
