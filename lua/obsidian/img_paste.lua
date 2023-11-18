@@ -66,23 +66,15 @@ local function save_clipboard_image(path)
     else
       return result
     end
+  elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
+    local cmd = 'powershell.exe "'
+      .. string.format("$content = Get-Clipboard -Format Image;$content.Save('%s', 'png')", path)
+      .. '"'
+    return os.execute(cmd)
+  elseif this_os == util.OSType.Darwin then
+    return run_job("pngpaste", { path })
   else
-    ---@type string, string[]
-    local cmd, args
-    if this_os == util.OSType.Darwin then
-      cmd = "pngpaste"
-      args = { path }
-    elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
-      cmd = "powershell.exe"
-      args = { string.format("$content = Get-Clipboard -Format Image;$content.Save('%s', 'png')", path) }
-    else
-      echo.err("No image save program for this OS ('" .. this_os .. "')")
-      return false
-    end
-
-    assert(cmd)
-    assert(args)
-    return run_job(cmd, args)
+    return echo.fail("image saving not implemented for OS '" .. this_os .. "'")
   end
 end
 
