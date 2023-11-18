@@ -261,7 +261,7 @@ M.register("ObsidianOpen", {
       local bufname = vim.api.nvim_buf_get_name(0)
       local vault_name_escaped = vault_name:gsub("%W", "%%%0") .. "%/"
       ---@diagnostic disable-next-line: undefined-field
-      if vim.loop.os_uname().sysname == "Windows_NT" then
+      if util.get_os() == util.OSType.Windows then
         bufname = bufname:gsub("/", "\\")
         vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
       end
@@ -297,32 +297,31 @@ M.register("ObsidianOpen", {
     end
 
     local cmd = nil
-    local args = {}
-    local sysname = vim.loop.os_uname().sysname
-    local release = vim.loop.os_uname().release
-    if sysname == "Linux" then
-      if string.find(release, "microsoft") then
-        cmd = "wsl-open"
-      else
-        cmd = "xdg-open"
-      end
+    local args = nil
+
+    if util.get_os() == util.OSType.Linux then
+      cmd = "xdg-open"
       args = { uri }
-    elseif sysname == "Darwin" then
+    elseif util.get_os() == util.OSType.Wsl then
+      cmd = "wsl-open"
+      args = { uri }
+    elseif util.get_os() == util.OSType.Windows then
+      cmd = "powershell"
+      args = { "Start-Process '" .. uri .. "'" }
+    elseif util.get_os() == util.OSType.Darwin then
       cmd = "open"
       if client.opts.open_app_foreground then
         args = { "-a", "/Applications/Obsidian.app", uri }
       else
         args = { "-a", "/Applications/Obsidian.app", "--background", uri }
       end
-    elseif sysname == "Windows_NT" then
-      cmd = "powershell"
-      args = { "Start-Process '" .. uri .. "'" }
-    end
-
-    if cmd == nil then
-      echo.err("open command does not support this OS yet", client.opts.log_level)
+    else
+      echo.err("open command does not support OS type '" .. util.get_os() .. "'")
       return
     end
+
+    assert(cmd)
+    assert(args)
 
     run_job(cmd, args)
   end,
@@ -1084,6 +1083,19 @@ M.register("ObsidianRename", {
 
     -- In case the files of any current buffers were changed.
     vim.cmd.checktime()
+  end,
+})
+
+M.register("ObsidianPasteImg", {
+  opts = { nargs = "?", complete = "file" },
+  ---@param client obsidian.Client
+  func = function(client, data)
+    local paste_img = require("obsidian.img_paste").paste_img
+    local path = paste_img(data.args, client.dir / client.opts.attachments.img_folder)
+    if path ~= nil then
+      local relative_path = Path:new(path:make_relative(tostring(client.dir)))
+      util.insert_text(client.opts.attachments.img_text_func(relative_path))
+    end
   end,
 })
 

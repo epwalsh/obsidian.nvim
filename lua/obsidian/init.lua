@@ -6,6 +6,7 @@ local module_lookups = {
   completion = "obsidian.completion",
   config = "obsidian.config",
   echo = "obsidian.echo",
+  img_paste = "obsidian.img_paste",
   mapping = "obsidian.mapping",
   Note = "obsidian.note",
   search = "obsidian.search",

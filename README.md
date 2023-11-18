@@ -25,6 +25,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 - ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
 - 🏃 Optional passthrough for `gf` to enable Obsidian links without interfering with existing functionality
+- 📷 Paste images into notes
 - 💅 Additional markdown syntax highlighting, concealing, and extmarks for references and check-boxes
 
 [![See this screenshot here https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)
@@ -50,6 +51,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
 - `:ObsidianWorkspace` to switch to another workspace.
+- `:ObsidianPasteImg` to paste an image from the clipboard into the note at the cursor position by saving it to the vault and adding a markdown image link. You can configure the default folder to save images to with the `attachments.img_folder` option.
 - (experimental) `:ObsidianRename` to rename the note of the current buffer or reference under the cursor, updating all backlinks across the vault. Since this command is still in alpha and could potentially write a lot of changes to your vault, I highly recommend committing the current state of your vault (if you're using version control) before running it. Alternatively you could do a dry-run first by appending "--dry-run" to the command, e.g. `:ObsidianRename new-id --dry-run`.
 
 ### Demo
@@ -63,7 +65,11 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 - NeoVim >= 0.8.0 (this plugin uses `vim.fs` which was only added in 0.8).
 - If you want completion and search features (recommended) you'll need [ripgrep](https://github.com/BurntSushi/ripgrep) to be installed and on your `$PATH`.
   See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
-- If you using WSL, you'll need [wsl-open](https://gitlab.com/4U6U57/wsl-open)
+
+Specific operating systems also require additional dependencies in order to use all of obsidian.nvim's functionality:
+- **Windows WSL** users need [`wsl-open`](https://github.com/jcsalterego/pngpaste) for the `:ObsidianOpen` command.
+- **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
+- **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
 Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see [plugin dependencies](#plugin-dependencies) below).
 
@@ -344,6 +350,18 @@ This is a complete list of all of the options that can be passed to `require("ob
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
     },
+  },
+
+  -- Specify how to handle attachments.
+  attachments = {
+    -- The default location (relative to the vault root) to place images via `:ObsidianPasteImg`.
+    img_folder = "assets/imgs",  -- This is the default
+    -- A function that determines the text to insert in the note when pasting an image.
+    -- It takes a single argument, a plenary `Path` and returns a string.
+    -- The is the default.
+    img_text_func = function(path)
+      return string.format("![%s](%s)", path.filename, tostring(path))
+    end,
   },
 
   -- Optional, set the YAML parser to use. The valid options are:

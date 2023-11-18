@@ -27,6 +27,7 @@ local config = {}
 ---@field sort_reversed boolean|?
 ---@field open_notes_in "current"|"vsplit"|"hsplit"
 ---@field ui obsidian.config.UIOpts
+---@field attachments obsidian.config.AttachmentsOpts
 ---@field yaml_parser string|?
 config.ClientOpts = {}
 
@@ -55,6 +56,7 @@ config.ClientOpts.default = function()
     sort_reversed = true,
     open_notes_in = "current",
     ui = config.UIOpts.default(),
+    attachments = config.AttachmentsOpts.default(),
     yaml_parser = "native",
   }
 end
@@ -74,6 +76,7 @@ config.ClientOpts.normalize = function(opts)
   opts.daily_notes = vim.tbl_extend("force", defaults.daily_notes, opts.daily_notes)
   opts.templates = vim.tbl_extend("force", defaults.templates, opts.templates)
   opts.ui = vim.tbl_extend("force", defaults.ui, opts.ui)
+  opts.attachments = vim.tbl_extend("force", defaults.attachments, opts.attachments)
 
   -- Rename old fields for backwards compatibility.
   if opts.ui.tick ~= nil then
@@ -226,6 +229,21 @@ config.UIOpts.default = function()
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
     },
+  }
+end
+
+---@class obsidian.config.AttachmentsOpts
+---@field img_folder string Default folder to save images to, relative to the vault root.
+---@field img_text_func function (Path,) -> string
+config.AttachmentsOpts = {}
+
+---@return obsidian.config.AttachmentsOpts
+config.AttachmentsOpts.default = function()
+  return {
+    img_folder = "assets/imgs",
+    img_text_func = function(path)
+      return string.format("![%s](%s)", path.filename, tostring(path))
+    end,
   }
 end
 
