@@ -1,16 +1,40 @@
 local Path = require "plenary.path"
 local util = require "obsidian.util"
 local echo = require "obsidian.echo"
+local run_job = require("obsidian.async").run_job
 
 local M = {}
 
 -- Image pasting adapted from https://github.com/ekickx/clipboard-image.nvim
 
----Check if clipboard contain image data
----See also: [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme)
----@param content string[]
+---@return string
+local function get_clip_check_command()
+  local check_cmd
+  local this_os = util.get_os()
+  if this_os == util.OSType.Linux then
+    local display_server = os.getenv "XDG_SESSION_TYPE"
+    if display_server == "x11" or display_server == "tty" then
+      check_cmd = "xclip -selection clipboard -o -t TARGETS"
+    elseif display_server == "wayland" then
+      check_cmd = "wl-paste --list-types"
+    end
+  elseif this_os == util.OSType.Darwin then
+    check_cmd = "pngpaste -b 2>&1"
+  elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
+    check_cmd = 'powershell.exe "Get-Clipboard -Format Image"'
+  end
+  return check_cmd
+end
+
+---Check if clipboard contains image data.
 ---@return boolean
-local function is_clipboard_img(content)
+local function clipboard_is_img()
+  local content = {}
+  for output in assert(io.popen(get_clip_check_command())):lines() do
+    content[#content + 1] = output
+  end
+
+  -- See: [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme)
   local this_os = util.get_os()
   if this_os == util.OSType.Linux then
     return vim.tbl_contains(content, "image/png")
@@ -21,52 +45,52 @@ local function is_clipboard_img(content)
   end
 end
 
----@return string, string
-local function get_clip_command()
-  local cmd_check, cmd_paste = "", ""
+---Save image from clipboard to `path`.
+---@param path string
+---@return boolean|integer|? result
+local function save_clipboard_image(path)
   local this_os = util.get_os()
+
   if this_os == util.OSType.Linux then
+    local cmd
     local display_server = os.getenv "XDG_SESSION_TYPE"
     if display_server == "x11" or display_server == "tty" then
-      cmd_check = "xclip -selection clipboard -o -t TARGETS"
-      cmd_paste = "xclip -selection clipboard -t image/png -o > '%s'"
+      cmd = string.format("xclip -selection clipboard -t image/png -o > '%s'", path)
     elseif display_server == "wayland" then
-      cmd_check = "wl-paste --list-types"
-      cmd_paste = "wl-paste --no-newline --type image/png > '%s'"
+      cmd = string.format("wl-paste --no-newline --type image/png > '%s'", path)
     end
-  elseif this_os == util.OSType.Darwin then
-    cmd_check = "pngpaste -b 2>&1"
-    cmd_paste = "pngpaste '%s'"
-  elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
-    cmd_check = "Get-Clipboard -Format Image"
-    cmd_paste = "$content = " .. cmd_check .. ";$content.Save('%s', 'png')"
-    cmd_check = 'powershell.exe "' .. cmd_check .. '"'
-    cmd_paste = 'powershell.exe "' .. cmd_paste .. '"'
+
+    local result = os.execute(cmd)
+    if type(result) == "number" and result > 0 then
+      return false
+    else
+      return result
+    end
+  else
+    ---@type string, string[]
+    local cmd, args
+    if this_os == util.OSType.Darwin then
+      cmd = "pngpaste"
+      args = { path }
+    elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
+      cmd = "powershell.exe"
+      args = { string.format("$content = Get-Clipboard -Format Image;$content.Save('%s', 'png')", path) }
+    else
+      echo.err("No image save program for this OS ('" .. this_os .. "')")
+      return false
+    end
+
+    assert(cmd)
+    assert(args)
+    return run_job(cmd, args)
   end
-  return cmd_check, cmd_paste
-end
-
----@param command string
----@return string[]
-local function get_clip_content(command)
-  local cmd = assert(io.popen(command))
-  local outputs = {}
-
-  -- Store output in outputs table
-  for output in cmd:lines() do
-    table.insert(outputs, output)
-  end
-
-  return outputs
 end
 
 ---@param fname string|?
 ---@param default_dir Path|string
 ---@return Path|? image_path the absolute path to the image file
 M.paste_img = function(fname, default_dir)
-  local cmd_check, cmd_paste = get_clip_command()
-  local content = get_clip_content(cmd_check)
-  if not is_clipboard_img(content) then
+  if not clipboard_is_img() then
     echo.err "There is no image data in the clipboard"
     return
   else
@@ -107,7 +131,11 @@ M.paste_img = function(fname, default_dir)
     path:parent():mkdir { exists_ok = true, parents = true }
 
     -- Paste image.
-    os.execute(string.format(cmd_paste, tostring(path)))
+    local result = save_clipboard_image(tostring(path))
+    if result == false then
+      echo.err "Failed to save image"
+      return
+    end
 
     return path
   end

@@ -296,9 +296,8 @@ M.register("ObsidianOpen", {
       uri = ("obsidian://open?vault=%s&file=%s"):format(encoded_vault, encoded_path)
     end
 
-    local cmd = nil
-    local args = nil
-
+    ---@type string, string[]
+    local cmd, args
     if util.get_os() == util.OSType.Linux then
       cmd = "xdg-open"
       args = { uri }
@@ -322,7 +321,6 @@ M.register("ObsidianOpen", {
 
     assert(cmd)
     assert(args)
-
     run_job(cmd, args)
   end,
 })
