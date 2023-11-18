@@ -234,15 +234,28 @@ end
 
 ---@class obsidian.config.AttachmentsOpts
 ---@field img_folder string Default folder to save images to, relative to the vault root.
----@field img_text_func function (Path,) -> string
+---@field img_text_func function (obsidian.Client, Path,) -> string
 config.AttachmentsOpts = {}
 
 ---@return obsidian.config.AttachmentsOpts
 config.AttachmentsOpts.default = function()
   return {
     img_folder = "assets/imgs",
-    img_text_func = function(path)
-      return string.format("![%s](%s)", path.filename, tostring(path))
+    ---@param client obsidian.Client
+    ---@param path Path the absolute path to the image file
+    ---@return string
+    img_text_func = function(client, path)
+      ---@type string
+      local link_path
+      if vim.startswith(tostring(path), tostring(client.dir)) then
+        -- Use relative path if the image is saved in the vault dir.
+        link_path = path:make_relative(tostring(client.dir))
+      else
+        -- Otherwise use the absolute path.
+        link_path = tostring(path)
+      end
+      local display_name = vim.fs.basename(link_path)
+      return string.format("![%s](%s)", display_name, link_path)
     end,
   }
 end

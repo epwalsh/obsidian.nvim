@@ -62,7 +62,7 @@ end
 
 ---@param fname string|?
 ---@param default_dir Path|string
----@return Path|?
+---@return Path|? image_path the absolute path to the image file
 M.paste_img = function(fname, default_dir)
   local cmd_check, cmd_paste = get_clip_command()
   local content = get_clip_content(cmd_check)
@@ -92,10 +92,11 @@ M.paste_img = function(fname, default_dir)
     else
       path = Path:new(default_dir) / fname
     end
+    path = Path:new(path:absolute())
 
     -- Get confirmation from user.
     local confirmation = string.lower(vim.fn.input {
-      prompt = "Saving image to '" .. tostring(path:absolute()) .. "'. Do you want to continue? [Y/n] ",
+      prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
     })
     if not (confirmation == "y" or confirmation == "yes") then
       echo.warn "Paste canceled"

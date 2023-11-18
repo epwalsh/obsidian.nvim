@@ -355,12 +355,25 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Specify how to handle attachments.
   attachments = {
     -- The default location (relative to the vault root) to place images via `:ObsidianPasteImg`.
+    -- The can be overridden per image by passing a full path to the command instead of just a filename.
     img_folder = "assets/imgs",  -- This is the default
     -- A function that determines the text to insert in the note when pasting an image.
-    -- It takes a single argument, a plenary `Path` and returns a string.
-    -- The is the default.
-    img_text_func = function(path)
-      return string.format("![%s](%s)", path.filename, tostring(path))
+    -- It takes two arguments, the `obsidian.Client` and a plenary `Path` to the image file.
+    -- The is the default implementation.
+    ---@param client obsidian.Client
+    ---@param path Path the absolute path to the image file
+    ---@return string
+    img_text_func = function(client, path)
+      local link_path
+      if vim.startswith(tostring(path), tostring(client.dir)) then
+        -- Use relative path if the image is saved in the vault dir.
+        link_path = path:make_relative(tostring(client.dir))
+      else
+        -- Otherwise use the absolute path.
+        link_path = tostring(path)
+      end
+      local display_name = vim.fs.basename(link_path)
+      return string.format("![%s](%s)", display_name, link_path)
     end,
   },
 

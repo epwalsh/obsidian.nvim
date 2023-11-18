@@ -1093,8 +1093,7 @@ M.register("ObsidianPasteImg", {
     local paste_img = require("obsidian.img_paste").paste_img
     local path = paste_img(data.args, client.dir / client.opts.attachments.img_folder)
     if path ~= nil then
-      local relative_path = Path:new(path:make_relative(tostring(client.dir)))
-      util.insert_text(client.opts.attachments.img_text_func(relative_path))
+      util.insert_text(client.opts.attachments.img_text_func(client, path))
     end
   end,
 })
