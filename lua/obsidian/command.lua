@@ -73,7 +73,7 @@ M.complete_args_search = function(client, _, cmd_line, _)
   local completions = {}
   local search_lwr = string.lower(search_)
   for note in iter(client:search(search_)) do
-    local note_path = tostring(note.path:make_relative(tostring(client.dir)))
+    local note_path = assert(client:vault_relative_path(note.path))
     if string.find(note:display_name(), search_lwr, 1, true) then
       table.insert(completions, note:display_name() .. "  " .. note_path)
     else
@@ -136,13 +136,13 @@ M.register("ObsidianCheck", {
     ---@diagnostic disable-next-line: undefined-field
     local start_time = vim.loop.hrtime()
 
-    scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
+    scan.scan_dir(vim.fs.normalize(tostring(client:vault_root())), {
       hidden = false,
       add_dirs = false,
       respect_gitignore = true,
       search_pattern = ".*%.md",
       on_insert = function(entry)
-        local relative_path = Path:new(entry):make_relative(tostring(client.dir))
+        local relative_path = assert(client:vault_relative_path(entry))
         for skip_dir in iter(skip_dirs) do
           if vim.startswith(relative_path, tostring(skip_dir) .. skip_dir._sep) then
             return
@@ -237,23 +237,21 @@ M.register("ObsidianNew", {
 M.register("ObsidianOpen", {
   opts = { nargs = "?" },
   complete = M.complete_args_search,
+  ---@param client obsidian.Client
   func = function(client, data)
-    local vault = client:vault()
-    if vault == nil then
-      echo.err("couldn't find an Obsidian vault", client.opts.log_level)
-      return
-    end
-
-    local vault_name = vim.fs.basename(vault)
-    assert(vault_name)
-
+    local vault_name = client:vault_name()
     local this_os = util.get_os()
 
+    ---@type string|?
     local path
     if data.args:len() > 0 then
       local note = client:resolve_note(data.args)
       if note ~= nil then
-        path = note.path:make_relative(vault)
+        path = client:vault_relative_path(note.path)
+        if path == nil then
+          echo.err("'" .. data.args .. "' not does not appear to be inside the vault")
+          return
+        end
       else
         echo.err("Could not resolve arguments to a note ID, path, or alias", client.opts.log_level)
         return
@@ -261,33 +259,19 @@ M.register("ObsidianOpen", {
     else
       -- bufname is an absolute path to the buffer.
       local bufname = vim.api.nvim_buf_get_name(0)
-      local vault_name_escaped = vault_name:gsub("%W", "%%%0") .. "%/"
-      ---@diagnostic disable-next-line: undefined-field
-      if this_os == util.OSType.Windows then
-        bufname = bufname:gsub("/", "\\")
-        vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
-      end
-
-      path = Path:new(bufname):make_relative(vault)
-
-      -- `make_relative` fails to work when vault path is configured to look behind a link
-      -- and returns an unaltered path if it cannot make the path relative.
-      if path == bufname then
-        -- If the vault name appears in the output of `make_relative`, i.e. `make_relative` has failed,
-        -- then remove everything up to and including the vault path
-        -- Example:
-        -- Config path: ~/Dropbox/Documents/0-obsidian-notes/
-        -- File path: /Users/username/Library/CloudStorage/Dropbox/Documents/0-obsidian-notes/Notes/note.md
-        -- Proper relative path: Notes/note.md
-        local _, j = path:find(vault_name_escaped)
-        if j ~= nil then
-          path = bufname:sub(j)
-        end
+      path = client:vault_relative_path(bufname)
+      if path == nil then
+        echo.err("Current buffer '" .. bufname .. "' does not appear to be inside the vault")
+        return
       end
     end
 
+    if this_os == util.OSType.Windows then
+      path = string.gsub(path, "/", "\\")
+    end
+
     local encoded_vault = util.urlencode(vault_name)
-    local encoded_path = util.urlencode(tostring(path))
+    local encoded_path = util.urlencode(path)
 
     local uri
     if client.opts.use_advanced_uri then
@@ -742,57 +726,6 @@ M.register("ObsidianFollowLink", {
   end,
 })
 
----Run a health check.
-M.register("ObsidianCheckHealth", {
-  opts = { nargs = 0 },
-  func = function(client, _)
-    local errors = 0
-
-    local vault = client:vault()
-    if vault == nil then
-      errors = errors + 1
-      echo.err("FAILED - couldn't find an Obsidian vault in '" .. tostring(client.dir) .. "'", client.opts.log_level)
-    end
-
-    -- Check completion via nvim-cmp
-    if client.opts.completion.nvim_cmp then
-      local ok, cmp = pcall(require, "cmp")
-      if not ok then
-        echo.err("nvim-cmp could not be loaded", client.opts.log_level)
-      else
-        local has_obsidian_source = false
-        local has_obsidian_new_source = false
-        for _, source in pairs(cmp.get_config().sources) do
-          if source.name == "obsidian" then
-            has_obsidian_source = true
-          elseif source.name == "obsidian_new" then
-            has_obsidian_new_source = true
-          end
-        end
-
-        if not has_obsidian_source then
-          echo.err("FAILED - note completion is not configured", client.opts.log_level)
-          errors = errors + 1
-        end
-
-        if not has_obsidian_new_source then
-          echo.err("FAILED - new note completion is not configured", client.opts.log_level)
-          errors = errors + 1
-        end
-      end
-    end
-
-    -- Report total errors.
-    if errors == 1 then
-      echo.err("There was 1 error with obsidian setup", client.opts.log_level)
-    elseif errors > 1 then
-      echo.err("There were " .. tostring(errors) .. " errors with obsidian setup", client.opts.log_level)
-    else
-      echo.info("All good!\nVault configured to '" .. vault .. "'", client.opts.log_level)
-    end
-  end,
-})
-
 M.register("ObsidianWorkspace", {
   opts = { nargs = "?" },
   func = function(client, data)
@@ -827,6 +760,7 @@ M.register("ObsidianWorkspace", {
 M.register("ObsidianRename", {
   opts = { nargs = 1 },
   complete = M.complete_args_id,
+  ---@param client obsidian.Client
   func = function(client, data)
     local AsyncExecutor = require("obsidian.async").AsyncExecutor
     local File = require("obsidian.async").File
@@ -979,8 +913,8 @@ M.register("ObsidianRename", {
       end
     end
 
-    local cur_note_rel_path = tostring(Path:new(cur_note_path):make_relative(tostring(client.dir)))
-    local new_note_rel_path = tostring(Path:new(new_note_path):make_relative(tostring(client.dir)))
+    local cur_note_rel_path = assert(client:vault_relative_path(cur_note_path))
+    local new_note_rel_path = assert(client:vault_relative_path(new_note_path))
 
     -- Search notes on disk for any references to `cur_note_id`.
     -- We look for the following forms of references:

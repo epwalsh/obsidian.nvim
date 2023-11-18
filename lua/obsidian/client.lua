@@ -35,22 +35,49 @@ Client.new = function(opts)
   return self
 end
 
----Find the path to the actual Obsidian vault (it may be in a parent of 'self.dir').
+---Get the absolute path to the root of the Obsidian vault (it may be in a parent of 'self.dir').
 ---
----@return string|?
-Client.vault = function(self)
+---@return Path
+Client.vault_root = function(self)
   local vault_indicator_folder = ".obsidian"
   local dirs = self.dir:parents()
   table.insert(dirs, 0, self.dir:absolute())
-  for _, dir in pairs(dirs) do
-    ---@type Path
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    local maybe_vault = Path:new(dir) / vault_indicator_folder
+  for _, dirpath in pairs(dirs) do
+    local dir = Path:new(dirpath)
+    local maybe_vault = dir / vault_indicator_folder
     if maybe_vault:is_dir() then
       return dir
     end
   end
-  return nil
+  return self.dir
+end
+
+---Get the name of the vault.
+---@return string
+Client.vault_name = function(self)
+  return assert(vim.fs.basename(tostring(self:vault_root())))
+end
+
+---Make a path relative to the vault root.
+---@param path string|Path
+---@return string|?
+Client.vault_relative_path = function(self, path)
+  local normalized_path = vim.fs.normalize(tostring(path))
+  local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
+  if relative_path == normalized_path then
+    -- When `:make_relative()` fails it returns the absolute path.
+    -- HACK: This can happen when the vault path is configured to look behind a link but `path` is
+    -- not behind the link. In this case we look for the first occurrence of the vault name in
+    -- `path` are remove everything up to and including it.
+    local _, j = string.find(relative_path, self:vault_name())
+    if j ~= nil then
+      return string.sub(relative_path, j)
+    else
+      return nil
+    end
+  else
+    return relative_path
+  end
 end
 
 ---@param search string

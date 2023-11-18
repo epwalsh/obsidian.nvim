@@ -366,9 +366,10 @@ This is a complete list of all of the options that can be passed to `require("ob
     ---@return string
     img_text_func = function(client, path)
       local link_path
-      if vim.startswith(tostring(path), tostring(client.dir)) then
+      local vault_relative_path = client:vault_relative_path(path)
+      if vault_relative_path ~= nil then
         -- Use relative path if the image is saved in the vault dir.
-        link_path = path:make_relative(tostring(client.dir))
+        link_path = vault_relative_path
       else
         -- Otherwise use the absolute path.
         link_path = tostring(path)

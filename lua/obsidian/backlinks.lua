@@ -199,7 +199,7 @@ Backlinks._view = function(self, backlink_matches)
     end
 
     -- Line for backlink within note.
-    local display_path = match.note.path:make_relative(tostring(self.client.dir))
+    local display_path = assert(self.client:vault_relative_path(match.note.path))
     local text, ref_indices, ref_strs = util.find_and_replace_refs(match.text)
     local text_start = 4 + display_path:len() + tostring(match.line):len()
     table.insert(view_lines, ("  %s:%s:%s"):format(display_path, match.line, text))
