@@ -21,7 +21,7 @@ source.complete = function(self, request, callback)
   local can_complete, search, insert_start, insert_end = completion.can_complete(request)
 
   ---@type string|Path|?
-  local dir = client.dir
+  local dir
   if client.opts.completion.new_notes_location == nil then
     dir = nil -- let the client decide
   elseif client.opts.completion.new_notes_location == "notes_subdir" then
