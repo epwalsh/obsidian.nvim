@@ -354,8 +354,9 @@ This is a complete list of all of the options that can be passed to `require("ob
 
   -- Specify how to handle attachments.
   attachments = {
-    -- The default location (relative to the vault root) to place images via `:ObsidianPasteImg`.
-    -- The can be overridden per image by passing a full path to the command instead of just a filename.
+    -- The default folder to place images in via `:ObsidianPasteImg`.
+    -- If this a relative path it will be interpreted as relative to the vault root.
+    -- You can always override this per image by passing a full path to the command instead of just a filename.
     img_folder = "assets/imgs",  -- This is the default
     -- A function that determines the text to insert in the note when pasting an image.
     -- It takes two arguments, the `obsidian.Client` and a plenary `Path` to the image file.

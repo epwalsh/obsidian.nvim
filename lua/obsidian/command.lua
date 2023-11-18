@@ -1091,7 +1091,14 @@ M.register("ObsidianPasteImg", {
   ---@param client obsidian.Client
   func = function(client, data)
     local paste_img = require("obsidian.img_paste").paste_img
-    local path = paste_img(data.args, client.dir / client.opts.attachments.img_folder)
+
+    local img_folder = Path:new(client.opts.attachments.img_folder)
+    if not img_folder:is_absolute() then
+      img_folder = client.dir / client.opts.attachments.img_folder
+    end
+
+    local path = paste_img(data.args, img_folder)
+
     if path ~= nil then
       util.insert_text(client.opts.attachments.img_text_func(client, path))
     end
