@@ -247,6 +247,8 @@ M.register("ObsidianOpen", {
     local vault_name = vim.fs.basename(vault)
     assert(vault_name)
 
+    local this_os = util.get_os()
+
     local path
     if data.args:len() > 0 then
       local note = client:resolve_note(data.args)
@@ -261,7 +263,7 @@ M.register("ObsidianOpen", {
       local bufname = vim.api.nvim_buf_get_name(0)
       local vault_name_escaped = vault_name:gsub("%W", "%%%0") .. "%/"
       ---@diagnostic disable-next-line: undefined-field
-      if util.get_os() == util.OSType.Windows then
+      if this_os == util.OSType.Windows then
         bufname = bufname:gsub("/", "\\")
         vault_name_escaped = vault_name_escaped:gsub("/", [[\%\]])
       end
@@ -298,16 +300,16 @@ M.register("ObsidianOpen", {
 
     ---@type string, string[]
     local cmd, args
-    if util.get_os() == util.OSType.Linux then
+    if this_os == util.OSType.Linux then
       cmd = "xdg-open"
       args = { uri }
-    elseif util.get_os() == util.OSType.Wsl then
+    elseif this_os == util.OSType.Wsl then
       cmd = "wsl-open"
       args = { uri }
-    elseif util.get_os() == util.OSType.Windows then
+    elseif this_os == util.OSType.Windows then
       cmd = "powershell"
       args = { "Start-Process '" .. uri .. "'" }
-    elseif util.get_os() == util.OSType.Darwin then
+    elseif this_os == util.OSType.Darwin then
       cmd = "open"
       if client.opts.open_app_foreground then
         args = { "-a", "/Applications/Obsidian.app", uri }
@@ -315,7 +317,7 @@ M.register("ObsidianOpen", {
         args = { "-a", "/Applications/Obsidian.app", "--background", uri }
       end
     else
-      echo.err("open command does not support OS type '" .. util.get_os() .. "'")
+      echo.err("open command does not support OS type '" .. this_os .. "'")
       return
     end
 

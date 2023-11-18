@@ -22,6 +22,8 @@ local function get_clip_check_command()
     check_cmd = "pngpaste -b 2>&1"
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
     check_cmd = 'powershell.exe "Get-Clipboard -Format Image"'
+  else
+    echo.fail("image saving not implemented for OS '" .. this_os .. "'")
   end
   return check_cmd
 end
@@ -40,8 +42,11 @@ local function clipboard_is_img()
     return vim.tbl_contains(content, "image/png")
   elseif this_os == util.OSType.Darwin then
     return string.sub(content[1], 1, 9) == "iVBORw0KG" -- Magic png number in base64
+  elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
+    return content ~= nil
   else
-    error("not implemented for OS '" .. this_os .. "'")
+    echo.fail("image saving not implemented for OS '" .. this_os .. "'")
+    return false
   end
 end
 
