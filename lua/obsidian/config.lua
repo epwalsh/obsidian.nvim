@@ -27,6 +27,7 @@ local config = {}
 ---@field sort_reversed boolean|?
 ---@field open_notes_in "current"|"vsplit"|"hsplit"
 ---@field ui obsidian.config.UIOpts
+---@field attachments obsidian.config.AttachmentsOpts
 ---@field yaml_parser string|?
 config.ClientOpts = {}
 
@@ -55,6 +56,7 @@ config.ClientOpts.default = function()
     sort_reversed = true,
     open_notes_in = "current",
     ui = config.UIOpts.default(),
+    attachments = config.AttachmentsOpts.default(),
     yaml_parser = "native",
   }
 end
@@ -74,6 +76,7 @@ config.ClientOpts.normalize = function(opts)
   opts.daily_notes = vim.tbl_extend("force", defaults.daily_notes, opts.daily_notes)
   opts.templates = vim.tbl_extend("force", defaults.templates, opts.templates)
   opts.ui = vim.tbl_extend("force", defaults.ui, opts.ui)
+  opts.attachments = vim.tbl_extend("force", defaults.attachments, opts.attachments)
 
   -- Rename old fields for backwards compatibility.
   if opts.ui.tick ~= nil then
@@ -226,6 +229,35 @@ config.UIOpts.default = function()
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
     },
+  }
+end
+
+---@class obsidian.config.AttachmentsOpts
+---@field img_folder string Default folder to save images to, relative to the vault root.
+---@field img_text_func function (obsidian.Client, Path,) -> string
+config.AttachmentsOpts = {}
+
+---@return obsidian.config.AttachmentsOpts
+config.AttachmentsOpts.default = function()
+  return {
+    img_folder = "assets/imgs",
+    ---@param client obsidian.Client
+    ---@param path Path the absolute path to the image file
+    ---@return string
+    img_text_func = function(client, path)
+      ---@type string
+      local link_path
+      local vault_relative_path = client:vault_relative_path(path)
+      if vault_relative_path ~= nil then
+        -- Use relative path if the image is saved in the vault dir.
+        link_path = vault_relative_path
+      else
+        -- Otherwise use the absolute path.
+        link_path = tostring(path)
+      end
+      local display_name = vim.fs.basename(link_path)
+      return string.format("![%s](%s)", display_name, link_path)
+    end,
   }
 end
 

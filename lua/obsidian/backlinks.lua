@@ -63,14 +63,15 @@ local Backlinks = {}
 ---@param client obsidian.Client
 ---@param bufnr integer|?
 ---@param winnr integer|?
+---@param note obsidian.Note|?
 ---@return obsidian.Backlinks
-Backlinks.new = function(client, bufnr, winnr)
+Backlinks.new = function(client, bufnr, winnr, note)
   local self = setmetatable({}, { __index = Backlinks })
   self.client = client
   self.bufnr = bufnr and bufnr or vim.fn.bufnr()
   self.winnr = winnr and winnr or vim.fn.winnr()
   self.bufname = vim.api.nvim_buf_get_name(self.bufnr)
-  self.note = Note.from_file(self.bufname)
+  self.note = note and note or Note.from_file(self.bufname)
   return self
 end
 
@@ -154,7 +155,7 @@ Backlinks._view = function(self, backlink_matches)
   vim.api.nvim_buf_set_option(0, "buftype", "nofile")
   vim.api.nvim_buf_set_option(0, "swapfile", false)
   vim.api.nvim_buf_set_option(0, "buflisted", false)
-  vim.api.nvim_buf_set_var(0, "obsidian_vault_dir", tostring(self.client.dir))
+  vim.api.nvim_buf_set_var(0, "obsidian_vault_dir", tostring(self.client:vault_root()))
   vim.api.nvim_buf_set_var(0, "obsidian_parent_win", self.winnr)
   vim.api.nvim_win_set_option(0, "wrap", self.client.opts.backlinks.wrap)
   vim.api.nvim_win_set_option(0, "spell", false)
@@ -199,7 +200,7 @@ Backlinks._view = function(self, backlink_matches)
     end
 
     -- Line for backlink within note.
-    local display_path = match.note.path:make_relative(tostring(self.client.dir))
+    local display_path = assert(self.client:vault_relative_path(match.note.path))
     local text, ref_indices, ref_strs = util.find_and_replace_refs(match.text)
     local text_start = 4 + display_path:len() + tostring(match.line):len()
     table.insert(view_lines, ("  %s:%s:%s"):format(display_path, match.line, text))

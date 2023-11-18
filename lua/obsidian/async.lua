@@ -361,9 +361,11 @@ end
 ---@param args string[]
 ---@param on_stdout function|? (string) -> nil
 ---@param on_exit function|? (integer) -> nil
+---@return integer exit_code
 M.run_job = function(cmd, args, on_stdout, on_exit)
   local job = init_job(cmd, args, on_stdout, on_exit)
   job:sync()
+  return job.code
 end
 
 ---@param cmd string

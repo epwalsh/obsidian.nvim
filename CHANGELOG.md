@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `:ObsidianPasteImg` for pasting images from the clipboard into notes. See the `attachments` configuration option for customizing the behavior of this command. Inspired by [md-img-paste.vim](https://github.com/ferrine/md-img-paste.vim) and [clipboard-image.nvim](https://github.com/ekickx/clipboard-image.nvim).
+
 ### Changed
 
 - Renamed `opts.ui.tick` to `opts.ui.update_debounce`, but the `tick` field will still be read for backwards compatibility.
+- `:ObsidianOpen` will now open wiki links under the cursor instead of always opening the note of the current buffer.
+- `:ObsidianBacklinks` will now show backlinks for the note of a wiki link under the cursor instead of always showing backlinks for the note of the current buffer.
 
 ### Fixed
 

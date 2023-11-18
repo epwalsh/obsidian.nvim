@@ -6,6 +6,7 @@ local module_lookups = {
   completion = "obsidian.completion",
   config = "obsidian.config",
   echo = "obsidian.echo",
+  img_paste = "obsidian.img_paste",
   mapping = "obsidian.mapping",
   Note = "obsidian.note",
   search = "obsidian.search",
@@ -92,6 +93,9 @@ obsidian.setup = function(opts)
   -- Ensure directories exist.
   client.dir:mkdir { parents = true, exists_ok = true }
   vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(client.dir)))
+  if client:vault_root() ~= client.dir then
+    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(client:vault_root())))
+  end
 
   if client.opts.notes_subdir ~= nil then
     local notes_subdir = client.dir / client.opts.notes_subdir
