@@ -180,6 +180,7 @@ util.replace_refs = function(s)
   return out
 end
 
+---@enum obsidian.RefTypes
 util.RefTypes = {
   WikiWithAlias = "wiki_with_alias",
   Wiki = "wiki",
@@ -368,7 +369,7 @@ end
 ---@param line string|nil - line to check or current line if nil
 ---@param col  integer|nil - column to check or current column if nil (1-indexed)
 ---@param include_naked_urls boolean|?
----@return integer|nil, integer|nil, string|? - start and end column of link (1-indexed)
+---@return integer|nil, integer|nil, obsidian.RefTypes|? - start and end column of link (1-indexed)
 util.cursor_on_markdown_link = function(line, col, include_naked_urls)
   local current_line = line and line or vim.api.nvim_get_current_line()
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -406,7 +407,7 @@ end
 ---@param line string|?
 ---@param col integer|?
 ---@param include_naked_urls boolean|?
----@returns string|?, string|?, string|?
+---@returns string|?, string|?, obsidian.RefTypes|?
 util.cursor_link = function(line, col, include_naked_urls)
   local current_line = line and line or vim.api.nvim_get_current_line()
 

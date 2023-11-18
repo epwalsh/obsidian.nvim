@@ -247,22 +247,29 @@ M.register("ObsidianOpen", {
     if data.args:len() > 0 then
       local note = client:resolve_note(data.args)
       if note ~= nil then
-        path = client:vault_relative_path(note.path)
-        if path == nil then
-          echo.err("'" .. data.args .. "' not does not appear to be inside the vault")
-          return
-        end
+        path = assert(client:vault_relative_path(note.path))
       else
         echo.err("Could not resolve arguments to a note ID, path, or alias", client.opts.log_level)
         return
       end
     else
-      -- bufname is an absolute path to the buffer.
-      local bufname = vim.api.nvim_buf_get_name(0)
-      path = client:vault_relative_path(bufname)
-      if path == nil then
-        echo.err("Current buffer '" .. bufname .. "' does not appear to be inside the vault")
-        return
+      local cursor_link, _, ref_type = util.cursor_link()
+      if cursor_link ~= nil and (ref_type == util.RefTypes.Wiki or ref_type == util.RefTypes.WikiWithAlias) then
+        local note = client:resolve_note(cursor_link)
+        if note ~= nil then
+          path = assert(client:vault_relative_path(note.path))
+        else
+          echo.err("Could not resolve link under cursor to a note ID, path, or alias", client.opts.log_level)
+          return
+        end
+      else
+        -- bufname is an absolute path to the buffer.
+        local bufname = vim.api.nvim_buf_get_name(0)
+        path = client:vault_relative_path(bufname)
+        if path == nil then
+          echo.err("Current buffer '" .. bufname .. "' does not appear to be inside the vault")
+          return
+        end
       end
     end
 
