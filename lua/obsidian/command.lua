@@ -1027,7 +1027,7 @@ M.register("ObsidianPasteImg", {
 
     local img_folder = Path:new(client.opts.attachments.img_folder)
     if not img_folder:is_absolute() then
-      img_folder = client.dir / client.opts.attachments.img_folder
+      img_folder = client:vault_root() / client.opts.attachments.img_folder
     end
 
     local path = paste_img(data.args, img_folder)
