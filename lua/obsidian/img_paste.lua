@@ -73,7 +73,10 @@ local function save_clipboard_image(path)
     end
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
     local cmd = 'powershell.exe "'
-      .. string.format("$content = Get-Clipboard -Format Image;$content.Save('%s', 'png')", path)
+      .. string.format(
+        "$content = Get-Clipboard -Format Image;$content.Save('%s', 'png')",
+        string.gsub(path, "/", "\\")
+      )
       .. '"'
     return os.execute(cmd)
   elseif this_os == util.OSType.Darwin then
@@ -108,7 +111,8 @@ M.paste_img = function(fname, default_dir)
 
     -- Resolve path to paste image to.
     local path
-    if string.find(fname, "/", nil, true) ~= nil then
+    if vim.fs.basename(fname) ~= fname then
+      -- fname is a full path
       path = Path:new(fname)
     else
       path = Path:new(default_dir) / fname

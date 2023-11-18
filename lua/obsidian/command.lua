@@ -278,7 +278,6 @@ M.register("ObsidianOpen", {
         -- Example:
         -- Config path: ~/Dropbox/Documents/0-obsidian-notes/
         -- File path: /Users/username/Library/CloudStorage/Dropbox/Documents/0-obsidian-notes/Notes/note.md
-        --                                                                   ^
         -- Proper relative path: Notes/note.md
         local _, j = path:find(vault_name_escaped)
         if j ~= nil then
