@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed `opts.ui.tick` to `opts.ui.update_debounce`, but the `tick` field will still be read for backwards compatibility.
 - `:ObsidianOpen` will now open wiki links under the cursor instead of always opening the note of the current buffer.
+- `:ObsidianBacklinks` will now show backlinks for the note of a wiki link under the cursor instead of always showing backlinks for the note of the current buffer.
 
 ### Fixed
 

@@ -242,6 +242,7 @@ M.register("ObsidianOpen", {
     local vault_name = client:vault_name()
     local this_os = util.get_os()
 
+    -- Resolve path of note to open.
     ---@type string|?
     local path
     if data.args:len() > 0 then
@@ -273,6 +274,7 @@ M.register("ObsidianOpen", {
       end
     end
 
+    -- Normalize path for windows.
     if this_os == util.OSType.Windows then
       path = string.gsub(path, "/", "\\")
     end
@@ -321,8 +323,19 @@ M.register("ObsidianOpen", {
 M.register("ObsidianBacklinks", {
   opts = { nargs = 0 },
   func = function(client, _)
+    ---@type obsidian.Note|?
+    local note
+    local cursor_link, _, ref_type = util.cursor_link()
+    if cursor_link ~= nil and (ref_type == util.RefTypes.Wiki or ref_type == util.RefTypes.WikiWithAlias) then
+      note = client:resolve_note(cursor_link)
+      if note == nil then
+        echo.err("Could not resolve link under cursor to a note ID, path, or alias", client.opts.log_level)
+        return
+      end
+    end
+
     local ok, backlinks = pcall(function()
-      return require("obsidian.backlinks").new(client)
+      return require("obsidian.backlinks").new(client, nil, nil, note)
     end)
     if ok then
       echo.info(

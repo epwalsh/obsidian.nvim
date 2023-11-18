@@ -63,14 +63,15 @@ local Backlinks = {}
 ---@param client obsidian.Client
 ---@param bufnr integer|?
 ---@param winnr integer|?
+---@param note obsidian.Note|?
 ---@return obsidian.Backlinks
-Backlinks.new = function(client, bufnr, winnr)
+Backlinks.new = function(client, bufnr, winnr, note)
   local self = setmetatable({}, { __index = Backlinks })
   self.client = client
   self.bufnr = bufnr and bufnr or vim.fn.bufnr()
   self.winnr = winnr and winnr or vim.fn.winnr()
   self.bufname = vim.api.nvim_buf_get_name(self.bufnr)
-  self.note = Note.from_file(self.bufname)
+  self.note = note and note or Note.from_file(self.bufname)
   return self
 end
 
