@@ -2,6 +2,7 @@ local module_lookups = {
   async = "obsidian.async",
   backlinks = "obsidian.backlinks",
   Client = "obsidian.client",
+  collections = "obsidian.collections",
   command = "obsidian.command",
   completion = "obsidian.completion",
   config = "obsidian.config",
@@ -89,6 +90,7 @@ obsidian.setup = function(opts)
 
   opts = obsidian.config.ClientOpts.normalize(opts)
   local client = obsidian.new(opts)
+  obsidian.echo.set_level(client.opts.log_level)
 
   -- Ensure directories exist.
   client.dir:mkdir { parents = true, exists_ok = true }
@@ -113,10 +115,7 @@ obsidian.setup = function(opts)
   if client.opts.templates ~= nil and client.opts.templates.subdir ~= nil then
     client.templates_dir = Path:new(client.dir) / client.opts.templates.subdir
     if not client.templates_dir:is_dir() then
-      obsidian.echo.err(
-        string.format("%s is not a valid directory for templates", client.templates_dir),
-        client.opts.log_level
-      )
+      obsidian.echo.err("%s is not a valid directory for templates", client.templates_dir)
       client.templates_dir = nil
     end
   end
@@ -201,7 +200,7 @@ obsidian.setup = function(opts)
       local lines = note:frontmatter_lines(nil, frontmatter)
       vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
       if not client._quiet then
-        obsidian.echo.info("Updated frontmatter", client.opts.log_level)
+        obsidian.echo.info "Updated frontmatter"
       end
     end,
   })

@@ -73,7 +73,7 @@ source.complete = function(self, request, callback)
                   label = label .. "]]"
                 end
               else
-                echo.err("Invalid completion options", client.opts.log_level)
+                echo.err "Invalid completion options"
                 return
               end
             elseif ref_type == completion.RefType.Markdown then

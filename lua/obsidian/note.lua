@@ -299,11 +299,12 @@ Note.from_lines = function(lines, path, root)
   -- The ID should match the filename with or without the extension.
   local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
   local relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
-  local fname = vim.fs.basename(relative_path)
+  local fname = assert(vim.fs.basename(relative_path))
   local fname_no_ext = vim.fn.fnamemodify(fname, ":r")
   if id ~= relative_path and id ~= relative_path_no_ext and id ~= fname and id ~= fname_no_ext then
     id = fname_no_ext
   end
+  assert(id)
 
   local n = Note.new(id, aliases, tags, path)
   n.metadata = metadata

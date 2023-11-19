@@ -32,7 +32,7 @@ source.complete = function(self, request, callback)
   elseif client.opts.completion.new_notes_location == "current_dir" then
     dir = vim.fn.expand "%:p:h"
   else
-    echo.err("Bad option value for 'completion.new_notes_location'. Skipping creating new note.", client.opts.log_level)
+    echo.err "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
     return
   end
 
@@ -55,7 +55,7 @@ source.complete = function(self, request, callback)
       elseif opts.completion.prepend_note_id then
         new_title = new_id .. "|" .. new_title
       else
-        echo.err("Invalid completion options", client.opts.log_level)
+        echo.err "Invalid completion options"
         return
       end
       sort_text = "[[" .. search

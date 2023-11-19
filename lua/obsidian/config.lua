@@ -9,7 +9,7 @@ local config = {}
 ---@field dir string|?
 ---@field workspaces obsidian.Workspace[]|?
 ---@field detect_cwd boolean
----@field log_level integer|?
+---@field log_level integer
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
 ---@field note_id_func function|?
@@ -38,7 +38,7 @@ config.ClientOpts.default = function()
     dir = nil,
     workspaces = {},
     detect_cwd = false,
-    log_level = nil,
+    log_level = vim.log.levels.INFO,
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
     note_id_func = nil,

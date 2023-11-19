@@ -197,8 +197,7 @@ Client.search_async = function(self, search, search_opts, callback)
             .. " error(s) occurred during search. First error from note at "
             .. tostring(first_err_path)
             .. ":\n"
-            .. tostring(first_err),
-          self.opts.log_level
+            .. tostring(first_err)
         )
       end
 
@@ -321,7 +320,7 @@ Client.new_note = function(self, title, id, dir, aliases)
     frontmatter = self.opts.note_frontmatter_func(note)
   end
   note:save(nil, not self.opts.disable_frontmatter, frontmatter)
-  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
+  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
 
   return note
 end
@@ -389,7 +388,7 @@ Client._daily = function(self, datetime)
       end
       note:save(nil, not self.opts.disable_frontmatter, frontmatter)
     end
-    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path), self.opts.log_level)
+    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   end
 
   return note
@@ -513,19 +512,16 @@ Client._run_with_finder_backend = function(self, implementations)
     if implementations[self.opts.finder] ~= nil then
       local ok, res = pcall(implementations[self.opts.finder])
       if not ok then
-        echo.err("error running finder '" .. self.opts.finder .. "':\n" .. tostring(res), self.opts.log_level)
+        echo.err("error running finder '" .. self.opts.finder .. "':\n" .. tostring(res))
         return
       elseif res == false then
-        echo.err(
-          "unable to load finder '" .. self.opts.finder .. "'. Are you sure it's installed?",
-          self.opts.log_level
-        )
+        echo.err("unable to load finder '" .. self.opts.finder .. "'. Are you sure it's installed?")
         return
       else
         return res
       end
     else
-      echo.err("invalid finder '" .. self.opts.finder .. "' in config", self.opts.log_level)
+      echo.err("invalid finder '" .. self.opts.finder .. "' in config")
       return
     end
   end

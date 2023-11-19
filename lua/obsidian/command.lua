@@ -185,7 +185,7 @@ M.register("ObsidianToday", {
     if string.len(arg) > 0 then
       local offset = tonumber(arg)
       if offset == nil then
-        echo.err("Invalid argument, expected an integer offset", client.log.level)
+        echo.err "Invalid argument, expected an integer offset"
         return
       else
         offset_days = offset
@@ -250,7 +250,7 @@ M.register("ObsidianOpen", {
       if note ~= nil then
         path = assert(client:vault_relative_path(note.path))
       else
-        echo.err("Could not resolve arguments to a note ID, path, or alias", client.opts.log_level)
+        echo.err "Could not resolve arguments to a note ID, path, or alias"
         return
       end
     else
@@ -260,7 +260,7 @@ M.register("ObsidianOpen", {
         if note ~= nil then
           path = assert(client:vault_relative_path(note.path))
         else
-          echo.err("Could not resolve link under cursor to a note ID, path, or alias", client.opts.log_level)
+          echo.err "Could not resolve link under cursor to a note ID, path, or alias"
           return
         end
       else
@@ -329,7 +329,7 @@ M.register("ObsidianBacklinks", {
     if cursor_link ~= nil and ref_type ~= util.RefTypes.NakedUrl then
       note = client:resolve_note(cursor_link)
       if note == nil then
-        echo.err("Could not resolve link under cursor to a note ID, path, or alias", client.opts.log_level)
+        echo.err "Could not resolve link under cursor to a note ID, path, or alias"
         return
       end
     end
@@ -339,12 +339,11 @@ M.register("ObsidianBacklinks", {
     end)
     if ok then
       echo.info(
-        ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(tostring(backlinks.note.id)),
-        client.opts.log_level
+        ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(tostring(backlinks.note.id))
       )
       backlinks:view()
     else
-      echo.err("Backlinks command can only be used from a valid note", client.opts.log_level)
+      echo.err "Backlinks command can only be used from a valid note"
     end
   end,
 })
@@ -434,7 +433,7 @@ M.register("ObsidianTemplate", {
   opts = { nargs = "?" },
   func = function(client, data)
     if client.templates_dir == nil then
-      echo.err("Templates folder is not defined or does not exist", client.opts.log_level)
+      echo.err "Templates folder is not defined or does not exist"
       return
     end
 
@@ -452,7 +451,7 @@ M.register("ObsidianTemplate", {
       if path:is_file() then
         insert_template(data.args)
       else
-        echo.err("Not a valid template file", client.opts.log_level)
+        echo.err "Not a valid template file"
       end
       return
     end
@@ -611,13 +610,13 @@ M.register("ObsidianLinkNew", {
     local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
 
     if data.line1 ~= csrow or data.line2 ~= cerow then
-      echo.err("ObsidianLink must be called with visual selection", client.opts.log_level)
+      echo.err "ObsidianLink must be called with visual selection"
       return
     end
 
     local lines = vim.fn.getline(csrow, cerow)
     if #lines ~= 1 then
-      echo.err("Only in-line visual selections allowed", client.opts.log_level)
+      echo.err "Only in-line visual selections allowed"
       return
     end
 
@@ -650,13 +649,13 @@ M.register("ObsidianLink", {
     local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
 
     if data.line1 ~= csrow or data.line2 ~= cerow then
-      echo.err("ObsidianLink must be called with visual selection", client.opts.log_level)
+      echo.err "ObsidianLink must be called with visual selection"
       return
     end
 
     local lines = vim.fn.getline(csrow, cerow)
     if #lines ~= 1 then
-      echo.err("Only in-line visual selections allowed", client.opts.log_level)
+      echo.err "Only in-line visual selections allowed"
       return
     end
 
@@ -671,7 +670,7 @@ M.register("ObsidianLink", {
     end
 
     if note == nil then
-      echo.err("Could not resolve argument to a note ID, alias, or path", client.opts.log_level)
+      echo.err "Could not resolve argument to a note ID, alias, or path"
       return
     end
 
@@ -700,10 +699,7 @@ M.register("ObsidianFollowLink", {
       if client.opts.follow_url_func ~= nil then
         client.opts.follow_url_func(location)
       else
-        echo.warn(
-          "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option.",
-          client.opts.log_level
-        )
+        echo.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
       end
       return
     end
@@ -728,7 +724,7 @@ M.register("ObsidianFollowLink", {
             note = client:new_note(location, nil, nil, aliases)
             vim.api.nvim_command("e " .. tostring(note.path))
           else
-            echo.warn("Aborting", client.opts.log_level)
+            echo.warn "Aborting"
           end
         end)
       elseif note ~= nil then
@@ -739,7 +735,7 @@ M.register("ObsidianFollowLink", {
           vim.api.nvim_command("e " .. tostring(path))
         end)
       else
-        echo.err("Failed to resolve note '" .. location .. "'", client.opts.log_level)
+        echo.err("Failed to resolve note '" .. location .. "'")
         return
       end
     end)
@@ -750,10 +746,7 @@ M.register("ObsidianWorkspace", {
   opts = { nargs = "?" },
   func = function(client, data)
     if not data.args or #data.args == 0 then
-      echo.info(
-        "Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.dir),
-        client.opts.log_level
-      )
+      echo.info("Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.dir))
       return
     end
 
@@ -765,13 +758,13 @@ M.register("ObsidianWorkspace", {
     end
 
     if not workspace then
-      echo.err("Workspace '" .. data.args .. "' does not exist", client.opts.log_level)
+      echo.err("Workspace '" .. data.args .. "' does not exist")
       return
     end
 
     client.current_workspace = workspace
 
-    echo.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")", client.opts.log_level)
+    echo.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")")
     -- NOTE: workspace.path has already been normalized
     client.dir = Path:new(workspace.path)
   end,
@@ -829,7 +822,7 @@ M.register("ObsidianRename", {
     local parts = vim.split(arg, "/", { plain = true })
     local new_note_id = parts[#parts]
     if new_note_id == "" then
-      echo.err("Invalid new note ID", client.opts.log_level)
+      echo.err "Invalid new note ID"
       return
     elseif vim.endswith(new_note_id, ".md") then
       new_note_id = string.sub(new_note_id, 1, -4)
