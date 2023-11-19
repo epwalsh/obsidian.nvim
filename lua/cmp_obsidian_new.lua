@@ -18,7 +18,7 @@ source.get_keyword_pattern = completion.get_keyword_pattern
 source.complete = function(self, request, callback)
   local opts = self:option(request)
   local client = obsidian.new(opts)
-  local can_complete, search, insert_start, insert_end = completion.can_complete(request)
+  local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
   ---@type string|Path|?
   local dir
@@ -45,24 +45,37 @@ source.complete = function(self, request, callback)
       rel_path = string.sub(rel_path, 1, -4)
     end
 
-    if opts.completion.use_path_only then
-      new_title = rel_path
-    elseif opts.completion.prepend_note_path then
-      new_title = rel_path .. "|" .. new_title
-    elseif opts.completion.prepend_note_id then
-      new_title = new_id .. "|" .. new_title
+    ---@type string, string
+    local sort_text, label, new_text
+    if ref_type == completion.RefType.Wiki then
+      if opts.completion.use_path_only then
+        new_title = rel_path
+      elseif opts.completion.prepend_note_path then
+        new_title = rel_path .. "|" .. new_title
+      elseif opts.completion.prepend_note_id then
+        new_title = new_id .. "|" .. new_title
+      else
+        echo.err("Invalid completion options", client.opts.log_level)
+        return
+      end
+      sort_text = "[[" .. search
+      label = "Create: [[" .. new_title .. "]]"
+      new_text = "[[" .. new_title .. "]]"
+    elseif ref_type == completion.RefType.Markdown then
+      sort_text = "[" .. search
+      label = "Create: [" .. new_title .. "](" .. rel_path .. ".md)"
+      new_text = "[" .. new_title .. "](" .. rel_path .. ".md)"
     else
-      echo.err("Invalid completion options", client.opts.log_level)
-      return
+      error "not implemented"
     end
 
     local items = {
       {
-        sortText = "[[" .. search,
-        label = "Create: [[" .. new_title .. "]]",
+        sortText = sort_text,
+        label = label,
         kind = 18,
         textEdit = {
-          newText = "[[" .. new_title .. "]]",
+          newText = new_text,
           range = {
             start = {
               line = request.context.cursor.row - 1,
