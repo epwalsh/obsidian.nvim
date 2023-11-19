@@ -18,7 +18,7 @@ source.get_keyword_pattern = completion.get_keyword_pattern
 source.complete = function(self, request, callback)
   local opts = self:option(request)
   local client = obsidian.new(opts)
-  local can_complete, search, insert_start, insert_end = completion.can_complete(request)
+  local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local function search_callback(results)
@@ -55,30 +55,46 @@ source.complete = function(self, request, callback)
 
             ---@type string
             local label
-            if client.opts.completion.use_path_only then
-              label = "[[" .. rel_path .. "]]"
-            elseif opts.completion.prepend_note_path then
-              label = "[[" .. rel_path
-              if option ~= tostring(note.id) then
-                label = label .. "|" .. option .. "]]"
+            if ref_type == completion.RefType.Wiki then
+              if client.opts.completion.use_path_only then
+                label = "[[" .. rel_path .. "]]"
+              elseif opts.completion.prepend_note_path then
+                label = "[[" .. rel_path
+                if option ~= tostring(note.id) then
+                  label = label .. "|" .. option .. "]]"
+                else
+                  label = label .. "]]"
+                end
+              elseif opts.completion.prepend_note_id then
+                label = "[[" .. tostring(note.id)
+                if option ~= tostring(note.id) then
+                  label = label .. "|" .. option .. "]]"
+                else
+                  label = label .. "]]"
+                end
               else
-                label = label .. "]]"
+                echo.err("Invalid completion options", client.opts.log_level)
+                return
               end
-            elseif opts.completion.prepend_note_id then
-              label = "[[" .. tostring(note.id)
-              if option ~= tostring(note.id) then
-                label = label .. "|" .. option .. "]]"
-              else
-                label = label .. "]]"
-              end
+            elseif ref_type == completion.RefType.Markdown then
+              label = "[" .. option .. "](" .. rel_path .. ".md)"
             else
-              echo.err("Invalid completion options", client.opts.log_level)
-              return
+              error "not implemented"
             end
 
             if not labels_seen[label] then
+              ---@type string
+              local sort_text
+              if ref_type == completion.RefType.Wiki then
+                sort_text = "[[" .. option
+              elseif ref_type == completion.RefType.Markdown then
+                sort_text = "[" .. option
+              else
+                error "not implemented"
+              end
+
               table.insert(items, {
-                sortText = "[[" .. option,
+                sortText = sort_text,
                 label = label,
                 kind = 18,
                 textEdit = {

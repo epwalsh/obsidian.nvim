@@ -1,16 +1,24 @@
 local completion = {}
 
----Backtrack through a string to find the first occurence of '[['.
+---@enum obsidian.completion.RefType
+completion.RefType = {
+  Wiki = 1,
+  Markdown = 2,
+}
+
+---Backtrack through a string to find the first occurrence of '[['.
 ---
 ---@param input string
----@return string|?
+---@return string|?, string|?, obsidian.completion.RefType|?
 completion._find_search_start = function(input)
   for i = string.len(input), 1, -1 do
     local substr = string.sub(input, i)
     if vim.startswith(substr, "]") or vim.endswith(substr, "]") then
       return nil
     elseif vim.startswith(substr, "[[") then
-      return substr
+      return substr, string.sub(substr, 3)
+    elseif vim.startswith(substr, "[") and string.sub(substr, i - 1, i - 1) ~= "[" then
+      return substr, string.sub(substr, 2)
     end
   end
   return nil
@@ -21,24 +29,27 @@ end
 ---items should be inserted.
 ---
 ---@return boolean
----@return string|?
----@return integer|?
----@return integer|?
+---@return string|?, integer|?, integer|?, obsidian.completion.RefType|?
 completion.can_complete = function(request)
-  local input = completion._find_search_start(request.context.cursor_before_line)
-  if input == nil then
-    return false, nil, nil, nil
+  local input, search = completion._find_search_start(request.context.cursor_before_line)
+  if input == nil or search == nil then
+    return false
+  elseif string.len(search) == 0 then
+    return false
   end
 
   local suffix = string.sub(request.context.cursor_after_line, 1, 2)
-  local search = string.sub(input, 3)
 
-  if string.len(search) > 0 and vim.startswith(input, "[[") then
+  if vim.startswith(input, "[[") then
     local cursor_col = request.context.cursor.col
     local insert_end_offset = suffix == "]]" and 1 or -1
-    return true, search, cursor_col - 1 - #input, cursor_col + insert_end_offset
+    return true, search, cursor_col - 1 - #input, cursor_col + insert_end_offset, completion.RefType.Wiki
+  elseif vim.startswith(input, "[") then
+    local cursor_col = request.context.cursor.col
+    local insert_end_offset = suffix == "]" and 1 or -1
+    return true, search, cursor_col - 1 - #input, cursor_col + insert_end_offset, completion.RefType.Markdown
   else
-    return false, nil, nil, nil
+    return false
   end
 end
 
@@ -50,7 +61,7 @@ completion.get_keyword_pattern = function()
   -- Note that this is a vim pattern, not a Lua pattern. See ':help pattern'.
   -- The enclosing [=[ ... ]=] is just a way to mark the boundary of a
   -- string in Lua.
-  return [=[\%(^\|[^\[]\)\zs\[\{2}[^\]]\+\]\{,2}]=]
+  return [=[\%(^\|[^\[]\)\zs\[\{,2}[^\]]\+\]\{,2}]=]
 end
 
 return completion

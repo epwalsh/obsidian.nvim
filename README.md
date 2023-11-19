@@ -23,7 +23,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 ## Features
 
-- ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[`)
+- ▶️ Autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links or just `[` for markdown links)
 - 🏃 Optional passthrough for `gf` to enable Obsidian links without interfering with existing functionality
 - 📷 Paste images into notes
 - 💅 Additional markdown syntax highlighting, concealing, and extmarks for references and check-boxes
@@ -210,6 +210,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     --  * "current_dir" - put new notes in same directory as the current buffer.
     --  * "notes_subdir" - put new notes in the default notes subdirectory.
     new_notes_location = "current_dir",
+
+    -- Control how wiki links are completed with these options:
 
     -- Whether to add the note ID during completion.
     -- E.g. "[[Foo" completes to "[[foo|Foo]]" assuming "foo" is the ID of the note.
