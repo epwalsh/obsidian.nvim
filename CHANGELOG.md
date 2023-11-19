@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.1.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.1.0) - 2023-11-18
+
+**Highlights:**
+
+Completion for markdown-style links in addition to Wiki links + more ways to customize how Wiki links are completed! 🔥
+We also added support for pasting images into notes with the new command `:ObsidianPasteImg` 📷
+
 ### Added
 
 - Added `:ObsidianPasteImg` for pasting images from the clipboard into notes. See the `attachments` configuration option for customizing the behavior of this command. Inspired by [md-img-paste.vim](https://github.com/ferrine/md-img-paste.vim) and [clipboard-image.nvim](https://github.com/ekickx/clipboard-image.nvim).
