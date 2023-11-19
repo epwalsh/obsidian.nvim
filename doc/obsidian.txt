@@ -34,8 +34,8 @@ Obsidian app.
 ==============================================================================
 2. Features                                                *obsidian-features*
 
-- ▶️ Autocompletion for note references via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> (triggered by typing `[[` for wiki links or just `[` for markdown links)
-- 🏃 Optional passthrough for `gf` to enable Obsidian links without interfering with existing functionality
+- ▶️ Ultra-fast, asynchronous autocompletion for note references via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> (triggered by typing `[[` for wiki links or just `[` for markdown links), powered by `ripgrep` <https://github.com/BurntSushi/ripgrep>
+- 🏃 Navigate throughout your vault by typing `gf` on any link to another note
 - 📷 Paste images into notes
 - 💅 Additional markdown syntax highlighting, concealing, and extmarks for references and check-boxes
 
@@ -113,12 +113,14 @@ USING LAZY.NVIM ~
       "epwalsh/obsidian.nvim",
       version = "*",  -- recommended, use latest release instead of latest commit
       lazy = true,
-      event = {
-        -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
-        -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
-        "BufReadPre path/to/my-vault/**.md",
-        "BufNewFile path/to/my-vault/**.md",
-      },
+      ft = "markdown",
+      -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
+      -- event = {
+      --   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
+      --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
+      --   "BufReadPre path/to/my-vault/**.md",
+      --   "BufNewFile path/to/my-vault/**.md",
+      -- },
       dependencies = {
         -- Required.
         "nvim-lua/plenary.nvim",
