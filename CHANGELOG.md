@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed some edge cases with finding references via patterns.
+
 ## [v2.1.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.1.0) - 2023-11-18
 
 **Highlights:**

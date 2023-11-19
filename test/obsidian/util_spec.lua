@@ -1,4 +1,5 @@
 local util = require "obsidian.util"
+local RefTypes = util.RefTypes
 
 describe("util.get_open_strategy()", function()
   it("should return the correct open strategy", function()
@@ -33,24 +34,16 @@ end)
 describe("util.find_refs()", function()
   it("should find positions of all refs", function()
     local s = "[[Foo]] [[foo|Bar]]"
-    local matches = util.find_refs(s)
-    local expected = { { 1, 7 }, { 9, 19 } }
-    assert.equals(#matches, #expected)
-    for i, match in ipairs(matches) do
-      assert.equals(match[1], expected[i][1])
-      assert.equals(match[2], expected[i][2])
-    end
+    assert.are_same({ { 1, 7, RefTypes.Wiki }, { 9, 19, RefTypes.WikiWithAlias } }, util.find_refs(s))
   end)
 
   it("should ignore refs within an inline code block", function()
     local s = "`[[Foo]]` [[foo|Bar]]"
-    local matches = util.find_refs(s)
-    local expected = { { 11, 21 } }
-    assert.equals(#matches, #expected)
-    for i, match in ipairs(matches) do
-      assert.equals(match[1], expected[i][1])
-      assert.equals(match[2], expected[i][2])
-    end
+    assert.are_same({ { 11, 21, RefTypes.WikiWithAlias } }, util.find_refs(s))
+
+    s = "[nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links or "
+      .. "just `[` for markdown links), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep)"
+    assert.are_same({ { 1, 47, RefTypes.Markdown }, { 134, 183, RefTypes.Markdown } }, util.find_refs(s))
   end)
 end)
 

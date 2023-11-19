@@ -174,7 +174,7 @@ obsidian.setup = function(opts)
     -- UI updates.
     vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI", "TextChangedP" }, {
       group = group,
-      pattern = tostring(client.dir / "**.md"),
+      pattern = "*.md",
       callback = obsidian.ui.get_autocmd_callback(client.opts.ui),
     })
   end

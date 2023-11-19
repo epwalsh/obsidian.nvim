@@ -189,9 +189,9 @@ util.RefTypes = {
 }
 
 util.ref_patterns = {
-  [util.RefTypes.WikiWithAlias] = "%[%[[^%|%]]+%|[^%]]+%]%]", -- [[xxx|yyy]]
-  [util.RefTypes.Wiki] = "%[%[[^%]%|]+%]%]", -- [[xxx]]
-  [util.RefTypes.Markdown] = "%[[^%]]+%]%([^%)]+%)", -- [yyy](xxx)
+  [util.RefTypes.WikiWithAlias] = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
+  [util.RefTypes.Wiki] = "%[%[[^][%|]+%]%]", -- [[xxx]]
+  [util.RefTypes.Markdown] = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   [util.RefTypes.NakedUrl] = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
 }
 
