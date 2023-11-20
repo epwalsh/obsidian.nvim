@@ -23,12 +23,12 @@ util.get_os = function()
 
   local this_os
   if vim.fn.has "win32" == 1 then
-    this_os = util.OS.Windows
+    this_os = util.OSType.Windows
   else
     local sysname = vim.loop.os_uname().sysname ---@diagnostic disable-line: undefined-field
     local release = vim.loop.os_uname().release ---@diagnostic disable-line: undefined-field
     if sysname == "Linux" and string.find(release, "microsoft") then
-      this_os = util.OS.Wsl
+      this_os = util.OSType.Wsl
     else
       this_os = sysname
     end
