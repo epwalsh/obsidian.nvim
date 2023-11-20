@@ -139,6 +139,14 @@ obsidian.setup = function(opts)
   -- These will be available across all buffers, not just note buffers in the vault.
   obsidian.command.install(client)
 
+  -- Register cmp sources.
+  if opts.completion.nvim_cmp then
+    local cmp = require "cmp"
+
+    cmp.register_source("obsidian", require("cmp_obsidian").new())
+    cmp.register_source("obsidian_new", require("cmp_obsidian_new").new())
+  end
+
   -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
@@ -155,6 +163,7 @@ obsidian.setup = function(opts)
       if opts.completion.nvim_cmp then
         -- Inject Obsidian as a cmp source when reading a buffer in the vault.
         local cmp = require "cmp"
+
         local sources = {
           { name = "obsidian", option = opts },
           { name = "obsidian_new", option = opts },
