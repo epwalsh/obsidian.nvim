@@ -12,6 +12,42 @@ M.install_hl_groups = function(ui_opts)
   end
 end
 
+-- We cache marks locally to help avoid redrawing marks when its not necessary. The main reason
+-- we need to do this is because the conceal char we get back from `nvim_buf_get_extmarks()` gets mangled.
+-- For example, "󰄱" is turned into "1\1\15".
+-- TODO: if we knew how to un-mangle the conceal char we wouldn't need the cache.
+
+M._buf_mark_cache = DefaultTbl.new(function()
+  return DefaultTbl.new(function()
+    return {}
+  end)
+end)
+
+---@param bufnr integer
+---@param ns_id integer
+---@param mark_id integer
+---@return ExtMark|?
+local function cache_get(bufnr, ns_id, mark_id)
+  local buf_ns_cache = M._buf_mark_cache[bufnr][ns_id]
+  return buf_ns_cache[mark_id]
+end
+
+---@param bufnr integer
+---@param ns_id integer
+---@param mark ExtMark
+---@return ExtMark|?
+local function cache_set(bufnr, ns_id, mark)
+  assert(mark.id ~= nil)
+  M._buf_mark_cache[bufnr][ns_id][mark.id] = mark
+end
+
+---@param bufnr integer
+---@param ns_id integer
+---@param mark_id integer
+local function cache_evict(bufnr, ns_id, mark_id)
+  M._buf_mark_cache[bufnr][ns_id][mark_id] = nil
+end
+
 ---@class ExtMark
 ---@field id integer|? ID of the mark, only set for marks that are actually materialized in the buffer.
 ---@field row integer 0-based row index to place the mark.
@@ -96,6 +132,7 @@ ExtMark.materialize = function(self, bufnr, ns_id)
   if self.id == nil then
     self.id = vim.api.nvim_buf_set_extmark(bufnr, ns_id, self.row, self.col, self.opts:to_tbl())
   end
+  cache_set(bufnr, ns_id, self)
   return self
 end
 
@@ -105,6 +142,7 @@ end
 ---@return boolean
 ExtMark.clear = function(self, bufnr, ns_id)
   if self.id ~= nil then
+    cache_evict(bufnr, ns_id, self.id)
     return vim.api.nvim_buf_del_extmark(bufnr, ns_id, self.id)
   else
     return false
@@ -123,18 +161,16 @@ ExtMark.collect = function(bufnr, ns_id, region_start, region_end)
   local marks = {}
   for data in util.iter(vim.api.nvim_buf_get_extmarks(bufnr, ns_id, region_start, region_end, { details = true })) do
     local mark = ExtMark.new(data[1], data[2], data[3], ExtMarkOpts.from_tbl(data[4]))
+    -- NOTE: since the conceal char we get back from `nvim_buf_get_extmarks()` is mangled, e.g.
+    -- "󰄱" is turned into "1\1\15", we used the cached version.
+    local cached_mark = cache_get(bufnr, ns_id, mark.id)
+    if cached_mark ~= nil then
+      mark.opts.conceal = cached_mark.opts.conceal
+    end
+    cache_set(bufnr, ns_id, mark)
     marks[#marks + 1] = mark
   end
   return marks
-end
-
----Collect all existing (materialized) marks on a line (0-based).
----@param bufnr integer
----@param ns_id integer
----@param lnum integer 0-based line index
----@return ExtMark[]
-ExtMark.collect_from_line = function(bufnr, ns_id, lnum)
-  return ExtMark.collect(bufnr, ns_id, lnum, lnum)
 end
 
 ---Clear all existing (materialized) marks with a line region.
@@ -391,12 +427,19 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
     local lnum = i - 1
     local cur_line_marks = cur_marks_by_line[lnum]
 
+    local function clear_line()
+      ExtMark.clear_line(bufnr, ns_id, lnum)
+      n_marks_cleared = n_marks_cleared + #cur_line_marks
+      for mark in util.iter(cur_line_marks) do
+        cache_evict(bufnr, ns_id, mark.id)
+      end
+    end
+
     -- Check if inside a code block or at code block boundary. If not, update marks.
     if string.match(line, "^%s*```[^`]*$") then
       inside_code_block = not inside_code_block
       -- Remove any existing marks here on the boundary of a code block.
-      ExtMark.clear_line(bufnr, ns_id, lnum)
-      n_marks_cleared = n_marks_cleared + #cur_line_marks
+      clear_line()
     elseif not inside_code_block then
       -- Get all marks that should be materialized.
       -- Some of these might already be materialized, which we'll check below and avoid re-drawing
@@ -420,13 +463,11 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
         end
       else
         -- Remove any existing marks here since there are no new marks.
-        ExtMark.clear_line(bufnr, ns_id, lnum)
-        n_marks_cleared = n_marks_cleared + #cur_line_marks
+        clear_line()
       end
     else
       -- Remove any existing marks here since we're inside a code block.
-      ExtMark.clear_line(bufnr, ns_id, lnum)
-      n_marks_cleared = n_marks_cleared + #cur_line_marks
+      clear_line()
     end
   end
 
