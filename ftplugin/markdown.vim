@@ -1,1 +1,0 @@
-setlocal suffixesadd+=.md

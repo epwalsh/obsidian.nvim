@@ -160,6 +160,8 @@ obsidian.setup = function(opts)
         vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
       end
 
+      vim.cmd [[ setlocal suffixesadd+=.md ]]
+
       if opts.completion.nvim_cmp then
         -- Inject Obsidian as a cmp source when reading a buffer in the vault.
         local cmp = require "cmp"
