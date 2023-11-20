@@ -1,4 +1,4 @@
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local workspace = require "obsidian.workspace"
 
 local config = {}
@@ -100,7 +100,7 @@ config.ClientOpts.normalize = function(opts)
   -- Warn about deprecated fields.
   ---@diagnostic disable-next-line undefined-field
   if opts.overwrite_mappings ~= nil then
-    echo.warn_once "the 'overwrite_mappings' config option is deprecated and no longer has any affect"
+    log.warn_once "the 'overwrite_mappings' config option is deprecated and no longer has any affect"
     ---@diagnostic disable-next-line
     opts.overwrite_mappings = nil
   end

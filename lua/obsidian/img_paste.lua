@@ -1,6 +1,6 @@
 local Path = require "plenary.path"
 local util = require "obsidian.util"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local run_job = require("obsidian.async").run_job
 
 local M = {}
@@ -23,7 +23,7 @@ local function get_clip_check_command()
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
     check_cmd = 'powershell.exe "Get-Clipboard -Format Image"'
   else
-    echo.fail("image saving not implemented for OS '" .. this_os .. "'")
+    log.fail("image saving not implemented for OS '" .. this_os .. "'")
   end
   return check_cmd
 end
@@ -45,7 +45,7 @@ local function clipboard_is_img()
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
     return content ~= nil
   else
-    echo.fail("image saving not implemented for OS '" .. this_os .. "'")
+    log.fail("image saving not implemented for OS '" .. this_os .. "'")
     return false
   end
 end
@@ -82,7 +82,7 @@ local function save_clipboard_image(path)
   elseif this_os == util.OSType.Darwin then
     return run_job("pngpaste", { path })
   else
-    return echo.fail("image saving not implemented for OS '" .. this_os .. "'")
+    return log.fail("image saving not implemented for OS '" .. this_os .. "'")
   end
 end
 
@@ -91,7 +91,7 @@ end
 ---@return Path|? image_path the absolute path to the image file
 M.paste_img = function(fname, default_dir)
   if not clipboard_is_img() then
-    echo.err "There is no image data in the clipboard"
+    log.err "There is no image data in the clipboard"
     return
   else
     -- Get filename to save to.
@@ -100,7 +100,7 @@ M.paste_img = function(fname, default_dir)
     end
 
     if fname == "" then
-      echo.err "Invalid file name"
+      log.err "Invalid file name"
       return
     end
 
@@ -124,7 +124,7 @@ M.paste_img = function(fname, default_dir)
       prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
     })
     if not (confirmation == "y" or confirmation == "yes") then
-      echo.warn "Paste canceled"
+      log.warn "Paste canceled"
       return
     end
 
@@ -134,7 +134,7 @@ M.paste_img = function(fname, default_dir)
     -- Paste image.
     local result = save_clipboard_image(tostring(path))
     if result == false then
-      echo.err "Failed to save image"
+      log.err "Failed to save image"
       return
     end
 

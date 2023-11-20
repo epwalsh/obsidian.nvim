@@ -1,5 +1,5 @@
 local util = require "obsidian.util"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local DefaultTbl = require("obsidian.collections").DefaultTbl
 local throttle = require("obsidian.async").throttle
 
@@ -432,7 +432,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 
   ---@diagnostic disable-next-line: undefined-field
   local runtime = math.floor((vim.loop.hrtime() - start_time) / 1000000)
-  echo.debug("Added %d new marks, cleared %d old marks in %dms", n_marks_added, n_marks_cleared, runtime)
+  log.debug("Added %d new marks, cleared %d old marks in %dms", n_marks_added, n_marks_cleared, runtime)
 end
 
 ---@param ui_opts obsidian.config.UIOpts

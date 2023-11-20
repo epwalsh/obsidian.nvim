@@ -1,7 +1,7 @@
 local Job = require "plenary.job"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = util.iter
 local uv = vim.loop
@@ -108,7 +108,7 @@ Executor._join = function(self, timeout, pause_fn)
     pause_fn(pause_for)
     ---@diagnostic disable-next-line: undefined-field
     if timeout ~= nil and (uv.hrtime() / 1000000) - start_time > timeout then
-      return echo.fail "Timeout error from Executor.join()"
+      return log.fail "Timeout error from Executor.join()"
     end
   end
 end
@@ -313,7 +313,7 @@ local init_job = function(cmd, args, on_stdout, on_exit)
     args = args,
     on_stdout = function(err, line)
       if err ~= nil then
-        return echo.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
+        return log.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
       end
       if on_stdout ~= nil then
         on_stdout(line)
@@ -321,7 +321,7 @@ local init_job = function(cmd, args, on_stdout, on_exit)
     end,
     on_stderr = function(err, line)
       if err then
-        return echo.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
+        return log.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
       elseif line ~= nil then
         stderr_lines[#stderr_lines + 1] = line
       end
@@ -330,7 +330,7 @@ local init_job = function(cmd, args, on_stdout, on_exit)
       --- NOTE: commands like `rg` return a non-zero exit code when there are no matches, which is okay.
       --- So we only log no-zero exit codes as errors when there's also stderr lines.
       if code > 0 and #stderr_lines > 0 then
-        echo.err(
+        log.err(
           "Command '"
             .. cmd
             .. "' with arguments "
@@ -341,7 +341,7 @@ local init_job = function(cmd, args, on_stdout, on_exit)
             .. table.concat(stderr_lines, "\n")
         )
       elseif #stderr_lines > 0 then
-        echo.warn(
+        log.warn(
           "Captured stderr output while running command '"
             .. cmd
             .. " with arguments "

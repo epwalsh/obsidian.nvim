@@ -1,5 +1,5 @@
 local Path = require "plenary.path"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 
 local util = {}
 
@@ -531,7 +531,7 @@ end
 ---@param title string
 util.clone_template = function(template_name, note_path, client, title)
   if client.templates_dir == nil then
-    echo.err "Templates folder is not defined or does not exist"
+    log.err "Templates folder is not defined or does not exist"
     return
   end
   local template_path = Path:new(client.templates_dir) / template_name
@@ -558,7 +558,7 @@ end
 ---@param location table - a tuple with {bufnr, winnr, row, col}
 util.insert_template = function(name, client, location)
   if client.templates_dir == nil then
-    echo.err "Templates folder is not defined or does not exist"
+    log.err "Templates folder is not defined or does not exist"
     return
   end
   local buf, win, row, col = unpack(location)

@@ -1,6 +1,6 @@
 local Path = require "plenary.path"
 local Note = require "obsidian.note"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
 local run_job = require("obsidian.async").run_job
@@ -171,7 +171,7 @@ M.register("ObsidianCheck", {
         end
         log_level = vim.log.levels.ERROR
       end
-      echo.echo(table.concat(messages, "\n"), log_level)
+      log.log(table.concat(messages, "\n"), log_level)
     end)
   end,
 })
@@ -185,7 +185,7 @@ M.register("ObsidianToday", {
     if string.len(arg) > 0 then
       local offset = tonumber(arg)
       if offset == nil then
-        echo.err "Invalid argument, expected an integer offset"
+        log.err "Invalid argument, expected an integer offset"
         return
       else
         offset_days = offset
@@ -250,7 +250,7 @@ M.register("ObsidianOpen", {
       if note ~= nil then
         path = assert(client:vault_relative_path(note.path))
       else
-        echo.err "Could not resolve arguments to a note ID, path, or alias"
+        log.err "Could not resolve arguments to a note ID, path, or alias"
         return
       end
     else
@@ -260,7 +260,7 @@ M.register("ObsidianOpen", {
         if note ~= nil then
           path = assert(client:vault_relative_path(note.path))
         else
-          echo.err "Could not resolve link under cursor to a note ID, path, or alias"
+          log.err "Could not resolve link under cursor to a note ID, path, or alias"
           return
         end
       else
@@ -268,7 +268,7 @@ M.register("ObsidianOpen", {
         local bufname = vim.api.nvim_buf_get_name(0)
         path = client:vault_relative_path(bufname)
         if path == nil then
-          echo.err("Current buffer '" .. bufname .. "' does not appear to be inside the vault")
+          log.err("Current buffer '" .. bufname .. "' does not appear to be inside the vault")
           return
         end
       end
@@ -309,7 +309,7 @@ M.register("ObsidianOpen", {
         args = { "-a", "/Applications/Obsidian.app", "--background", uri }
       end
     else
-      echo.err("open command does not support OS type '" .. this_os .. "'")
+      log.err("open command does not support OS type '" .. this_os .. "'")
       return
     end
 
@@ -329,7 +329,7 @@ M.register("ObsidianBacklinks", {
     if cursor_link ~= nil and ref_type ~= util.RefTypes.NakedUrl then
       note = client:resolve_note(cursor_link)
       if note == nil then
-        echo.err "Could not resolve link under cursor to a note ID, path, or alias"
+        log.err "Could not resolve link under cursor to a note ID, path, or alias"
         return
       end
     end
@@ -338,12 +338,12 @@ M.register("ObsidianBacklinks", {
       return require("obsidian.backlinks").new(client, nil, nil, note)
     end)
     if ok then
-      echo.info(
+      log.info(
         ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(tostring(backlinks.note.id))
       )
       backlinks:view()
     else
-      echo.err "Backlinks command can only be used from a valid note"
+      log.err "Backlinks command can only be used from a valid note"
     end
   end,
 })
@@ -433,7 +433,7 @@ M.register("ObsidianTemplate", {
   opts = { nargs = "?" },
   func = function(client, data)
     if client.templates_dir == nil then
-      echo.err "Templates folder is not defined or does not exist"
+      log.err "Templates folder is not defined or does not exist"
       return
     end
 
@@ -451,7 +451,7 @@ M.register("ObsidianTemplate", {
       if path:is_file() then
         insert_template(data.args)
       else
-        echo.err "Not a valid template file"
+        log.err "Not a valid template file"
       end
       return
     end
@@ -610,13 +610,13 @@ M.register("ObsidianLinkNew", {
     local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
 
     if data.line1 ~= csrow or data.line2 ~= cerow then
-      echo.err "ObsidianLink must be called with visual selection"
+      log.err "ObsidianLink must be called with visual selection"
       return
     end
 
     local lines = vim.fn.getline(csrow, cerow)
     if #lines ~= 1 then
-      echo.err "Only in-line visual selections allowed"
+      log.err "Only in-line visual selections allowed"
       return
     end
 
@@ -649,13 +649,13 @@ M.register("ObsidianLink", {
     local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
 
     if data.line1 ~= csrow or data.line2 ~= cerow then
-      echo.err "ObsidianLink must be called with visual selection"
+      log.err "ObsidianLink must be called with visual selection"
       return
     end
 
     local lines = vim.fn.getline(csrow, cerow)
     if #lines ~= 1 then
-      echo.err "Only in-line visual selections allowed"
+      log.err "Only in-line visual selections allowed"
       return
     end
 
@@ -670,7 +670,7 @@ M.register("ObsidianLink", {
     end
 
     if note == nil then
-      echo.err "Could not resolve argument to a note ID, alias, or path"
+      log.err "Could not resolve argument to a note ID, alias, or path"
       return
     end
 
@@ -699,7 +699,7 @@ M.register("ObsidianFollowLink", {
       if client.opts.follow_url_func ~= nil then
         client.opts.follow_url_func(location)
       else
-        echo.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+        log.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
       end
       return
     end
@@ -724,7 +724,7 @@ M.register("ObsidianFollowLink", {
             note = client:new_note(location, nil, nil, aliases)
             vim.api.nvim_command("e " .. tostring(note.path))
           else
-            echo.warn "Aborting"
+            log.warn "Aborting"
           end
         end)
       elseif note ~= nil then
@@ -735,7 +735,7 @@ M.register("ObsidianFollowLink", {
           vim.api.nvim_command("e " .. tostring(path))
         end)
       else
-        echo.err("Failed to resolve note '" .. location .. "'")
+        log.err("Failed to resolve note '" .. location .. "'")
         return
       end
     end)
@@ -746,7 +746,7 @@ M.register("ObsidianWorkspace", {
   opts = { nargs = "?" },
   func = function(client, data)
     if not data.args or #data.args == 0 then
-      echo.info("Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.dir))
+      log.info("Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.dir))
       return
     end
 
@@ -758,13 +758,13 @@ M.register("ObsidianWorkspace", {
     end
 
     if not workspace then
-      echo.err("Workspace '" .. data.args .. "' does not exist")
+      log.err("Workspace '" .. data.args .. "' does not exist")
       return
     end
 
     client.current_workspace = workspace
 
-    echo.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")")
+    log.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")")
     -- NOTE: workspace.path has already been normalized
     client.dir = Path:new(workspace.path)
   end,
@@ -804,7 +804,7 @@ M.register("ObsidianRename", {
       is_current_buf = false
       cur_note = client:resolve_note(cur_note_id)
       if cur_note == nil then
-        echo.err("Could not resolve note '" .. cur_note_id .. "'")
+        log.err("Could not resolve note '" .. cur_note_id .. "'")
         return
       end
       cur_note_id = tostring(cur_note.id)
@@ -822,7 +822,7 @@ M.register("ObsidianRename", {
     local parts = vim.split(arg, "/", { plain = true })
     local new_note_id = parts[#parts]
     if new_note_id == "" then
-      echo.err "Invalid new note ID"
+      log.err "Invalid new note ID"
       return
     elseif vim.endswith(new_note_id, ".md") then
       new_note_id = string.sub(new_note_id, 1, -4)
@@ -837,7 +837,7 @@ M.register("ObsidianRename", {
     end
 
     if new_note_id == cur_note_id then
-      echo.warn "New note ID is the same, doing nothing"
+      log.warn "New note ID is the same, doing nothing"
       return
     end
 
@@ -868,7 +868,7 @@ M.register("ObsidianRename", {
       })
     end
     if not (confirmation == "y" or confirmation == "yes") then
-      echo.warn "Rename canceled, doing nothing"
+      log.warn "Rename canceled, doing nothing"
       return
     end
 
@@ -893,7 +893,7 @@ M.register("ObsidianRename", {
           quietly(vim.cmd.saveas, new_note_path)
           vim.fn.delete(cur_note_path)
         else
-          echo.info("Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file")
+          log.info("Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file")
         end
       else
         -- For the non-current buffer the best we can do is delete the buffer (we've already saved it above)
@@ -902,7 +902,7 @@ M.register("ObsidianRename", {
           quietly(vim.cmd.bdelete, cur_note_bufnr)
           assert(vim.loop.fs_rename(cur_note_path, new_note_path)) ---@diagnostic disable-line: undefined-field
         else
-          echo.info("Dry run: removing buffer '" .. cur_note_path .. "' and renaming file to '" .. new_note_path .. "'")
+          log.info("Dry run: removing buffer '" .. cur_note_path .. "' and renaming file to '" .. new_note_path .. "'")
         end
       end
     else
@@ -910,7 +910,7 @@ M.register("ObsidianRename", {
       if not dry_run then
         assert(vim.loop.fs_rename(cur_note_path, new_note_path)) ---@diagnostic disable-line: undefined-field
       else
-        echo.info("Dry run: renaming file '" .. cur_note_path .. "' to '" .. new_note_path .. "'")
+        log.info("Dry run: renaming file '" .. cur_note_path .. "' to '" .. new_note_path .. "'")
       end
     end
 
@@ -922,7 +922,7 @@ M.register("ObsidianRename", {
       if not dry_run then
         cur_note:save()
       else
-        echo.info("Dry run: updating frontmatter of '" .. new_note_path .. "'")
+        log.info("Dry run: updating frontmatter of '" .. new_note_path .. "'")
       end
     end
 
@@ -974,7 +974,7 @@ M.register("ObsidianRename", {
           local n
           line, n = util.string_replace(line, ref, replacement)
           if dry_run and n > 0 then
-            echo.info(
+            log.info(
               "Dry run: '"
                 .. path
                 .. "':"
@@ -1025,7 +1025,7 @@ M.register("ObsidianRename", {
     executor:join(2000)
 
     local prefix = dry_run and "Dry run: replaced " or "Replaced "
-    echo.info(prefix .. replacement_count .. " reference(s) across " .. file_count .. " file(s)")
+    log.info(prefix .. replacement_count .. " reference(s) across " .. file_count .. " file(s)")
 
     -- In case the files of any current buffers were changed.
     vim.cmd.checktime()
