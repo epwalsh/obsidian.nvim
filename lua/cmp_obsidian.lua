@@ -1,7 +1,7 @@
 local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = util.iter
 
@@ -73,7 +73,7 @@ source.complete = function(self, request, callback)
                   label = label .. "]]"
                 end
               else
-                echo.err "Invalid completion options"
+                log.err "Invalid completion options"
                 return
               end
             elseif ref_type == completion.RefType.Markdown then

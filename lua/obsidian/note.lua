@@ -2,7 +2,7 @@ local Path = require "plenary.path"
 local with = require("plenary.context_manager").with
 local open = require("plenary.context_manager").open
 local yaml = require "obsidian.yaml"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = util.iter
 
@@ -102,7 +102,7 @@ end
 ---@return obsidian.Note
 Note.from_file = function(path, root)
   if path == nil then
-    echo.fail "note path cannot be nil"
+    log.fail "note path cannot be nil"
     error() -- unreachable
   end
   local n
@@ -122,7 +122,7 @@ end
 Note.from_file_async = function(path, root)
   local File = require("obsidian.async").File
   if path == nil then
-    echo.fail "note path cannot be nil"
+    log.fail "note path cannot be nil"
     error()
   end
   local f = File.open(vim.fs.normalize(tostring(path)))
@@ -241,7 +241,7 @@ Note.from_lines = function(lines, path, root)
           if type(v) == "string" or type(v) == "number" then
             id = v
           else
-            echo.warn("Invalid 'id' in frontmatter for " .. tostring(path))
+            log.warn("Invalid 'id' in frontmatter for " .. tostring(path))
           end
         elseif k == "aliases" then
           if type(v) == "table" then
@@ -249,7 +249,7 @@ Note.from_lines = function(lines, path, root)
               if type(alias) == "string" then
                 table.insert(aliases, alias)
               else
-                echo.warn(
+                log.warn(
                   "Invalid alias value found in frontmatter for "
                     .. path
                     .. ". Expected string, found "
@@ -259,7 +259,7 @@ Note.from_lines = function(lines, path, root)
               end
             end
           else
-            echo.warn("Invalid 'aliases' in frontmatter for " .. tostring(path))
+            log.warn("Invalid 'aliases' in frontmatter for " .. tostring(path))
           end
         elseif k == "tags" then
           if type(v) == "table" then
@@ -267,7 +267,7 @@ Note.from_lines = function(lines, path, root)
               if type(tag) == "string" then
                 table.insert(tags, tag)
               else
-                echo.warn(
+                log.warn(
                   "Invalid tag value found in frontmatter for "
                     .. tostring(path)
                     .. ". Expected string, found "
@@ -279,7 +279,7 @@ Note.from_lines = function(lines, path, root)
           elseif type(v) == "string" then
             tags = vim.split(v, " ")
           else
-            echo.warn("Invalid 'tags' in frontmatter for " .. tostring(path))
+            log.warn("Invalid 'tags' in frontmatter for " .. tostring(path))
           end
         else
           if metadata == nil then
@@ -398,7 +398,7 @@ end
 ---@param frontmatter table|?
 Note.save = function(self, path, insert_frontmatter, frontmatter)
   if self.path == nil then
-    echo.fail "note path cannot be nil"
+    log.fail "note path cannot be nil"
     error()
   end
 
@@ -447,7 +447,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   assert(save_path ~= nil)
   local save_f = io.open(save_path, "w")
   if save_f == nil then
-    echo.fail("failed to write file at " .. save_path)
+    log.fail("failed to write file at " .. save_path)
     error()
   end
   for _, line in pairs(new_lines) do

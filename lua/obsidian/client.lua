@@ -1,7 +1,7 @@
 local Path = require "plenary.path"
 local Note = require "obsidian.note"
 local workspace = require "obsidian.workspace"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = util.iter
 
@@ -192,7 +192,7 @@ Client.search_async = function(self, search, search_opts, callback)
     executor:map(task_fn, next_path, function(results)
       -- Check for errors.
       if first_err ~= nil and first_err_path ~= nil then
-        echo.err(
+        log.err(
           tostring(err_count)
             .. " error(s) occurred during search. First error from note at "
             .. tostring(first_err_path)
@@ -320,7 +320,7 @@ Client.new_note = function(self, title, id, dir, aliases)
     frontmatter = self.opts.note_frontmatter_func(note)
   end
   note:save(nil, not self.opts.disable_frontmatter, frontmatter)
-  echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+  log.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
 
   return note
 end
@@ -388,7 +388,7 @@ Client._daily = function(self, datetime)
       end
       note:save(nil, not self.opts.disable_frontmatter, frontmatter)
     end
-    echo.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+    log.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   end
 
   return note
@@ -512,16 +512,16 @@ Client._run_with_finder_backend = function(self, implementations)
     if implementations[self.opts.finder] ~= nil then
       local ok, res = pcall(implementations[self.opts.finder])
       if not ok then
-        echo.err("error running finder '" .. self.opts.finder .. "':\n" .. tostring(res))
+        log.err("error running finder '" .. self.opts.finder .. "':\n" .. tostring(res))
         return
       elseif res == false then
-        echo.err("unable to load finder '" .. self.opts.finder .. "'. Are you sure it's installed?")
+        log.err("unable to load finder '" .. self.opts.finder .. "'. Are you sure it's installed?")
         return
       else
         return res
       end
     else
-      echo.err("invalid finder '" .. self.opts.finder .. "' in config")
+      log.err("invalid finder '" .. self.opts.finder .. "' in config")
       return
     end
   end
@@ -535,7 +535,7 @@ Client._run_with_finder_backend = function(self, implementations)
     end
   end
 
-  echo.err "No finders available. One of 'telescope.nvim', 'fzf-lua', or 'fzf.vim' is required."
+  log.err "No finders available. One of 'telescope.nvim', 'fzf-lua', or 'fzf.vim' is required."
 end
 
 return Client

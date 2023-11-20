@@ -3,7 +3,7 @@ local Path = require "plenary.path"
 local completion = require "obsidian.completion"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
-local echo = require "obsidian.echo"
+local log = require "obsidian.log"
 
 local source = {}
 
@@ -32,7 +32,7 @@ source.complete = function(self, request, callback)
   elseif client.opts.completion.new_notes_location == "current_dir" then
     dir = vim.fn.expand "%:p:h"
   else
-    echo.err "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
+    log.err "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
     return
   end
 
@@ -55,7 +55,7 @@ source.complete = function(self, request, callback)
       elseif opts.completion.prepend_note_id then
         new_title = new_id .. "|" .. new_title
       else
-        echo.err "Invalid completion options"
+        log.err "Invalid completion options"
         return
       end
       sort_text = "[[" .. search
