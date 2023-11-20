@@ -352,8 +352,16 @@ M.register("ObsidianBacklinks", {
 M.register("ObsidianSearch", {
   opts = { nargs = "?" },
   func = function(client, data)
-    local base_cmd =
-      vim.tbl_flatten { search.SEARCH_CMD, { "--smart-case", "--column", "--line-number", "--no-heading" } }
+    local base_cmd = {
+      "rg",
+      "--no-config",
+      "--fixed-strings",
+      "--type=md",
+      "--smart-case",
+      "--column",
+      "--line-number",
+      "--no-heading",
+    }
 
     client:_run_with_finder_backend {
       ["telescope.nvim"] = function()
@@ -1012,7 +1020,7 @@ M.register("ObsidianRename", {
       end, path)
     end
 
-    search.search_async(client.dir, reference_forms, { "-m=1" }, on_search_match, function(_)
+    search.search_async(client.dir, reference_forms, { "--fixed-strings", "-m=1" }, on_search_match, function(_)
       all_tasks_submitted = true
     end)
 

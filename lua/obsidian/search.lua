@@ -7,38 +7,62 @@ local run_job_async = require("obsidian.async").run_job_async
 
 local M = {}
 
-M.SEARCH_CMD = { "rg", "--no-config", "--fixed-strings", "--type=md" }
+M._BASE_CMD = { "rg", "--no-config", "--type=md" }
+M._SEARCH_CMD = vim.tbl_flatten { M._BASE_CMD, "--json" }
+M._FIND_CMD = vim.tbl_flatten { M._BASE_CMD, "--files" }
 
 ---@param dir string|Path
 ---@param term string|string[]
 ---@param opts string[]|?
----@param quote boolean|?
 ---@return string[]
-M.build_search_cmd = function(dir, term, opts, quote)
-  if quote == nil then
-    quote = true
-  end
-
+M.build_search_cmd = function(dir, term, opts)
   local search_terms
   if type(term) == "string" then
-    search_terms = { "-e", quote and util.quote(term) or term }
+    search_terms = { "-e", term }
   else
     search_terms = {}
     for t in iter(term) do
       search_terms[#search_terms + 1] = "-e"
-      search_terms[#search_terms + 1] = quote and util.quote(t) or t
+      search_terms[#search_terms + 1] = t
     end
   end
 
   local norm_dir = vim.fs.normalize(tostring(dir))
   local cmd = vim.tbl_flatten {
-    M.SEARCH_CMD,
-    "--json",
+    M._SEARCH_CMD,
     opts and opts or {},
     search_terms,
-    quote and util.quote(norm_dir) or norm_dir,
+    norm_dir,
   }
   return cmd
+end
+
+---Build the 'rg' command for finding files.
+---
+---@param path string|?
+---@param sort_by string|?
+---@param sort_reversed boolean|?
+---@param term string|?
+---@return string[]
+M.build_find_cmd = function(path, sort_by, sort_reversed, term, opts)
+  local additional_opts = {}
+  if sort_by ~= nil then
+    local sort = "sortr" -- default sort is reverse
+    if sort_reversed == false then
+      sort = "sort"
+    end
+    additional_opts[#additional_opts + 1] = "--" .. sort
+    additional_opts[#additional_opts + 1] = sort_by
+  end
+  if term ~= nil then
+    term = "*" .. term .. "*.md"
+    additional_opts[#additional_opts + 1] = "-g"
+    additional_opts[#additional_opts + 1] = term
+  end
+  if path ~= nil and path ~= "." then
+    additional_opts[#additional_opts + 1] = tostring(path)
+  end
+  return vim.tbl_flatten { M._FIND_CMD, opts and opts or {}, additional_opts }
 end
 
 ---@class MatchPath
@@ -100,7 +124,7 @@ end
 ---@param on_match function (match: MatchData) -> nil
 ---@param on_exit function|? (exit_code: integer) -> nil
 M.search_async = function(dir, term, opts, on_match, on_exit)
-  local cmd = M.build_search_cmd(dir, term, opts, false)
+  local cmd = M.build_search_cmd(dir, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     local data = vim.json.decode(line)
     if data["type"] == "match" then
@@ -112,40 +136,6 @@ M.search_async = function(dir, term, opts, on_match, on_exit)
       on_exit(code)
     end
   end)
-end
-
-M.FIND_CMD = { "rg", "--no-config", "--files", "--type=md" }
-
----Build the 'rg' command for finding files.
----
----@param path string|?
----@param sort_by string|?
----@param sort_reversed boolean|?
----@param term string|?
----@param quote boolean|?
----@return string[]
-M.build_find_cmd = function(path, sort_by, sort_reversed, term, opts, quote)
-  if quote == nil then
-    quote = true
-  end
-  local additional_opts = {}
-  if sort_by ~= nil then
-    local sort = "sortr" -- default sort is reverse
-    if sort_reversed == false then
-      sort = "sort"
-    end
-    additional_opts[#additional_opts + 1] = "--" .. sort
-    additional_opts[#additional_opts + 1] = sort_by
-  end
-  if term ~= nil then
-    term = "*" .. term .. "*.md"
-    additional_opts[#additional_opts + 1] = "-g"
-    additional_opts[#additional_opts + 1] = quote and util.quote(term) or term
-  end
-  if path ~= nil and path ~= "." then
-    additional_opts[#additional_opts + 1] = tostring(path)
-  end
-  return vim.tbl_flatten { M.FIND_CMD, opts and opts or {}, additional_opts }
 end
 
 ---Find markdown files in a directory matching a given term. Return an iterator
@@ -194,7 +184,7 @@ end
 ---@param on_exit function|? (integer) -> nil
 M.find_async = function(dir, term, sort_by, sort_reversed, opts, on_match, on_exit)
   local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = M.build_find_cmd(norm_dir, sort_by, sort_reversed, term, opts, false)
+  local cmd = M.build_find_cmd(norm_dir, sort_by, sort_reversed, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     on_match(line)
   end, function(code)

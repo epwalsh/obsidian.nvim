@@ -103,7 +103,7 @@ Backlinks._gather = function(self)
   local last_note = nil
   local tx, rx = channel.oneshot()
 
-  search.search_async(self.client.dir, "[[" .. tostring(self.note.id), {}, function(match)
+  search.search_async(self.client.dir, "[[" .. tostring(self.note.id), { "--fixed-strings" }, function(match)
     if is_valid_backlink(match) then
       local path = match.path.text
       local src_note
