@@ -216,6 +216,10 @@ obsidian.setup = function(opts)
     end,
   })
 
+  obsidian.get_client = function()
+    return client
+  end
+
   return client
 end
 

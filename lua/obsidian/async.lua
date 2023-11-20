@@ -417,4 +417,28 @@ M.throttle = function(fn, timeout)
   end
 end
 
+---Run an async function in a non-async context. The async function is expected to take a single
+---callback parameters with the results. This function returns those results.
+---@param async_fn_with_callback function (function,) -> any
+---@param timeout integer|?
+---@return any results
+M.block_on = function(async_fn_with_callback, timeout)
+  local done = false
+  local result
+  timeout = timeout and timeout or 2000
+
+  local function collect_result(res)
+    result = res
+    done = true
+  end
+
+  async_fn_with_callback(collect_result)
+
+  vim.wait(timeout, function()
+    return done
+  end, 20, false)
+
+  return result
+end
+
 return M

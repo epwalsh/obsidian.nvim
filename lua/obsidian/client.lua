@@ -141,23 +141,14 @@ end
 ---
 ---@param search string
 ---@param search_opts string[]|?
+---@param timeout integer|?
 ---@return obsidian.Note[]
-Client.search = function(self, search, search_opts)
-  local done = false
-  local results = {}
+Client.search = function(self, search, search_opts, timeout)
+  local block_on = require("obsidian.async").block_on
 
-  local function collect_results(results_)
-    results = results_
-    done = true
-  end
-
-  self:search_async(search, search_opts, collect_results)
-
-  vim.wait(2000, function()
-    return done
-  end, 20, false)
-
-  return results
+  return block_on(function(cb)
+    return self:search_async(search, search_opts, cb)
+  end, timeout)
 end
 
 ---An async version of `search()` that runs the callback with an array of all matching notes.
@@ -169,6 +160,7 @@ Client.search_async = function(self, search, search_opts, callback)
   local async = require "plenary.async"
   local next_path = self:_search_iter_async(search, search_opts)
   local executor = require("obsidian.async").AsyncExecutor.new()
+
   local dir = tostring(self.dir)
   local err_count = 0
   local first_err
@@ -213,6 +205,103 @@ Client.search_async = function(self, search, search_opts, callback)
       callback(results_)
     end)
   end, function(_) end)
+end
+
+---Find all tags starting with the given term.
+---@param term string
+---@param timeout integer|?
+---@return string[]
+Client.find_tags = function(self, term, timeout)
+  local block_on = require("obsidian.async").block_on
+
+  return block_on(function(cb)
+    return self:find_tags_async(term, cb)
+  end, timeout)
+end
+
+---An async version of 'find_tags()'.
+---@param term string
+---@param callback function(string[]) -> nil
+Client.find_tags_async = function(self, term, callback)
+  local async = require "plenary.async"
+  local channel = require("plenary.async.control").channel
+  local search = require "obsidian.search"
+  local AsyncExecutor = require("obsidian.async").AsyncExecutor
+
+  assert(string.len(term) > 0)
+
+  local tags = {}
+  local err_count = 0
+  local first_err = nil
+  local first_err_path = nil
+
+  local opts = {}
+  if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
+    opts[#opts + 1] = "-g!" .. self.opts.templates.subdir
+  end
+
+  local tx_content, rx_content = channel.oneshot()
+  search.search_async(self.dir, "#" .. term .. search.TAGS_REGEX, opts, function(match)
+    local tag = string.sub(match.submatches[1].match.text, 2)
+    tags[tag] = true
+  end, function(_)
+    tx_content()
+  end)
+
+  local executor = AsyncExecutor.new()
+  local tx_frontmatter, rx_frontmatter = channel.oneshot()
+  search.search_async(
+    self.dir,
+    { "\\s*- " .. term .. search.TAGS_REGEX, "tags: .*" .. term .. search.TAGS_REGEX },
+    vim.tbl_flatten { opts, "-m1" },
+    function(match)
+      executor:submit(function()
+        local path = vim.fs.normalize(match.path.text)
+        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        if ok then
+          if res.tags ~= nil then
+            for tag in util.iter(res.tags) do
+              tag = tostring(tag)
+              if vim.startswith(tag, term) then
+                tags[tag] = true
+              end
+            end
+          end
+        else
+          err_count = err_count + 1
+          if first_err == nil then
+            first_err = res
+            first_err_path = path
+          end
+        end
+      end)
+    end,
+    function(_)
+      tx_frontmatter()
+    end
+  )
+
+  async.run(function()
+    rx_content()
+    rx_frontmatter()
+    executor:join_async(5000)
+
+    local tags_list = {}
+    for tag in util.iter(tags) do
+      tags_list[#tags_list + 1] = tag
+    end
+
+    if first_err ~= nil and first_err_path ~= nil then
+      log.err(
+        tostring(err_count)
+          .. " error(s) occurred during search. First error from note at "
+          .. tostring(first_err_path)
+          .. ":\n"
+          .. tostring(first_err)
+      )
+    end
+    return tags_list
+  end, callback)
 end
 
 ---Create a new Zettel ID

@@ -11,6 +11,8 @@ M._BASE_CMD = { "rg", "--no-config", "--type=md" }
 M._SEARCH_CMD = vim.tbl_flatten { M._BASE_CMD, "--json" }
 M._FIND_CMD = vim.tbl_flatten { M._BASE_CMD, "--files" }
 
+M.TAGS_REGEX = "[A-Za-z0-9_/-]*"
+
 ---@param dir string|Path
 ---@param term string|string[]
 ---@param opts string[]|?
