@@ -4,7 +4,9 @@ local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
 local run_job = require("obsidian.async").run_job
+
 local iter = util.iter
+local RefTypes = search.RefTypes
 
 local M = {
   commands = {},
@@ -255,7 +257,7 @@ M.register("ObsidianOpen", {
       end
     else
       local cursor_link, _, ref_type = util.cursor_link()
-      if cursor_link ~= nil and ref_type ~= util.RefTypes.NakedUrl then
+      if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl then
         local note = client:resolve_note(cursor_link)
         if note ~= nil then
           path = assert(client:vault_relative_path(note.path))
@@ -326,7 +328,7 @@ M.register("ObsidianBacklinks", {
     ---@type obsidian.Note|?
     local note
     local cursor_link, _, ref_type = util.cursor_link()
-    if cursor_link ~= nil and ref_type ~= util.RefTypes.NakedUrl then
+    if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl then
       note = client:resolve_note(cursor_link)
       if note == nil then
         log.err "Could not resolve link under cursor to a note ID, path, or alias"
@@ -721,7 +723,7 @@ M.register("ObsidianFollowLink", {
     -- Search for matching notes.
     -- TODO: handle case where there are multiple matches by prompting user to choose.
     client:resolve_note_async(location, function(note)
-      if note == nil and (link_type == util.RefTypes.Wiki or link_type == util.RefTypes.WikiWithAlias) then
+      if note == nil and (link_type == RefTypes.Wiki or link_type == RefTypes.WikiWithAlias) then
         vim.schedule(function()
           local confirmation = string.lower(vim.fn.input {
             prompt = "Create new note '" .. location .. "'? [Y/n] ",

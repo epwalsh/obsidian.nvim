@@ -3,8 +3,7 @@ local channel = require("plenary.async.control").channel
 local Path = require "plenary.path"
 local Note = require "obsidian.note"
 local search = require "obsidian.search"
-local util = require "obsidian.util"
-local iter = util.iter
+local iter = require("obsidian.util").iter
 
 ---Parse path and line number from a line in an ObsidianBacklinks buffer.
 ---@param line string
@@ -201,7 +200,7 @@ Backlinks._view = function(self, backlink_matches)
 
     -- Line for backlink within note.
     local display_path = assert(self.client:vault_relative_path(match.note.path))
-    local text, ref_indices, ref_strs = util.find_and_replace_refs(match.text)
+    local text, ref_indices, ref_strs = search.find_and_replace_refs(match.text)
     local text_start = 4 + display_path:len() + tostring(match.line):len()
     table.insert(view_lines, ("  %s:%s:%s"):format(display_path, match.line, text))
 

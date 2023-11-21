@@ -1,8 +1,14 @@
 local Path = require "plenary.path"
+local async = require "plenary.async"
+local channel = require("plenary.async.control").channel
 local Note = require "obsidian.note"
 local workspace = require "obsidian.workspace"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
+local search = require "obsidian.search"
+local AsyncExecutor = require("obsidian.async").AsyncExecutor
+local block_on = require("obsidian.async").block_on
+
 local iter = util.iter
 
 ---@class obsidian.Client
@@ -80,14 +86,11 @@ Client.vault_relative_path = function(self, path)
   end
 end
 
----@param search string
+---@param term string
 ---@param search_opts string[]|?
 ---@param find_opts string[]|?
 ---@return function
-Client._search_iter_async = function(self, search, search_opts, find_opts)
-  local channel = require("plenary.async.control").channel
-  local search_async = require("obsidian.search").search_async
-  local find_async = require("obsidian.search").find_async
+Client._search_iter_async = function(self, term, search_opts, find_opts)
   local tx, rx = channel.mpsc()
   local found = {}
 
@@ -118,8 +121,14 @@ Client._search_iter_async = function(self, search, search_opts, find_opts)
     search_opts[#search_opts + 1] = "-g!" .. self.opts.templates.subdir
     find_opts[#find_opts + 1] = "-g!" .. self.opts.templates.subdir
   end
-  search_async(self.dir, search, vim.tbl_flatten { search_opts, "--fixed-strings", "-m=1" }, on_search_match, on_exit)
-  find_async(self.dir, search, self.opts.sort_by, self.opts.sort_reversed, find_opts, on_find_match, on_exit)
+  search.search_async(
+    self.dir,
+    term,
+    vim.tbl_flatten { search_opts, "--fixed-strings", "-m=1" },
+    on_search_match,
+    on_exit
+  )
+  search.find_async(self.dir, term, self.opts.sort_by, self.opts.sort_reversed, find_opts, on_find_match, on_exit)
 
   return function()
     while true do
@@ -139,27 +148,24 @@ end
 
 ---Search for notes.
 ---
----@param search string
+---@param term string
 ---@param search_opts string[]|?
 ---@param timeout integer|?
 ---@return obsidian.Note[]
-Client.search = function(self, search, search_opts, timeout)
-  local block_on = require("obsidian.async").block_on
-
+Client.search = function(self, term, search_opts, timeout)
   return block_on(function(cb)
-    return self:search_async(search, search_opts, cb)
+    return self:search_async(term, search_opts, cb)
   end, timeout)
 end
 
 ---An async version of `search()` that runs the callback with an array of all matching notes.
 ---
----@param search string
+---@param term string
 ---@param search_opts string[]|?
 ---@param callback function (obsidian.Note[]) -> nil
-Client.search_async = function(self, search, search_opts, callback)
-  local async = require "plenary.async"
-  local next_path = self:_search_iter_async(search, search_opts)
-  local executor = require("obsidian.async").AsyncExecutor.new()
+Client.search_async = function(self, term, search_opts, callback)
+  local next_path = self:_search_iter_async(term, search_opts)
+  local executor = AsyncExecutor.new()
 
   local dir = tostring(self.dir)
   local err_count = 0
@@ -212,8 +218,6 @@ end
 ---@param timeout integer|?
 ---@return string[]
 Client.find_tags = function(self, term, timeout)
-  local block_on = require("obsidian.async").block_on
-
   return block_on(function(cb)
     return self:find_tags_async(term, cb)
   end, timeout)
@@ -223,11 +227,6 @@ end
 ---@param term string
 ---@param callback function(string[]) -> nil
 Client.find_tags_async = function(self, term, callback)
-  local async = require "plenary.async"
-  local channel = require("plenary.async.control").channel
-  local search = require "obsidian.search"
-  local AsyncExecutor = require("obsidian.async").AsyncExecutor
-
   assert(string.len(term) > 0)
 
   local tags = {}
@@ -241,7 +240,7 @@ Client.find_tags_async = function(self, term, callback)
   end
 
   local tx_content, rx_content = channel.oneshot()
-  search.search_async(self.dir, "#" .. term .. search.TAGS_REGEX, opts, function(match)
+  search.search_async(self.dir, "#" .. term .. search.Patterns.TagChars, opts, function(match)
     local tag = string.sub(match.submatches[1].match.text, 2)
     tags[tag] = true
   end, function(_)
@@ -252,7 +251,7 @@ Client.find_tags_async = function(self, term, callback)
   local tx_frontmatter, rx_frontmatter = channel.oneshot()
   search.search_async(
     self.dir,
-    { "\\s*- " .. term .. search.TAGS_REGEX, "tags: .*" .. term .. search.TAGS_REGEX },
+    { "\\s*- " .. term .. search.Patterns.TagChars, "tags: .*" .. term .. search.Patterns.TagChars },
     vim.tbl_flatten { opts, "-m1" },
     function(match)
       executor:submit(function()
@@ -537,8 +536,6 @@ end
 ---@param callback function(obsidian.Note|?)
 ---@return obsidian.Note|?
 Client.resolve_note_async = function(self, query, callback)
-  local async = require "plenary.async"
-
   -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
   if count > 0 then

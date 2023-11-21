@@ -4,6 +4,8 @@ local open = require("plenary.context_manager").open
 local yaml = require "obsidian.yaml"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
+local search = require "obsidian.search"
+
 local iter = util.iter
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
@@ -223,7 +225,7 @@ Note.from_lines = function(lines, path, root)
 
   if title ~= nil then
     -- Remove references and links from title
-    title = util.replace_refs(title)
+    title = search.replace_refs(title)
   end
 
   -- Parse the frontmatter YAML.

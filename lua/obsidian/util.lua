@@ -127,16 +127,6 @@ util.urlencode = function(str)
   return url
 end
 
----@param s string
----@return boolean
-util.is_url = function(s)
-  if string.match(util.strip_whitespace(s), util.ref_patterns[util.RefTypes.NakedUrl]) then
-    return true
-  else
-    return false
-  end
-end
-
 ---Create a new unique Zettel ID.
 ---
 ---@return string
@@ -167,164 +157,6 @@ util.match_case = function(prefix, key)
     end
   end
   return table.concat(out_chars, "")
-end
-
----Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
----
----@param s string
----@return string
-util.replace_refs = function(s)
-  local out, _ = string.gsub(s, "%[%[[^%|%]]+%|([^%]]+)%]%]", "%1")
-  out, _ = out:gsub("%[%[([^%]]+)%]%]", "%1")
-  out, _ = out:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
-  return out
-end
-
----@enum obsidian.RefTypes
-util.RefTypes = {
-  WikiWithAlias = "wiki_with_alias",
-  Wiki = "wiki",
-  Markdown = "markdown",
-  NakedUrl = "naked_url",
-  Tag = "tag",
-}
-
-util.ref_patterns = {
-  [util.RefTypes.WikiWithAlias] = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
-  [util.RefTypes.Wiki] = "%[%[[^][%|]+%]%]", -- [[xxx]]
-  [util.RefTypes.Markdown] = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
-  [util.RefTypes.NakedUrl] = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
-  [util.RefTypes.Tag] = "#[a-zA-Z0-9_/-]+", -- #tag
-}
-
----@param s string
----@param pattern string
----@param init integer|?
----@param plain boolean|?
-util.gfind = function(s, pattern, init, plain)
-  init = init and init or 1
-
-  return function()
-    if init < #s then
-      local m_start, m_end = string.find(s, pattern, init, plain)
-      if m_start ~= nil and m_end ~= nil then
-        init = m_end + 1
-        return m_start, m_end
-      end
-    end
-    return nil
-  end
-end
-
----@class FindRefsOpts
----@field include_naked_urls boolean|?
----@field include_tags boolean|?
-
----Find refs and URLs.
----@param s string the string to search
----@param opts FindRefsOpts|?
----@return table
-util.find_refs = function(s, opts)
-  opts = opts and opts or {}
-
-  -- First find all inline code blocks so we can skip reference matches inside of those.
-  local inline_code_blocks = {}
-  for m_start, m_end in util.gfind(s, "`[^`]*`") do
-    inline_code_blocks[#inline_code_blocks + 1] = { m_start, m_end }
-  end
-
-  local patterns = { util.RefTypes.WikiWithAlias, util.RefTypes.Wiki, util.RefTypes.Markdown }
-  if opts.include_naked_urls then
-    patterns[#patterns + 1] = util.RefTypes.NakedUrl
-  end
-  if opts.include_tags then
-    patterns[#patterns + 1] = util.RefTypes.Tag
-  end
-
-  local matches = {}
-  for pattern_name in util.iter(patterns) do
-    local pattern = util.ref_patterns[pattern_name]
-    local search_start = 1
-    while search_start < #s do
-      local m_start, m_end = string.find(s, pattern, search_start)
-      if m_start ~= nil and m_end ~= nil then
-        -- Check if we're inside a code block.
-        local inside_code_block = false
-        for code_block_boundary in util.iter(inline_code_blocks) do
-          if code_block_boundary[1] < m_start and m_end < code_block_boundary[2] then
-            inside_code_block = true
-            break
-          end
-        end
-
-        if not inside_code_block then
-          -- Check if this match overlaps with any others (e.g. a naked URL match would be contained in
-          -- a markdown URL).
-          local overlap = false
-          for match in util.iter(matches) do
-            if (match[1] <= m_start and m_start <= match[2]) or (match[1] <= m_end and m_end <= match[2]) then
-              overlap = true
-              break
-            end
-          end
-
-          if not overlap then
-            matches[#matches + 1] = { m_start, m_end, pattern_name }
-          end
-        end
-
-        search_start = m_end
-      else
-        break
-      end
-    end
-  end
-
-  -- Sort results by position.
-  table.sort(matches, function(a, b)
-    return a[1] < b[1]
-  end)
-
-  return matches
-end
-
----Find all refs in a string and replace with their titles.
----
----@param s string
---
----@return string
----@return table
----@return string[]
-util.find_and_replace_refs = function(s)
-  local pieces = {}
-  local refs = {}
-  local is_ref = {}
-  local matches = util.find_refs(s)
-  local last_end = 1
-  for _, match in pairs(matches) do
-    local m_start, m_end = unpack(match)
-    if last_end < m_start then
-      table.insert(pieces, string.sub(s, last_end, m_start - 1))
-      table.insert(is_ref, false)
-    end
-    local ref_str = string.sub(s, m_start, m_end)
-    table.insert(pieces, util.replace_refs(ref_str))
-    table.insert(refs, ref_str)
-    table.insert(is_ref, true)
-    last_end = m_end + 1
-  end
-
-  local indices = {}
-  local length = 0
-  for i, piece in ipairs(pieces) do
-    local i_end = length + string.len(piece)
-    if is_ref[i] then
-      table.insert(indices, { length + 1, i_end })
-    end
-    length = i_end
-  end
-
-  return table.concat(pieces, ""), indices, refs
 end
 
 ---Check if an object is an array-like table.
@@ -374,27 +206,6 @@ util.table_length = function(x)
   return n
 end
 
----Determines if cursor is currently inside markdown link.
----
----@param line string|nil - line to check or current line if nil
----@param col  integer|nil - column to check or current column if nil (1-indexed)
----@param include_naked_urls boolean|?
----@return integer|nil, integer|nil, obsidian.RefTypes|? - start and end column of link (1-indexed)
-util.cursor_on_markdown_link = function(line, col, include_naked_urls)
-  local current_line = line and line or vim.api.nvim_get_current_line()
-  local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
-  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
-
-  for match in util.iter(util.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
-    local open, close, m_type = unpack(match)
-    if open <= cur_col and cur_col <= close then
-      return open, close, m_type
-    end
-  end
-
-  return nil
-end
-
 util.toggle_checkbox = function()
   local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
   local line = vim.api.nvim_get_current_line()
@@ -410,48 +221,6 @@ util.toggle_checkbox = function()
   end
   -- 0-indexed
   vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
-end
-
----Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
----
----@param line string|?
----@param col integer|?
----@param include_naked_urls boolean|?
----@returns string|?, string|?, obsidian.RefTypes|?
-util.cursor_link = function(line, col, include_naked_urls)
-  local current_line = line and line or vim.api.nvim_get_current_line()
-
-  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
-  if open == nil or close == nil then
-    return
-  end
-
-  local link = current_line:sub(open, close)
-  local link_location, link_name
-  if link_type == util.RefTypes.Markdown then
-    link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")
-    link_name = link:gsub("^%[(.-)%]%((.*)%)$", "%1")
-  elseif link_type == util.RefTypes.NakedUrl then
-    link_location = link
-    link_name = link
-  elseif link_type == util.RefTypes.WikiWithAlias then
-    link = util.unescape_single_backslash(link)
-    -- remove boundary brackets, e.g. '[[XXX|YYY]]' -> 'XXX|YYY'
-    link = link:sub(3, #link - 2)
-    -- split on the "|"
-    local split_idx = link:find "|"
-    link_location = link:sub(1, split_idx - 1)
-    link_name = link:sub(split_idx + 1)
-  elseif link_type == util.RefTypes.Wiki then
-    -- remove boundary brackets, e.g. '[[YYY]]' -> 'YYY'
-    link = link:sub(3, #link - 2)
-    link_location = link
-    link_name = link
-  else
-    error("not implemented for " .. link_type)
-  end
-
-  return link_location, link_name, link_type
 end
 
 ---Determines if the given date is a working day (not weekend)
@@ -594,6 +363,86 @@ end
 
 util.escape_magic_characters = function(text)
   return text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+end
+
+---Check if a string is a valid URL.
+---@param s string
+---@return boolean
+util.is_url = function(s)
+  local search = require "obsidian.search"
+
+  if string.match(util.strip_whitespace(s), search.Patterns[search.RefTypes.NakedUrl]) then
+    return true
+  else
+    return false
+  end
+end
+
+---Determines if cursor is currently inside markdown link.
+---
+---@param line string|nil - line to check or current line if nil
+---@param col  integer|nil - column to check or current column if nil (1-indexed)
+---@param include_naked_urls boolean|?
+---@return integer|nil, integer|nil, obsidian.search.RefTypes|? - start and end column of link (1-indexed)
+util.cursor_on_markdown_link = function(line, col, include_naked_urls)
+  local search = require "obsidian.search"
+
+  local current_line = line and line or vim.api.nvim_get_current_line()
+  local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
+  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
+
+  for match in util.iter(search.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
+    local open, close, m_type = unpack(match)
+    if open <= cur_col and cur_col <= close then
+      return open, close, m_type
+    end
+  end
+
+  return nil
+end
+
+---Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
+---
+---@param line string|?
+---@param col integer|?
+---@param include_naked_urls boolean|?
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.cursor_link = function(line, col, include_naked_urls)
+  local search = require "obsidian.search"
+
+  local current_line = line and line or vim.api.nvim_get_current_line()
+
+  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
+  if open == nil or close == nil then
+    return
+  end
+
+  local link = current_line:sub(open, close)
+  local link_location, link_name
+  if link_type == search.RefTypes.Markdown then
+    link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")
+    link_name = link:gsub("^%[(.-)%]%((.*)%)$", "%1")
+  elseif link_type == search.RefTypes.NakedUrl then
+    link_location = link
+    link_name = link
+  elseif link_type == search.RefTypes.WikiWithAlias then
+    link = util.unescape_single_backslash(link)
+    -- remove boundary brackets, e.g. '[[XXX|YYY]]' -> 'XXX|YYY'
+    link = link:sub(3, #link - 2)
+    -- split on the "|"
+    local split_idx = link:find "|"
+    link_location = link:sub(1, split_idx - 1)
+    link_name = link:sub(split_idx + 1)
+  elseif link_type == search.RefTypes.Wiki then
+    -- remove boundary brackets, e.g. '[[YYY]]' -> 'YYY'
+    link = link:sub(3, #link - 2)
+    link_location = link
+    link_name = link
+  else
+    error("not implemented for " .. link_type)
+  end
+
+  return link_location, link_name, link_type
 end
 
 util.gf_passthrough = function()

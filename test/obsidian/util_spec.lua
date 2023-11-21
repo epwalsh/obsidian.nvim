@@ -1,5 +1,4 @@
 local util = require "obsidian.util"
-local RefTypes = util.RefTypes
 
 describe("util.get_open_strategy()", function()
   it("should return the correct open strategy", function()
@@ -19,45 +18,6 @@ describe("util.match_case()", function()
   it("should match case of key to prefix", function()
     assert.equals(util.match_case("Foo", "foo"), "Foo")
     assert.equals(util.match_case("In-cont", "in-context learning"), "In-context learning")
-  end)
-end)
-
-describe("util.replace_refs()", function()
-  it("should remove refs and links from a string", function()
-    assert.equals(util.replace_refs "Hi there [[foo|Bar]]", "Hi there Bar")
-    assert.equals(util.replace_refs "Hi there [[Bar]]", "Hi there Bar")
-    assert.equals(util.replace_refs "Hi there [Bar](foo)", "Hi there Bar")
-    assert.equals(util.replace_refs "Hi there [[foo|Bar]] [[Baz]]", "Hi there Bar Baz")
-  end)
-end)
-
-describe("util.find_refs()", function()
-  it("should find positions of all refs", function()
-    local s = "[[Foo]] [[foo|Bar]]"
-    assert.are_same({ { 1, 7, RefTypes.Wiki }, { 9, 19, RefTypes.WikiWithAlias } }, util.find_refs(s))
-  end)
-
-  it("should ignore refs within an inline code block", function()
-    local s = "`[[Foo]]` [[foo|Bar]]"
-    assert.are_same({ { 11, 21, RefTypes.WikiWithAlias } }, util.find_refs(s))
-
-    s = "[nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links or "
-      .. "just `[` for markdown links), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep)"
-    assert.are_same({ { 1, 47, RefTypes.Markdown }, { 134, 183, RefTypes.Markdown } }, util.find_refs(s))
-  end)
-end)
-
-describe("util.find_and_replace_refs()", function()
-  it("should find and replace all refs", function()
-    local s, indices = util.find_and_replace_refs "[[Foo]] [[foo|Bar]]"
-    local expected_s = "Foo Bar"
-    local expected_indices = { { 1, 3 }, { 5, 7 } }
-    assert.equals(s, expected_s)
-    assert.equals(#indices, #expected_indices)
-    for i = 1, #indices do
-      assert.equals(indices[i][1], expected_indices[i][1])
-      assert.equals(indices[i][2], expected_indices[i][2])
-    end
   end)
 end)
 

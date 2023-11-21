@@ -11,7 +11,169 @@ M._BASE_CMD = { "rg", "--no-config", "--type=md" }
 M._SEARCH_CMD = vim.tbl_flatten { M._BASE_CMD, "--json" }
 M._FIND_CMD = vim.tbl_flatten { M._BASE_CMD, "--files" }
 
-M.TAGS_REGEX = "[A-Za-z0-9_/-]*"
+---@enum obsidian.search.RefTypes
+M.RefTypes = {
+  WikiWithAlias = "WikiWithAlias",
+  Wiki = "Wiki",
+  Markdown = "Markdown",
+  NakedUrl = "NakedUrl",
+  Tag = "Tag",
+}
+
+---@enum obsidian.search.Patterns
+M.Patterns = {
+  -- Miscellaneous
+  TagChars = "[A-Za-z0-9_/-]*",
+
+  -- References
+  WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
+  Wiki = "%[%[[^][%|]+%]%]", -- [[xxx]]
+  Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
+  NakedUrl = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
+  Tag = "#[a-zA-Z0-9_/-]+", -- #tag
+}
+
+---Iterate over all matches of 'pattern' in 's'. 'gfind' is to 'find' and 'gsub' is to 'sub'.
+---@param s string
+---@param pattern string
+---@param init integer|?
+---@param plain boolean|?
+M.gfind = function(s, pattern, init, plain)
+  init = init and init or 1
+
+  return function()
+    if init < #s then
+      local m_start, m_end = string.find(s, pattern, init, plain)
+      if m_start ~= nil and m_end ~= nil then
+        init = m_end + 1
+        return m_start, m_end
+      end
+    end
+    return nil
+  end
+end
+
+---@class obsidian.search.FindRefsOpts
+---@field include_naked_urls boolean|?
+---@field include_tags boolean|?
+
+---Find refs and URLs.
+---@param s string the string to search
+---@param opts obsidian.search.FindRefsOpts|?
+---@return table
+M.find_refs = function(s, opts)
+  opts = opts and opts or {}
+
+  -- First find all inline code blocks so we can skip reference matches inside of those.
+  local inline_code_blocks = {}
+  for m_start, m_end in M.gfind(s, "`[^`]*`") do
+    inline_code_blocks[#inline_code_blocks + 1] = { m_start, m_end }
+  end
+
+  local pattern_names = { M.RefTypes.WikiWithAlias, M.RefTypes.Wiki, M.RefTypes.Markdown }
+  if opts.include_naked_urls then
+    pattern_names[#pattern_names + 1] = M.RefTypes.NakedUrl
+  end
+  if opts.include_tags then
+    pattern_names[#pattern_names + 1] = M.RefTypes.Tag
+  end
+
+  local matches = {}
+  for pattern_name in iter(pattern_names) do
+    local pattern = M.Patterns[pattern_name]
+    local search_start = 1
+    while search_start < #s do
+      local m_start, m_end = string.find(s, pattern, search_start)
+      if m_start ~= nil and m_end ~= nil then
+        -- Check if we're inside a code block.
+        local inside_code_block = false
+        for code_block_boundary in iter(inline_code_blocks) do
+          if code_block_boundary[1] < m_start and m_end < code_block_boundary[2] then
+            inside_code_block = true
+            break
+          end
+        end
+
+        if not inside_code_block then
+          -- Check if this match overlaps with any others (e.g. a naked URL match would be contained in
+          -- a markdown URL).
+          local overlap = false
+          for match in iter(matches) do
+            if (match[1] <= m_start and m_start <= match[2]) or (match[1] <= m_end and m_end <= match[2]) then
+              overlap = true
+              break
+            end
+          end
+
+          if not overlap then
+            matches[#matches + 1] = { m_start, m_end, pattern_name }
+          end
+        end
+
+        search_start = m_end
+      else
+        break
+      end
+    end
+  end
+
+  -- Sort results by position.
+  table.sort(matches, function(a, b)
+    return a[1] < b[1]
+  end)
+
+  return matches
+end
+
+---Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
+---
+---@param s string
+---@return string
+M.replace_refs = function(s)
+  local out, _ = string.gsub(s, "%[%[[^%|%]]+%|([^%]]+)%]%]", "%1")
+  out, _ = out:gsub("%[%[([^%]]+)%]%]", "%1")
+  out, _ = out:gsub("%[([^%]]+)%]%([^%)]+%)", "%1")
+  return out
+end
+
+---Find all refs in a string and replace with their titles.
+---
+---@param s string
+--
+---@return string
+---@return table
+---@return string[]
+M.find_and_replace_refs = function(s)
+  local pieces = {}
+  local refs = {}
+  local is_ref = {}
+  local matches = M.find_refs(s)
+  local last_end = 1
+  for _, match in pairs(matches) do
+    local m_start, m_end = unpack(match)
+    if last_end < m_start then
+      table.insert(pieces, string.sub(s, last_end, m_start - 1))
+      table.insert(is_ref, false)
+    end
+    local ref_str = string.sub(s, m_start, m_end)
+    table.insert(pieces, M.replace_refs(ref_str))
+    table.insert(refs, ref_str)
+    table.insert(is_ref, true)
+    last_end = m_end + 1
+  end
+
+  local indices = {}
+  local length = 0
+  for i, piece in ipairs(pieces) do
+    local i_end = length + string.len(piece)
+    if is_ref[i] then
+      table.insert(indices, { length + 1, i_end })
+    end
+    length = i_end
+  end
+
+  return table.concat(pieces, ""), indices, refs
+end
 
 ---@param dir string|Path
 ---@param term string|string[]
