@@ -441,6 +441,8 @@ end
 ---@param datetime integer
 ---@return obsidian.Note
 Client._daily = function(self, datetime)
+  local templates = require "obsidian.templates"
+
   local id
   if self.opts.daily_notes.date_format ~= nil then
     id = tostring(os.date(self.opts.daily_notes.date_format, datetime))
@@ -462,7 +464,7 @@ Client._daily = function(self, datetime)
   if not note:exists() then
     local write_frontmatter = true
     if self.opts.daily_notes.template then
-      util.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
+      templates.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
       note = Note.from_file(path, self.dir)
       if note.has_frontmatter then
         write_frontmatter = false

@@ -12,6 +12,7 @@ local module_lookups = {
   mapping = "obsidian.mapping",
   Note = "obsidian.note",
   search = "obsidian.search",
+  templates = "obsidian.templates",
   ui = "obsidian.ui",
   util = "obsidian.util",
   VERSION = "obsidian.version",

@@ -3,6 +3,7 @@ local Note = require "obsidian.note"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
+local templates = require "obsidian.templates"
 local run_job = require("obsidian.async").run_job
 local iter = require("obsidian.itertools").iter
 local enumerate = require("obsidian.itertools").enumerate
@@ -454,7 +455,7 @@ M.register("ObsidianTemplate", {
     local insert_location = util.get_active_window_cursor_location()
 
     local function insert_template(name)
-      util.insert_template(name, client, insert_location)
+      templates.insert_template(name, client, insert_location)
     end
 
     if string.len(data.args) > 0 then

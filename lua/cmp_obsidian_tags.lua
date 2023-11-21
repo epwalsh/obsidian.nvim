@@ -1,5 +1,5 @@
 local obsidian = require "obsidian"
-local completion = require("obsidian.completion").tags
+local completion = require "obsidian.completion.tags"
 local config = require "obsidian.config"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter

@@ -1,4 +1,4 @@
-local completion = require("obsidian.completion").refs
+local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
 local log = require "obsidian.log"
