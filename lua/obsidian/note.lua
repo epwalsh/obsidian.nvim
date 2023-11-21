@@ -334,7 +334,7 @@ end
 ---@return table
 Note.frontmatter = function(self)
   local out = { id = self.id, aliases = self.aliases, tags = self.tags }
-  if self.metadata ~= nil and util.table_length(self.metadata) > 0 then
+  if self.metadata ~= nil and not vim.tbl_isempty(self.metadata) then
     for k, v in pairs(self.metadata) do
       out[k] = v
     end

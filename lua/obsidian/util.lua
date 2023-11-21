@@ -54,6 +54,10 @@ util.get_open_strategy = function(opt)
   return strategy
 end
 
+-------------------
+-- Table methods --
+-------------------
+
 ---Check if a list table contains a value.
 ---
 ---@param table any[]
@@ -181,14 +185,6 @@ end
 util.strip = function(s)
   local out = string.gsub(s, "^%s+", "")
   return out
-end
-
-util.table_length = function(x)
-  local n = 0
-  for _ in pairs(x) do
-    n = n + 1
-  end
-  return n
 end
 
 util.toggle_checkbox = function()

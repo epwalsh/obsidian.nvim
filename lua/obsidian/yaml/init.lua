@@ -94,7 +94,7 @@ dumps = function(x, indent, order)
         local v = x[k]
         if type(v) == "string" or type(v) == "boolean" or type(v) == "number" then
           table.insert(out, indent_str .. tostring(k) .. ": " .. dumps(v, 0)[1])
-        elseif type(v) == "table" and util.table_length(v) == 0 then
+        elseif type(v) == "table" and vim.tbl_isempty(v) then
           table.insert(out, indent_str .. tostring(k) .. ": []")
         else
           local item_lines = dumps(v, indent + 2)
