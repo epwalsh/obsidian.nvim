@@ -509,7 +509,7 @@ M.register("ObsidianTemplate", {
 
         local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
         fzf_lua.files {
-          cmd = util.table_params_to_str(cmd),
+          cmd = table.concat(cmd, " "),
           cwd = tostring(client.templates_dir),
           file_icons = false,
           actions = {
@@ -536,7 +536,7 @@ M.register("ObsidianTemplate", {
 
         local cmd =
           search.build_find_cmd(tostring(client.templates_dir), client.opts.sort_by, client.opts.sort_reversed)
-        local fzf_options = { source = util.table_params_to_str(cmd), sink = "ApplyTemplate" }
+        local fzf_options = { source = table.concat(cmd, " "), sink = "ApplyTemplate" }
 
         local ok, res = pcall(function()
           vim.api.nvim_call_function("fzf#run", {
@@ -586,13 +586,13 @@ M.register("ObsidianQuickSwitch", {
         end
 
         local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
-        fzf_lua.files { cmd = util.table_params_to_str(cmd), cwd = tostring(client.dir) }
+        fzf_lua.files { cmd = table.concat(cmd, " "), cwd = tostring(client.dir) }
 
         return true
       end,
       ["fzf.vim"] = function()
         local cmd = search.build_find_cmd(dir, client.opts.sort_by, client.opts.sort_reversed)
-        local fzf_options = { source = util.table_params_to_str(cmd), sink = "e" }
+        local fzf_options = { source = table.concat(cmd, " "), sink = "e" }
 
         local ok, res = pcall(function()
           vim.api.nvim_call_function("fzf#run", {

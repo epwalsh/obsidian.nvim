@@ -101,15 +101,15 @@ Parser.parse = function(self, str)
         if type(root_value) == "table" then
           parent = root_value
         end
-      elseif util.is_array(parent) and value_type == YamlType.ArrayItem then
+      elseif util.tbl_is_array(parent) and value_type == YamlType.ArrayItem then
         -- Add value to parent array.
         parent[#parent + 1] = value
-      elseif util.is_mapping(parent) and value_type == YamlType.Mapping then
+      elseif util.tbl_is_mapping(parent) and value_type == YamlType.Mapping then
         assert(parent ~= nil) -- for type checking
         -- Add value to parent mapping.
         for key, item in pairs(value) do
           -- Check for duplicate keys.
-          if util.mapping_has_key(parent, key) then
+          if util.tbl_contains_key(parent, key) then
             error(self:_error_msg("duplicate key '" .. key .. "' found in table", i, line.content))
           else
             parent[key] = item
@@ -364,7 +364,7 @@ Parser._parse_mapping = function(self, i, lines)
       if value_type == YamlType.Mapping then
         for key, item in pairs(value) do
           -- Check for duplicate keys.
-          if util.mapping_has_key(out, key) then
+          if util.tbl_contains_key(out, key) then
             error(self:_error_msg("duplicate key '" .. key .. "' found in table", i))
           else
             out[key] = item
@@ -498,7 +498,7 @@ Parser._parse_inline_mapping = function(self, i, text)
       return false, self:_error_msg("invalid inline mapping", i, text), nil
     end
     local value = self:_parse_inline_value(i, value_str)
-    if not util.mapping_has_key(out, key) then
+    if not util.tbl_contains_key(out, key) then
       out[key] = value
     else
       return false, self:_error_msg("duplicate key '" .. key .. "' found in inline mapping", i, text), nil

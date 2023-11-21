@@ -396,7 +396,7 @@ Client.new_note = function(self, title, id, dir, aliases)
   ---@type string[]
   ---@diagnostic disable-next-line: assign-type-mismatch
   aliases = aliases == nil and {} or aliases
-  if new_title ~= nil and new_title:len() > 0 and not util.contains(aliases, new_title) then
+  if new_title ~= nil and new_title:len() > 0 and not util.tbl_contains(aliases, new_title) then
     aliases[#aliases + 1] = new_title
   end
 
@@ -570,7 +570,7 @@ Client.resolve_note_async = function(self, query, callback)
     local query_lwr = string.lower(query)
     local maybe_matches = {}
     for note in iter(results) do
-      if query == note.id or query == note:display_name() or util.contains(note.aliases, query) then
+      if query == note.id or query == note:display_name() or util.tbl_contains(note.aliases, query) then
         -- Exact match! We're done!
         return callback(note)
       end

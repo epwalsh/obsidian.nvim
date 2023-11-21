@@ -54,12 +54,12 @@ util.get_open_strategy = function(opt)
   return strategy
 end
 
----Check if a table (list) contains a value.
+---Check if a list table contains a value.
 ---
----@param table table
+---@param table any[]
 ---@param val any
 ---@return boolean
-util.contains = function(table, val)
+util.tbl_contains = function(table, val)
   for i = 1, #table do
     if table[i] == val then
       return true
@@ -68,12 +68,12 @@ util.contains = function(table, val)
   return false
 end
 
----Check if a table (list) contains a key.
+---Check if a table contains a key.
 ---
 ---@param table table
 ---@param needle any
 ---@return boolean
-util.contains_key = function(table, needle)
+util.tbl_contains_key = function(table, needle)
   for key, _ in pairs(table) do
     if key == needle then
       return true
@@ -82,14 +82,32 @@ util.contains_key = function(table, needle)
   return false
 end
 
----Return a new table (list) with only the unique values of the original.
+---Check if an object is an array-like table.
+---@param t any
+---@return boolean
+util.tbl_is_array = function(t)
+  if type(t) ~= "table" then
+    return false
+  end
+
+  return vim.tbl_islist(t)
+end
+
+---Check if an object is an non-array table.
+---@param t any
+---@return boolean
+util.tbl_is_mapping = function(t)
+  return type(t) == "table" and (vim.tbl_isempty(t) or not util.tbl_is_array(t))
+end
+
+---Return a new list table with only the unique values of the original table.
 ---
 ---@param table table
 ---@return any[]
-util.unique = function(table)
+util.tbl_unique = function(table)
   local out = {}
   for _, val in pairs(table) do
-    if not util.contains(out, val) then
+    if not util.tbl_contains(out, val) then
       out[#out + 1] = val
     end
   end
@@ -158,40 +176,6 @@ util.match_case = function(prefix, key)
     end
   end
   return table.concat(out_chars, "")
-end
-
----Check if an object is an array-like table.
----@param t any
----@return boolean
-util.is_array = function(t)
-  if type(t) ~= "table" then
-    return false
-  end
-
-  return vim.tbl_islist(t)
-end
-
----Check if an object is an non-array table.
----@param t any
----@return boolean
-util.is_mapping = function(t)
-  return type(t) == "table" and (vim.tbl_isempty(t) or not util.is_array(t))
-end
-
----Helper function to convert a table with the list of table_params
----into a single string with params separated by spaces
----@param table_params table a table with the list of params
----@return string a single string with params separated by spaces
-util.table_params_to_str = function(table_params)
-  local s = ""
-  for _, param in ipairs(table_params) do
-    if #s > 0 then
-      s = s .. " " .. param
-    else
-      s = param
-    end
-  end
-  return s
 end
 
 util.strip = function(s)
@@ -630,19 +614,6 @@ util.strip_comments = function(str)
     end
   end
   return str
-end
-
----Check if a mapping contains a key.
----@param map table
----@param key string
----@return boolean
-util.mapping_has_key = function(map, key)
-  for k, _ in pairs(map) do
-    if key == k then
-      return true
-    end
-  end
-  return false
 end
 
 ---Check if a string contains a substring.

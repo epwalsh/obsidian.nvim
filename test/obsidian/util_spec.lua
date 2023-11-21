@@ -21,13 +21,6 @@ describe("util.match_case()", function()
   end)
 end)
 
-describe("util.table_params_to_str()", function()
-  it("should convert a list of params into a string", function()
-    local as_string = util.table_params_to_str { "find", "/home/user/obsidian", "-name", "*.md" }
-    assert.equals(as_string, "find /home/user/obsidian -name *.md")
-  end)
-end)
-
 describe("util.cursor_on_markdown_link()", function()
   it("should correctly find if coursor is on markdown/wiki link", function()
     --           0    5    10   15   20   25   30   35   40    45  50   55

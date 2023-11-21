@@ -30,7 +30,7 @@ source.complete = function(self, request, callback)
         if client.opts.completion.use_path_only then
           aliases = { note.id }
         else
-          aliases = util.unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
+          aliases = util.tbl_unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
         end
 
         for alias in iter(aliases) do
@@ -40,7 +40,7 @@ source.complete = function(self, request, callback)
           if
             alias_case_matched ~= nil
             and alias_case_matched ~= alias
-            and not util.contains(note.aliases, alias_case_matched)
+            and not util.tbl_contains(note.aliases, alias_case_matched)
           then
             table.insert(options, alias_case_matched)
           end

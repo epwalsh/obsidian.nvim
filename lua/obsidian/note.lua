@@ -59,7 +59,7 @@ end
 
 Note.should_save_frontmatter = function(self)
   local fname = self:fname()
-  return (fname ~= nil and not util.contains(SKIP_UPDATING_FRONTMATTER, fname))
+  return (fname ~= nil and not util.tbl_contains(SKIP_UPDATING_FRONTMATTER, fname))
 end
 
 ---Check if a note has a given alias.
@@ -67,7 +67,7 @@ end
 ---@param alias string
 ---@return boolean
 Note.has_alias = function(self, alias)
-  return util.contains(self.aliases, alias)
+  return util.tbl_contains(self.aliases, alias)
 end
 
 ---Check if a note has a given tag.
@@ -75,7 +75,7 @@ end
 ---@param tag string
 ---@return boolean
 Note.has_tag = function(self, tag)
-  return util.contains(self.tags, tag)
+  return util.tbl_contains(self.tags, tag)
 end
 
 ---Add an alias to the note.
@@ -293,7 +293,7 @@ Note.from_lines = function(lines, path, root)
   end
 
   -- Use title as an alias.
-  if title ~= nil and not util.contains(aliases, title) then
+  if title ~= nil and not util.tbl_contains(aliases, title) then
     table.insert(aliases, title)
   end
 
