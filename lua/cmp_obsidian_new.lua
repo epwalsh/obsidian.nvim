@@ -1,6 +1,5 @@
 local Path = require "plenary.path"
-
-local completion = require "obsidian.completion"
+local completion = require("obsidian.completion").refs
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
 local log = require "obsidian.log"

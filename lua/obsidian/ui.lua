@@ -221,7 +221,7 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
 local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
-  local matches = util.find_refs(line, true)
+  local matches = util.find_refs(line, { include_naked_urls = true, include_tags = true })
   for match in util.iter(matches) do
     local m_start, m_end, m_type = unpack(match)
     if m_type == util.RefTypes.WikiWithAlias then
@@ -385,6 +385,19 @@ local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
           end_row = lnum,
           end_col = m_end,
           hl_group = ui_opts.reference_text.hl_group,
+          spell = false,
+        }
+      )
+    elseif m_type == util.RefTypes.Tag then
+      -- A tag is like '#tag'
+      marks[#marks + 1] = ExtMark.new(
+        nil,
+        lnum,
+        m_start - 1,
+        ExtMarkOpts.from_tbl {
+          end_row = lnum,
+          end_col = m_end,
+          hl_group = ui_opts.tags.hl_group,
           spell = false,
         }
       )

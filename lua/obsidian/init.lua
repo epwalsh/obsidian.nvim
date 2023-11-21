@@ -145,6 +145,7 @@ obsidian.setup = function(opts)
 
     cmp.register_source("obsidian", require("cmp_obsidian").new())
     cmp.register_source("obsidian_new", require("cmp_obsidian_new").new())
+    cmp.register_source("obsidian_tags", require("cmp_obsidian_tags").new())
   end
 
   -- Register autocommands.
@@ -169,9 +170,10 @@ obsidian.setup = function(opts)
         local sources = {
           { name = "obsidian", option = opts },
           { name = "obsidian_new", option = opts },
+          { name = "obsidian_tags", option = opts },
         }
         for _, source in pairs(cmp.get_config().sources) do
-          if source.name ~= "obsidian" and source.name ~= "obsidian_new" then
+          if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
             table.insert(sources, source)
           end
         end

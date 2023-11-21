@@ -23,7 +23,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 ## Features
 
-- ▶️ Ultra-fast, asynchronous autocompletion for note references via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links or just `[` for markdown links), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep)
+- ▶️ Ultra-fast, asynchronous autocompletion for note references and tags via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links, `[` for markdown links, or `#` for tags), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep)
 - 🏃 Navigate throughout your vault by typing `gf` on any link to another note
 - 📷 Paste images into notes
 - 💅 Additional markdown syntax highlighting, concealing, and extmarks for references and check-boxes
@@ -356,6 +356,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- Replace the above with this if you don't have a patched font:
     -- external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
     reference_text = { hl_group = "ObsidianRefText" },
+    tags = { hl_group = "ObsidianTag" },
     hl_groups = {
       -- The options are passed directly to `vim.api.nvim_set_hl()`. See `:help nvim_set_hl`.
       ObsidianTodo = { bold = true, fg = "#f78c6c" },
@@ -364,6 +365,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       ObsidianTilde = { bold = true, fg = "#ff5370" },
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
+      ObsidianTag = { italic = true, fg = "#89ddff" },
     },
   },
 
@@ -409,6 +411,8 @@ This is a complete list of all of the options that can be passed to `require("ob
 #### Completion
 
 obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
+
+Note that in order to trigger completion for tags *within YAML frontmatter* you still need to type the "#" at the start of the tag. obsidian.nvim will remove the "#" when you hit enter on the tag completion item.
 
 #### Syntax highlighting
 

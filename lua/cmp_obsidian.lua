@@ -1,4 +1,4 @@
-local completion = require "obsidian.completion"
+local completion = require("obsidian.completion").refs
 local obsidian = require "obsidian"
 local config = require "obsidian.config"
 local log = require "obsidian.log"
@@ -96,7 +96,7 @@ source.complete = function(self, request, callback)
               table.insert(items, {
                 sortText = sort_text,
                 label = label,
-                kind = 18,
+                kind = 18, -- "Reference"
                 textEdit = {
                   newText = label,
                   range = {
@@ -111,6 +111,7 @@ source.complete = function(self, request, callback)
                   },
                 },
               })
+
               labels_seen[label] = true
             end
           end

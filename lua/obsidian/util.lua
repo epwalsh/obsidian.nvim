@@ -186,6 +186,7 @@ util.RefTypes = {
   Wiki = "wiki",
   Markdown = "markdown",
   NakedUrl = "naked_url",
+  Tag = "tag",
 }
 
 util.ref_patterns = {
@@ -193,6 +194,7 @@ util.ref_patterns = {
   [util.RefTypes.Wiki] = "%[%[[^][%|]+%]%]", -- [[xxx]]
   [util.RefTypes.Markdown] = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   [util.RefTypes.NakedUrl] = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
+  [util.RefTypes.Tag] = "#[a-zA-Z0-9_/-]+", -- #tag
 }
 
 ---@param s string
@@ -214,12 +216,17 @@ util.gfind = function(s, pattern, init, plain)
   end
 end
 
+---@class FindRefsOpts
+---@field include_naked_urls boolean|?
+---@field include_tags boolean|?
+
 ---Find refs and URLs.
----
----@param s string
----@param include_naked_urls boolean|?
+---@param s string the string to search
+---@param opts FindRefsOpts|?
 ---@return table
-util.find_refs = function(s, include_naked_urls)
+util.find_refs = function(s, opts)
+  opts = opts and opts or {}
+
   -- First find all inline code blocks so we can skip reference matches inside of those.
   local inline_code_blocks = {}
   for m_start, m_end in util.gfind(s, "`[^`]*`") do
@@ -227,8 +234,11 @@ util.find_refs = function(s, include_naked_urls)
   end
 
   local patterns = { util.RefTypes.WikiWithAlias, util.RefTypes.Wiki, util.RefTypes.Markdown }
-  if include_naked_urls then
+  if opts.include_naked_urls then
     patterns[#patterns + 1] = util.RefTypes.NakedUrl
+  end
+  if opts.include_tags then
+    patterns[#patterns + 1] = util.RefTypes.Tag
   end
 
   local matches = {}
@@ -375,7 +385,7 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls)
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
   cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
-  for match in util.iter(util.find_refs(current_line, include_naked_urls)) do
+  for match in util.iter(util.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
     local open, close, m_type = unpack(match)
     if open <= cur_col and cur_col <= close then
       return open, close, m_type
