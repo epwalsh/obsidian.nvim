@@ -1,6 +1,6 @@
 local Line = require "obsidian.yaml.line"
 local util = require "obsidian.util"
-local iter = util.iter
+local iter = require("obsidian.itertools").iter
 
 local m = {}
 

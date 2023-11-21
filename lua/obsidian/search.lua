@@ -1,8 +1,7 @@
 local Path = require "plenary.path"
 local Deque = require("plenary.async.structs").Deque
 local scan = require "plenary.scandir"
-local util = require "obsidian.util"
-local iter = util.iter
+local iter = require("obsidian.itertools").iter
 local run_job_async = require("obsidian.async").run_job_async
 
 local M = {}

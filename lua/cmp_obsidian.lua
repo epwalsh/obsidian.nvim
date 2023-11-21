@@ -3,7 +3,7 @@ local obsidian = require "obsidian"
 local config = require "obsidian.config"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
-local iter = util.iter
+local iter = require("obsidian.itertools").iter
 
 local source = {}
 

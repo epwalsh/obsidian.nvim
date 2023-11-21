@@ -3,7 +3,7 @@ local channel = require("plenary.async.control").channel
 local Path = require "plenary.path"
 local Note = require "obsidian.note"
 local search = require "obsidian.search"
-local iter = require("obsidian.util").iter
+local iter = require("obsidian.itertools").iter
 
 ---Parse path and line number from a line in an ObsidianBacklinks buffer.
 ---@param line string

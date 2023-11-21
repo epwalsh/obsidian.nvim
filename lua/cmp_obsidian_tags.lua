@@ -2,6 +2,7 @@ local obsidian = require "obsidian"
 local completion = require("obsidian.completion").tags
 local config = require "obsidian.config"
 local util = require "obsidian.util"
+local iter = require("obsidian.itertools").iter
 
 local source = {}
 
@@ -24,7 +25,7 @@ source.complete = function(self, request, callback)
 
   client:find_tags_async(search, function(tags)
     local items = {}
-    for tag in util.iter(tags) do
+    for tag in iter(tags) do
       items[#items + 1] = {
         sortText = "#" .. tag,
         label = "Tag: #" .. tag,

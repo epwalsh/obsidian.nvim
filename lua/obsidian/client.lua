@@ -8,8 +8,7 @@ local util = require "obsidian.util"
 local search = require "obsidian.search"
 local AsyncExecutor = require("obsidian.async").AsyncExecutor
 local block_on = require("obsidian.async").block_on
-
-local iter = util.iter
+local iter = require("obsidian.itertools").iter
 
 ---@class obsidian.Client
 ---@field current_workspace obsidian.Workspace
@@ -259,7 +258,7 @@ Client.find_tags_async = function(self, term, callback)
         local ok, res = pcall(Note.from_file_async, path, self.dir)
         if ok then
           if res.tags ~= nil then
-            for tag in util.iter(res.tags) do
+            for tag in iter(res.tags) do
               tag = tostring(tag)
               if vim.startswith(tag, term) then
                 tags[tag] = true
@@ -286,7 +285,7 @@ Client.find_tags_async = function(self, term, callback)
     executor:join_async(5000)
 
     local tags_list = {}
-    for tag in util.iter(tags) do
+    for tag in iter(tags) do
       tags_list[#tags_list + 1] = tag
     end
 

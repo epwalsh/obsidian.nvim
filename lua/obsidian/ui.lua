@@ -3,6 +3,7 @@ local log = require "obsidian.log"
 local search = require "obsidian.search"
 local DefaultTbl = require("obsidian.collections").DefaultTbl
 local throttle = require("obsidian.async").throttle
+local iter = require("obsidian.itertools").iter
 
 local M = {}
 
@@ -160,7 +161,7 @@ ExtMark.collect = function(bufnr, ns_id, region_start, region_end)
   region_start = region_start and region_start or 0
   region_end = region_end and region_end or -1
   local marks = {}
-  for data in util.iter(vim.api.nvim_buf_get_extmarks(bufnr, ns_id, region_start, region_end, { details = true })) do
+  for data in iter(vim.api.nvim_buf_get_extmarks(bufnr, ns_id, region_start, region_end, { details = true })) do
     local mark = ExtMark.new(data[1], data[2], data[3], ExtMarkOpts.from_tbl(data[4]))
     -- NOTE: since the conceal char we get back from `nvim_buf_get_extmarks()` is mangled, e.g.
     -- "󰄱" is turned into "1\1\15", we used the cached version.
@@ -223,7 +224,7 @@ end
 ---@return ExtMark[]
 local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
   local matches = search.find_refs(line, { include_naked_urls = true, include_tags = true })
-  for match in util.iter(matches) do
+  for match in iter(matches) do
     local m_start, m_end, m_type = unpack(match)
     if m_type == search.RefTypes.WikiWithAlias then
       -- Reference of the form [[xxx|yyy]]
@@ -429,7 +430,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
   local cur_marks_by_line = DefaultTbl.new(function()
     return {}
   end)
-  for mark in util.iter(ExtMark.collect(bufnr, ns_id)) do
+  for mark in iter(ExtMark.collect(bufnr, ns_id)) do
     local cur_line_marks = cur_marks_by_line[mark.row]
     cur_line_marks[#cur_line_marks + 1] = mark
   end
@@ -444,7 +445,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
     local function clear_line()
       ExtMark.clear_line(bufnr, ns_id, lnum)
       n_marks_cleared = n_marks_cleared + #cur_line_marks
-      for mark in util.iter(cur_line_marks) do
+      for mark in iter(cur_line_marks) do
         cache_evict(bufnr, ns_id, mark.id)
       end
     end
@@ -461,7 +462,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
       local new_line_marks = get_line_marks(line, lnum, ui_opts)
       if #new_line_marks > 0 then
         -- Materialize new marks.
-        for mark in util.iter(new_line_marks) do
+        for mark in iter(new_line_marks) do
           if not util.contains(cur_line_marks, mark) then
             mark:materialize(bufnr, ns_id)
             n_marks_added = n_marks_added + 1
@@ -469,7 +470,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
         end
 
         -- Clear old marks.
-        for mark in util.iter(cur_line_marks) do
+        for mark in iter(cur_line_marks) do
           if not util.contains(new_line_marks, mark) then
             mark:clear(bufnr, ns_id)
             n_marks_cleared = n_marks_cleared + 1

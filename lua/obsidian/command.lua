@@ -4,8 +4,10 @@ local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
 local run_job = require("obsidian.async").run_job
+local iter = require("obsidian.itertools").iter
+local enumerate = require("obsidian.itertools").enumerate
+local zip = require("obsidian.itertools").zip
 
-local iter = util.iter
 local RefTypes = search.RefTypes
 
 local M = {
@@ -979,8 +981,8 @@ M.register("ObsidianRename", {
       local count = 0
       local lines = {}
       local f = File.open(path, "r")
-      for line_num, line in util.enumerate(f:lines(true)) do
-        for ref, replacement in util.zip(reference_forms, replace_with) do
+      for line_num, line in enumerate(f:lines(true)) do
+        for ref, replacement in zip(reference_forms, replace_with) do
           local n
           line, n = util.string_replace(line, ref, replacement)
           if dry_run and n > 0 then

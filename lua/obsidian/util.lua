@@ -1,5 +1,6 @@
 local Path = require "plenary.path"
 local log = require "obsidian.log"
+local iter = require("obsidian.itertools").iter
 
 local util = {}
 
@@ -212,7 +213,7 @@ util.toggle_checkbox = function()
   if string.match(line, "^%s*- %[ %].*") then
     line = util.string_replace(line, "- [ ]", "- [x]", 1)
   else
-    for check_char in util.iter { "x", "~", ">", "-" } do
+    for check_char in iter { "x", "~", ">", "-" } do
       if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
         line = util.string_replace(line, "- [" .. check_char .. "]", "- [ ]", 1)
         break
@@ -391,7 +392,7 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls)
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
   cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
-  for match in util.iter(search.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
+  for match in iter(search.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
     local open, close, m_type = unpack(match)
     if open <= cur_col and cur_col <= close then
       return open, close, m_type
@@ -728,90 +729,6 @@ util.get_external_depency_info = function(cmd)
 
   if exit_code == 0 then
     return output[1]
-  end
-end
-
----Create an iterator from an iterable type such as a table/array, or string.
----For mapping tables the behavior matches Python where the return iterator is over keys.
----For convenience this also accepts iterator functions, in which case it returns the original function as is.
----@param iterable table|string|function
----@return function
-util.iter = function(iterable)
-  if type(iterable) == "function" then
-    return iterable
-  elseif type(iterable) == "string" then
-    local i = 1
-    local n = string.len(iterable)
-
-    return function()
-      if i > n then
-        return nil
-      else
-        local c = string.sub(iterable, i, i)
-        i = i + 1
-        return c
-      end
-    end
-  elseif type(iterable) == "table" then
-    if vim.tbl_isempty(iterable) then
-      return function()
-        return nil
-      end
-    elseif vim.tbl_islist(iterable) then
-      local i = 1
-      local n = #iterable
-
-      return function()
-        if i > n then
-          return nil
-        else
-          local x = iterable[i]
-          i = i + 1
-          return x
-        end
-      end
-    else
-      return util.iter(vim.tbl_keys(iterable))
-    end
-  else
-    error("unexpected type '" .. type(iterable) .. "'")
-  end
-end
-
----Create an enumeration iterator over an iterable.
----@param iterable table|string|function
----@return function
-util.enumerate = function(iterable)
-  local iterator = util.iter(iterable)
-  local i = 0
-
-  return function()
-    local next = iterator()
-    if next == nil then
-      return nil, nil
-    else
-      i = i + 1
-      return i, next
-    end
-  end
-end
-
----Zip two iterables together.
----@param iterable1 table|string|function
----@param iterable2 table|string|function
----@return function
-util.zip = function(iterable1, iterable2)
-  local iterator1 = util.iter(iterable1)
-  local iterator2 = util.iter(iterable2)
-
-  return function()
-    local next1 = iterator1()
-    local next2 = iterator2()
-    if next1 == nil or next2 == nil then
-      return nil
-    else
-      return next1, next2
-    end
   end
 end
 

@@ -8,6 +8,7 @@ local module_lookups = {
   config = "obsidian.config",
   log = "obsidian.log",
   img_paste = "obsidian.img_paste",
+  itertools = "obsidian.itertools",
   mapping = "obsidian.mapping",
   Note = "obsidian.note",
   search = "obsidian.search",
@@ -34,7 +35,7 @@ local obsidian = setmetatable({}, {
 
 ---Print general information about the current installation of Obsidian.nvim.
 obsidian.info = function()
-  local iter = obsidian.util.iter
+  local iter = obsidian.itertools.iter
 
   local info = obsidian.util.get_plugin_info()
   if info ~= nil then
