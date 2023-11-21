@@ -162,9 +162,11 @@ config.MappingOpts = {}
 ---Get defaults.
 ---@return obsidian.config.MappingOpts
 config.MappingOpts.default = function()
+  local mappings = require "obsidian.mappings"
+
   return {
-    ["gf"] = require("obsidian.mapping").gf_passthrough(),
-    ["<leader>ch"] = require("obsidian.mapping").toggle_checkbox(),
+    ["gf"] = mappings.gf_passthrough(),
+    ["<leader>ch"] = mappings.toggle_checkbox(),
   }
 end
 
