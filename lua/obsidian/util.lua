@@ -4,56 +4,6 @@ local iter = require("obsidian.itertools").iter
 
 local util = {}
 
----@enum OSType
-util.OSType = {
-  Linux = "Linux",
-  Wsl = "Wsl",
-  Windows = "Windows",
-  Darwin = "Darwin",
-}
-
-util._current_os = nil
-
----Get the running operating system.
----Reference https://vi.stackexchange.com/a/2577/33116
----@return OSType
-util.get_os = function()
-  if util._current_os ~= nil then
-    return util._current_os
-  end
-
-  local this_os
-  if vim.fn.has "win32" == 1 then
-    this_os = util.OSType.Windows
-  else
-    local sysname = vim.loop.os_uname().sysname ---@diagnostic disable-line: undefined-field
-    local release = vim.loop.os_uname().release ---@diagnostic disable-line: undefined-field
-    if sysname == "Linux" and string.find(release, "microsoft") then
-      this_os = util.OSType.Wsl
-    else
-      this_os = sysname
-    end
-  end
-
-  assert(this_os)
-  util._current_os = this_os
-  return this_os
-end
-
----Get the strategy for opening notes
----
----@param opt "current"|"vsplit"|"hsplit"
----@return string
-util.get_open_strategy = function(opt)
-  local strategy = "e "
-  if opt == "hsplit" then
-    strategy = "sp "
-  elseif opt == "vsplit" then
-    strategy = "vsp "
-  end
-  return strategy
-end
-
 -------------------
 -- Table methods --
 -------------------
@@ -118,6 +68,10 @@ util.tbl_unique = function(table)
   return out
 end
 
+--------------------
+-- String methods --
+--------------------
+
 ---Quote a string for safe command-line usage.
 ---
 ---Adapted from lua-shell-games.
@@ -150,17 +104,6 @@ util.urlencode = function(str)
   return url
 end
 
----Create a new unique Zettel ID.
----
----@return string
-util.zettel_id = function()
-  local suffix = ""
-  for _ = 1, 4 do
-    suffix = suffix .. string.char(math.random(65, 90))
-  end
-  return tostring(os.time()) .. "-" .. suffix
-end
-
 ---Match the case of 'key' to the given 'prefix' of the key.
 ---
 ---@param prefix string
@@ -182,166 +125,6 @@ util.match_case = function(prefix, key)
   return table.concat(out_chars, "")
 end
 
-util.strip = function(s)
-  local out = string.gsub(s, "^%s+", "")
-  return out
-end
-
-util.toggle_checkbox = function()
-  local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
-  local line = vim.api.nvim_get_current_line()
-  if string.match(line, "^%s*- %[ %].*") then
-    line = util.string_replace(line, "- [ ]", "- [x]", 1)
-  else
-    for check_char in iter { "x", "~", ">", "-" } do
-      if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
-        line = util.string_replace(line, "- [" .. check_char .. "]", "- [ ]", 1)
-        break
-      end
-    end
-  end
-  -- 0-indexed
-  vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
-end
-
----Determines if the given date is a working day (not weekend)
----
----@param time integer
----
----@return boolean
-util.is_working_day = function(time)
-  local is_saturday = (os.date("%w", time) == "6")
-  local is_sunday = (os.date("%w", time) == "0")
-  return not (is_saturday or is_sunday)
-end
-
----Determines the last working day before a given time
----
----@param time integer
----@return integer
-util.working_day_before = function(time)
-  local previous_day = time - (24 * 60 * 60)
-  if util.is_working_day(previous_day) then
-    return previous_day
-  else
-    return util.working_day_before(previous_day)
-  end
-end
-
----Determines the next working day before a given time
----
----@param time integer
----@return integer
-util.working_day_after = function(time)
-  local next_day = time + (24 * 60 * 60)
-  if util.is_working_day(next_day) then
-    return next_day
-  else
-    return util.working_day_after(next_day)
-  end
-end
-
----
----
----@return table - tuple containing {bufnr, winnr, row, col}
-util.get_active_window_cursor_location = function()
-  local buf = vim.api.nvim_win_get_buf(0)
-  local win = vim.api.nvim_get_current_win()
-  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
-  local location = { buf, win, row, col }
-  return location
-end
-
----Substitute Variables inside a given Text
----
----@param text string  - name of a template in the configured templates folder
----@param client obsidian.Client
----@param title string|nil
----@return string
-util.substitute_template_variables = function(text, client, title)
-  local methods = client.opts.templates.substitutions or {}
-  if not methods["date"] then
-    methods["date"] = function()
-      local date_format = client.opts.templates.date_format or "%Y-%m-%d"
-      return tostring(os.date(date_format))
-    end
-  end
-  if not methods["time"] then
-    methods["time"] = function()
-      local time_format = client.opts.templates.time_format or "%H:%M"
-      return tostring(os.date(time_format))
-    end
-  end
-  if title then
-    methods["title"] = function()
-      return title
-    end
-  end
-  for key, value in pairs(methods) do
-    text = string.gsub(text, "{{" .. key .. "}}", value())
-  end
-  return text
-end
-
----Clone Template
----
----@param template_name string  - name of a template in the configured templates folder
----@param note_path string
----@param client obsidian.Client
----@param title string
-util.clone_template = function(template_name, note_path, client, title)
-  if client.templates_dir == nil then
-    log.err "Templates folder is not defined or does not exist"
-    return
-  end
-  local template_path = Path:new(client.templates_dir) / template_name
-  local template_file = io.open(tostring(template_path), "r")
-  local note_file = io.open(tostring(note_path), "wb")
-  if not template_file then
-    return error("Unable to read template at " .. template_path)
-  end
-  if not note_file then
-    return error("Unable to write note at " .. note_path)
-  end
-  for line in template_file:lines "L" do
-    line = util.substitute_template_variables(line, client, title)
-    note_file:write(line)
-  end
-  template_file:close()
-  note_file:close()
-end
-
----Insert a template at the given location.
----
----@param name string - name of a template in the configured templates folder
----@param client obsidian.Client
----@param location table - a tuple with {bufnr, winnr, row, col}
-util.insert_template = function(name, client, location)
-  if client.templates_dir == nil then
-    log.err "Templates folder is not defined or does not exist"
-    return
-  end
-  local buf, win, row, col = unpack(location)
-  local template_path = Path:new(client.templates_dir) / name
-  local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
-
-  local insert_lines = {}
-  local template_file = io.open(tostring(template_path), "r")
-  if template_file then
-    local lines = template_file:lines()
-    for line in lines do
-      line = util.substitute_template_variables(line, client, title)
-      table.insert(insert_lines, line)
-    end
-    template_file:close()
-    table.insert(insert_lines, "")
-  end
-
-  vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
-  local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
-  vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
-end
-
 util.escape_magic_characters = function(text)
   return text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
 end
@@ -356,81 +139,6 @@ util.is_url = function(s)
     return true
   else
     return false
-  end
-end
-
----Determines if cursor is currently inside markdown link.
----
----@param line string|nil - line to check or current line if nil
----@param col  integer|nil - column to check or current column if nil (1-indexed)
----@param include_naked_urls boolean|?
----@return integer|nil, integer|nil, obsidian.search.RefTypes|? - start and end column of link (1-indexed)
-util.cursor_on_markdown_link = function(line, col, include_naked_urls)
-  local search = require "obsidian.search"
-
-  local current_line = line and line or vim.api.nvim_get_current_line()
-  local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
-  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
-
-  for match in iter(search.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
-    local open, close, m_type = unpack(match)
-    if open <= cur_col and cur_col <= close then
-      return open, close, m_type
-    end
-  end
-
-  return nil
-end
-
----Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
----
----@param line string|?
----@param col integer|?
----@param include_naked_urls boolean|?
----@return string|?, string|?, obsidian.search.RefTypes|?
-util.cursor_link = function(line, col, include_naked_urls)
-  local search = require "obsidian.search"
-
-  local current_line = line and line or vim.api.nvim_get_current_line()
-
-  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
-  if open == nil or close == nil then
-    return
-  end
-
-  local link = current_line:sub(open, close)
-  local link_location, link_name
-  if link_type == search.RefTypes.Markdown then
-    link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")
-    link_name = link:gsub("^%[(.-)%]%((.*)%)$", "%1")
-  elseif link_type == search.RefTypes.NakedUrl then
-    link_location = link
-    link_name = link
-  elseif link_type == search.RefTypes.WikiWithAlias then
-    link = util.unescape_single_backslash(link)
-    -- remove boundary brackets, e.g. '[[XXX|YYY]]' -> 'XXX|YYY'
-    link = link:sub(3, #link - 2)
-    -- split on the "|"
-    local split_idx = link:find "|"
-    link_location = link:sub(1, split_idx - 1)
-    link_name = link:sub(split_idx + 1)
-  elseif link_type == search.RefTypes.Wiki then
-    -- remove boundary brackets, e.g. '[[YYY]]' -> 'YYY'
-    link = link:sub(3, #link - 2)
-    link_location = link
-    link_name = link
-  else
-    error("not implemented for " .. link_type)
-  end
-
-  return link_location, link_name, link_type
-end
-
-util.gf_passthrough = function()
-  if util.cursor_on_markdown_link(nil, nil, true) then
-    return "<cmd>ObsidianFollowLink<CR>"
-  else
-    return "gf"
   end
 end
 
@@ -621,19 +329,6 @@ util.string_contains = function(str, substr)
   return i ~= nil
 end
 
----Get the path to where a plugin is installed.
----@param name string|?
----@return string|?
-util.get_src_root = function(name)
-  name = name and name or "obsidian.nvim"
-  for _, path in ipairs(vim.api.nvim_list_runtime_paths()) do
-    if vim.endswith(path, name) then
-      return path
-    end
-  end
-  return nil
-end
-
 ---Replace up to `n` occurrences of `what` in `s` with `with`.
 ---@param s string
 ---@param what string
@@ -660,6 +355,313 @@ util.string_replace = function(s, what, with, n)
 
   s = replace(s)
   return s, count
+end
+
+------------------------------------
+-- Miscellaneous helper functions --
+------------------------------------
+
+---@enum OSType
+util.OSType = {
+  Linux = "Linux",
+  Wsl = "Wsl",
+  Windows = "Windows",
+  Darwin = "Darwin",
+}
+
+util._current_os = nil
+
+---Get the running operating system.
+---Reference https://vi.stackexchange.com/a/2577/33116
+---@return OSType
+util.get_os = function()
+  if util._current_os ~= nil then
+    return util._current_os
+  end
+
+  local this_os
+  if vim.fn.has "win32" == 1 then
+    this_os = util.OSType.Windows
+  else
+    local sysname = vim.loop.os_uname().sysname ---@diagnostic disable-line: undefined-field
+    local release = vim.loop.os_uname().release ---@diagnostic disable-line: undefined-field
+    if sysname == "Linux" and string.find(release, "microsoft") then
+      this_os = util.OSType.Wsl
+    else
+      this_os = sysname
+    end
+  end
+
+  assert(this_os)
+  util._current_os = this_os
+  return this_os
+end
+
+---Get the strategy for opening notes
+---
+---@param opt "current"|"vsplit"|"hsplit"
+---@return string
+util.get_open_strategy = function(opt)
+  local strategy = "e "
+  if opt == "hsplit" then
+    strategy = "sp "
+  elseif opt == "vsplit" then
+    strategy = "vsp "
+  end
+  return strategy
+end
+
+---Create a new unique Zettel ID.
+---
+---@return string
+util.zettel_id = function()
+  local suffix = ""
+  for _ = 1, 4 do
+    suffix = suffix .. string.char(math.random(65, 90))
+  end
+  return tostring(os.time()) .. "-" .. suffix
+end
+
+---Toggle the checkbox on the line that the cursor is on.
+util.toggle_checkbox = function()
+  local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
+  local line = vim.api.nvim_get_current_line()
+  if string.match(line, "^%s*- %[ %].*") then
+    line = util.string_replace(line, "- [ ]", "- [x]", 1)
+  else
+    for check_char in iter { "x", "~", ">", "-" } do
+      if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
+        line = util.string_replace(line, "- [" .. check_char .. "]", "- [ ]", 1)
+        break
+      end
+    end
+  end
+  -- 0-indexed
+  vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
+end
+
+---Determines if the given date is a working day (not weekend)
+---
+---@param time integer
+---
+---@return boolean
+util.is_working_day = function(time)
+  local is_saturday = (os.date("%w", time) == "6")
+  local is_sunday = (os.date("%w", time) == "0")
+  return not (is_saturday or is_sunday)
+end
+
+---Determines the last working day before a given time
+---
+---@param time integer
+---@return integer
+util.working_day_before = function(time)
+  local previous_day = time - (24 * 60 * 60)
+  if util.is_working_day(previous_day) then
+    return previous_day
+  else
+    return util.working_day_before(previous_day)
+  end
+end
+
+---Determines the next working day before a given time
+---
+---@param time integer
+---@return integer
+util.working_day_after = function(time)
+  local next_day = time + (24 * 60 * 60)
+  if util.is_working_day(next_day) then
+    return next_day
+  else
+    return util.working_day_after(next_day)
+  end
+end
+
+---@return table - tuple containing {bufnr, winnr, row, col}
+util.get_active_window_cursor_location = function()
+  local buf = vim.api.nvim_win_get_buf(0)
+  local win = vim.api.nvim_get_current_win()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+  local location = { buf, win, row, col }
+  return location
+end
+
+---Substitute Variables inside a given Text
+---
+---@param text string  - name of a template in the configured templates folder
+---@param client obsidian.Client
+---@param title string|nil
+---@return string
+util.substitute_template_variables = function(text, client, title)
+  local methods = client.opts.templates.substitutions or {}
+  if not methods["date"] then
+    methods["date"] = function()
+      local date_format = client.opts.templates.date_format or "%Y-%m-%d"
+      return tostring(os.date(date_format))
+    end
+  end
+  if not methods["time"] then
+    methods["time"] = function()
+      local time_format = client.opts.templates.time_format or "%H:%M"
+      return tostring(os.date(time_format))
+    end
+  end
+  if title then
+    methods["title"] = function()
+      return title
+    end
+  end
+  for key, value in pairs(methods) do
+    text = string.gsub(text, "{{" .. key .. "}}", value())
+  end
+  return text
+end
+
+---Clone Template
+---
+---@param template_name string  - name of a template in the configured templates folder
+---@param note_path string
+---@param client obsidian.Client
+---@param title string
+util.clone_template = function(template_name, note_path, client, title)
+  if client.templates_dir == nil then
+    log.err "Templates folder is not defined or does not exist"
+    return
+  end
+  local template_path = Path:new(client.templates_dir) / template_name
+  local template_file = io.open(tostring(template_path), "r")
+  local note_file = io.open(tostring(note_path), "wb")
+  if not template_file then
+    return error("Unable to read template at " .. template_path)
+  end
+  if not note_file then
+    return error("Unable to write note at " .. note_path)
+  end
+  for line in template_file:lines "L" do
+    line = util.substitute_template_variables(line, client, title)
+    note_file:write(line)
+  end
+  template_file:close()
+  note_file:close()
+end
+
+---Insert a template at the given location.
+---
+---@param name string - name of a template in the configured templates folder
+---@param client obsidian.Client
+---@param location table - a tuple with {bufnr, winnr, row, col}
+util.insert_template = function(name, client, location)
+  if client.templates_dir == nil then
+    log.err "Templates folder is not defined or does not exist"
+    return
+  end
+  local buf, win, row, col = unpack(location)
+  local template_path = Path:new(client.templates_dir) / name
+  local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
+
+  local insert_lines = {}
+  local template_file = io.open(tostring(template_path), "r")
+  if template_file then
+    local lines = template_file:lines()
+    for line in lines do
+      line = util.substitute_template_variables(line, client, title)
+      table.insert(insert_lines, line)
+    end
+    template_file:close()
+    table.insert(insert_lines, "")
+  end
+
+  vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
+  local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+  vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
+end
+
+---Determines if cursor is currently inside markdown link.
+---
+---@param line string|nil - line to check or current line if nil
+---@param col  integer|nil - column to check or current column if nil (1-indexed)
+---@param include_naked_urls boolean|?
+---@return integer|nil, integer|nil, obsidian.search.RefTypes|? - start and end column of link (1-indexed)
+util.cursor_on_markdown_link = function(line, col, include_naked_urls)
+  local search = require "obsidian.search"
+
+  local current_line = line and line or vim.api.nvim_get_current_line()
+  local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
+  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
+
+  for match in iter(search.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
+    local open, close, m_type = unpack(match)
+    if open <= cur_col and cur_col <= close then
+      return open, close, m_type
+    end
+  end
+
+  return nil
+end
+
+---Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
+---
+---@param line string|?
+---@param col integer|?
+---@param include_naked_urls boolean|?
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.cursor_link = function(line, col, include_naked_urls)
+  local search = require "obsidian.search"
+
+  local current_line = line and line or vim.api.nvim_get_current_line()
+
+  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
+  if open == nil or close == nil then
+    return
+  end
+
+  local link = current_line:sub(open, close)
+  local link_location, link_name
+  if link_type == search.RefTypes.Markdown then
+    link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")
+    link_name = link:gsub("^%[(.-)%]%((.*)%)$", "%1")
+  elseif link_type == search.RefTypes.NakedUrl then
+    link_location = link
+    link_name = link
+  elseif link_type == search.RefTypes.WikiWithAlias then
+    link = util.unescape_single_backslash(link)
+    -- remove boundary brackets, e.g. '[[XXX|YYY]]' -> 'XXX|YYY'
+    link = link:sub(3, #link - 2)
+    -- split on the "|"
+    local split_idx = link:find "|"
+    link_location = link:sub(1, split_idx - 1)
+    link_name = link:sub(split_idx + 1)
+  elseif link_type == search.RefTypes.Wiki then
+    -- remove boundary brackets, e.g. '[[YYY]]' -> 'YYY'
+    link = link:sub(3, #link - 2)
+    link_location = link
+    link_name = link
+  else
+    error("not implemented for " .. link_type)
+  end
+
+  return link_location, link_name, link_type
+end
+
+util.gf_passthrough = function()
+  if util.cursor_on_markdown_link(nil, nil, true) then
+    return "<cmd>ObsidianFollowLink<CR>"
+  else
+    return "gf"
+  end
+end
+
+---Get the path to where a plugin is installed.
+---@param name string|?
+---@return string|?
+util.get_src_root = function(name)
+  name = name and name or "obsidian.nvim"
+  for _, path in ipairs(vim.api.nvim_list_runtime_paths()) do
+    if vim.endswith(path, name) then
+      return path
+    end
+  end
+  return nil
 end
 
 ---Get info about a plugin.

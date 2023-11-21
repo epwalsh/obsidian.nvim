@@ -78,7 +78,7 @@ dumps = function(x, indent, order)
     if util.tbl_is_array(x) then
       for _, v in ipairs(x) do
         local item_lines = dumps(v, indent + 2)
-        table.insert(out, indent_str .. "- " .. util.strip(item_lines[1]))
+        table.insert(out, indent_str .. "- " .. util.lstrip_whitespace(item_lines[1]))
         for i = 2, #item_lines do
           table.insert(out, item_lines[i])
         end
