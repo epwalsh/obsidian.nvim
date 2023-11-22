@@ -174,6 +174,22 @@ M.find_and_replace_refs = function(s)
   return table.concat(pieces, ""), indices, refs
 end
 
+---@param sort_by obsidian.config.SortBy|?
+---@param sort_reversed boolean|?
+---@return string[]
+local get_sort_opts = function(sort_by, sort_reversed)
+  local opts = {}
+  if sort_by ~= nil then
+    local sort = "sortr" -- default sort is reverse
+    if sort_reversed == false then
+      sort = "sort"
+    end
+    opts[#opts + 1] = "--" .. sort
+    opts[#opts + 1] = sort_by
+  end
+  return opts
+end
+
 ---@param dir string|Path
 ---@param term string|string[]
 ---@param opts string[]|?
@@ -203,20 +219,12 @@ end
 ---Build the 'rg' command for finding files.
 ---
 ---@param path string|?
----@param sort_by string|?
+---@param sort_by obsidian.config.SortBy|?
 ---@param sort_reversed boolean|?
 ---@param term string|?
 ---@return string[]
 M.build_find_cmd = function(path, sort_by, sort_reversed, term, opts)
-  local additional_opts = {}
-  if sort_by ~= nil then
-    local sort = "sortr" -- default sort is reverse
-    if sort_reversed == false then
-      sort = "sort"
-    end
-    additional_opts[#additional_opts + 1] = "--" .. sort
-    additional_opts[#additional_opts + 1] = sort_by
-  end
+  local additional_opts = get_sort_opts(sort_by, sort_reversed)
   if term ~= nil then
     term = "*" .. term .. "*.md"
     additional_opts[#additional_opts + 1] = "-g"
@@ -306,7 +314,7 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param sort_by string|?
+---@param sort_by obsidian.config.SortBy|?
 ---@param sort_reversed boolean|?
 ---@param opts string[]|?
 ---@return function
@@ -340,7 +348,7 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param sort_by string|?
+---@param sort_by obsidian.config.SortBy|?
 ---@param sort_reversed boolean|?
 ---@param opts string[]|?
 ---@param on_match function (string) -> nil
