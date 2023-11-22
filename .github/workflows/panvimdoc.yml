@@ -27,10 +27,11 @@ jobs:
           description: a plugin for writing and navigating an Obsidian vault
           pandoc: README.md
           toc: false
-          version: NVIM v0.8.0
+          version: NVIM v0.9.4
           demojify: false
           dedupsubheadings: false
           shiftheadinglevelby: -1
+          ignorerawblocks: true
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
