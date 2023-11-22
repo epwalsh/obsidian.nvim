@@ -4,7 +4,7 @@ A Neovim plugin for writing and navigating an [Obsidian](https://obsidian.md) va
 
 Built for people who love the concept of Obsidian -- a simple, markdown-based notes app -- but love Neovim too much to stand typing characters into anything else.
 
-*This plugin is not meant to replace Obsidian, but to complement it.* My personal workflow involves writing Obsidian notes in Neovim using this plugin, while viewing and reading them using the Obsidian app. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
+_This plugin is not meant to replace Obsidian, but to complement it._ My personal workflow involves writing Obsidian notes in Neovim using this plugin, while viewing and reading them using the Obsidian app. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
 
 ## Table of contents
 
@@ -67,6 +67,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
 Specific operating systems also require additional dependencies in order to use all of obsidian.nvim's functionality:
+
 - **Windows WSL** users need [`wsl-open`](https://github.com/jcsalterego/pngpaste) for the `:ObsidianOpen` command.
 - **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
@@ -366,6 +367,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
       ObsidianTag = { italic = true, fg = "#89ddff" },
+      ObsidianHighlightText = { bg = "#75662e" },
     },
   },
 
@@ -412,7 +414,7 @@ This is a complete list of all of the options that can be passed to `require("ob
 
 obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
 
-Note that in order to trigger completion for tags *within YAML frontmatter* you still need to type the "#" at the start of the tag. obsidian.nvim will remove the "#" when you hit enter on the tag completion item.
+Note that in order to trigger completion for tags _within YAML frontmatter_ you still need to type the "#" at the start of the tag. obsidian.nvim will remove the "#" when you hit enter on the tag completion item.
 
 #### Syntax highlighting
 
