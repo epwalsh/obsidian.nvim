@@ -413,7 +413,7 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
 local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
-  for m_start, m_end in search.gfind(line, "==[^=]+==%s?") do
+  for m_start, m_end in search.gfind(line, "==[^=]+==") do
     -- Conceal opening '=='
     marks[#marks + 1] = ExtMark.new(
       nil,
@@ -433,7 +433,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
       m_start + 1,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        end_col = m_end - 3,
+        end_col = m_end - 2,
         hl_group = ui_opts.highlight_text.hl_group,
         spell = false,
       }
@@ -443,10 +443,10 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
     marks[#marks + 1] = ExtMark.new(
       nil,
       lnum,
-      m_end - 3,
+      m_end - 2,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        end_col = m_end,
+        end_col = m_end - 1,
         conceal = "",
       }
     )
