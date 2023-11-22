@@ -413,7 +413,7 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
 local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
-  if string.match(line, " ==.+== ") then
+  if string.match(line, " %=%=.+%=%= ") then
     local opening_highlight_loc = string.find(line, "==", nil, true)
     assert(opening_highlight_loc)
     local closing_highlight_loc = string.find(line, "==", opening_highlight_loc, true)
