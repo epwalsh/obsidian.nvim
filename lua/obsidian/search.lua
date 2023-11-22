@@ -30,7 +30,7 @@ M.Patterns = {
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
   Tag = "#[a-zA-Z0-9_/-]+", -- #tag
-  Highlight = "==[%g%s?]+==", -- ==highlight==
+  Highlight = "==[%g+%s?%g+]+==", -- ==highlight==
 }
 
 ---Iterate over all matches of 'pattern' in 's'. 'gfind' is to 'find' and 'gsub' is to 'sub'.
