@@ -1,4 +1,5 @@
 local Line = require "obsidian.yaml.line"
+local abc = require "obsidian.abc"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 
@@ -7,6 +8,7 @@ local m = {}
 ---@class obsidian.yaml.ParserOpts
 ---@field luanil boolean
 local ParserOpts = {}
+
 m.ParserOpts = ParserOpts
 
 ---@return obsidian.yaml.ParserOpts
@@ -24,9 +26,10 @@ ParserOpts.normalize = function(opts)
   return opts
 end
 
----@class obsidian.yaml.Parser
+---@class obsidian.yaml.Parser : obsidian.ABC
 ---@field opts obsidian.yaml.ParserOpts
-local Parser = {}
+local Parser = abc.new_class()
+
 m.Parser = Parser
 
 local YamlType = {}
@@ -43,7 +46,7 @@ m.YamlType = YamlType
 ---@param opts obsidian.yaml.ParserOpts|?
 ---@return obsidian.yaml.Parser
 m.new = function(opts)
-  local self = setmetatable({}, { __index = Parser })
+  local self = Parser.init()
   self.opts = ParserOpts.normalize(opts and opts or {})
   return self
 end

@@ -1,3 +1,4 @@
+local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local Path = require "plenary.path"
@@ -49,13 +50,13 @@ local function wipe_rogue_buffer()
   end
 end
 
----@class obsidian.Backlinks
+---@class obsidian.Backlinks : obsidian.ABC
 ---@field client obsidian.Client
 ---@field bufnr integer
 ---@field winnr integer
 ---@field bufname string
 ---@field note obsidian.Note
-local Backlinks = {}
+local Backlinks = abc.new_class()
 
 ---Create a new backlinks object.
 ---
@@ -65,7 +66,7 @@ local Backlinks = {}
 ---@param note obsidian.Note|?
 ---@return obsidian.Backlinks
 Backlinks.new = function(client, bufnr, winnr, note)
-  local self = setmetatable({}, { __index = Backlinks })
+  local self = Backlinks.init()
   self.client = client
   self.bufnr = bufnr and bufnr or vim.fn.bufnr()
   self.winnr = winnr and winnr or vim.fn.winnr()

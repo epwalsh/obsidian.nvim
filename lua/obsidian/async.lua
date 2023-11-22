@@ -1,4 +1,5 @@
 local Job = require "plenary.job"
+local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local log = require "obsidian.log"
@@ -8,14 +9,14 @@ local uv = vim.loop
 local M = {}
 
 ---An abstract class that mimics Python's `concurrent.futures.Executor` class.
----@class obsidian.Executor
+---@class obsidian.Executor : obsidian.ABC
 ---@field tasks_running integer
 ---@field tasks_pending integer
-local Executor = {}
+local Executor = abc.new_class()
 
 ---@return obsidian.Executor
 Executor.new = function()
-  local self = setmetatable({}, { __index = Executor })
+  local self = Executor.init()
   self.tasks_running = 0
   self.tasks_pending = 0
   return self
@@ -146,13 +147,18 @@ end
 ---@field max_workers integer|?
 ---@field tasks_running integer
 ---@field tasks_pending integer
-local AsyncExecutor = Executor.new()
+local AsyncExecutor = abc.new_class({
+  __tostring = function(self)
+    return string.format("AsyncExecutor(max_workers=%s)", self.max_workers)
+  end,
+}, Executor.new())
+
 M.AsyncExecutor = AsyncExecutor
 
 ---@param max_workers integer|?
 ---@return obsidian.AsyncExecutor
 AsyncExecutor.new = function(max_workers)
-  local self = setmetatable({}, { __index = AsyncExecutor })
+  local self = AsyncExecutor.init()
   if max_workers == nil then
     max_workers = 10
   elseif max_workers < 0 then
@@ -195,12 +201,17 @@ end
 ---A multi-threaded Executor which uses the Libuv threadpool.
 ---@class obsidian.ThreadPoolExecutor : obsidian.Executor
 ---@field tasks_running integer
-local ThreadPoolExecutor = Executor.new()
+local ThreadPoolExecutor = abc.new_class({
+  __tostring = function(self)
+    return string.format("ThreadPoolExecutor(max_workers=%s)", self.max_workers)
+  end,
+}, Executor.new())
+
 M.ThreadPoolExecutor = ThreadPoolExecutor
 
 ---@return obsidian.ThreadPoolExecutor
 ThreadPoolExecutor.new = function()
-  local self = setmetatable({}, { __index = ThreadPoolExecutor })
+  local self = ThreadPoolExecutor.init()
   self.tasks_running = 0
   self.tasks_pending = 0
   return self
@@ -225,16 +236,17 @@ ThreadPoolExecutor.submit = function(self, fn, callback, ...)
 end
 
 ---Represents a file.
----@class obsidian.File
+---@class obsidian.File : obsidian.ABC
 ---@field fd userdata
-local File = {}
+local File = abc.new_class()
+
 M.File = File
 
 ---@param path string
 ---@param mode string|?
 ---@return obsidian.File
 File.open = function(path, mode)
-  local self = setmetatable({}, { __index = File })
+  local self = File.init()
   local err, fd = async.uv.fs_open(path, mode and mode or "r", 438)
   assert(not err, err)
   self.fd = fd
