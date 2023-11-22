@@ -130,18 +130,30 @@ Backlinks._gather = function(self)
 end
 
 ---Create a view for the backlinks.
-Backlinks.view = function(self)
+---@param callback function|? (BacklinkMatch[],) -> nil
+Backlinks.view = function(self, callback)
   async.run(function()
     return self:_gather()
   end, function(backlink_matches)
     vim.schedule(function()
       self:_view(backlink_matches)
+      if callback ~= nil then
+        callback(backlink_matches)
+      end
     end)
   end)
 end
 
 ---@param backlink_matches BacklinkMatch[]
 Backlinks._view = function(self, backlink_matches)
+  if vim.tbl_isempty(backlink_matches) then
+    return
+  end
+
+  -- Get current window and save view so we can return focus after.
+  local cur_winnr = vim.api.nvim_get_current_win()
+  local cur_win_view = vim.fn.winsaveview()
+
   -- Clear any existing backlinks buffer.
   wipe_rogue_buffer()
 
@@ -246,6 +258,10 @@ Backlinks._view = function(self, backlink_matches)
   -- Lock the buffer.
   vim.api.nvim_buf_set_option(0, "readonly", true)
   vim.api.nvim_buf_set_option(0, "modifiable", false)
+
+  -- Return focus to the previous window and restore view.
+  vim.api.nvim_set_current_win(cur_winnr)
+  vim.fn.winrestview(cur_win_view) ---@diagnostic disable-line: param-type-mismatch
 end
 
 Backlinks.open_or_fold = function()

@@ -342,11 +342,25 @@ M.register("ObsidianBacklinks", {
     local ok, backlinks = pcall(function()
       return require("obsidian.backlinks").new(client, nil, nil, note)
     end)
+
     if ok then
-      log.info(
-        ("Showing backlinks '%s'. Hit ENTER on a line to follow the backlink."):format(tostring(backlinks.note.id))
-      )
-      backlinks:view()
+      backlinks:view(function(matches)
+        if not vim.tbl_isempty(matches) then
+          log.info(
+            "Showing backlinks to '%s'.\n\n"
+              .. "TIPS:\n\n"
+              .. "- Hit ENTER on a match to follow the backlink\n"
+              .. "- Hit ENTER on a group header to toggle the fold, or use normal fold mappings",
+            backlinks.note.id
+          )
+        else
+          if note ~= nil then
+            log.warn("No backlinks to '%s'", note.id)
+          else
+            log.warn "No backlinks to current note"
+          end
+        end
+      end)
     else
       log.err "Backlinks command can only be used from a valid note"
     end

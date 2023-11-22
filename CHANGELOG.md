@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - In the backlinks view you can now hit `<ENTER>` within a group to toggle the folding.
+- `:ObsidianBacklinks` will now maintain focus to the current window.
 
 ## [v2.1.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.1.1) - 2023-11-20
 
