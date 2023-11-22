@@ -30,6 +30,7 @@ M.Patterns = {
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
   Tag = "#[a-zA-Z0-9_/-]+", -- #tag
+  Highlight = "==[^=]+==", -- ==highlight==
 }
 
 ---Iterate over all matches of 'pattern' in 's'. 'gfind' is to 'find' and 'gsub' is to 'sub'.
@@ -52,29 +53,15 @@ M.gfind = function(s, pattern, init, plain)
   end
 end
 
----@class obsidian.search.FindRefsOpts
----@field include_naked_urls boolean|?
----@field include_tags boolean|?
-
----Find refs and URLs.
----@param s string the string to search
----@param opts obsidian.search.FindRefsOpts|?
+---Find all matches of a pattern
+---@param s string
+---@param pattern_names table
 ---@return table
-M.find_refs = function(s, opts)
-  opts = opts and opts or {}
-
+M.find_matches = function(s, pattern_names)
   -- First find all inline code blocks so we can skip reference matches inside of those.
   local inline_code_blocks = {}
   for m_start, m_end in M.gfind(s, "`[^`]*`") do
     inline_code_blocks[#inline_code_blocks + 1] = { m_start, m_end }
-  end
-
-  local pattern_names = { M.RefTypes.WikiWithAlias, M.RefTypes.Wiki, M.RefTypes.Markdown }
-  if opts.include_naked_urls then
-    pattern_names[#pattern_names + 1] = M.RefTypes.NakedUrl
-  end
-  if opts.include_tags then
-    pattern_names[#pattern_names + 1] = M.RefTypes.Tag
   end
 
   local matches = {}
@@ -122,6 +109,35 @@ M.find_refs = function(s, opts)
   end)
 
   return matches
+end
+
+---Find inline highlights
+---@param s string
+---@return table
+M.find_highlight = function(s)
+  return M.find_matches(s, { "Highlight" })
+end
+
+---@class obsidian.search.FindRefsOpts
+---@field include_naked_urls boolean|?
+---@field include_tags boolean|?
+
+---Find refs and URLs.
+---@param s string the string to search
+---@param opts obsidian.search.FindRefsOpts|?
+---@return table
+M.find_refs = function(s, opts)
+  opts = opts and opts or {}
+
+  local pattern_names = { M.RefTypes.WikiWithAlias, M.RefTypes.Wiki, M.RefTypes.Markdown }
+  if opts.include_naked_urls then
+    pattern_names[#pattern_names + 1] = M.RefTypes.NakedUrl
+  end
+  if opts.include_tags then
+    pattern_names[#pattern_names + 1] = M.RefTypes.Tag
+  end
+
+  return M.find_matches(s, pattern_names)
 end
 
 ---Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
