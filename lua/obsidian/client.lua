@@ -24,7 +24,12 @@ local Client = {}
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 Client.new = function(opts)
-  local self = setmetatable({}, { __index = Client })
+  local self = setmetatable({}, {
+    __index = Client,
+    __tostring = function(self)
+      return string.format("obsidian.Client('%s')", self.dir)
+    end,
+  })
 
   self.current_workspace = workspace.get_from_opts(opts)
   -- NOTE: workspace.path has already been normalized

@@ -19,11 +19,7 @@ end
 -- For example, "󰄱" is turned into "1\1\15".
 -- TODO: if we knew how to un-mangle the conceal char we wouldn't need the cache.
 
-M._buf_mark_cache = DefaultTbl.new(function()
-  return DefaultTbl.new(function()
-    return {}
-  end)
-end)
+M._buf_mark_cache = DefaultTbl.new(DefaultTbl.with_tbl)
 
 ---@param bufnr integer
 ---@param ns_id integer
@@ -56,6 +52,7 @@ end
 ---@field col integer 0-based col index to place the mark.
 ---@field opts ExtMarkOpts Optional parameters passed directly to `nvim_buf_set_extmark()`.
 local ExtMark = {}
+ExtMark.__mt = { __index = ExtMark }
 M.ExtMark = ExtMark
 
 ---@class ExtMarkOpts
@@ -65,12 +62,13 @@ M.ExtMark = ExtMark
 ---@field hl_group string|?
 ---@field spell boolean|?
 local ExtMarkOpts = {}
+ExtMarkOpts.__mt = { __index = ExtMarkOpts }
 M.ExtMarkOpts = ExtMarkOpts
 
 ---@param a ExtMarkOpts
 ---@param b ExtMarkOpts
 ---@return boolean
-ExtMarkOpts.__eq = function(a, b)
+ExtMarkOpts.__mt.__eq = function(a, b)
   -- TODO: the conceal char we get back from `nvim_buf_get_extmarks()` is mangled, e.g.
   -- "󰄱" is turned into "1\1\15", so this comparison fails.
   return a.end_row == b.end_row
@@ -83,7 +81,7 @@ end
 ---@param data table
 ---@return ExtMarkOpts
 ExtMarkOpts.from_tbl = function(data)
-  local self = setmetatable({}, { __index = ExtMarkOpts, __eq = ExtMarkOpts.__eq })
+  local self = setmetatable({}, ExtMarkOpts.__mt)
   self.end_row = data.end_row
   self.end_col = data.end_col
   self.conceal = data.conceal
@@ -107,7 +105,7 @@ end
 ---@param a ExtMark
 ---@param b ExtMark
 ---@return boolean
-ExtMark.__eq = function(a, b)
+ExtMark.__mt.__eq = function(a, b)
   return a.row == b.row and a.col == b.col and a.opts == b.opts
 end
 
@@ -117,7 +115,7 @@ end
 ---@param opts ExtMarkOpts
 ---@return ExtMark
 ExtMark.new = function(id, row, col, opts)
-  local self = setmetatable({}, { __index = ExtMark, __eq = ExtMark.__eq })
+  local self = setmetatable({}, ExtMark.__mt)
   self.id = id
   self.row = row
   self.col = col
@@ -427,9 +425,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
   local n_marks_cleared = 0
 
   -- Collect all current marks, grouped by line.
-  local cur_marks_by_line = DefaultTbl.new(function()
-    return {}
-  end)
+  local cur_marks_by_line = DefaultTbl.with_tbl()
   for mark in iter(ExtMark.collect(bufnr, ns_id)) do
     local cur_line_marks = cur_marks_by_line[mark.row]
     cur_line_marks[#cur_line_marks + 1] = mark
