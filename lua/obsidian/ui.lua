@@ -413,45 +413,43 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
 local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
-  if string.match(line, "==%w+==") then
-    for m_start, m_end in search.gfind(line, "==[^=]+==%s?") do
-      -- Conceal opening '=='
-      marks[#marks + 1] = ExtMark.new(
-        nil,
-        lnum,
-        m_start - 1,
-        ExtMarkOpts.from_tbl {
-          end_row = lnum,
-          end_col = m_start + 1,
-          conceal = "",
-        }
-      )
+  for m_start, m_end in search.gfind(line, "==[^=]+==%s?") do
+    -- Conceal opening '=='
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      m_start - 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = m_start + 1,
+        conceal = "",
+      }
+    )
 
-      -- Highlight text
-      marks[#marks + 1] = ExtMark.new(
-        nil,
-        lnum,
-        m_start + 1,
-        ExtMarkOpts.from_tbl {
-          end_row = lnum,
-          end_col = m_end - 2,
-          hl_group = ui_opts.highlight_text.hl_group,
-          spell = false,
-        }
-      )
+    -- Highlight text
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      m_start + 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = m_end - 2,
+        hl_group = ui_opts.highlight_text.hl_group,
+        spell = false,
+      }
+    )
 
-      -- Conceal closing '=='
-      marks[#marks + 1] = ExtMark.new(
-        nil,
-        lnum,
-        m_end - 2,
-        ExtMarkOpts.from_tbl {
-          end_row = lnum,
-          end_col = m_end,
-          conceal = "",
-        }
-      )
-    end
+    -- Conceal closing '=='
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      m_end - 2,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = m_end,
+        conceal = "",
+      }
+    )
   end
   return marks
 end
