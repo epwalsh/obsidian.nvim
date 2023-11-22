@@ -1,4 +1,5 @@
 local Path = require "plenary.path"
+local abc = require "obsidian.abc"
 local with = require("plenary.context_manager").with
 local open = require("plenary.context_manager").open
 local yaml = require "obsidian.yaml"
@@ -9,7 +10,7 @@ local iter = require("obsidian.itertools").iter
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
----@class obsidian.Note
+---@class obsidian.Note : obsidian.ABC
 ---@field id string|integer
 ---@field aliases string[]
 ---@field tags string[]
@@ -17,7 +18,11 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 ---@field metadata table|?
 ---@field has_frontmatter boolean|?
 ---@field frontmatter_end_line integer|?
-local Note = {}
+local Note = abc.new_class {
+  __tostring = function(self)
+    return string.format("Note('%s')", self.id)
+  end,
+}
 
 ---Create new note.
 ---
@@ -27,7 +32,7 @@ local Note = {}
 ---@param path string|Path|?
 ---@return obsidian.Note
 Note.new = function(id, aliases, tags, path)
-  local self = setmetatable({}, { __index = Note })
+  local self = Note.init()
   self.id = id
   self.aliases = aliases and aliases or {}
   self.tags = tags and tags or {}

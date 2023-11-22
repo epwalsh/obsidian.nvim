@@ -1,4 +1,5 @@
 local Path = require "plenary.path"
+local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local Note = require "obsidian.note"
@@ -10,22 +11,25 @@ local AsyncExecutor = require("obsidian.async").AsyncExecutor
 local block_on = require("obsidian.async").block_on
 local iter = require("obsidian.itertools").iter
 
----@class obsidian.Client
+---@class obsidian.Client : obsidian.ABC
 ---@field current_workspace obsidian.Workspace
 ---@field dir Path
 ---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
 ---@field backlinks_namespace integer
 ---@field _quiet boolean
-local Client = {}
+local Client = abc.new_class {
+  __tostring = function(self)
+    return string.format("obsidian.Client('%s')", self.dir)
+  end,
+}
 
 ---Create a new Obsidian client without additional setup.
 ---
 ---@param opts obsidian.config.ClientOpts
 ---@return obsidian.Client
 Client.new = function(opts)
-  local self = setmetatable({}, { __index = Client })
-
+  local self = Client.init()
   self.current_workspace = workspace.get_from_opts(opts)
   -- NOTE: workspace.path has already been normalized
   self.dir = Path:new(self.current_workspace.path)

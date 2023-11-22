@@ -1,4 +1,7 @@
+local log = require "obsidian.log"
+
 local module_lookups = {
+  abc = "obsidian.abc",
   async = "obsidian.async",
   backlinks = "obsidian.backlinks",
   Client = "obsidian.client",
@@ -33,6 +36,20 @@ local obsidian = setmetatable({}, {
     return mod
   end,
 })
+
+---@type obsidian.Client|?
+obsidian._client = nil
+
+---Get the current obsidian client.
+---@return obsidian.Client
+obsidian.get_client = function()
+  if obsidian._client == nil then
+    log.fail "Obsidian client has not been set! Did you forget to call 'setup()'?"
+    return ---@diagnostic disable-line: missing-return-value  (unreachable)
+  else
+    return obsidian._client
+  end
+end
 
 ---Print general information about the current installation of Obsidian.nvim.
 obsidian.info = function()
@@ -92,7 +109,7 @@ obsidian.setup = function(opts)
 
   opts = obsidian.config.ClientOpts.normalize(opts)
   local client = obsidian.new(opts)
-  obsidian.log.set_level(client.opts.log_level)
+  log.set_level(client.opts.log_level)
 
   -- Ensure directories exist.
   client.dir:mkdir { parents = true, exists_ok = true }
@@ -117,7 +134,7 @@ obsidian.setup = function(opts)
   if client.opts.templates ~= nil and client.opts.templates.subdir ~= nil then
     client.templates_dir = Path:new(client.dir) / client.opts.templates.subdir
     if not client.templates_dir:is_dir() then
-      obsidian.log.err("%s is not a valid directory for templates", client.templates_dir)
+      log.err("%s is not a valid directory for templates", client.templates_dir)
       client.templates_dir = nil
     end
   end
@@ -215,14 +232,13 @@ obsidian.setup = function(opts)
       local lines = note:frontmatter_lines(nil, frontmatter)
       vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
       if not client._quiet then
-        obsidian.log.info "Updated frontmatter"
+        log.info "Updated frontmatter"
       end
     end,
   })
 
-  obsidian.get_client = function()
-    return client
-  end
+  -- Set global client.
+  obsidian._client = client
 
   return client
 end
