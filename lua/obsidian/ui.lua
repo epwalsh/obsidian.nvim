@@ -414,7 +414,7 @@ end
 ---@return ExtMark[]
 local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   if string.match(line, "==%w+==") then
-    for m_start, m_end in search.gfind(line, "==[^=]+==") do
+    for m_start, m_end in search.gfind(line, "==%g+.*%g+==") do
       -- Conceal opening '=='
       marks[#marks + 1] = ExtMark.new(
         nil,
