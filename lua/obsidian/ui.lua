@@ -414,47 +414,49 @@ end
 ---@return ExtMark[]
 local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   if string.match(line, "==%w+==") then
-    local opening_highlight_loc = string.find(line, "==", 0, true)
-    assert(opening_highlight_loc)
-    local closing_highlight_loc = string.find(line, "==", opening_highlight_loc + 2, true)
-    assert(closing_highlight_loc)
+    for m_start, m_end in search.gfind(line, "==[^=]+==") do
+      -- local opening_highlight_loc = string.find(line, "==", 0, true)
+      -- assert(opening_highlight_loc)
+      -- local closing_highlight_loc = string.find(line, "==", opening_highlight_loc + 2, true)
+      -- assert(closing_highlight_loc)
 
-    -- Conceal opening '=='
-    marks[#marks + 1] = ExtMark.new(
-      nil,
-      lnum,
-      opening_highlight_loc - 1,
-      ExtMarkOpts.from_tbl {
-        end_row = lnum,
-        end_col = opening_highlight_loc + 1,
-        conceal = "",
-      }
-    )
+      -- Conceal opening '=='
+      marks[#marks + 1] = ExtMark.new(
+        nil,
+        lnum,
+        m_start - 1,
+        ExtMarkOpts.from_tbl {
+          end_row = lnum,
+          end_col = m_start + 1,
+          conceal = "",
+        }
+      )
 
-    -- Highlight text
-    marks[#marks + 1] = ExtMark.new(
-      nil,
-      lnum,
-      opening_highlight_loc + 1,
-      ExtMarkOpts.from_tbl {
-        end_row = lnum,
-        end_col = closing_highlight_loc - 1,
-        hl_group = ui_opts.highlight_text.hl_group,
-        spell = false,
-      }
-    )
+      -- Highlight text
+      marks[#marks + 1] = ExtMark.new(
+        nil,
+        lnum,
+        m_start + 1,
+        ExtMarkOpts.from_tbl {
+          end_row = lnum,
+          end_col = m_end - 1,
+          hl_group = ui_opts.highlight_text.hl_group,
+          spell = false,
+        }
+      )
 
-    -- Conceal closing '=='
-    marks[#marks + 1] = ExtMark.new(
-      nil,
-      lnum,
-      closing_highlight_loc - 1,
-      ExtMarkOpts.from_tbl {
-        end_row = lnum,
-        end_col = closing_highlight_loc + 1,
-        conceal = "",
-      }
-    )
+      -- Conceal closing '=='
+      marks[#marks + 1] = ExtMark.new(
+        nil,
+        lnum,
+        m_end - 1,
+        ExtMarkOpts.from_tbl {
+          end_row = lnum,
+          end_col = m_end + 1,
+          conceal = "",
+        }
+      )
+    end
   end
   return marks
 end
