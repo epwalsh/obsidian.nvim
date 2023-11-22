@@ -446,7 +446,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
       m_end - 2,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        end_col = m_end - 1,
+        end_col = m_end,
         conceal = "",
       }
     )
