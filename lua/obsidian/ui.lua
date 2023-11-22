@@ -413,30 +413,31 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
 local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
-  local open_highlight_loc = string.find(line, "==", nil, true)
-  assert(open_highlight_loc)
-  local close_highlight_loc = string.find(line, "==", open_highlight_loc, true)
-  assert(close_highlight_loc)
+  local opening_highlight_loc = string.find(line, "==", nil, true)
+  assert(opening_highlight_loc)
+  local closing_highlight_loc = string.find(line, "==", opening_highlight_loc, true)
+  assert(closing_highlight_loc)
 
   -- Conceal opening '=='
   marks[#marks + 1] = ExtMark.new(
     nil,
     lnum,
-    open_highlight_loc - 1,
+    opening_highlight_loc - 1,
     ExtMarkOpts.from_tbl {
       end_row = lnum,
-      end_col = open_highlight_loc,
+      end_col = opening_highlight_loc,
       conceal = "",
     }
   )
 
+  -- Highlight text
   marks[#marks + 1] = ExtMark.new(
     nil,
     lnum,
-    open_highlight_loc + 1,
+    opening_highlight_loc + 1,
     ExtMarkOpts.from_tbl {
       end_row = lnum,
-      end_col = close_highlight_loc - 2,
+      end_col = closing_highlight_loc - 2,
       hl_group = ui_opts.highlight_text.hl_group,
       spell = false,
     }
@@ -446,10 +447,10 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   marks[#marks + 1] = ExtMark.new(
     nil,
     lnum,
-    close_highlight_loc - 1,
+    closing_highlight_loc - 1,
     ExtMarkOpts.from_tbl {
       end_row = lnum,
-      end_col = close_highlight_loc,
+      end_col = closing_highlight_loc,
       conceal = "",
     }
   )
