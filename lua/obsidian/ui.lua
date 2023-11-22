@@ -444,7 +444,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
       marks[#marks + 1] = ExtMark.new(
         nil,
         lnum,
-        m_end - 1,
+        m_end - 2,
         ExtMarkOpts.from_tbl {
           end_row = lnum,
           end_col = m_end + 1,
