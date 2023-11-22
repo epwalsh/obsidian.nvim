@@ -413,47 +413,49 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
 local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
-  local opening_highlight_loc = string.find(line, "==", nil, true)
-  assert(opening_highlight_loc)
-  local closing_highlight_loc = string.find(line, "==", opening_highlight_loc, true)
-  assert(closing_highlight_loc)
+  if string.match(line, "^%s*- ==%s*-== ") then
+    local opening_highlight_loc = string.find(line, "==", nil, true)
+    assert(opening_highlight_loc)
+    local closing_highlight_loc = string.find(line, "==", opening_highlight_loc, true)
+    assert(closing_highlight_loc)
 
-  -- Conceal opening '=='
-  marks[#marks + 1] = ExtMark.new(
-    nil,
-    lnum,
-    opening_highlight_loc - 1,
-    ExtMarkOpts.from_tbl {
-      end_row = lnum,
-      end_col = opening_highlight_loc,
-      conceal = "",
-    }
-  )
+    -- Conceal opening '=='
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      opening_highlight_loc - 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = opening_highlight_loc,
+        conceal = "",
+      }
+    )
 
-  -- Highlight text
-  marks[#marks + 1] = ExtMark.new(
-    nil,
-    lnum,
-    opening_highlight_loc + 1,
-    ExtMarkOpts.from_tbl {
-      end_row = lnum,
-      end_col = closing_highlight_loc - 2,
-      hl_group = ui_opts.highlight_text.hl_group,
-      spell = false,
-    }
-  )
+    -- Highlight text
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      opening_highlight_loc + 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = closing_highlight_loc - 2,
+        hl_group = ui_opts.highlight_text.hl_group,
+        spell = false,
+      }
+    )
 
-  -- Conceal closing '=='
-  marks[#marks + 1] = ExtMark.new(
-    nil,
-    lnum,
-    closing_highlight_loc - 1,
-    ExtMarkOpts.from_tbl {
-      end_row = lnum,
-      end_col = closing_highlight_loc,
-      conceal = "",
-    }
-  )
+    -- Conceal closing '=='
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      closing_highlight_loc - 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = closing_highlight_loc,
+        conceal = "",
+      }
+    )
+  end
   return marks
 end
 
