@@ -423,7 +423,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
     marks[#marks + 1] = ExtMark.new(
       nil,
       lnum,
-      opening_highlight_loc,
+      opening_highlight_loc - 1,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
         end_col = opening_highlight_loc + 1,
@@ -448,7 +448,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
     marks[#marks + 1] = ExtMark.new(
       nil,
       lnum,
-      closing_highlight_loc,
+      closing_highlight_loc - 1,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
         end_col = closing_highlight_loc + 1,
