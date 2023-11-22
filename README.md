@@ -70,6 +70,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
   See [ripgrep#installation](https://github.com/BurntSushi/ripgrep) for install options.
 
 Specific operating systems also require additional dependencies in order to use all of obsidian.nvim's functionality:
+
 - **Windows WSL** users need [`wsl-open`](https://github.com/jcsalterego/pngpaste) for the `:ObsidianOpen` command.
 - **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
