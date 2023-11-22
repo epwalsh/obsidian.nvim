@@ -416,7 +416,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   if string.match(line, "==%w+==") then
     local opening_highlight_loc = string.find(line, "==", 0, true)
     assert(opening_highlight_loc)
-    local closing_highlight_loc = string.find(line, "==", opening_highlight_loc, true)
+    local closing_highlight_loc = string.find(line, "==", opening_highlight_loc + 2, true)
     assert(closing_highlight_loc)
 
     -- Conceal opening '=='
@@ -426,7 +426,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
       opening_highlight_loc,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        end_col = opening_highlight_loc + 1,
+        end_col = opening_highlight_loc + 2,
         conceal = "",
       }
     )
@@ -451,7 +451,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
       closing_highlight_loc,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        end_col = closing_highlight_loc + 1,
+        end_col = closing_highlight_loc + 2,
         conceal = "",
       }
     )
