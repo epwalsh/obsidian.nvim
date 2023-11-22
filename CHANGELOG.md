@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added method `get_client()` to get the current obsidian client instance. For example: `:lua print(require("obsidian").get_client():new_note_id("Foo"))`
 - Added client methods `find_tags()` and `find_tags_async()`.
 
+### Changed
+
+- In the backlinks view you can now hit `<ENTER>` within a group to toggle the folding.
+
 ## [v2.1.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.1.1) - 2023-11-20
 
 ### Fixed

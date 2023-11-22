@@ -170,7 +170,7 @@ Backlinks._view = function(self, backlink_matches)
     0,
     "n",
     "<CR>",
-    [[<cmd>lua require("obsidian.backlinks").open()<CR>]],
+    [[<cmd>lua require("obsidian.backlinks").open_or_fold()<CR>]],
     { silent = true, noremap = true, nowait = true }
   )
 
@@ -248,7 +248,7 @@ Backlinks._view = function(self, backlink_matches)
   vim.api.nvim_buf_set_option(0, "modifiable", false)
 end
 
-Backlinks.open = function()
+Backlinks.open_or_fold = function()
   local vault_dir = Path:new(vim.api.nvim_buf_get_var(0, "obsidian_vault_dir"))
   local parent_win = vim.api.nvim_buf_get_var(0, "obsidian_parent_win")
   local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
@@ -261,6 +261,8 @@ Backlinks.open = function()
     if line_nr ~= nil then
       vim.api.nvim_win_set_cursor(0, { tonumber(line_nr), 0 })
     end
+  elseif string.len(line) > 0 then
+    vim.cmd "normal! za" -- toggle fold
   end
 end
 
