@@ -23,7 +23,7 @@ M.RefTypes = {
 M.Patterns = {
   -- Miscellaneous
   TagChars = "[A-Za-z0-9_/-]*",
-  Highlight = "==[[%g+%s?]?%g]+==", -- ==text==
+  Highlight = "==[^=]+==", -- ==text==
 
   -- References
   WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
