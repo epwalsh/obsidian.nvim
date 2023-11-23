@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Removed UI update delay on `BufEnter`.
+- Fixed completion bug ([#243](https://github.com/epwalsh/obsidian.nvim/issues/243))
 
 ## [v2.1.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.1.1) - 2023-11-20
 
