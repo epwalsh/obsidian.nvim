@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Changed API of `Client` search methods to take a class of options.
+
 ## [v2.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.2.0) - 2023-11-23
 
 ### Added

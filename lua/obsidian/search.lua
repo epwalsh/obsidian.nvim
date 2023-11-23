@@ -190,7 +190,7 @@ end
 ---@field max_count_per_file integer|?
 local SearchOpts = abc.new_class {
   __tostring = function(self)
-    return string.format("SearchOpts(%s)", vim.inspect(self:as_tbl()))
+    return string.format("search.SearchOpts(%s)", vim.inspect(self:as_tbl()))
   end,
 }
 
@@ -258,7 +258,7 @@ end
 
 ---@param dir string|Path
 ---@param term string|string[]
----@param opts obsidian.search.SearchOpts|table|?
+---@param opts obsidian.search.SearchOpts|?
 ---@return string[]
 M.build_search_cmd = function(dir, term, opts)
   opts = SearchOpts.from_tbl(opts and opts or {})
@@ -286,7 +286,7 @@ end
 ---
 ---@param path string|?
 ---@param term string|?
----@param opts obsidian.search.SearchOpts|table|?
+---@param opts obsidian.search.SearchOpts|?
 ---@return string[]
 M.build_find_cmd = function(path, term, opts)
   opts = SearchOpts.from_tbl(opts and opts or {})
@@ -329,7 +329,7 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param opts obsidian.search.SearchOpts|table|?
+---@param opts obsidian.search.SearchOpts|?
 ---@return function
 M.search = function(dir, term, opts)
   local matches = Deque.new()
@@ -361,7 +361,7 @@ end
 ---
 ---@param dir string|Path
 ---@param term string|string[]
----@param opts obsidian.search.SearchOpts|table|?
+---@param opts obsidian.search.SearchOpts|?
 ---@param on_match function (match: MatchData) -> nil
 ---@param on_exit function|? (exit_code: integer) -> nil
 M.search_async = function(dir, term, opts, on_match, on_exit)
@@ -384,7 +384,7 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param opts obsidian.search.SearchOpts|table|?
+---@param opts obsidian.search.SearchOpts|?
 ---@return function
 M.find = function(dir, term, opts)
   local paths = Deque.new()
@@ -416,7 +416,7 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param opts obsidian.search.SearchOpts|table|?
+---@param opts obsidian.search.SearchOpts|?
 ---@param on_match function (string) -> nil
 ---@param on_exit function|? (integer) -> nil
 M.find_async = function(dir, term, opts, on_match, on_exit)
