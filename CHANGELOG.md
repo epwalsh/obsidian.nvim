@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- `:ObsidianFollowLink` and the default `gf` pass-through mapping will now follow links to local files that are not notes.
+
 ### Changed
 
 - Changed API of `Client` search methods to take a class of options.
