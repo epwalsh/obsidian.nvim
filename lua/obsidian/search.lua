@@ -1,5 +1,6 @@
 local Path = require "plenary.path"
 local Deque = require("plenary.async.structs").Deque
+local abc = require "obsidian.abc"
 local scan = require "plenary.scandir"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
@@ -180,30 +181,88 @@ M.find_and_replace_refs = function(s)
   return table.concat(pieces, ""), indices, refs
 end
 
----@param sort_by obsidian.config.SortBy|?
----@param sort_reversed boolean|?
+---@class obsidian.search.SearchOpts : obsidian.ABC
+---@field sort_by obsidian.config.SortBy|?
+---@field sort_reversed boolean|?
+---@field fixed_strings boolean|?
+---@field ignore_case boolean|?
+---@field exclude string[]|? paths to exclude
+---@field max_count_per_file integer|?
+local SearchOpts = abc.new_class {
+  __tostring = function(self)
+    return string.format("search.SearchOpts(%s)", vim.inspect(self:as_tbl()))
+  end,
+}
+
+M.SearchOpts = SearchOpts
+
+---@param opts obsidian.search.SearchOpts|table<string, any>
+---@return obsidian.search.SearchOpts
+SearchOpts.from_tbl = function(opts)
+  setmetatable(opts, SearchOpts.mt)
+  return opts
+end
+
+---@return obsidian.search.SearchOpts
+SearchOpts.default = function()
+  return SearchOpts.from_tbl {}
+end
+
+---@param other obsidian.search.SearchOpts|table
+---@return obsidian.search.SearchOpts
+SearchOpts.merge = function(self, other)
+  return SearchOpts.from_tbl(vim.tbl_extend("force", self:as_tbl(), SearchOpts.from_tbl(other):as_tbl()))
+end
+
+---@param path string
+SearchOpts.add_exclude = function(self, path)
+  if self.exclude == nil then
+    self.exclude = {}
+  end
+  self.exclude[#self.exclude + 1] = path
+end
+
 ---@return string[]
-local get_sort_opts = function(sort_by, sort_reversed)
+SearchOpts.to_ripgrep_opts = function(self)
   local opts = {}
-  if sort_by ~= nil then
+
+  if self.sort_by ~= nil then
     local sort = "sortr" -- default sort is reverse
-    if sort_reversed == false then
+    if self.sort_reversed == false then
       sort = "sort"
     end
-    opts[#opts + 1] = "--" .. sort
-    opts[#opts + 1] = sort_by
+    opts[#opts + 1] = "--" .. sort .. "=" .. self.sort_by
   end
+
+  if self.fixed_strings then
+    opts[#opts + 1] = "--fixed-strings"
+  end
+
+  if self.ignore_case then
+    opts[#opts + 1] = "--ignore-case"
+  end
+
+  if self.exclude ~= nil then
+    assert(type(self.exclude) == "table")
+    for path in iter(self.exclude) do
+      opts[#opts + 1] = "-g!" .. path
+    end
+  end
+
+  if self.max_count_per_file ~= nil then
+    opts[#opts + 1] = "-m=" .. self.max_count_per_file
+  end
+
   return opts
 end
 
 ---@param dir string|Path
----@param sort_by obsidian.config.SortBy|?
----@param sort_reversed boolean|?
 ---@param term string|string[]
----@param opts string[]|?
+---@param opts obsidian.search.SearchOpts|?
 ---@return string[]
-M.build_search_cmd = function(dir, sort_by, sort_reversed, term, opts)
-  local additional_opts = get_sort_opts(sort_by, sort_reversed)
+M.build_search_cmd = function(dir, term, opts)
+  opts = SearchOpts.from_tbl(opts and opts or {})
+
   local search_terms
   if type(term) == "string" then
     search_terms = { "-e", term }
@@ -215,35 +274,36 @@ M.build_search_cmd = function(dir, sort_by, sort_reversed, term, opts)
     end
   end
 
-  local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = vim.tbl_flatten {
+  return vim.tbl_flatten {
     M._SEARCH_CMD,
-    opts and opts or {},
-    additional_opts,
+    opts:to_ripgrep_opts(),
     search_terms,
-    norm_dir,
+    vim.fs.normalize(tostring(dir)),
   }
-  return cmd
 end
 
 ---Build the 'rg' command for finding files.
 ---
 ---@param path string|?
----@param sort_by obsidian.config.SortBy|?
----@param sort_reversed boolean|?
 ---@param term string|?
+---@param opts obsidian.search.SearchOpts|?
 ---@return string[]
-M.build_find_cmd = function(path, sort_by, sort_reversed, term, opts)
-  local additional_opts = get_sort_opts(sort_by, sort_reversed)
+M.build_find_cmd = function(path, term, opts)
+  opts = SearchOpts.from_tbl(opts and opts or {})
+
+  local additional_opts = {}
+
   if term ~= nil then
     term = "*" .. term .. "*.md"
     additional_opts[#additional_opts + 1] = "-g"
     additional_opts[#additional_opts + 1] = term
   end
+
   if path ~= nil and path ~= "." then
     additional_opts[#additional_opts + 1] = tostring(path)
   end
-  return vim.tbl_flatten { M._FIND_CMD, opts and opts or {}, additional_opts }
+
+  return vim.tbl_flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }
 end
 
 ---@class MatchPath
@@ -269,15 +329,13 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param sort_by obsidian.config.SortBy|?
----@param sort_reversed boolean|?
----@param opts string[]|?
+---@param opts obsidian.search.SearchOpts|?
 ---@return function
-M.search = function(dir, term, sort_by, sort_reversed, opts)
+M.search = function(dir, term, opts)
   local matches = Deque.new()
   local done = false
 
-  M.search_async(dir, term, sort_by, sort_reversed, opts, function(match_data)
+  M.search_async(dir, term, opts, function(match_data)
     matches:pushright(match_data)
   end, function(_, _, _)
     done = true
@@ -303,13 +361,11 @@ end
 ---
 ---@param dir string|Path
 ---@param term string|string[]
----@param sort_by obsidian.config.SortBy|?
----@param sort_reversed boolean|?
----@param opts string[]|? additional CLI options for ripgrep
+---@param opts obsidian.search.SearchOpts|?
 ---@param on_match function (match: MatchData) -> nil
 ---@param on_exit function|? (exit_code: integer) -> nil
-M.search_async = function(dir, term, sort_by, sort_reversed, opts, on_match, on_exit)
-  local cmd = M.build_search_cmd(dir, sort_by, sort_reversed, term, opts)
+M.search_async = function(dir, term, opts, on_match, on_exit)
+  local cmd = M.build_search_cmd(dir, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     local data = vim.json.decode(line)
     if data["type"] == "match" then
@@ -328,15 +384,13 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param sort_by obsidian.config.SortBy|?
----@param sort_reversed boolean|?
----@param opts string[]|? additional CLI options for ripgrep
+---@param opts obsidian.search.SearchOpts|?
 ---@return function
-M.find = function(dir, term, sort_by, sort_reversed, opts)
+M.find = function(dir, term, opts)
   local paths = Deque.new()
   local done = false
 
-  M.find_async(dir, term, sort_by, sort_reversed, opts, function(path)
+  M.find_async(dir, term, opts, function(path)
     paths:pushright(path)
   end, function(_, _, _)
     done = true
@@ -362,14 +416,12 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param sort_by obsidian.config.SortBy|?
----@param sort_reversed boolean|?
----@param opts string[]|?
+---@param opts obsidian.search.SearchOpts|?
 ---@param on_match function (string) -> nil
 ---@param on_exit function|? (integer) -> nil
-M.find_async = function(dir, term, sort_by, sort_reversed, opts, on_match, on_exit)
+M.find_async = function(dir, term, opts, on_match, on_exit)
   local norm_dir = vim.fs.normalize(tostring(dir))
-  local cmd = M.build_find_cmd(norm_dir, sort_by, sort_reversed, term, opts)
+  local cmd = M.build_find_cmd(norm_dir, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     on_match(line)
   end, function(code)

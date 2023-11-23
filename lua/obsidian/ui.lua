@@ -7,8 +7,10 @@ local iter = require("obsidian.itertools").iter
 
 local M = {}
 
+local NAMESPACE = "obsidian"
+
 ---@param ui_opts obsidian.config.UIOpts
-M.install_hl_groups = function(ui_opts)
+local function install_hl_groups(ui_opts)
   for group_name, opts in pairs(ui_opts.hl_groups) do
     vim.api.nvim_set_hl(0, group_name, opts)
   end
@@ -44,6 +46,12 @@ end
 ---@param mark_id integer
 local function cache_evict(bufnr, ns_id, mark_id)
   M._buf_mark_cache[bufnr][ns_id][mark_id] = nil
+end
+
+---@param bufnr integer
+---@param ns_id integer
+local function cache_clear(bufnr, ns_id)
+  M._buf_mark_cache[bufnr][ns_id] = {}
 end
 
 ---@class ExtMark : obsidian.ABC
@@ -409,8 +417,7 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
         conceal = "",
       }
     )
-
-    -- Highlight text
+    -- Highlight text in the middle
     marks[#marks + 1] = ExtMark.new(
       nil,
       lnum,
@@ -422,7 +429,6 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
         spell = false,
       }
     )
-
     -- Conceal closing '=='
     marks[#marks + 1] = ExtMark.new(
       nil,
@@ -523,8 +529,8 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@param throttle boolean
 ---@return function
-M.get_autocmd_callback = function(ui_opts, throttle)
-  local ns_id = vim.api.nvim_create_namespace "obsidian"
+local function get_extmarks_autocmd_callback(ui_opts, throttle)
+  local ns_id = vim.api.nvim_create_namespace(NAMESPACE)
 
   local callback = function(ev)
     update_extmarks(ev.buf, ns_id, ui_opts)
@@ -535,6 +541,38 @@ M.get_autocmd_callback = function(ui_opts, throttle)
   else
     return callback
   end
+end
+
+---@param ui_opts obsidian.config.UIOpts
+M.setup = function(ui_opts)
+  if ui_opts.enable == false then
+    return
+  end
+
+  local group = vim.api.nvim_create_augroup("obsidian_ui", { clear = true })
+
+  install_hl_groups(ui_opts)
+
+  vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    group = group,
+    pattern = "*.md",
+    callback = get_extmarks_autocmd_callback(ui_opts, false),
+  })
+
+  vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI", "TextChangedP" }, {
+    group = group,
+    pattern = "*.md",
+    callback = get_extmarks_autocmd_callback(ui_opts, true),
+  })
+
+  vim.api.nvim_create_autocmd({ "BufUnload" }, {
+    group = group,
+    pattern = "*.md",
+    callback = function(ev)
+      local ns_id = vim.api.nvim_create_namespace(NAMESPACE)
+      cache_clear(ev.buf, ns_id)
+    end,
+  })
 end
 
 return M
