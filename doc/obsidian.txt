@@ -402,6 +402,7 @@ This is a complete list of all of the options that can be passed to
           ObsidianRefText = { underline = true, fg = "#c792ea" },
           ObsidianExtLinkIcon = { fg = "#c792ea" },
           ObsidianTag = { italic = true, fg = "#89ddff" },
+          ObsidianHighlightText = { bg = "#75662e" },
         },
       },
     
