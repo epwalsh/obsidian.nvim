@@ -126,7 +126,7 @@ source.complete = function(self, request, callback)
       }
     end
 
-    client:search_async(search, false, { "--ignore-case" }, search_callback)
+    client:search_async(search, { ignore_case = true }, search_callback)
   else
     callback { isIncomplete = true }
   end

@@ -2,6 +2,7 @@ local M = {}
 
 ---@class obsidian.ABC
 ---@field init function an init function which essentially calls 'setmetatable({}, mt)'.
+---@field as_tbl function get a raw table with only the instance's fields
 ---@field mt table the metatable
 
 ---Create a new class.
@@ -58,20 +59,8 @@ M.new_class = function(metamethods, base_class)
       -- In order to use 'vim.deep_equal' we need to pull out the raw fields first.
       -- If we passed 'a' and 'b' directly to 'vim.deep_equal' we'd get a stack overflow due
       -- to infinite recursion, since 'vim.deep_equal' calls the '.__eq' metamethod.
-      local a_fields = {}
-      for k, v in pairs(a) do
-        if not vim.startswith(k, "__") then
-          a_fields[k] = v
-        end
-      end
-
-      local b_fields = {}
-      for k, v in pairs(b) do
-        if not vim.startswith(k, "__") then
-          b_fields[k] = v
-        end
-      end
-
+      local a_fields = a:as_tbl()
+      local b_fields = b:as_tbl()
       return vim.deep_equal(a_fields, b_fields)
     end,
   }, metamethods and metamethods or {})
@@ -79,6 +68,16 @@ M.new_class = function(metamethods, base_class)
   class.init = function()
     local self = setmetatable({}, class.mt)
     return self
+  end
+
+  class.as_tbl = function(self)
+    local fields = {}
+    for k, v in pairs(self) do
+      if not vim.startswith(k, "__") then
+        fields[k] = v
+      end
+    end
+    return fields
   end
 
   return class

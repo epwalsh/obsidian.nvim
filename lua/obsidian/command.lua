@@ -458,6 +458,7 @@ M.register("ObsidianSearch", {
 --- Insert a template
 M.register("ObsidianTemplate", {
   opts = { nargs = "?" },
+  ---@param client obsidian.Client
   func = function(client, data)
     if client.templates_dir == nil then
       log.err "Templates folder is not defined or does not exist"
@@ -483,6 +484,9 @@ M.register("ObsidianTemplate", {
       return
     end
 
+    local search_opts =
+      search.SearchOpts.from_tbl { sort_by = client.opts.sort_by, sort_reversed = client.opts.sort_reversed }
+
     client:_run_with_finder_backend {
       ["telescope.nvim"] = function()
         -- try with telescope.nvim
@@ -506,7 +510,7 @@ M.register("ObsidianTemplate", {
               end
               return true
             end,
-            find_command = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
+            find_command = search.build_find_cmd(".", nil, search_opts),
           }
           require("telescope.builtin").find_files(opts)
         end
@@ -522,7 +526,7 @@ M.register("ObsidianTemplate", {
           return false
         end
 
-        local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
+        local cmd = search.build_find_cmd(".", nil, search_opts)
         fzf_lua.files {
           cmd = table.concat(cmd, " "),
           cwd = tostring(client.templates_dir),
@@ -549,8 +553,7 @@ M.register("ObsidianTemplate", {
           vim.api.nvim_del_user_command "ApplyTemplate"
         end, { nargs = 1, bang = true })
 
-        local cmd =
-          search.build_find_cmd(tostring(client.templates_dir), client.opts.sort_by, client.opts.sort_reversed)
+        local cmd = search.build_find_cmd(tostring(client.templates_dir), nil, search_opts)
         local fzf_options = { source = table.concat(cmd, " "), sink = "ApplyTemplate" }
 
         local ok, res = pcall(function()
@@ -576,8 +579,11 @@ M.register("ObsidianTemplate", {
 ---Quick switch to an obsidian note
 M.register("ObsidianQuickSwitch", {
   opts = { nargs = 0 },
+  ---@param client obsidian.Client
   func = function(client, _)
     local dir = tostring(client.dir)
+    local search_opts =
+      search.SearchOpts.from_tbl { sort_by = client.opts.sort_by, sort_reversed = client.opts.sort_reversed }
 
     client:_run_with_finder_backend {
       ["telescope.nvim"] = function()
@@ -589,7 +595,7 @@ M.register("ObsidianQuickSwitch", {
         telescope.find_files {
           cwd = dir,
           search_file = "*.md",
-          find_command = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed),
+          find_command = search.build_find_cmd(".", nil, search_opts),
         }
 
         return true
@@ -600,13 +606,13 @@ M.register("ObsidianQuickSwitch", {
           return false
         end
 
-        local cmd = search.build_find_cmd(".", client.opts.sort_by, client.opts.sort_reversed)
+        local cmd = search.build_find_cmd(".", nil, search_opts)
         fzf_lua.files { cmd = table.concat(cmd, " "), cwd = tostring(client.dir) }
 
         return true
       end,
       ["fzf.vim"] = function()
-        local cmd = search.build_find_cmd(dir, client.opts.sort_by, client.opts.sort_reversed)
+        local cmd = search.build_find_cmd(dir, nil, search_opts)
         local fzf_options = { source = table.concat(cmd, " "), sink = "e" }
 
         local ok, res = pcall(function()
@@ -1042,9 +1048,7 @@ M.register("ObsidianRename", {
     search.search_async(
       client.dir,
       reference_forms,
-      nil,
-      nil,
-      { "--fixed-strings", "-m=1" },
+      search.SearchOpts.from_tbl { fixed_strings = true, max_count_per_file = 1 },
       on_search_match,
       function(_)
         all_tasks_submitted = true

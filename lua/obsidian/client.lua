@@ -90,11 +90,10 @@ Client.vault_relative_path = function(self, path)
 end
 
 ---@param term string
----@param sort boolean
----@param search_opts string[]|?
----@param find_opts string[]|?
+---@param search_opts obsidian.search.SearchOpts|table|?
+---@param find_opts obsidian.search.SearchOpts|table|?
 ---@return function
-Client._search_iter_async = function(self, term, sort, search_opts, find_opts)
+Client._search_iter_async = function(self, term, search_opts, find_opts)
   local tx, rx = channel.mpsc()
   local found = {}
 
@@ -118,31 +117,22 @@ Client._search_iter_async = function(self, term, sort, search_opts, find_opts)
     end
   end
 
-  local cmds_done = 0 -- out of the two, one for 'search' and one for 'find'
-  search_opts = search_opts and search_opts or {}
-  find_opts = find_opts and find_opts or {}
+  search_opts = search.SearchOpts.from_tbl(search_opts and search_opts or {})
+  find_opts = search.SearchOpts.from_tbl(find_opts and find_opts or {})
+
   if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
-    search_opts[#search_opts + 1] = "-g!" .. self.opts.templates.subdir
-    find_opts[#find_opts + 1] = "-g!" .. self.opts.templates.subdir
+    search_opts:add_exclude(self.opts.templates.subdir)
+    find_opts:add_exclude(self.opts.templates.subdir)
   end
-  search.search_async(
-    self.dir,
-    term,
-    sort and self.opts.sort_by or nil,
-    sort and self.opts.sort_reversed or nil,
-    vim.tbl_flatten { search_opts, "--fixed-strings", "-m=1" },
-    on_search_match,
-    on_exit
-  )
-  search.find_async(
-    self.dir,
-    term,
-    sort and self.opts.sort_by or nil,
-    sort and self.opts.sort_reversed or nil,
-    find_opts,
-    on_find_match,
-    on_exit
-  )
+
+  search_opts.fixed_strings = true
+  search_opts.max_count_per_file = 1
+
+  local cmds_done = 0 -- out of the two, one for 'search' and one for 'find'
+
+  search.search_async(self.dir, term, search_opts, on_search_match, on_exit)
+
+  search.find_async(self.dir, term, find_opts, on_find_match, on_exit)
 
   return function()
     while true do
@@ -161,26 +151,30 @@ Client._search_iter_async = function(self, term, sort, search_opts, find_opts)
 end
 
 ---Search for notes.
----
----@param term string
----@param sort boolean
----@param search_opts string[]|? additional CLI options for ripgrep
----@param timeout integer|?
+---@param term string The term to search for
+---@param opts obsidian.search.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
+---@param timeout integer|? Timeout to wait in milliseconds
 ---@return obsidian.Note[]
-Client.search = function(self, term, sort, search_opts, timeout)
+Client.search = function(self, term, opts, timeout)
   return block_on(function(cb)
-    return self:search_async(term, sort, search_opts, cb)
+    return self:search_async(term, opts, cb)
   end, timeout)
 end
 
 ---An async version of `search()` that runs the callback with an array of all matching notes.
----
----@param term string
----@param sort boolean
----@param search_opts string[]|? additional CLI options for ripgrep
+---@param term string The term to search for
+---@param opts obsidian.search.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param callback function (obsidian.Note[]) -> nil
-Client.search_async = function(self, term, sort, search_opts, callback)
-  local next_path = self:_search_iter_async(term, sort, search_opts)
+Client.search_async = function(self, term, opts, callback)
+  -- boolean is interpreted as a 'sort' flag
+  if type(opts) == "boolean" then
+    opts = search.SearchOpts.from_tbl {
+      sort_by = opts and self.opts.sort_by or nil,
+      sort_reversed = opts and self.opts.sort_reversed or nil,
+    }
+  end
+
+  local next_path = self:_search_iter_async(term, opts)
   local executor = AsyncExecutor.new()
 
   local dir = tostring(self.dir)
@@ -231,20 +225,20 @@ end
 
 ---Find all tags starting with the given term.
 ---@param term string
----@param sort boolean
+---@param opts obsidian.search.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param timeout integer|?
 ---@return string[]
-Client.find_tags = function(self, term, sort, timeout)
+Client.find_tags = function(self, term, opts, timeout)
   return block_on(function(cb)
-    return self:find_tags_async(term, sort, cb)
+    return self:find_tags_async(term, opts, cb)
   end, timeout)
 end
 
 ---An async version of 'find_tags()'.
 ---@param term string
----@param sort boolean
+---@param opts obsidian.search.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param callback function(string[]) -> nil
-Client.find_tags_async = function(self, term, sort, callback)
+Client.find_tags_async = function(self, term, opts, callback)
   assert(string.len(term) > 0)
 
   local tags = {}
@@ -252,35 +246,32 @@ Client.find_tags_async = function(self, term, sort, callback)
   local first_err = nil
   local first_err_path = nil
 
-  local opts = {}
+  if type(opts) == "boolean" then
+    opts = search.SearchOpts.from_tbl {
+      sort_by = opts and self.opts.sort_by or nil,
+      sort_reversed = opts and self.opts.sort_reversed or nil,
+    }
+  else
+    opts = search.SearchOpts.from_tbl(opts and opts or {})
+  end
   if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
-    opts[#opts + 1] = "-g!" .. self.opts.templates.subdir
+    opts:add_exclude(self.opts.templates.subdir)
   end
 
   local tx_content, rx_content = channel.oneshot()
-  search.search_async(
-    self.dir,
-    "#" .. term .. search.Patterns.TagChars,
-    sort and self.opts.sort_by or nil,
-    sort and self.opts.sort_reversed or nil,
-    opts,
-    function(match)
-      local tag = string.sub(match.submatches[1].match.text, 2)
-      tags[tag] = true
-    end,
-    function(_)
-      tx_content()
-    end
-  )
+  search.search_async(self.dir, "#" .. term .. search.Patterns.TagChars, opts, function(match)
+    local tag = string.sub(match.submatches[1].match.text, 2)
+    tags[tag] = true
+  end, function(_)
+    tx_content()
+  end)
 
   local executor = AsyncExecutor.new()
   local tx_frontmatter, rx_frontmatter = channel.oneshot()
   search.search_async(
     self.dir,
     { "\\s*- " .. term .. search.Patterns.TagChars, "tags: .*" .. term .. search.Patterns.TagChars },
-    sort and self.opts.sort_by or nil,
-    sort and self.opts.sort_reversed or nil,
-    vim.tbl_flatten { opts, "-m1" },
+    opts:merge { max_count_per_file = 1 },
     function(match)
       executor:submit(function()
         local path = vim.fs.normalize(match.path.text)
@@ -597,7 +588,7 @@ Client.resolve_note_async = function(self, query, callback)
     end
   end
 
-  self:search_async(query, false, { "--ignore-case" }, function(results)
+  self:search_async(query, { ignore_case = true }, function(results)
     local query_lwr = string.lower(query)
     local maybe_matches = {}
     for note in iter(results) do

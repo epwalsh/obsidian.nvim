@@ -167,6 +167,11 @@ obsidian.setup = function(opts)
     cmp.register_source("obsidian_tags", require("cmp_obsidian_tags").new())
   end
 
+  -- Setup UI add-ons.
+  if client.opts.ui.enable then
+    obsidian.ui.setup(client.opts.ui)
+  end
+
   -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
@@ -200,22 +205,6 @@ obsidian.setup = function(opts)
       end
     end,
   })
-
-  if client.opts.ui.enable then
-    obsidian.ui.install_hl_groups(client.opts.ui)
-
-    vim.api.nvim_create_autocmd({ "BufEnter" }, {
-      group = group,
-      pattern = "*.md",
-      callback = obsidian.ui.get_autocmd_callback(client.opts.ui, false),
-    })
-
-    vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI", "TextChangedP" }, {
-      group = group,
-      pattern = "*.md",
-      callback = obsidian.ui.get_autocmd_callback(client.opts.ui, true),
-    })
-  end
 
   -- Add missing frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {

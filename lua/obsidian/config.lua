@@ -3,8 +3,6 @@ local workspace = require "obsidian.workspace"
 
 local config = {}
 
----[[ Options specs ]]---
-
 ---@class obsidian.config.ClientOpts
 ---@field dir string|?
 ---@field workspaces obsidian.Workspace[]|?
@@ -220,6 +218,7 @@ end
 ---@field checkboxes table{string, obsidian.config.UICharSpec}
 ---@field external_link_icon obsidian.config.UICharSpec
 ---@field reference_text obsidian.config.UIStyleSpec
+---@field highlight_text obsidian.config.UIStyleSpec
 ---@field tags obsidian.config.UIStyleSpec
 ---@field hl_groups table{string, table}
 config.UIOpts = {}
