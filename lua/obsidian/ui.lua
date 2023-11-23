@@ -390,6 +390,54 @@ local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 
+---@param marks ExtMark[]
+---@param lnum integer
+---@param ui_opts obsidian.config.UIOpts
+---@return ExtMark[]
+local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
+  local matches = search.find_highlight(line)
+  for match in iter(matches) do
+    local m_start, m_end, _ = unpack(match)
+    -- Conceal opening '=='
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      m_start - 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = m_start + 1,
+        conceal = "",
+      }
+    )
+
+    -- Highlight text
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      m_start + 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = m_end - 2,
+        hl_group = ui_opts.highlight_text.hl_group,
+        spell = false,
+      }
+    )
+
+    -- Conceal closing '=='
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      m_end - 2,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = m_end,
+        conceal = "",
+      }
+    )
+  end
+  return marks
+end
+
 ---@param lnum integer
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
@@ -397,6 +445,7 @@ local get_line_marks = function(line, lnum, ui_opts)
   local marks = {}
   get_line_check_extmarks(marks, line, lnum, ui_opts)
   get_line_ref_extmarks(marks, line, lnum, ui_opts)
+  get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 
