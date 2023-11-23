@@ -737,6 +737,8 @@ M.register("ObsidianFollowLink", {
       location = location:sub(1, -header_link:len() - 1)
     end
 
+    local buf_cwd = vim.fs.basename(vim.api.nvim_buf_get_name(0))
+
     -- Search for matching notes.
     -- TODO: handle case where there are multiple matches by prompting user to choose.
     client:resolve_note_async(location, function(note)
@@ -761,13 +763,20 @@ M.register("ObsidianFollowLink", {
         vim.schedule(function()
           vim.api.nvim_command("e " .. tostring(path))
         end)
-      elseif Path:new(location):is_file() then
-        vim.schedule(function()
-          vim.api.nvim_command("e " .. location)
-        end)
       else
-        log.err("Failed to resolve note '" .. location .. "'")
-        return
+        local paths_to_check = { client:vault_root() / location, Path:new(location) }
+        if buf_cwd ~= nil then
+          paths_to_check[#paths_to_check + 1] = Path:new(buf_cwd) / location
+        end
+
+        for path in iter(paths_to_check) do
+          if path:is_file() then
+            return vim.schedule(function()
+              vim.api.nvim_command("e " .. tostring(path))
+            end)
+          end
+        end
+        return log.err("Failed to resolve file '" .. location .. "'")
       end
     end)
   end,
