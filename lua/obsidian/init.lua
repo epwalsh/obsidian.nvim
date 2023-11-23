@@ -206,7 +206,7 @@ obsidian.setup = function(opts)
     end,
   })
 
-  -- Add missing frontmatter on BufWritePre
+  -- Add/update frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = group,
     pattern = tostring(client.dir / "**.md"),
@@ -225,9 +225,20 @@ obsidian.setup = function(opts)
       if client.opts.note_frontmatter_func ~= nil then
         frontmatter = client.opts.note_frontmatter_func(note)
       end
-      local lines = note:frontmatter_lines(nil, frontmatter)
-      vim.api.nvim_buf_set_lines(bufnr, 0, note.frontmatter_end_line and note.frontmatter_end_line or 0, false, lines)
-      if not client._quiet then
+      local new_lines = note:frontmatter_lines(nil, frontmatter)
+      local cur_lines
+      if note.frontmatter_end_line ~= nil then
+        cur_lines = vim.api.nvim_buf_get_lines(0, 0, note.frontmatter_end_line, false)
+      end
+
+      vim.api.nvim_buf_set_lines(
+        bufnr,
+        0,
+        note.frontmatter_end_line and note.frontmatter_end_line or 0,
+        false,
+        new_lines
+      )
+      if not client._quiet and not vim.deep_equal(cur_lines, new_lines) then
         log.info "Updated frontmatter"
       end
     end,
