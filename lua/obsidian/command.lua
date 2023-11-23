@@ -761,6 +761,10 @@ M.register("ObsidianFollowLink", {
         vim.schedule(function()
           vim.api.nvim_command("e " .. tostring(path))
         end)
+      elseif Path:new(location):is_file() then
+        vim.schedule(function()
+          vim.api.nvim_command("e " .. location)
+        end)
       else
         log.err("Failed to resolve note '" .. location .. "'")
         return
