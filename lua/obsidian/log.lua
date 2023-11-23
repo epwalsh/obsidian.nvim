@@ -2,6 +2,26 @@ local log = {}
 
 log._log_level = vim.log.levels.INFO
 
+---@param t table
+---@return boolean
+local function has_tostring(t)
+  local mt = getmetatable(t)
+  return mt ~= nil and mt.__tostring ~= nil
+end
+
+---@return any[]
+local function message_args(...)
+  local out = {}
+  for i, v in ipairs { ... } do
+    if type(v) == "table" and not has_tostring(v) then
+      out[i] = vim.inspect(v)
+    else
+      out[i] = v
+    end
+  end
+  return out
+end
+
 ---@param level integer
 log.set_level = function(level)
   log._log_level = level
@@ -13,7 +33,7 @@ end
 ---@param level integer|?
 log.log = function(msg, level, ...)
   if level == nil or log._log_level == nil or level >= log._log_level then
-    msg = "[Obsidian] " .. string.format(tostring(msg), ...)
+    msg = string.format(tostring(msg), unpack(message_args(...)))
     if vim.in_fast_event() then
       vim.schedule(function()
         vim.notify(msg, level, { title = "Obsidian.nvim" })
@@ -30,7 +50,7 @@ end
 ---@param level integer|?
 log.log_once = function(msg, level, ...)
   if level == nil or log._log_level == nil or level >= log._log_level then
-    msg = "[Obsidian] " .. string.format(tostring(msg), ...)
+    msg = string.format(tostring(msg), unpack(message_args(...)))
     if vim.in_fast_event() then
       vim.schedule(function()
         vim.notify_once(msg, level, { title = "Obsidian.nvim" })

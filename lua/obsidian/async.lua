@@ -319,12 +319,14 @@ end
 local init_job = function(cmd, args, on_stdout, on_exit)
   local stderr_lines = {}
 
+  log.debug("Initializing job '%s' with args '%s'", cmd, args)
+
   return Job:new { ---@diagnostic disable-line: missing-fields
     command = cmd,
     args = args,
     on_stdout = function(err, line)
       if err ~= nil then
-        return log.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
+        return log.err("Error running command '%s' with args '%s'\n:%s", cmd, args, err)
       end
       if on_stdout ~= nil then
         on_stdout(line)
@@ -332,7 +334,7 @@ local init_job = function(cmd, args, on_stdout, on_exit)
     end,
     on_stderr = function(err, line)
       if err then
-        return log.err("Error running command '" .. cmd "' with arguments " .. vim.inspect(args) .. "\n:" .. err)
+        return log.err("Error running command '%s' with args '%s'\n:%s", cmd, args, err)
       elseif line ~= nil then
         stderr_lines[#stderr_lines + 1] = line
       end
@@ -342,23 +344,18 @@ local init_job = function(cmd, args, on_stdout, on_exit)
       --- So we only log no-zero exit codes as errors when there's also stderr lines.
       if code > 0 and #stderr_lines > 0 then
         log.err(
-          "Command '"
-            .. cmd
-            .. "' with arguments "
-            .. vim.inspect(args)
-            .. " exited with non-zero exit code "
-            .. code
-            .. "\n\n[stderr]\n\n"
-            .. table.concat(stderr_lines, "\n")
+          "Command '%s' with args '%s' exited with non-zero code %s\n\n[stderr]\n\n",
+          cmd,
+          args,
+          code,
+          table.concat(stderr_lines, "\n")
         )
       elseif #stderr_lines > 0 then
         log.warn(
-          "Captured stderr output while running command '"
-            .. cmd
-            .. " with arguments "
-            .. vim.inspect(args)
-            .. ":\n"
-            .. table.concat(stderr_lines)
+          "Captured stderr output while running command '%s' with args '%s':\n",
+          cmd,
+          args,
+          table.concat(stderr_lines)
         )
       end
       if on_exit ~= nil then
