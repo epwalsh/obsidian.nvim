@@ -1,6 +1,7 @@
 local Path = require "plenary.path"
 local Deque = require("plenary.async.structs").Deque
 local scan = require "plenary.scandir"
+local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 local run_job_async = require("obsidian.async").run_job_async
 
@@ -33,26 +34,6 @@ M.Patterns = {
   Tag = "#[a-zA-Z0-9_/-]+", -- #tag
 }
 
----Iterate over all matches of 'pattern' in 's'. 'gfind' is to 'find' and 'gsub' is to 'sub'.
----@param s string
----@param pattern string
----@param init integer|?
----@param plain boolean|?
-M.gfind = function(s, pattern, init, plain)
-  init = init and init or 1
-
-  return function()
-    if init < #s then
-      local m_start, m_end = string.find(s, pattern, init, plain)
-      if m_start ~= nil and m_end ~= nil then
-        init = m_end + 1
-        return m_start, m_end
-      end
-    end
-    return nil
-  end
-end
-
 ---Find all matches of a pattern
 ---@param s string
 ---@param pattern_names table
@@ -60,7 +41,7 @@ end
 M.find_matches = function(s, pattern_names)
   -- First find all inline code blocks so we can skip reference matches inside of those.
   local inline_code_blocks = {}
-  for m_start, m_end in M.gfind(s, "`[^`]*`") do
+  for m_start, m_end in util.gfind(s, "`[^`]*`") do
     inline_code_blocks[#inline_code_blocks + 1] = { m_start, m_end }
   end
 
@@ -115,7 +96,6 @@ end
 ---@param s string
 ---@return table
 M.find_highlight = function(s)
-  local util = require "obsidian.util"
   local matches = {}
   for match in iter(M.find_matches(s, { "Highlight" })) do
     -- Remove highlights that begin/end with whitespace

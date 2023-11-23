@@ -70,6 +70,26 @@ end
 -- String methods --
 --------------------
 
+---Iterate over all matches of 'pattern' in 's'. 'gfind' is to 'find' as 'gsub' is to 'sub'.
+---@param s string
+---@param pattern string
+---@param init integer|?
+---@param plain boolean|?
+util.gfind = function(s, pattern, init, plain)
+  init = init and init or 1
+
+  return function()
+    if init < #s then
+      local m_start, m_end = string.find(s, pattern, init, plain)
+      if m_start ~= nil and m_end ~= nil then
+        init = m_end + 1
+        return m_start, m_end
+      end
+    end
+    return nil
+  end
+end
+
 ---Quote a string for safe command-line usage.
 ---
 ---Adapted from lua-shell-games.
