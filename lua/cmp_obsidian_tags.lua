@@ -25,7 +25,7 @@ source.complete = function(self, request, callback)
     return callback { isIncomplete = true }
   end
 
-  client:find_tags_async(search, function(tags)
+  client:find_tags_async(search, false, function(tags)
     local items = {}
     for tag in iter(tags) do
       items[#items + 1] = {

@@ -77,7 +77,7 @@ M.complete_args_search = function(client, _, cmd_line, _)
 
   local completions = {}
   local search_lwr = string.lower(search_)
-  for note in iter(client:search(search_)) do
+  for note in iter(client:search(search_, true)) do
     local note_path = assert(client:vault_relative_path(note.path))
     if string.find(note:display_name(), search_lwr, 1, true) then
       table.insert(completions, note:display_name() .. "  " .. note_path)
@@ -1039,9 +1039,17 @@ M.register("ObsidianRename", {
       end, path)
     end
 
-    search.search_async(client.dir, reference_forms, { "--fixed-strings", "-m=1" }, on_search_match, function(_)
-      all_tasks_submitted = true
-    end)
+    search.search_async(
+      client.dir,
+      reference_forms,
+      nil,
+      nil,
+      { "--fixed-strings", "-m=1" },
+      on_search_match,
+      function(_)
+        all_tasks_submitted = true
+      end
+    )
 
     -- Wait for all tasks to get submitted.
     vim.wait(2000, function()

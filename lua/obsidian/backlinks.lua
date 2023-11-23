@@ -103,26 +103,34 @@ Backlinks._gather = function(self)
   local last_note = nil
   local tx, rx = channel.oneshot()
 
-  search.search_async(self.client.dir, "[[" .. tostring(self.note.id), { "--fixed-strings" }, function(match)
-    if is_valid_backlink(match) then
-      local path = match.path.text
-      local src_note
-      if path ~= last_path then
-        src_note = Note.from_file(path, self.client.dir)
-      else
-        assert(last_note ~= nil)
-        src_note = last_note
+  search.search_async(
+    self.client.dir,
+    "[[" .. tostring(self.note.id),
+    self.client.opts.sort_by,
+    self.client.opts.sort_reversed,
+    { "--fixed-strings" },
+    function(match)
+      if is_valid_backlink(match) then
+        local path = match.path.text
+        local src_note
+        if path ~= last_path then
+          src_note = Note.from_file(path, self.client.dir)
+        else
+          assert(last_note ~= nil)
+          src_note = last_note
+        end
+        table.insert(
+          backlink_matches,
+          { note = src_note, line = match.line_number, text = string.gsub(match.lines.text, "\n", "") }
+        )
+        last_path = path
+        last_note = src_note
       end
-      table.insert(
-        backlink_matches,
-        { note = src_note, line = match.line_number, text = string.gsub(match.lines.text, "\n", "") }
-      )
-      last_path = path
-      last_note = src_note
+    end,
+    function(_, _, _)
+      tx()
     end
-  end, function(_, _, _)
-    tx()
-  end)
+  )
 
   rx()
 
