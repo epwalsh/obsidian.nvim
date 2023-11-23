@@ -90,10 +90,11 @@ Client.vault_relative_path = function(self, path)
 end
 
 ---@param term string
+---@param sort boolean
 ---@param search_opts string[]|?
 ---@param find_opts string[]|?
 ---@return function
-Client._search_iter_async = function(self, term, search_opts, find_opts)
+Client._search_iter_async = function(self, term, sort, search_opts, find_opts)
   local tx, rx = channel.mpsc()
   local found = {}
 
@@ -127,11 +128,21 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
   search.search_async(
     self.dir,
     term,
+    sort and self.opts.sort_by or nil,
+    sort and self.opts.sort_reversed or nil,
     vim.tbl_flatten { search_opts, "--fixed-strings", "-m=1" },
     on_search_match,
     on_exit
   )
-  search.find_async(self.dir, term, self.opts.sort_by, self.opts.sort_reversed, find_opts, on_find_match, on_exit)
+  search.find_async(
+    self.dir,
+    term,
+    sort and self.opts.sort_by or nil,
+    sort and self.opts.sort_reversed or nil,
+    find_opts,
+    on_find_match,
+    on_exit
+  )
 
   return function()
     while true do
@@ -152,22 +163,24 @@ end
 ---Search for notes.
 ---
 ---@param term string
----@param search_opts string[]|?
+---@param sort boolean
+---@param search_opts string[]|? additional CLI options for ripgrep
 ---@param timeout integer|?
 ---@return obsidian.Note[]
-Client.search = function(self, term, search_opts, timeout)
+Client.search = function(self, term, sort, search_opts, timeout)
   return block_on(function(cb)
-    return self:search_async(term, search_opts, cb)
+    return self:search_async(term, sort, search_opts, cb)
   end, timeout)
 end
 
 ---An async version of `search()` that runs the callback with an array of all matching notes.
 ---
 ---@param term string
----@param search_opts string[]|?
+---@param sort boolean
+---@param search_opts string[]|? additional CLI options for ripgrep
 ---@param callback function (obsidian.Note[]) -> nil
-Client.search_async = function(self, term, search_opts, callback)
-  local next_path = self:_search_iter_async(term, search_opts)
+Client.search_async = function(self, term, sort, search_opts, callback)
+  local next_path = self:_search_iter_async(term, sort, search_opts)
   local executor = AsyncExecutor.new()
 
   local dir = tostring(self.dir)
@@ -218,18 +231,20 @@ end
 
 ---Find all tags starting with the given term.
 ---@param term string
+---@param sort boolean
 ---@param timeout integer|?
 ---@return string[]
-Client.find_tags = function(self, term, timeout)
+Client.find_tags = function(self, term, sort, timeout)
   return block_on(function(cb)
-    return self:find_tags_async(term, cb)
+    return self:find_tags_async(term, sort, cb)
   end, timeout)
 end
 
 ---An async version of 'find_tags()'.
 ---@param term string
+---@param sort boolean
 ---@param callback function(string[]) -> nil
-Client.find_tags_async = function(self, term, callback)
+Client.find_tags_async = function(self, term, sort, callback)
   assert(string.len(term) > 0)
 
   local tags = {}
@@ -243,18 +258,28 @@ Client.find_tags_async = function(self, term, callback)
   end
 
   local tx_content, rx_content = channel.oneshot()
-  search.search_async(self.dir, "#" .. term .. search.Patterns.TagChars, opts, function(match)
-    local tag = string.sub(match.submatches[1].match.text, 2)
-    tags[tag] = true
-  end, function(_)
-    tx_content()
-  end)
+  search.search_async(
+    self.dir,
+    "#" .. term .. search.Patterns.TagChars,
+    sort and self.opts.sort_by or nil,
+    sort and self.opts.sort_reversed or nil,
+    opts,
+    function(match)
+      local tag = string.sub(match.submatches[1].match.text, 2)
+      tags[tag] = true
+    end,
+    function(_)
+      tx_content()
+    end
+  )
 
   local executor = AsyncExecutor.new()
   local tx_frontmatter, rx_frontmatter = channel.oneshot()
   search.search_async(
     self.dir,
     { "\\s*- " .. term .. search.Patterns.TagChars, "tags: .*" .. term .. search.Patterns.TagChars },
+    sort and self.opts.sort_by or nil,
+    sort and self.opts.sort_reversed or nil,
     vim.tbl_flatten { opts, "-m1" },
     function(match)
       executor:submit(function()
@@ -572,7 +597,7 @@ Client.resolve_note_async = function(self, query, callback)
     end
   end
 
-  self:search_async(query, { "--ignore-case" }, function(results)
+  self:search_async(query, false, { "--ignore-case" }, function(results)
     local query_lwr = string.lower(query)
     local maybe_matches = {}
     for note in iter(results) do

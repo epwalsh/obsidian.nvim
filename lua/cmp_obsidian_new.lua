@@ -96,6 +96,7 @@ source.complete = function(self, request, callback)
         },
       },
     }
+
     return callback {
       items = items,
       isIncomplete = true,

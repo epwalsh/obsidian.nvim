@@ -23,7 +23,7 @@ local config = {}
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
 ---@field finder string|?
----@field sort_by string|?
+---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
 ---@field open_notes_in "current"|"vsplit"|"hsplit"
 ---@field ui obsidian.config.UIOpts
@@ -61,6 +61,14 @@ config.ClientOpts.default = function()
   }
 end
 
+---@enum obsidian.config.SortBy
+config.SortBy = {
+  path = "path",
+  modified = "modified",
+  accessed = "accessed",
+  created = "created",
+}
+
 ---Normalize options.
 ---
 ---@param opts table<string, any>
@@ -85,7 +93,7 @@ config.ClientOpts.normalize = function(opts)
   end
 
   -- Validate.
-  if opts.sort_by ~= nil and not vim.tbl_contains({ "path", "modified", "accessed", "created" }, opts.sort_by) then
+  if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
     error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
   end
 

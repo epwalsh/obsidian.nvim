@@ -1,5 +1,7 @@
 *obsidian.txt*           a plugin for writing and navigating an Obsidian vault
 
+obsidian.nvim
+
 A Neovim plugin for writing and navigating an Obsidian <https://obsidian.md>
 vault, written in Lua.
 
@@ -85,12 +87,11 @@ SYSTEM REQUIREMENTS                             *obsidian-system-requirements*
     See ripgrep#installation <https://github.com/BurntSushi/ripgrep> for install options.
 
 Specific operating systems also require additional dependencies in order to use
-all of obsidian.nvim’s functionality: - **Windows WSL** users need `wsl-open`
-<https://github.com/jcsalterego/pngpaste> for the `:ObsidianOpen` command. -
-**MacOS** users need `pngpaste` <https://github.com/jcsalterego/pngpaste>
-(`brew install pngpaste`) for the `:ObsidianPasteImg` command. - **Linux**
-users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg`
-command.
+all of obsidian.nvim’s functionality:
+
+- **Windows WSL** users need `wsl-open` <https://github.com/jcsalterego/pngpaste> for the `:ObsidianOpen` command.
+- **MacOS** users need `pngpaste` <https://github.com/jcsalterego/pngpaste> (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
+- **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
 Search functionality (e.g. via the `:ObsidianSearch` and
 `:ObsidianQuickSwitch` commands) also requires telescope.nvim

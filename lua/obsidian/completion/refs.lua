@@ -17,7 +17,7 @@ local find_search_start = function(input)
       return nil
     elseif vim.startswith(substr, "[[") then
       return substr, string.sub(substr, 3)
-    elseif vim.startswith(substr, "[") and string.sub(substr, i - 1, i - 1) ~= "[" then
+    elseif vim.startswith(substr, "[") and string.sub(input, i - 1, i - 1) ~= "[" then
       return substr, string.sub(substr, 2)
     end
   end
@@ -37,15 +37,15 @@ M.can_complete = function(request)
     return false
   end
 
-  local suffix = string.sub(request.context.cursor_after_line, 1, 2)
-
   if vim.startswith(input, "[[") then
+    local suffix = string.sub(request.context.cursor_after_line, 1, 2)
     local cursor_col = request.context.cursor.col
     local insert_end_offset = suffix == "]]" and 1 or -1
     return true, search, cursor_col - 1 - #input, cursor_col + insert_end_offset, M.RefType.Wiki
   elseif vim.startswith(input, "[") then
+    local suffix = string.sub(request.context.cursor_after_line, 1, 1)
     local cursor_col = request.context.cursor.col
-    local insert_end_offset = suffix == "]" and 1 or -1
+    local insert_end_offset = suffix == "]" and 0 or -1
     return true, search, cursor_col - 1 - #input, cursor_col + insert_end_offset, M.RefType.Markdown
   else
     return false
@@ -60,7 +60,7 @@ M.get_keyword_pattern = function()
   -- Note that this is a vim pattern, not a Lua pattern. See ':help pattern'.
   -- The enclosing [=[ ... ]=] is just a way to mark the boundary of a
   -- string in Lua.
-  return [=[\%(^\|[^\[]\)\zs\[\{,2}[^\]]\+\]\{,2}]=]
+  return [=[\%(^\|[^\[]\)\zs\[\{1,2}[^\]]\+\]\{,2}]=]
 end
 
 return M

@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added client methods `find_tags()` and `find_tags_async()`.
 - Added extmarks for inline highlighting, e.g. `==highlight this text!==`.
 
+### Changed
+
+- In the backlinks view you can now hit `<ENTER>` within a group to toggle the folding.
+- `:ObsidianBacklinks` will now maintain focus to the current window.
+- `:ObsidianBacklinks` will now respect the `sort_by` and `sort_reversed` configuration options.
+
+### Fixed
+
+- Removed UI update delay on `BufEnter`.
+- Fixed completion bug ([#243](https://github.com/epwalsh/obsidian.nvim/issues/243))
+
 ## [v2.1.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.1.1) - 2023-11-20
 
 ### Fixed

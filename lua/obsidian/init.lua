@@ -202,11 +202,18 @@ obsidian.setup = function(opts)
   })
 
   if client.opts.ui.enable then
-    -- UI updates.
+    obsidian.ui.install_hl_groups(client.opts.ui)
+
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+      group = group,
+      pattern = "*.md",
+      callback = obsidian.ui.get_autocmd_callback(client.opts.ui, false),
+    })
+
     vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI", "TextChangedP" }, {
       group = group,
       pattern = "*.md",
-      callback = obsidian.ui.get_autocmd_callback(client.opts.ui),
+      callback = obsidian.ui.get_autocmd_callback(client.opts.ui, true),
     })
   end
 

@@ -29,7 +29,7 @@ M.Patterns = {
   WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
   Wiki = "%[%[[^][%|]+%]%]", -- [[xxx]]
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
-  NakedUrl = "https?://[a-zA-Z0-9._#/=&?-]+[a-zA-Z0-9]", -- https://xyz.com
+  NakedUrl = "https?://[a-zA-Z0-9._#/=&?%%-]+[a-zA-Z0-9]", -- https://xyz.com
   Tag = "#[a-zA-Z0-9_/-]+", -- #tag
 }
 
@@ -200,11 +200,30 @@ M.find_and_replace_refs = function(s)
   return table.concat(pieces, ""), indices, refs
 end
 
+---@param sort_by obsidian.config.SortBy|?
+---@param sort_reversed boolean|?
+---@return string[]
+local get_sort_opts = function(sort_by, sort_reversed)
+  local opts = {}
+  if sort_by ~= nil then
+    local sort = "sortr" -- default sort is reverse
+    if sort_reversed == false then
+      sort = "sort"
+    end
+    opts[#opts + 1] = "--" .. sort
+    opts[#opts + 1] = sort_by
+  end
+  return opts
+end
+
 ---@param dir string|Path
+---@param sort_by obsidian.config.SortBy|?
+---@param sort_reversed boolean|?
 ---@param term string|string[]
 ---@param opts string[]|?
 ---@return string[]
-M.build_search_cmd = function(dir, term, opts)
+M.build_search_cmd = function(dir, sort_by, sort_reversed, term, opts)
+  local additional_opts = get_sort_opts(sort_by, sort_reversed)
   local search_terms
   if type(term) == "string" then
     search_terms = { "-e", term }
@@ -220,6 +239,7 @@ M.build_search_cmd = function(dir, term, opts)
   local cmd = vim.tbl_flatten {
     M._SEARCH_CMD,
     opts and opts or {},
+    additional_opts,
     search_terms,
     norm_dir,
   }
@@ -229,20 +249,12 @@ end
 ---Build the 'rg' command for finding files.
 ---
 ---@param path string|?
----@param sort_by string|?
+---@param sort_by obsidian.config.SortBy|?
 ---@param sort_reversed boolean|?
 ---@param term string|?
 ---@return string[]
 M.build_find_cmd = function(path, sort_by, sort_reversed, term, opts)
-  local additional_opts = {}
-  if sort_by ~= nil then
-    local sort = "sortr" -- default sort is reverse
-    if sort_reversed == false then
-      sort = "sort"
-    end
-    additional_opts[#additional_opts + 1] = "--" .. sort
-    additional_opts[#additional_opts + 1] = sort_by
-  end
+  local additional_opts = get_sort_opts(sort_by, sort_reversed)
   if term ~= nil then
     term = "*" .. term .. "*.md"
     additional_opts[#additional_opts + 1] = "-g"
@@ -277,13 +289,15 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
+---@param sort_by obsidian.config.SortBy|?
+---@param sort_reversed boolean|?
 ---@param opts string[]|?
 ---@return function
-M.search = function(dir, term, opts)
+M.search = function(dir, term, sort_by, sort_reversed, opts)
   local matches = Deque.new()
   local done = false
 
-  M.search_async(dir, term, opts, function(match_data)
+  M.search_async(dir, term, sort_by, sort_reversed, opts, function(match_data)
     matches:pushright(match_data)
   end, function(_, _, _)
     done = true
@@ -309,11 +323,13 @@ end
 ---
 ---@param dir string|Path
 ---@param term string|string[]
----@param opts string[]|?
+---@param sort_by obsidian.config.SortBy|?
+---@param sort_reversed boolean|?
+---@param opts string[]|? additional CLI options for ripgrep
 ---@param on_match function (match: MatchData) -> nil
 ---@param on_exit function|? (exit_code: integer) -> nil
-M.search_async = function(dir, term, opts, on_match, on_exit)
-  local cmd = M.build_search_cmd(dir, term, opts)
+M.search_async = function(dir, term, sort_by, sort_reversed, opts, on_match, on_exit)
+  local cmd = M.build_search_cmd(dir, sort_by, sort_reversed, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     local data = vim.json.decode(line)
     if data["type"] == "match" then
@@ -332,9 +348,9 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param sort_by string|?
+---@param sort_by obsidian.config.SortBy|?
 ---@param sort_reversed boolean|?
----@param opts string[]|?
+---@param opts string[]|? additional CLI options for ripgrep
 ---@return function
 M.find = function(dir, term, sort_by, sort_reversed, opts)
   local paths = Deque.new()
@@ -366,7 +382,7 @@ end
 ---
 ---@param dir string|Path
 ---@param term string
----@param sort_by string|?
+---@param sort_by obsidian.config.SortBy|?
 ---@param sort_reversed boolean|?
 ---@param opts string[]|?
 ---@param on_match function (string) -> nil

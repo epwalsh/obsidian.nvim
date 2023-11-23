@@ -103,26 +103,34 @@ Backlinks._gather = function(self)
   local last_note = nil
   local tx, rx = channel.oneshot()
 
-  search.search_async(self.client.dir, "[[" .. tostring(self.note.id), { "--fixed-strings" }, function(match)
-    if is_valid_backlink(match) then
-      local path = match.path.text
-      local src_note
-      if path ~= last_path then
-        src_note = Note.from_file(path, self.client.dir)
-      else
-        assert(last_note ~= nil)
-        src_note = last_note
+  search.search_async(
+    self.client.dir,
+    "[[" .. tostring(self.note.id),
+    self.client.opts.sort_by,
+    self.client.opts.sort_reversed,
+    { "--fixed-strings" },
+    function(match)
+      if is_valid_backlink(match) then
+        local path = match.path.text
+        local src_note
+        if path ~= last_path then
+          src_note = Note.from_file(path, self.client.dir)
+        else
+          assert(last_note ~= nil)
+          src_note = last_note
+        end
+        table.insert(
+          backlink_matches,
+          { note = src_note, line = match.line_number, text = string.gsub(match.lines.text, "\n", "") }
+        )
+        last_path = path
+        last_note = src_note
       end
-      table.insert(
-        backlink_matches,
-        { note = src_note, line = match.line_number, text = string.gsub(match.lines.text, "\n", "") }
-      )
-      last_path = path
-      last_note = src_note
+    end,
+    function(_, _, _)
+      tx()
     end
-  end, function(_, _, _)
-    tx()
-  end)
+  )
 
   rx()
 
@@ -130,18 +138,30 @@ Backlinks._gather = function(self)
 end
 
 ---Create a view for the backlinks.
-Backlinks.view = function(self)
+---@param callback function|? (BacklinkMatch[],) -> nil
+Backlinks.view = function(self, callback)
   async.run(function()
     return self:_gather()
   end, function(backlink_matches)
     vim.schedule(function()
       self:_view(backlink_matches)
+      if callback ~= nil then
+        callback(backlink_matches)
+      end
     end)
   end)
 end
 
 ---@param backlink_matches BacklinkMatch[]
 Backlinks._view = function(self, backlink_matches)
+  if vim.tbl_isempty(backlink_matches) then
+    return
+  end
+
+  -- Get current window and save view so we can return focus after.
+  local cur_winnr = vim.api.nvim_get_current_win()
+  local cur_win_view = vim.fn.winsaveview()
+
   -- Clear any existing backlinks buffer.
   wipe_rogue_buffer()
 
@@ -170,7 +190,7 @@ Backlinks._view = function(self, backlink_matches)
     0,
     "n",
     "<CR>",
-    [[<cmd>lua require("obsidian.backlinks").open()<CR>]],
+    [[<cmd>lua require("obsidian.backlinks").open_or_fold()<CR>]],
     { silent = true, noremap = true, nowait = true }
   )
 
@@ -246,9 +266,13 @@ Backlinks._view = function(self, backlink_matches)
   -- Lock the buffer.
   vim.api.nvim_buf_set_option(0, "readonly", true)
   vim.api.nvim_buf_set_option(0, "modifiable", false)
+
+  -- Return focus to the previous window and restore view.
+  vim.api.nvim_set_current_win(cur_winnr)
+  vim.fn.winrestview(cur_win_view) ---@diagnostic disable-line: param-type-mismatch
 end
 
-Backlinks.open = function()
+Backlinks.open_or_fold = function()
   local vault_dir = Path:new(vim.api.nvim_buf_get_var(0, "obsidian_vault_dir"))
   local parent_win = vim.api.nvim_buf_get_var(0, "obsidian_parent_win")
   local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
@@ -261,6 +285,8 @@ Backlinks.open = function()
     if line_nr ~= nil then
       vim.api.nvim_win_set_cursor(0, { tonumber(line_nr), 0 })
     end
+  elseif string.len(line) > 0 then
+    vim.cmd "normal! za" -- toggle fold
   end
 end
 
