@@ -1,13 +1,15 @@
+local abc = require "obsidian.abc"
 local obsidian = require "obsidian"
 local completion = require "obsidian.completion.tags"
 local config = require "obsidian.config"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 
-local source = {}
+---@class cmp_obsidian_tags.Source : obsidian.ABC
+local source = abc.new_class()
 
 source.new = function()
-  return setmetatable({}, { __index = source })
+  return source.init()
 end
 
 source.get_trigger_characters = completion.get_trigger_characters
