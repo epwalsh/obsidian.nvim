@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `:ObsidianBacklinks` will now maintain focus to the current window.
 - `:ObsidianBacklinks` will now respect the `sort_by` and `sort_reversed` configuration options.
 
+### Fixed
+
+- Removed UI update delay on `BufEnter`.
+
 ## [v2.1.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.1.1) - 2023-11-20
 
 ### Fixed

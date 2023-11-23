@@ -3,7 +3,6 @@ local util = require "obsidian.util"
 local log = require "obsidian.log"
 local search = require "obsidian.search"
 local DefaultTbl = require("obsidian.collections").DefaultTbl
-local throttle = require("obsidian.async").throttle
 local iter = require("obsidian.itertools").iter
 
 local M = {}
@@ -473,13 +472,20 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 end
 
 ---@param ui_opts obsidian.config.UIOpts
+---@param throttle boolean
 ---@return function
-M.get_autocmd_callback = function(ui_opts)
+M.get_autocmd_callback = function(ui_opts, throttle)
   local ns_id = vim.api.nvim_create_namespace "obsidian"
-  M.install_hl_groups(ui_opts)
-  return throttle(function(ev)
+
+  local callback = function(ev)
     update_extmarks(ev.buf, ns_id, ui_opts)
-  end, ui_opts.update_debounce)
+  end
+
+  if throttle then
+    return require("obsidian.async").throttle(callback, ui_opts.update_debounce)
+  else
+    return callback
+  end
 end
 
 return M
