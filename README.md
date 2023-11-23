@@ -360,6 +360,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- Replace the above with this if you don't have a patched font:
     -- external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
     reference_text = { hl_group = "ObsidianRefText" },
+    highlight_text = { hl_group = "ObsidianHighlightText" },
     tags = { hl_group = "ObsidianTag" },
     hl_groups = {
       -- The options are passed directly to `vim.api.nvim_set_hl()`. See `:help nvim_set_hl`.
