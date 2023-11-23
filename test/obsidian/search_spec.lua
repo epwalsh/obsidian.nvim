@@ -4,6 +4,7 @@ local search = require "obsidian.search"
 
 local RefTypes = search.RefTypes
 local SearchOpts = search.SearchOpts
+local Patterns = search.Patterns
 
 describe("search.find_notes_async()", function()
   it("should recursively find notes in a directory given a file name", function()
@@ -98,5 +99,21 @@ describe("search.SearchOpts", function()
     local opts = SearchOpts.from_tbl { fixed_strings = true, max_count_per_file = 1 }
     opts = opts:merge { fixed_strings = false, ignore_case = true }
     assert.are_same(opts:to_ripgrep_opts(), { "--ignore-case", "-m=1" })
+  end)
+end)
+
+describe("search.RefTypes", function()
+  it("should have all keys matching values", function()
+    for k, v in pairs(RefTypes) do
+      assert(k == v)
+    end
+  end)
+end)
+
+describe("search.Patterns", function()
+  it("should include a pattern for every RefType", function()
+    for _, ref_type in pairs(RefTypes) do
+      assert(type(Patterns[ref_type]) == "string")
+    end
   end)
 end)
