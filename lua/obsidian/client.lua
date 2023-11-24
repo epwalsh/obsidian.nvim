@@ -387,6 +387,7 @@ end
 ---@param callback function(string[]) -> nil
 Client.find_tags_async = function(self, term, opts, callback)
   assert(string.len(term) > 0)
+  term = string.lower(term)
 
   local tags = {}
   local err_count = 0
@@ -397,10 +398,16 @@ Client.find_tags_async = function(self, term, opts, callback)
   search.search_async(
     self.dir,
     "#" .. term .. search.Patterns.TagChars,
-    self:_prepare_search_opts(opts),
-    function(match)
-      local tag = string.sub(match.submatches[1].match.text, 2)
-      tags[tag] = true
+    self:_prepare_search_opts(opts, { ignore_case = true }),
+    function(match_data)
+      local line = match_data.lines.text
+      for match in iter(search.find_tags(line)) do
+        local m_start, m_end, _ = unpack(match)
+        local tag = string.sub(line, m_start + 1, m_end)
+        if vim.startswith(string.lower(tag), term) then
+          tags[tag] = true
+        end
+      end
     end,
     function(_)
       tx_content()
@@ -412,7 +419,7 @@ Client.find_tags_async = function(self, term, opts, callback)
   search.search_async(
     self.dir,
     { "\\s*- " .. term .. search.Patterns.TagChars, "tags: .*" .. term .. search.Patterns.TagChars },
-    self:_prepare_search_opts(opts, { max_count_per_file = 1 }),
+    self:_prepare_search_opts(opts, { max_count_per_file = 1, ignore_case = true }),
     function(match)
       executor:submit(function()
         local path = vim.fs.normalize(match.path.text)
@@ -421,7 +428,7 @@ Client.find_tags_async = function(self, term, opts, callback)
           if res.tags ~= nil then
             for tag in iter(res.tags) do
               tag = tostring(tag)
-              if vim.startswith(tag, term) then
+              if vim.startswith(string.lower(tag), term) then
                 tags[tag] = true
               end
             end

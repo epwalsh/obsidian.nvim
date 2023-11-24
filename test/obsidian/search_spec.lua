@@ -47,6 +47,18 @@ describe("search.find_refs()", function()
   end)
 end)
 
+describe("search.find_tags()", function()
+  it("should find positions of all tags", function()
+    local s = "I have a #meeting at noon"
+    assert.are_same({ { 10, 17, RefTypes.Tag } }, search.find_tags(s))
+  end)
+
+  it("should ignore anchor links that look like tags", function()
+    local s = "[readme](README#installation)"
+    assert.are_same({}, search.find_tags(s))
+  end)
+end)
+
 describe("search.find_and_replace_refs()", function()
   it("should find and replace all refs", function()
     local s, indices = search.find_and_replace_refs "[[Foo]] [[foo|Bar]]"

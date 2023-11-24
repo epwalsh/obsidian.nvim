@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed API of `Client` search methods to take a class of options.
 
+### Fixed
+
+- Made tags autocompletion more robust by ignoring anchor links (which look like tags) and searching case-insensitive.
+
 ## [v2.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.2.0) - 2023-11-23
 
 ### Added

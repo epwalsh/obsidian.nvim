@@ -38,7 +38,7 @@ M.Patterns = {
 ---Find all matches of a pattern
 ---@param s string
 ---@param pattern_names table
----@return table
+---@return table<integer, integer, string>[]
 M.find_matches = function(s, pattern_names)
   -- First find all inline code blocks so we can skip reference matches inside of those.
   local inline_code_blocks = {}
@@ -95,7 +95,7 @@ end
 
 ---Find inline highlights
 ---@param s string
----@return table
+---@return table<integer, integer, string>[]
 M.find_highlight = function(s)
   local matches = {}
   for match in iter(M.find_matches(s, { "Highlight" })) do
@@ -116,7 +116,7 @@ end
 ---Find refs and URLs.
 ---@param s string the string to search
 ---@param opts obsidian.search.FindRefsOpts|?
----@return table
+---@return table<integer, integer, string>[]
 M.find_refs = function(s, opts)
   opts = opts and opts or {}
 
@@ -129,6 +129,22 @@ M.find_refs = function(s, opts)
   end
 
   return M.find_matches(s, pattern_names)
+end
+
+---Find all tags in a string.
+---@param s string the string to search
+---@return table<integer, integer, string>[]
+M.find_tags = function(s)
+  local matches = {}
+  -- NOTE: we search over all reference types to make sure we're not including anchor links within
+  -- references, which otherwise look just like tags.
+  for match in iter(M.find_refs(s, { include_naked_urls = true, include_tags = true })) do
+    local _, _, m_type = unpack(match)
+    if m_type == M.RefTypes.Tag then
+      matches[#matches + 1] = match
+    end
+  end
+  return matches
 end
 
 ---Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
