@@ -226,22 +226,22 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
   end
 end
 
----Search for notes.
+---Find notes matching the given term. Notes are searched based on ID, title, filename, and aliases.
 ---@param term string The term to search for
 ---@param opts obsidian.client.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
 ---@param timeout integer|? Timeout to wait in milliseconds
 ---@return obsidian.Note[]
-Client.search = function(self, term, opts, timeout)
+Client.find_notes = function(self, term, opts, timeout)
   return block_on(function(cb)
-    return self:search_async(term, opts, cb)
+    return self:find_notes_async(term, opts, cb)
   end, timeout)
 end
 
----An async version of `search()` that runs the callback with an array of all matching notes.
+---An async version of `find_notes()` that runs the callback with an array of all matching notes.
 ---@param term string The term to search for
 ---@param opts obsidian.client.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
 ---@param callback function (obsidian.Note[]) -> nil
-Client.search_async = function(self, term, opts, callback)
+Client.find_notes_async = function(self, term, opts, callback)
   local next_path = self:_search_iter_async(term, opts)
   local executor = AsyncExecutor.new()
 
@@ -289,6 +289,87 @@ Client.search_async = function(self, term, opts, callback)
       callback(results_)
     end)
   end, function(_) end)
+end
+
+---Resolve the query to a single note if possible, otherwise `nil` is returned.
+---@param query string
+---@return obsidian.Note|?
+Client.resolve_note = function(self, query)
+  local maybe_note
+  local done = false
+
+  self:resolve_note_async(query, function(res)
+    maybe_note = res
+    done = true
+  end)
+
+  vim.wait(2000, function()
+    return done
+  end, 20, false)
+
+  return maybe_note
+end
+
+---An async version of `resolve_note()`.
+---@param query string
+---@param callback function(obsidian.Note|?)
+---@return obsidian.Note|?
+Client.resolve_note_async = function(self, query, callback)
+  -- Autocompletion for command args will have this format.
+  local note_path, count = string.gsub(query, "^.*  ", "")
+  if count > 0 then
+    ---@type Path
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local full_path = self.dir / note_path
+    return async.run(function()
+      return Note.from_file_async(full_path, self.dir)
+    end, callback)
+  end
+
+  -- Query might be a path.
+  local fname = query
+  if not vim.endswith(fname, ".md") then
+    fname = fname .. ".md"
+  end
+  local paths_to_check = { Path:new(fname), self.dir / fname }
+  if self.opts.notes_subdir ~= nil then
+    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / fname)
+  end
+  if self.opts.daily_notes.folder ~= nil then
+    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / fname)
+  end
+  for _, path in pairs(paths_to_check) do
+    if path:is_file() and vim.endswith(tostring(path), ".md") then
+      return async.run(function()
+        return Note.from_file_async(path)
+      end, callback)
+    end
+  end
+
+  self:find_notes_async(query, { ignore_case = true }, function(results)
+    local query_lwr = string.lower(query)
+    local maybe_matches = {}
+    for note in iter(results) do
+      if query == note.id or query == note:display_name() or util.tbl_contains(note.aliases, query) then
+        -- Exact match! We're done!
+        return callback(note)
+      end
+
+      for alias in iter(note.aliases) do
+        if query_lwr == string.lower(alias) then
+          -- Lower case match, save this one for later.
+          table.insert(maybe_matches, note)
+          break
+        end
+      end
+    end
+
+    if #maybe_matches > 0 then
+      return callback(maybe_matches[1])
+    else
+      return callback(nil)
+    end
+  end)
 end
 
 ---Find all tags starting with the given term.
@@ -591,89 +672,6 @@ end
 ---@return obsidian.Note
 Client.daily = function(self, offset_days)
   return self:_daily(os.time() + (offset_days * 3600 * 24))
-end
-
----Resolve the query to a single note.
----
----@param query string
----@return obsidian.Note|?
-Client.resolve_note = function(self, query)
-  local maybe_note
-  local done = false
-
-  self:resolve_note_async(query, function(res)
-    maybe_note = res
-    done = true
-  end)
-
-  vim.wait(2000, function()
-    return done
-  end, 20, false)
-
-  return maybe_note
-end
-
----An async vesion of `resolve_note()`.
----
----@param query string
----@param callback function(obsidian.Note|?)
----@return obsidian.Note|?
-Client.resolve_note_async = function(self, query, callback)
-  -- Autocompletion for command args will have this format.
-  local note_path, count = string.gsub(query, "^.*  ", "")
-  if count > 0 then
-    ---@type Path
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    local full_path = self.dir / note_path
-    return async.run(function()
-      return Note.from_file_async(full_path, self.dir)
-    end, callback)
-  end
-
-  -- Query might be a path.
-  local fname = query
-  if not vim.endswith(fname, ".md") then
-    fname = fname .. ".md"
-  end
-  local paths_to_check = { Path:new(fname), self.dir / fname }
-  if self.opts.notes_subdir ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / fname)
-  end
-  if self.opts.daily_notes.folder ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / fname)
-  end
-  for _, path in pairs(paths_to_check) do
-    if path:is_file() and vim.endswith(tostring(path), ".md") then
-      return async.run(function()
-        return Note.from_file_async(path)
-      end, callback)
-    end
-  end
-
-  self:search_async(query, { ignore_case = true }, function(results)
-    local query_lwr = string.lower(query)
-    local maybe_matches = {}
-    for note in iter(results) do
-      if query == note.id or query == note:display_name() or util.tbl_contains(note.aliases, query) then
-        -- Exact match! We're done!
-        return callback(note)
-      end
-
-      for alias in iter(note.aliases) do
-        if query_lwr == string.lower(alias) then
-          -- Lower case match, save this one for later.
-          table.insert(maybe_matches, note)
-          break
-        end
-      end
-    end
-
-    if #maybe_matches > 0 then
-      return callback(maybe_matches[1])
-    else
-      return callback(nil)
-    end
-  end)
 end
 
 Client._run_with_finder_backend = function(self, implementations)

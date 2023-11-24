@@ -49,13 +49,13 @@ end
 ---@param client obsidian.Client
 ---@return string[]
 M.complete_args_search = function(client, _, cmd_line, _)
-  local search_
+  local query
   local cmd_arg, _ = util.lstrip_whitespace(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
   if string.len(cmd_arg) > 0 then
     if string.find(cmd_arg, "|", 1, true) then
       return {}
     else
-      search_ = cmd_arg
+      query = cmd_arg
     end
   else
     local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
@@ -72,18 +72,18 @@ M.complete_args_search = function(client, _, cmd_line, _)
       return {}
     end
 
-    search_ = table.concat(lines, " ")
+    query = table.concat(lines, " ")
   end
 
   local completions = {}
-  local search_lwr = string.lower(search_)
-  for note in iter(client:search(search_, { sort = true })) do
+  local query_lower = string.lower(query)
+  for note in iter(client:find_notes(query, { sort = true })) do
     local note_path = assert(client:vault_relative_path(note.path))
-    if string.find(note:display_name(), search_lwr, 1, true) then
+    if string.find(string.lower(note:display_name()), query_lower, 1, true) then
       table.insert(completions, note:display_name() .. "  " .. note_path)
     else
       for _, alias in pairs(note.aliases) do
-        if string.find(string.lower(alias), search_lwr, 1, true) then
+        if string.find(string.lower(alias), query_lower, 1, true) then
           table.insert(completions, alias .. "  " .. note_path)
           break
         end
