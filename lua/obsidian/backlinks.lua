@@ -6,6 +6,8 @@ local Note = require "obsidian.note"
 local search = require "obsidian.search"
 local iter = require("obsidian.itertools").iter
 
+local NAMESPACE = "ObsidianBacklinks"
+
 ---Parse path and line number from a line in an ObsidianBacklinks buffer.
 ---@param line string
 local function parse_path_and_line_nr(line)
@@ -163,6 +165,8 @@ Backlinks._view = function(self, backlink_matches)
   -- Clear any existing backlinks buffer.
   wipe_rogue_buffer()
 
+  local ns_id = vim.api.nvim_create_namespace(NAMESPACE)
+
   vim.api.nvim_command("botright " .. tostring(self.client.opts.backlinks.height) .. "split ObsidianBacklinks")
 
   -- Configure buffer.
@@ -196,7 +200,7 @@ Backlinks._view = function(self, backlink_matches)
 
   vim.api.nvim_buf_set_option(0, "readonly", false)
   vim.api.nvim_buf_set_option(0, "modifiable", true)
-  vim.api.nvim_buf_clear_namespace(0, self.client.backlinks_namespace, 0, -1)
+  vim.api.nvim_buf_clear_namespace(0, ns_id, 0, -1)
 
   -- Render lines.
   local view_lines = {}
@@ -253,7 +257,7 @@ Backlinks._view = function(self, backlink_matches)
 
   -- Render highlights.
   for _, hl in pairs(highlights) do
-    vim.api.nvim_buf_add_highlight(0, self.client.backlinks_namespace, hl.group, hl.line, hl.col_start, hl.col_end)
+    vim.api.nvim_buf_add_highlight(0, ns_id, hl.group, hl.line, hl.col_start, hl.col_end)
   end
 
   -- Create folds.

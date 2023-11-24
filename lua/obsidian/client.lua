@@ -16,7 +16,6 @@ local iter = require("obsidian.itertools").iter
 ---@field dir Path
 ---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
----@field backlinks_namespace integer
 ---@field _quiet boolean
 local Client = abc.new_class {
   __tostring = function(self)
@@ -34,7 +33,6 @@ Client.new = function(opts)
   -- NOTE: workspace.path has already been normalized
   self.dir = Path:new(self.current_workspace.path)
   self.opts = opts
-  self.backlinks_namespace = vim.api.nvim_create_namespace "ObsidianBacklinks"
   self._quiet = false
   if self.opts.yaml_parser ~= nil then
     local yaml = require "obsidian.yaml"

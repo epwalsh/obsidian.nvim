@@ -7,7 +7,7 @@ local iter = require("obsidian.itertools").iter
 
 local M = {}
 
-local NAMESPACE = "obsidian"
+local NAMESPACE = "ObsidianUI"
 
 ---@param ui_opts obsidian.config.UIOpts
 local function install_hl_groups(ui_opts)
