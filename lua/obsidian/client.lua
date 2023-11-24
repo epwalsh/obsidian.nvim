@@ -450,7 +450,7 @@ Client.find_tags_async = function(self, term, opts, callback)
   async.run(function()
     rx_content()
     rx_frontmatter()
-    executor:join_async(5000)
+    executor:join_async()
 
     local tags_list = {}
     for tag in iter(tags) do

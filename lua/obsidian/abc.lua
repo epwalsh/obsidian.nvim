@@ -65,8 +65,8 @@ M.new_class = function(metamethods, base_class)
     end,
   }, metamethods and metamethods or {})
 
-  class.init = function()
-    local self = setmetatable({}, class.mt)
+  class.init = function(t)
+    local self = setmetatable(t and t or {}, class.mt)
     return self
   end
 
