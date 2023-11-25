@@ -32,12 +32,15 @@ local Parser = abc.new_class()
 
 m.Parser = Parser
 
-local YamlType = {}
-YamlType.Scalar = "Scalar" -- a boolean, string, number, or NULL
-YamlType.Mapping = "Mapping"
-YamlType.Array = "Array"
-YamlType.ArrayItem = "ArrayItem"
-YamlType.EmptyLine = "EmptyLine"
+---@enum YamlType
+local YamlType = {
+  Scalar = "Scalar", -- a boolean, string, number, or NULL
+  Mapping = "Mapping",
+  Array = "Array",
+  ArrayItem = "ArrayItem",
+  EmptyLine = "EmptyLine",
+}
+
 m.YamlType = YamlType
 
 ---@class vim.NIL
