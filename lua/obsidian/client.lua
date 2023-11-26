@@ -180,6 +180,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
     tx.send(nil)
   end
 
+  ---@param content_match MatchData
   local function on_search_match(content_match)
     local path = vim.fs.normalize(content_match.path.text)
     if not found[path] then
@@ -188,6 +189,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
     end
   end
 
+  ---@param path_match string
   local function on_find_match(path_match)
     local path = vim.fs.normalize(path_match)
     if not found[path] then
@@ -209,11 +211,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
   search.find_async(self.dir, term, self:_prepare_search_opts(find_opts), on_find_match, on_exit)
 
   return function()
-    while true do
-      if cmds_done >= 2 then
-        return nil
-      end
-
+    while cmds_done < 2 do
       local value = rx.recv()
       if value == nil then
         cmds_done = cmds_done + 1
@@ -221,6 +219,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
         return value
       end
     end
+    return nil
   end
 end
 
@@ -267,11 +266,10 @@ Client.find_notes_async = function(self, term, opts, callback)
       -- Check for errors.
       if first_err ~= nil and first_err_path ~= nil then
         log.err(
-          tostring(err_count)
-            .. " error(s) occurred during search. First error from note at "
-            .. tostring(first_err_path)
-            .. ":\n"
-            .. tostring(first_err)
+          "%d error(s) occurred during search. First error from note at '%s':\n%s",
+          err_count,
+          first_err_path,
+          first_err
         )
       end
 
@@ -290,22 +288,13 @@ Client.find_notes_async = function(self, term, opts, callback)
 end
 
 ---Resolve the query to a single note if possible, otherwise `nil` is returned.
+---The 'query' can be a path, filename, note ID, alias, title, etc.
 ---@param query string
 ---@return obsidian.Note|?
-Client.resolve_note = function(self, query)
-  local maybe_note
-  local done = false
-
-  self:resolve_note_async(query, function(res)
-    maybe_note = res
-    done = true
-  end)
-
-  vim.wait(2000, function()
-    return done
-  end, 20, false)
-
-  return maybe_note
+Client.resolve_note = function(self, query, timeout)
+  return block_on(function(cb)
+    return self:resolve_note_async(query, cb)
+  end, timeout)
 end
 
 ---An async version of `resolve_note()`.
@@ -393,55 +382,61 @@ Client.find_tags_async = function(self, term, opts, callback)
   local err_count = 0
   local first_err = nil
   local first_err_path = nil
+  local executor = AsyncExecutor.new()
+
+  ---@param match_data MatchData
+  local on_content_match = function(match_data)
+    local line = match_data.lines.text
+    for match in iter(search.find_tags(line)) do
+      local m_start, m_end, _ = unpack(match)
+      local tag = string.sub(line, m_start + 1, m_end)
+      if vim.startswith(string.lower(tag), term) then
+        tags[tag] = true
+      end
+    end
+  end
+
+  ---@param match_data MatchData
+  local on_frontmatter_match = function(match_data)
+    executor:submit(function()
+      local path = vim.fs.normalize(match_data.path.text)
+      local ok, res = pcall(Note.from_file_async, path, self.dir)
+      if ok then
+        if res.tags ~= nil then
+          for tag in iter(res.tags) do
+            tag = tostring(tag)
+            if vim.startswith(string.lower(tag), term) then
+              tags[tag] = true
+            end
+          end
+        end
+      else
+        err_count = err_count + 1
+        if first_err == nil then
+          first_err = res
+          first_err_path = path
+        end
+      end
+    end)
+  end
 
   local tx_content, rx_content = channel.oneshot()
   search.search_async(
     self.dir,
     "#" .. term .. search.Patterns.TagChars,
     self:_prepare_search_opts(opts, { ignore_case = true }),
-    function(match_data)
-      local line = match_data.lines.text
-      for match in iter(search.find_tags(line)) do
-        local m_start, m_end, _ = unpack(match)
-        local tag = string.sub(line, m_start + 1, m_end)
-        if vim.startswith(string.lower(tag), term) then
-          tags[tag] = true
-        end
-      end
-    end,
+    on_content_match,
     function(_)
       tx_content()
     end
   )
 
-  local executor = AsyncExecutor.new()
   local tx_frontmatter, rx_frontmatter = channel.oneshot()
   search.search_async(
     self.dir,
     { "\\s*- " .. term .. search.Patterns.TagChars, "tags: .*" .. term .. search.Patterns.TagChars },
     self:_prepare_search_opts(opts, { max_count_per_file = 1, ignore_case = true }),
-    function(match)
-      executor:submit(function()
-        local path = vim.fs.normalize(match.path.text)
-        local ok, res = pcall(Note.from_file_async, path, self.dir)
-        if ok then
-          if res.tags ~= nil then
-            for tag in iter(res.tags) do
-              tag = tostring(tag)
-              if vim.startswith(string.lower(tag), term) then
-                tags[tag] = true
-              end
-            end
-          end
-        else
-          err_count = err_count + 1
-          if first_err == nil then
-            first_err = res
-            first_err_path = path
-          end
-        end
-      end)
-    end,
+    on_frontmatter_match,
     function(_)
       tx_frontmatter()
     end
@@ -459,11 +454,10 @@ Client.find_tags_async = function(self, term, opts, callback)
 
     if first_err ~= nil and first_err_path ~= nil then
       log.err(
-        tostring(err_count)
-          .. " error(s) occurred during search. First error from note at "
-          .. tostring(first_err_path)
-          .. ":\n"
-          .. tostring(first_err)
+        "%d error(s) occurred during search. First error from note at '%s':\n%s",
+        err_count,
+        first_err_path,
+        first_err
       )
     end
     return tags_list

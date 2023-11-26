@@ -3,6 +3,7 @@ local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local log = require "obsidian.log"
+local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 local uv = vim.loop
 
@@ -32,13 +33,13 @@ Executor.submit = function(self, fn, callback, ...)
   error "not implemented"
 end
 
----Map a function over a generator or array of task args. The callback is called with an array of the results
----once all tasks have finished. The order of the results passed to the callback will be the same
----as the order of the corresponding task args.
+---Map a function over a generator or array of task args, or the keys and values in a regular table.
+---The callback is called with an array of the results once all tasks have finished.
+---The order of the results passed to the callback will be the same as the order of the corresponding task args.
 ---
 ---@param self obsidian.Executor
 ---@param fn function
----@param task_args table[]|function
+---@param task_args table[]|table|function
 ---@param callback function|?
 ---@diagnostic disable-next-line: unused-local
 Executor.map = function(self, fn, task_args, callback)
@@ -63,11 +64,17 @@ Executor.map = function(self, fn, task_args, callback)
     end
   end
 
-  if type(task_args) == "table" then
+  if type(task_args) == "table" and util.tbl_is_array(task_args) then
     num_tasks = #task_args
-
     for i, args in ipairs(task_args) do
       self:submit(fn, get_task_done_fn(i), unpack(args))
+    end
+  elseif type(task_args) == "table" then
+    local i = 0
+    for k, v in pairs(task_args) do
+      i = i + 1
+      num_tasks = num_tasks + 1
+      self:submit(fn, get_task_done_fn(i), k, v)
     end
   elseif type(task_args) == "function" then
     local i = 0
@@ -83,6 +90,8 @@ Executor.map = function(self, fn, task_args, callback)
       args = next_args
       next_args = { task_args() }
     end
+  else
+    return log.fail("unexpected type '%s' for 'task_args'", type(task_args))
   end
 
   if num_tasks == 0 then
