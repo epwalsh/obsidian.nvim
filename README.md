@@ -256,8 +256,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     },
   },
 
-  -- Optional, customize how names/IDs for new notes are created. This is equivalent to the default
-  -- implementation.
+  -- Optional, customize how names/IDs for new notes are created.
   note_id_func = function(title)
     -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
     -- In this case a note with the title 'My new note' will be given an ID that looks

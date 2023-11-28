@@ -469,15 +469,7 @@ end
 ---@param title string|?
 ---@return string
 Client.new_note_id = function(self, title)
-  local today_id = tostring(os.date "%Y-%m-%d")
-  if
-    title ~= nil
-    and string.len(title) >= 5
-    and string.find(today_id, title, 1, true) == 1
-    and not self:daily_note_path(today_id):is_file()
-  then
-    return today_id
-  elseif self.opts.note_id_func ~= nil then
+  if self.opts.note_id_func ~= nil then
     local new_id = self.opts.note_id_func(title)
     -- Remote '.md' suffix if it's there (we add that later).
     new_id = new_id:gsub("%.md$", "", 1)
@@ -576,9 +568,11 @@ end
 
 ---Get the path to a daily note.
 ---
----@param id string
----@return Path
-Client.daily_note_path = function(self, id)
+---@param datetime integer|?
+---@return Path, string
+Client.daily_note_path = function(self, datetime)
+  datetime = datetime and datetime or os.time()
+
   ---@type Path
   local path = Path:new(self.dir)
 
@@ -591,10 +585,17 @@ Client.daily_note_path = function(self, id)
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.notes_subdir
   end
-  ---@type Path
-  ---@diagnostic disable-next-line: assign-type-mismatch
+
+  local id
+  if self.opts.daily_notes.date_format ~= nil then
+    id = tostring(os.date(self.opts.daily_notes.date_format, datetime))
+  else
+    id = tostring(os.date("%Y-%m-%d", datetime))
+  end
+
   path = path / (id .. ".md")
-  return path
+
+  return path, id
 end
 
 ---Open (or create) the daily note.
@@ -605,14 +606,7 @@ end
 Client._daily = function(self, datetime)
   local templates = require "obsidian.templates"
 
-  local id
-  if self.opts.daily_notes.date_format ~= nil then
-    id = tostring(os.date(self.opts.daily_notes.date_format, datetime))
-  else
-    id = tostring(os.date("%Y-%m-%d", datetime))
-  end
-
-  local path = self:daily_note_path(id)
+  local path, id = self:daily_note_path(datetime)
 
   local alias
   if self.opts.daily_notes.alias_format ~= nil then

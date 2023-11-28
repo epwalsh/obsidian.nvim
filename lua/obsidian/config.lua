@@ -197,7 +197,7 @@ end
 ---@field subdir string
 ---@field date_format string|?
 ---@field time_format string|?
----@field substitutions table|?
+---@field substitutions table<string, function>|?
 config.TemplateOpts = {}
 
 ---Get defaults.
