@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.3.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.3.0) - 2023-11-28
+
 ### Added
 
 - The command `:ObsidianFollowLink` and the default `gf` pass-through mapping will now follow links to local files that are not notes.
