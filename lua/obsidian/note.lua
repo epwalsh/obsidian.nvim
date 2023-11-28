@@ -43,6 +43,27 @@ Note.new = function(id, aliases, tags, path)
   return self
 end
 
+---Get markdown display info about the note.
+---@return string
+Note.display_info = function(self)
+  ---@type string[]
+  local info = {}
+
+  if self.path ~= nil then
+    info[#info + 1] = ("**path:** %s"):format(self.path)
+  end
+
+  if #self.aliases > 0 then
+    info[#info + 1] = ("**aliases:** '%s'"):format(table.concat(self.aliases, "', '"))
+  end
+
+  if #self.tags > 0 then
+    info[#info + 1] = ("**tags:** '%s'"):format(table.concat(self.tags, "', '"))
+  end
+
+  return table.concat(info, "\n")
+end
+
 ---Check if the note exists on the file system.
 ---
 ---@return boolean
