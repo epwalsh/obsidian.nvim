@@ -29,33 +29,33 @@ _This plugin is not meant to replace Obsidian, but to complement it._ My persona
 - ▶️ Ultra-fast, asynchronous autocompletion for note references and tags via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links, `[` for markdown links, or `#` for tags), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep)
 - 🏃 Navigate throughout your vault by typing `gf` on any link to another note
 - 📷 Paste images into notes
-- 💅 Additional markdown syntax highlighting, concealing, and extmarks for references and check-boxes
+- 💅 Additional markdown syntax highlighting, concealing, and extmarks for references, tags, and check-boxes
 
 [![See this screenshot here https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)
 
 ### Commands
 
-- `:ObsidianOpen` to open a note in the Obsidian app.
-  This command has one optional argument: the ID, path, or alias of the note to open. If not given, the note corresponding to the current buffer is opened.
-- `:ObsidianNew` to create a new note.
+- `:ObsidianOpen [QUERY]` to open a note in the Obsidian app.
+  This command has one optional argument: a query used to resolve the note to open by ID, path, or alias. If not given, the note corresponding to the current buffer is opened.
+- `:ObsidianNew [TITLE]` to create a new note.
   This command has one optional argument: the title of the new note.
 - `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
-- `:ObsidianToday` to open/create a new daily note. This command also takes an optional offset in days, e.g. use `:ObsidianToday -1` to go to yesterday's note.
+- `:ObsidianToday [OFFSET]` to open/create a new daily note. This command also takes an optional offset in days, e.g. use `:ObsidianToday -1` to go to yesterday's note. Unlike `:ObsidianYesterday` and `:ObsidianTomorrow` this command does not differentiate between weekdays and weekends.
 - `:ObsidianYesterday` to open/create the daily note for the previous working day.
 - `:ObsidianTomorrow` to open/create the daily note for the next working day.
-- `:ObsidianTemplate` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
+- `:ObsidianTemplate [NAME]` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
   See ["using templates"](#using-templates) for more information.
-- `:ObsidianSearch` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
+- `:ObsidianSearch [QUERY]` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
   This command has one optional argument: a search query to start with.
-- `:ObsidianLink` to link an in-line visual selection of text to a note.
-  This command has one optional argument: the ID, path, or alias of the note to link to. If not given, the selected text will be used to find the note with a matching ID, path, or alias.
-- `:ObsidianLinkNew` to create a new note and link it to an in-line visual selection of text.
+- `:ObsidianLink [QUERY]` to link an inline visual selection of text to a note.
+  This command has one optional argument: a query that will be used to resolve the note by ID, path, or alias. If not given, the selected text will be used as the query.
+- `:ObsidianLinkNew [TITLE]` to create a new note and link it to an inline visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
-- `:ObsidianWorkspace` to switch to another workspace.
-- `:ObsidianPasteImg` to paste an image from the clipboard into the note at the cursor position by saving it to the vault and adding a markdown image link. You can configure the default folder to save images to with the `attachments.img_folder` option.
-- (experimental) `:ObsidianRename` to rename the note of the current buffer or reference under the cursor, updating all backlinks across the vault. Since this command is still in alpha and could potentially write a lot of changes to your vault, I highly recommend committing the current state of your vault (if you're using version control) before running it. Alternatively you could do a dry-run first by appending "--dry-run" to the command, e.g. `:ObsidianRename new-id --dry-run`.
+- `:ObsidianWorkspace [NAME]` to switch to another workspace.
+- `:ObsidianPasteImg [IMGNAME]` to paste an image from the clipboard into the note at the cursor position by saving it to the vault and adding a markdown image link. You can configure the default folder to save images to with the `attachments.img_folder` option.
+- `:ObsidianRename [NEWNAME] [--dry-run]` to rename the note of the current buffer or reference under the cursor, updating all backlinks across the vault. Since this command is still relatively new and could potentially write a lot of changes to your vault, I highly recommend committing the current state of your vault (if you're using version control) before running it, or doing a dry-run first by appending "--dry-run" to the command, e.g. `:ObsidianRename new-id --dry-run`.
 
 ### Demo
 
@@ -166,13 +166,11 @@ If you choose to use any of these you should include them in the "dependencies" 
 
 ### Configuration options
 
-This is a complete list of all of the options that can be passed to `require("obsidian").setup()`:
+This is a complete list of all of the options that can be passed to `require("obsidian").setup()`. The values represent reasonable defaults, but please read each option carefully and customize it to your needs:
 
 ```lua
 {
-  -- Optional, and for backward compatibility. Setting this will use it as the default workspace
-  -- dir = "~/vaults/other",
-  -- Optional, list of vault names and paths.
+  -- A list of vault names and paths.
   workspaces = {
     {
       name = "personal",
@@ -184,16 +182,20 @@ This is a complete list of all of the options that can be passed to `require("ob
     },
   },
 
-  -- Optional, set to true to use the current directory as a vault; otherwise,
-  -- the first workspace is opened by default
+  -- Alternatively - and for backwards compatibility - you can set 'dir' to a single path instead of
+  -- 'workspaces'. For example:
+  -- dir = "~/vaults/work",
+
+  -- Optional, set to true to use the current directory as a vault; otherwise
+  -- the first workspace is opened by default.
   detect_cwd = false,
 
   -- Optional, if you keep notes in a specific subdirectory of your vault.
   notes_subdir = "notes",
 
   -- Optional, set the log level for obsidian.nvim. This is an integer corresponding to one of the log
-  -- levels defined by "vim.log.levels.*" or nil, which is equivalent to DEBUG (1).
-  log_level = vim.log.levels.DEBUG,
+  -- levels defined by "vim.log.levels.*".
+  log_level = vim.log.levels.INFO,
 
   daily_notes = {
     -- Optional, if you keep daily notes in a separate directory.
@@ -206,36 +208,37 @@ This is a complete list of all of the options that can be passed to `require("ob
     template = nil
   },
 
-  -- Optional, completion.
+  -- Optional, completion of wiki links, local markdown links, and tags using nvim-cmp.
   completion = {
-    -- If using nvim-cmp, otherwise set to false
+    -- Set to false to disable completion.
     nvim_cmp = true,
-    -- Trigger completion at 2 chars
+
+    -- Trigger completion at 2 chars.
     min_chars = 2,
+
     -- Where to put new notes created from completion. Valid options are
     --  * "current_dir" - put new notes in same directory as the current buffer.
     --  * "notes_subdir" - put new notes in the default notes subdirectory.
     new_notes_location = "current_dir",
 
-    -- Control how wiki links are completed with these options:
-
-    -- Whether to add the note ID during completion.
+    -- Control how wiki links are completed with these (mutually exclusive) options:
+    --
+    -- 1. Whether to add the note ID during completion.
     -- E.g. "[[Foo" completes to "[[foo|Foo]]" assuming "foo" is the ID of the note.
     -- Mutually exclusive with 'prepend_note_path' and 'use_path_only'.
     prepend_note_id = true,
-
-    -- Whether to add the note path during completion.
+    -- 2. Whether to add the note path during completion.
     -- E.g. "[[Foo" completes to "[[notes/foo|Foo]]" assuming "notes/foo.md" is the path of the note.
     -- Mutually exclusive with 'prepend_note_id' and 'use_path_only'.
     prepend_note_path = false,
-
-    -- Whether to only use paths during completion.
+    -- 3. Whether to only use paths during completion.
     -- E.g. "[[Foo" completes to "[[notes/foo]]" assuming "notes/foo.md" is the path of the note.
     -- Mutually exclusive with 'prepend_note_id' and 'prepend_note_path'.
     use_path_only = false,
   },
 
-  -- Optional, key mappings.
+  -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
+  -- way then set 'mappings = {}'.
   mappings = {
     -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
     ["gf"] = {
@@ -253,10 +256,11 @@ This is a complete list of all of the options that can be passed to `require("ob
     },
   },
 
-  -- Optional, customize how names/IDs for new notes are created.
+  -- Optional, customize how names/IDs for new notes are created. This is equivalent to the default
+  -- implementation.
   note_id_func = function(title)
     -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
-    -- In this case a note with the title 'My new note' will given an ID that looks
+    -- In this case a note with the title 'My new note' will be given an ID that looks
     -- like '1657296016-my-new-note', and therefore the file name '1657296016-my-new-note.md'
     local suffix = ""
     if title ~= nil then
@@ -294,7 +298,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     date_format = "%Y-%m-%d",
     time_format = "%H:%M",
     -- A map for custom variables, the key should be the variable and the value a function
-    substitutions = {}
+    substitutions = {},
   },
 
   -- Optional, customize the backlinks interface.
@@ -321,21 +325,19 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_app_foreground = false,
 
   -- Optional, by default commands like `:ObsidianSearch` will attempt to use
-  -- telescope.nvim, fzf-lua, and fzf.vim (in that order), and use the
-  -- first one they find. By setting this option to your preferred
-  -- finder you can attempt it first. Note that if the specified finder
-  -- is not installed, or if it the command does not support it, the
-  -- remaining finders will be attempted in the original order.
+  -- telescope.nvim, fzf-lua, or fzf.vim (in that order), and use the
+  -- first one they find. You can set this option to tell obsidian.nvim to always use this
+  -- finder.
   finder = "telescope.nvim",
 
   -- Optional, sort search results by "path", "modified", "accessed", or "created".
-  -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example `:ObsidianQuickSwitch`
-  -- will show the notes sorted by latest modified time
+  -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example,
+  -- that `:ObsidianQuickSwitch` will show the notes sorted by latest modified time
   sort_by = "modified",
   sort_reversed = true,
 
   -- Optional, determines whether to open notes in a horizontal split, a vertical split,
-  -- or replacing the current buffer (default)
+  -- or replacing the current buffer (default).
   -- Accepted values are "current", "hsplit" and "vsplit"
   open_notes_in = "current",
 
@@ -378,12 +380,12 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Specify how to handle attachments.
   attachments = {
     -- The default folder to place images in via `:ObsidianPasteImg`.
-    -- If this a relative path it will be interpreted as relative to the vault root.
+    -- If this is a relative path it will be interpreted as relative to the vault root.
     -- You can always override this per image by passing a full path to the command instead of just a filename.
     img_folder = "assets/imgs",  -- This is the default
     -- A function that determines the text to insert in the note when pasting an image.
     -- It takes two arguments, the `obsidian.Client` and a plenary `Path` to the image file.
-    -- The is the default implementation.
+    -- This is the default implementation.
     ---@param client obsidian.Client
     ---@param path Path the absolute path to the image file
     ---@return string
@@ -407,7 +409,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is more robust
   --    but much slower and needs to be installed separately.
   -- In general you should be using the native parser unless you run into a bug with it, in which
-  -- case you can temporarily switch to the "yq" parser.
+  -- case you can temporarily switch to the "yq" parser until the bug is fixed.
   yaml_parser = "native",
 }
 ```
