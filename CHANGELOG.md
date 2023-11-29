@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `Client:update_ui()` method.
+
 ### Changed
 
-- `Client.daily_note_path()` now takes a datetime integer instead of an ID string.
+- `Client:daily_note_path()` now takes a datetime integer instead of an ID string.
+- Template substitutions can now handle multiple lines, i.e. you can define custom substitutions that return a string with new line characters.
 
 ## [v2.3.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.3.0) - 2023-11-28
 

@@ -543,6 +543,24 @@ local function get_extmarks_autocmd_callback(ui_opts, throttle)
   end
 end
 
+---Manually update extmarks.
+---@param ui_opts obsidian.config.UIOpts
+---@param bufnr integer|?
+M.update = function(ui_opts, bufnr)
+  if ui_opts.enable == false then
+    return
+  end
+
+  bufnr = bufnr and bufnr or 0
+
+  if not vim.endswith(vim.api.nvim_buf_get_name(bufnr), ".md") then
+    return
+  end
+
+  local ns_id = vim.api.nvim_create_namespace(NAMESPACE)
+  update_extmarks(bufnr, ns_id, ui_opts)
+end
+
 ---@param ui_opts obsidian.config.UIOpts
 M.setup = function(ui_opts)
   if ui_opts.enable == false then

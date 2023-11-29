@@ -698,4 +698,10 @@ Client._run_with_finder_backend = function(self, implementations)
   log.err "No finders available. One of 'telescope.nvim', 'fzf-lua', or 'fzf.vim' is required."
 end
 
+---Manually update extmarks in a buffer.
+---@param bufnr integer|?
+Client.update_ui = function(self, bufnr)
+  require("obsidian.ui").update(self.opts.ui, bufnr)
+end
+
 return Client

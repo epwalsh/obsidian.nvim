@@ -1,5 +1,6 @@
 local Path = require "plenary.path"
 local log = require "obsidian.log"
+local util = require "obsidian.util"
 
 local M = {}
 
@@ -55,8 +56,7 @@ M.clone_template = function(template_name, note_path, client, title)
     return error("Unable to write note at " .. note_path)
   end
   for line in template_file:lines "L" do
-    line = M.substitute_template_variables(line, client, title)
-    note_file:write(line)
+    note_file:write(M.substitute_template_variables(line, client, title))
   end
   template_file:close()
   note_file:close()
@@ -81,8 +81,21 @@ M.insert_template = function(name, client, location)
   if template_file then
     local lines = template_file:lines()
     for line in lines do
-      line = M.substitute_template_variables(line, client, title)
-      table.insert(insert_lines, line)
+      local new_lines = M.substitute_template_variables(line, client, title)
+      if string.find(new_lines, "[\r\n]") then
+        local line_start = 1
+        for line_end in util.gfind(new_lines, "[\r\n]") do
+          local new_line = string.sub(new_lines, line_start, line_end - 1)
+          table.insert(insert_lines, new_line)
+          line_start = line_end + 1
+        end
+        local last_line = string.sub(new_lines, line_start)
+        if string.len(last_line) > 0 then
+          table.insert(insert_lines, last_line)
+        end
+      else
+        table.insert(insert_lines, new_lines)
+      end
     end
     template_file:close()
     table.insert(insert_lines, "")
@@ -91,6 +104,8 @@ M.insert_template = function(name, client, location)
   vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
   local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
   vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
+
+  client:update_ui(0)
 end
 
 return M
