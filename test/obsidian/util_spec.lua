@@ -1,13 +1,5 @@
 local util = require "obsidian.util"
 
-describe("util.get_open_strategy()", function()
-  it("should return the correct open strategy", function()
-    assert.equals(util.get_open_strategy "current", "e ")
-    assert.equals(util.get_open_strategy "hsplit", "sp ")
-    assert.equals(util.get_open_strategy "vsplit", "vsp ")
-  end)
-end)
-
 describe("util.urlencode()", function()
   it("should correctly URL-encode a path", function()
     assert.equals(util.urlencode [[~/Library/Foo Bar.md]], [[~%2FLibrary%2FFoo%20Bar.md]])
