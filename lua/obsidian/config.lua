@@ -23,11 +23,18 @@ local config = {}
 ---@field finder string|?
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
----@field open_notes_in "current"|"vsplit"|"hsplit"
+---@field open_notes_in obsidian.config.OpenStrategy
 ---@field ui obsidian.config.UIOpts
 ---@field attachments obsidian.config.AttachmentsOpts
 ---@field yaml_parser string|?
 config.ClientOpts = {}
+
+---@enum obsidian.config.OpenStrategy
+config.OpenStrategy = {
+  current = "current",
+  vsplit = "vsplit",
+  hsplit = "hsplit",
+}
 
 ---Get defaults.
 ---@return obsidian.config.ClientOpts

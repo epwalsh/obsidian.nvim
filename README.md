@@ -335,9 +335,10 @@ This is a complete list of all of the options that can be passed to `require("ob
   sort_by = "modified",
   sort_reversed = true,
 
-  -- Optional, determines whether to open notes in a horizontal split, a vertical split,
-  -- or replacing the current buffer (default).
-  -- Accepted values are "current", "hsplit" and "vsplit"
+  -- Optional, determines how certain commands open notes. The valid options are:
+  -- 1. "current" (the default) - to always open in the current window
+  -- 2. "vsplit" - to open in a vertical split if there's not already a vertical split
+  -- 3. "hsplit" - to open in a horizontal split if there's not already a horizontal split
   open_notes_in = "current",
 
   -- Optional, configure additional syntax highlighting / extmarks.

@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `Client:update_ui()` method.
+- Assigned enum type `obsidian.config.OpenStrategy` to `config.open_notes_in`.
 
 ### Changed
 
 - `Client:daily_note_path()` now takes a datetime integer instead of an ID string.
 - Template substitutions can now handle multiple lines, i.e. you can define custom substitutions that return a string with new line characters.
+- The "vsplit" and "hsplit" open strategies for `config.open_notes_in` will now only open a vertical/horizontal split if the window is not already split.
 
 ## [v2.3.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.3.0) - 2023-11-28
 

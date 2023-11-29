@@ -1,4 +1,5 @@
 local iter = require("obsidian.itertools").iter
+local log = require "obsidian.log"
 
 local util = {}
 
@@ -417,16 +418,32 @@ end
 
 ---Get the strategy for opening notes
 ---
----@param opt "current"|"vsplit"|"hsplit"
+---@param opt obsidian.config.OpenStrategy
 ---@return string
 util.get_open_strategy = function(opt)
-  local strategy = "e "
-  if opt == "hsplit" then
-    strategy = "sp "
-  elseif opt == "vsplit" then
-    strategy = "vsp "
+  local OpenStrategy = require("obsidian.config").OpenStrategy
+
+  -- either 'leaf', 'row' for vertically split windows, or 'col' for horizontally split windows
+  local cur_layout = vim.fn.winlayout()[1]
+
+  if opt == OpenStrategy.hsplit then
+    if cur_layout ~= "col" then
+      return "hsplit "
+    else
+      return "e "
+    end
+  elseif opt == OpenStrategy.vsplit then
+    if cur_layout ~= "row" then
+      return "vsplit "
+    else
+      return "e "
+    end
+  elseif opt == OpenStrategy.current then
+    return "e "
+  else
+    log.err("undefined open strategy '%s'", opt)
+    return "e "
   end
-  return strategy
 end
 
 ---Create a new unique Zettel ID.
