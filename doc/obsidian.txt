@@ -289,8 +289,7 @@ please read each option carefully and customize it to your needs:
         },
       },
     
-      -- Optional, customize how names/IDs for new notes are created. This is equivalent to the default
-      -- implementation.
+      -- Optional, customize how names/IDs for new notes are created.
       note_id_func = function(title)
         -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
         -- In this case a note with the title 'My new note' will be given an ID that looks
