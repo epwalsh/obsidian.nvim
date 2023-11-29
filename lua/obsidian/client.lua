@@ -661,7 +661,7 @@ Client.tomorrow = function(self)
 end
 
 ---Open (or create) the daily note for today + `offset_days`.
----
+---@param offset_days integer|?
 ---@return obsidian.Note
 Client.daily = function(self, offset_days)
   return self:_daily(os.time() + (offset_days * 3600 * 24))
