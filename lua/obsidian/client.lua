@@ -580,7 +580,7 @@ Client.new_note = function(self, title, id, dir, aliases)
   if self.opts.note_frontmatter_func ~= nil then
     frontmatter = self.opts.note_frontmatter_func(note)
   end
-  note:save(nil, not self:should_save_frontmatter(note), frontmatter)
+  note:save(nil, self:should_save_frontmatter(note), frontmatter)
   log.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
 
   return note
@@ -651,7 +651,7 @@ Client._daily = function(self, datetime)
       if self.opts.note_frontmatter_func ~= nil then
         frontmatter = self.opts.note_frontmatter_func(note)
       end
-      note:save(nil, not self:should_save_frontmatter(note), frontmatter)
+      note:save(nil, self:should_save_frontmatter(note), frontmatter)
     end
     log.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
   end
