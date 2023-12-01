@@ -73,7 +73,7 @@ _This plugin is not meant to replace Obsidian, but to complement it._ My persona
 
 ### Demo
 
-[![See https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4](https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4)](https://user-images.githubusercontent.com/75107188/227362168-29ff9d4d-5b62-4aff-9442-21cd8c072d29.mp4)
+[![demo](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2100e489-b1f4-46d1-ac46-0be2f338c071)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2100e489-b1f4-46d1-ac46-0be2f338c071)
 
 ## Setup
 
