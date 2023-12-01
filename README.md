@@ -31,7 +31,7 @@ _This plugin is not meant to replace Obsidian, but to complement it._ My persona
 - 📷 Paste images into notes
 - 💅 Additional markdown syntax highlighting, concealing, and extmarks for references, tags, and check-boxes
 
-[![See this screenshot here https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)](https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png)
+[![See this screenshot](https://github.com/epwalsh/obsidian.nvim/assets/8812459/7344a1bd-6701-404a-9be8-cbb756013e6a)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/7344a1bd-6701-404a-9be8-cbb756013e6a)
 
 ### Commands
 
