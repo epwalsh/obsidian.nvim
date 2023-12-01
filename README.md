@@ -286,7 +286,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     return tostring(os.time()) .. "-" .. suffix
   end,
 
-  -- Optional, set to true if you don't want obsidian.nvim to manage frontmatter.
+  -- Optional, boolean or a function that takes a filename and returns a boolean.
+  -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
   disable_frontmatter = false,
 
   -- Optional, alternatively you can customize the frontmatter data.

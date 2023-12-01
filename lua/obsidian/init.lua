@@ -217,7 +217,7 @@ obsidian.setup = function(opts)
 
       local bufnr = ev.buf
       local note = obsidian.Note.from_buffer(bufnr, client.dir)
-      if not note:should_save_frontmatter() or client.opts.disable_frontmatter == true then
+      if not client:should_save_frontmatter(note) then
         return
       end
 

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `Client:update_ui()` method.
 - Assigned enum type `obsidian.config.OpenStrategy` to `config.open_notes_in`.
+- `disable_frontmatter` now can be a function taking the filename of a note (relative to the vault root) to determine whether the note's frontmatter can be managed by obsidian.nvim or not.
 
 ### Changed
 

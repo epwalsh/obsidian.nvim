@@ -13,7 +13,7 @@ local config = {}
 ---@field note_id_func function|?
 ---@field follow_url_func function|?
 ---@field note_frontmatter_func function|?
----@field disable_frontmatter boolean|?
+---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
 ---@field backlinks obsidian.config.BacklinksOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
