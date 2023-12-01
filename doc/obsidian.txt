@@ -42,7 +42,7 @@ Obsidian app.
 - 💅 Additional markdown syntax highlighting, concealing, and extmarks for references, tags, and check-boxes
 
 
-<https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png>
+<https://github.com/epwalsh/obsidian.nvim/assets/8812459/7344a1bd-6701-404a-9be8-cbb756013e6a>
 
 
 COMMANDS                                                   *obsidian-commands*
@@ -664,7 +664,7 @@ funds! ❤️
 ==============================================================================
 6. Links                                                      *obsidian-links*
 
-1. *See this screenshot here https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png*: https://raw.githubusercontent.com/epwalsh/obsidian.nvim/main/.github/assets/checkboxes.png
+1. *See this screenshot*: https://github.com/epwalsh/obsidian.nvim/assets/8812459/7344a1bd-6701-404a-9be8-cbb756013e6a
 2. *demo*: https://github.com/epwalsh/obsidian.nvim/assets/8812459/2100e489-b1f4-46d1-ac46-0be2f338c071
 3. *BuyMeACoffee*: https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black
 
