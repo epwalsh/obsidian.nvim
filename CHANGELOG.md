@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- `disable_frontmatter` now can be a function to determine whether a note's frontmatter can be managed by obsidian.nvim or not.
+- `disable_frontmatter` now can be a function taking the filename of a note (relative to the vault root) to determine whether the note's frontmatter can be managed by obsidian.nvim or not.
 
 ### Added
 
