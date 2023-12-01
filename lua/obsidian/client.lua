@@ -99,7 +99,7 @@ Client.should_save_frontmatter = function(self, note)
     return true
   end
   if type(self.opts.disable_frontmatter) == "boolean" then
-    return self.opts.disable_frontmatter == false
+    return not self.opts.disable_frontmatter
   end
   if type(self.opts.disable_frontmatter) == "function" then
     return not self.opts.disable_frontmatter(self:vault_relative_path(note.path))
