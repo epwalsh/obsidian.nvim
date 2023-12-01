@@ -71,7 +71,7 @@ _This plugin is not meant to replace Obsidian, but to complement it._ My persona
 
 Specific operating systems also require additional dependencies in order to use all of obsidian.nvim's functionality:
 
-- **Windows WSL** users need [`wsl-open`](https://github.com/jcsalterego/pngpaste) for the `:ObsidianOpen` command.
+- **Windows WSL** users need [`wsl-open`](https://gitlab.com/4U6U57/wsl-open) for the `:ObsidianOpen` command.
 - **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
