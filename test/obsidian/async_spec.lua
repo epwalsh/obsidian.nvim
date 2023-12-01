@@ -97,7 +97,7 @@ end)
 
 describe("File.lines()", function()
   it("should correctly read all lines from a file", function()
-    local path = "RELEASE_PROCESS.md"
+    local path = ".github/RELEASE_PROCESS.md"
     local actual_lines = {}
     with(open(path), function(reader)
       for line in reader:lines() do
