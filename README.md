@@ -153,14 +153,26 @@ use({
 
 ### Plugin dependencies
 
-The only required plugin dependency is [plenary.nvim](https://github.com/nvim-lua/plenary.nvim), but there are a number of optional dependencies that enhance the obsidian.nvim experience:
+The only required plugin dependency is [plenary.nvim](https://github.com/nvim-lua/plenary.nvim), but there are a number of optional dependencies that enhance the obsidian.nvim experience.
 
-- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter): for base markdown syntax highlighting. See [syntax highlighting](#syntax-highlighting) for more details.
+**Completion:**
+
 - [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp): for completion of note references.
+
+**Search functionality:**
+
 - [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim): for search and quick-switch functionality.
 - [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): an alternative to telescope for search and quick-switch functionality.
 - [junegunn/fzf](https://github.com/junegunn/fzf) and [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim): another alternative to telescope for search and quick-switch functionality.
-- [godlygeek/tabular](https://github.com/godlygeek/tabular) and [preservim/vim-markdown](https://github.com/preservim/vim-markdown): matching rules, mappings, and an alternative to nvim-treesitter for syntax highlighting (see [syntax highlighting](#syntax-highlighting) for more details).
+
+**Syntax highlighting:**
+
+- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter): for base markdown syntax highlighting. See [syntax highlighting](#syntax-highlighting) for more details.
+- [preservim/vim-markdown](https://github.com/preservim/vim-markdown): an alternative to nvim-treesitter for syntax highlighting (see [syntax highlighting](#syntax-highlighting) for more details), plus other cool features.
+
+**Miscellaneous:**
+
+- 🆕 [pomo.nvim](https://github.com/epwalsh/pomo.nvim): for running lightweight [pomodoro](https://en.wikipedia.org/wiki/Pomodoro_Technique) timers.
 
 If you choose to use any of these you should include them in the "dependencies" or "requires" field of the obsidian.nvim plugin spec for your package manager.
 
