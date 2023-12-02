@@ -176,73 +176,78 @@ obsidian.setup = function(opts)
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
   -- Only register commands, mappings, cmp source, etc when we enter a note buffer.
-  vim.api.nvim_create_autocmd({ "BufEnter" }, {
-    group = group,
-    pattern = tostring(client.dir / "**.md"),
-    callback = function()
-      -- Register mappings.
-      for mapping_keys, mapping_config in pairs(opts.mappings) do
-        vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
-      end
+  for _, workspace in ipairs(client.opts.workspaces) do
+    -- NOTE: workspace.path has already been normalized
+    local pattern = tostring(Path:new(workspace.path) / "**.md")
 
-      vim.cmd [[ setlocal suffixesadd+=.md ]]
-
-      if opts.completion.nvim_cmp then
-        -- Inject Obsidian as a cmp source when reading a buffer in the vault.
-        local cmp = require "cmp"
-
-        local sources = {
-          { name = "obsidian", option = opts },
-          { name = "obsidian_new", option = opts },
-          { name = "obsidian_tags", option = opts },
-        }
-        for _, source in pairs(cmp.get_config().sources) do
-          if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
-            table.insert(sources, source)
-          end
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+      group = group,
+      pattern = pattern,
+      callback = function()
+        -- Register mappings.
+        for mapping_keys, mapping_config in pairs(opts.mappings) do
+          vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
         end
-        cmp.setup.buffer { sources = sources }
-      end
-    end,
-  })
 
-  -- Add/update frontmatter on BufWritePre
-  vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-    group = group,
-    pattern = tostring(client.dir / "**.md"),
-    callback = function(ev)
-      if is_template(ev.match) then
-        return
-      end
+        vim.cmd [[ setlocal suffixesadd+=.md ]]
 
-      local bufnr = ev.buf
-      local note = obsidian.Note.from_buffer(bufnr, client.dir)
-      if not client:should_save_frontmatter(note) then
-        return
-      end
+        if opts.completion.nvim_cmp then
+          -- Inject Obsidian as a cmp source when reading a buffer in the vault.
+          local cmp = require "cmp"
 
-      local frontmatter = nil
-      if client.opts.note_frontmatter_func ~= nil then
-        frontmatter = client.opts.note_frontmatter_func(note)
-      end
-      local new_lines = note:frontmatter_lines(nil, frontmatter)
-      local cur_lines
-      if note.frontmatter_end_line ~= nil then
-        cur_lines = vim.api.nvim_buf_get_lines(0, 0, note.frontmatter_end_line, false)
-      end
+          local sources = {
+            { name = "obsidian", option = opts },
+            { name = "obsidian_new", option = opts },
+            { name = "obsidian_tags", option = opts },
+          }
+          for _, source in pairs(cmp.get_config().sources) do
+            if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
+              table.insert(sources, source)
+            end
+          end
+          cmp.setup.buffer { sources = sources }
+        end
+      end,
+    })
 
-      vim.api.nvim_buf_set_lines(
-        bufnr,
-        0,
-        note.frontmatter_end_line and note.frontmatter_end_line or 0,
-        false,
-        new_lines
-      )
-      if not client._quiet and not vim.deep_equal(cur_lines, new_lines) then
-        log.info "Updated frontmatter"
-      end
-    end,
-  })
+    -- Add/update frontmatter on BufWritePre
+    vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+      group = group,
+      pattern = pattern,
+      callback = function(ev)
+        if is_template(ev.match) then
+          return
+        end
+
+        local bufnr = ev.buf
+        local note = obsidian.Note.from_buffer(bufnr, client.dir)
+        if not client:should_save_frontmatter(note) then
+          return
+        end
+
+        local frontmatter = nil
+        if client.opts.note_frontmatter_func ~= nil then
+          frontmatter = client.opts.note_frontmatter_func(note)
+        end
+        local new_lines = note:frontmatter_lines(nil, frontmatter)
+        local cur_lines
+        if note.frontmatter_end_line ~= nil then
+          cur_lines = vim.api.nvim_buf_get_lines(0, 0, note.frontmatter_end_line, false)
+        end
+
+        vim.api.nvim_buf_set_lines(
+          bufnr,
+          0,
+          note.frontmatter_end_line and note.frontmatter_end_line or 0,
+          false,
+          new_lines
+        )
+        if not client._quiet and not vim.deep_equal(cur_lines, new_lines) then
+          log.info "Updated frontmatter"
+        end
+      end,
+    })
+  end
 
   -- Set global client.
   obsidian._client = client
