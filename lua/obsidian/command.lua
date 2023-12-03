@@ -471,9 +471,13 @@ M.register("ObsidianSearch", {
 
         -- Use mini.pick's grep_live or grep picker depending on whether there are arguments
         if data.args:len() > 0 then
-          mini_pick.builtin.grep { tool = "rg", args = table.concat(grep_arguments, " ") }
+          mini_pick.builtin.grep { tool = "rg", args = table.concat(grep_arguments, " "), cwd = tostring(client.dir) }
         else
-          mini_pick.builtin.grep_live { tool = "rg", args = table.concat(grep_arguments, " ") }
+          mini_pick.builtin.grep_live {
+            tool = "rg",
+            args = table.concat(grep_arguments, " "),
+            cwd = tostring(client.dir),
+          }
         end
 
         return true
