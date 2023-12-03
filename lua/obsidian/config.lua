@@ -118,15 +118,25 @@ config.ClientOpts.normalize = function(opts)
     opts.overwrite_mappings = nil
   end
 
-  -- Normalize workspace paths.
+  -- Normalize workspaces
+  -- NOTE: path will be normalized in workspace.new*() fn
   for key, value in pairs(opts.workspaces) do
-    opts.workspaces[key].path = vim.fs.normalize(tostring(value.path))
+    if value.path == nil
+    then
+      log.warn("encountered an invalid workspace: path is nil")
+    end
+    if value.name == nil
+    then
+      opts.workspaces[key] = workspace.new_from_dir(value.path)
+    else
+      opts.workspaces[key] = workspace.new(value.name, value.path)
+    end
   end
 
   -- Convert dir to workspace format.
+  -- NOTE: path will be normalized in workspace.new_from_dir() fn
   if opts.dir ~= nil then
-    -- NOTE: path will be normalized in workspace.new() fn
-    table.insert(opts.workspaces, 1, workspace.new("dir", opts.dir))
+    table.insert(opts.workspaces, 1, workspace.new_from_dir(opts.dir))
   end
 
   return opts
