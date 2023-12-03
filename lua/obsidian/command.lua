@@ -468,19 +468,23 @@ M.register("ObsidianSearch", {
             tostring(client.dir),
           },
         }
+        -- Prepare source with 'cwd' option
+        local source = {
+          name = "grep",
+          args = table.concat(grep_arguments, " "),
+          cwd = tostring(client.dir),
+        }
 
         -- Use mini.pick's grep_live or grep picker depending on whether there are arguments
         if data.args:len() > 0 then
           mini_pick.builtin.grep {
             tool = "rg",
-            args = table.concat(grep_arguments, " "),
-            source = { cwd = tostring(client.dir) },
+            source = source,
           }
         else
           mini_pick.builtin.grep_live {
             tool = "rg",
-            args = table.concat(grep_arguments, " "),
-            source = { cwd = tostring(client.dir) },
+            source = source,
           }
         end
 
