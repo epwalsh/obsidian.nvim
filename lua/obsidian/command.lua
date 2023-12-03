@@ -451,6 +451,33 @@ M.register("ObsidianSearch", {
 
         return true
       end,
+      ["mini.pick"] = function()
+        -- Check if mini.pick is available
+        local has_mini_pick, mini_pick = pcall(require, "mini.pick")
+        if not has_mini_pick then
+          return false
+        end
+
+        -- Set up the arguments for mini.pick
+        local grep_arguments = vim.tbl_flatten {
+          base_cmd,
+          {
+            "--color=always",
+            "--",
+            util.quote(data.args),
+            tostring(client.dir),
+          },
+        }
+
+        -- Use mini.pick's grep_live or grep picker depending on whether there are arguments
+        if data.args:len() > 0 then
+          mini_pick.builtin.grep { tool = "rg", args = table.concat(grep_arguments, " ") }
+        else
+          mini_pick.builtin.grep_live { tool = "rg", args = table.concat(grep_arguments, " ") }
+        end
+
+        return true
+      end,
     }
   end,
 })
