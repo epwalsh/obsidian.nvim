@@ -808,7 +808,7 @@ M.register("ObsidianWorkspace", {
       return
     end
 
-    client.current_workspace = workspace
+    client:switch_workspace(workspace)
 
     log.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")")
     -- NOTE: workspace.path has already been normalized
