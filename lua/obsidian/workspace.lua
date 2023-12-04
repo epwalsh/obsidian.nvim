@@ -1,8 +1,9 @@
 local abc = require "obsidian.abc"
+local Path = require "plenary.path"
 
 ---@class obsidian.Workspace : obsidian.ABC
 ---@field name string
----@field path string
+---@field path Path
 ---@field group number autocommand group id, used by `Workspace.register`
 local Workspace = abc.new_class {
   __tostring = function(self)
@@ -19,7 +20,7 @@ local Workspace = abc.new_class {
 Workspace.new = function(name, path)
   local self = Workspace.init()
   self.name = name
-  self.path = vim.fs.normalize(path)
+  self.path = Path:new(vim.fs.normalize(path))
   self.group = vim.api.nvim_create_augroup("obsidian_workspace_" .. string.lower(name), { clear = true })
   return self
 end
