@@ -129,7 +129,7 @@ M.register("ObsidianCheck", {
 
     ---@param path Path
     local function check_note(path, relative_path)
-      local ok, res = pcall(Note.from_file_async, path, client.dir)
+      local ok, res = pcall(Note.from_file_async, path, client.current_workspace.path)
       if not ok then
         errors[#errors + 1] = "Failed to parse note '" .. relative_path .. "': " .. tostring(res)
       elseif res.has_frontmatter == false then
@@ -399,12 +399,12 @@ M.register("ObsidianSearch", {
 
         if data.args:len() > 0 then
           telescope.grep_string {
-            cwd = tostring(client.dir),
+            cwd = tostring(client.current_workspace.path),
             search = data.args,
             vimgrep_arguments = vimgrep_arguments,
           }
         else
-          telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
+          telescope.live_grep { cwd = tostring(client.current_workspace.path), vimgrep_arguments = vimgrep_arguments }
         end
 
         return true
@@ -416,9 +416,9 @@ M.register("ObsidianSearch", {
         end
 
         if data.args:len() > 0 then
-          fzf_lua.grep { cwd = tostring(client.dir), search = data.args }
+          fzf_lua.grep { cwd = tostring(client.current_workspace.path), search = data.args }
         else
-          fzf_lua.live_grep { cwd = tostring(client.dir), exec_empty_query = true }
+          fzf_lua.live_grep { cwd = tostring(client.current_workspace.path), exec_empty_query = true }
         end
 
         return true
@@ -430,7 +430,7 @@ M.register("ObsidianSearch", {
             "--color=always",
             "--",
             util.quote(data.args),
-            tostring(client.dir),
+            tostring(client.current_workspace.path),
           },
         }
 
@@ -581,7 +581,7 @@ M.register("ObsidianQuickSwitch", {
   opts = { nargs = 0 },
   ---@param client obsidian.Client
   func = function(client, _)
-    local dir = tostring(client.dir)
+    local dir = tostring(client.current_workspace.path)
     local search_opts =
       search.SearchOpts.from_tbl { sort_by = client.opts.sort_by, sort_reversed = client.opts.sort_reversed }
 
@@ -607,7 +607,7 @@ M.register("ObsidianQuickSwitch", {
         end
 
         local cmd = search.build_find_cmd(".", nil, search_opts)
-        fzf_lua.files { cmd = table.concat(cmd, " "), cwd = tostring(client.dir) }
+        fzf_lua.files { cmd = table.concat(cmd, " "), cwd = tostring(client.current_workspace.path) }
 
         return true
       end,
@@ -792,7 +792,7 @@ M.register("ObsidianWorkspace", {
   opts = { nargs = "?" },
   func = function(client, data)
     if not data.args or #data.args == 0 then
-      log.info("Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.dir))
+      log.info("Current workspace: " .. client.current_workspace.name .. " @ " .. tostring(client.current_workspace.path))
       return
     end
 
@@ -808,11 +808,8 @@ M.register("ObsidianWorkspace", {
       return
     end
 
-    client:switch_workspace(workspace)
-
     log.info("Switching to workspace '" .. workspace.name .. "' (" .. workspace.path .. ")")
-    -- NOTE: workspace.path has already been normalized
-    client.dir = Path:new(workspace.path)
+    client:switch_workspace(workspace)
   end,
 })
 
@@ -877,7 +874,7 @@ M.register("ObsidianRename", {
     local new_note_path
     if #parts > 1 then
       parts[#parts] = nil
-      new_note_path = vim.fs.joinpath(unpack(vim.tbl_flatten { tostring(client.dir), parts, new_note_id .. ".md" }))
+      new_note_path = vim.fs.joinpath(unpack(vim.tbl_flatten { tostring(client.current_workspace.path), parts, new_note_id .. ".md" }))
     else
       new_note_path = vim.fs.joinpath(dirname, new_note_id .. ".md")
     end
@@ -1059,7 +1056,7 @@ M.register("ObsidianRename", {
     end
 
     search.search_async(
-      client.dir,
+      client.current_workspace.path,
       reference_forms,
       search.SearchOpts.from_tbl { fixed_strings = true, max_count_per_file = 1 },
       on_search_match,

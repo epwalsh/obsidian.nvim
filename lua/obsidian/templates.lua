@@ -74,7 +74,8 @@ M.insert_template = function(name, client, location)
   end
   local buf, win, row, col = unpack(location)
   local template_path = Path:new(client.templates_dir) / name
-  local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
+  -- FIXME: Temporarily change client.dir to client.current_workspace.path
+  local title = require("obsidian.note").from_buffer(buf, client.current_workspace.path):display_name()
 
   local insert_lines = {}
   local template_file = io.open(tostring(template_path), "r")

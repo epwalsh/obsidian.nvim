@@ -123,7 +123,7 @@ Backlinks._gather = function(self)
   local tx, rx = channel.oneshot()
 
   -- Collect matches.
-  search.search_async(self.client.dir, "[[" .. tostring(self.note.id), opts, function(match)
+  search.search_async(self.client.current_workspace.path, "[[" .. tostring(self.note.id), opts, function(match)
     if is_valid_backlink(match) then
       local path = match.path.text
 
@@ -152,7 +152,7 @@ Backlinks._gather = function(self)
   -- Load notes for each match and combine into array of BacklinksMatches.
   local executor = AsyncExecutor.new()
   executor:map(function(path, idx)
-    local ok, res = pcall(Note.from_file_async, path, self.client.dir)
+    local ok, res = pcall(Note.from_file_async, path, self.client.current_workspace.path)
     if ok then
       out[idx] = { note = res, matches = backlink_matches[path] }
     else

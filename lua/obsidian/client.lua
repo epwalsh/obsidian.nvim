@@ -13,13 +13,12 @@ local iter = require("obsidian.itertools").iter
 ---@class obsidian.Client : obsidian.ABC
 ---@field workspaces table<obsidian.Workspace>
 ---@field current_workspace obsidian.Workspace
----@field dir Path
 ---@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
   __tostring = function(self)
-    return string.format("obsidian.Client('%s')", self.dir)
+    return string.format("obsidian.Client('%s')", self.current_workspace.path)
   end,
 }
 
@@ -47,9 +46,6 @@ Client.new = function(opts)
 
   self:switch_workspace(default_workspace)
 
-  -- temporary
-  self.dir = default_workspace.path
-
   self.opts = opts
   self._quiet = false
   if self.opts.yaml_parser ~= nil then
@@ -60,13 +56,13 @@ Client.new = function(opts)
   return self
 end
 
----Get the absolute path to the root of the Obsidian vault (it may be in a parent of 'self.dir').
----
+---Get the absolute path to the root of the Obsidian vault (it may be in a parent of 'self.current_workspace.path').
+--- TODO: is this function necessary ? if not, remove it 
 ---@return Path
 Client.vault_root = function(self)
   local vault_indicator_folder = ".obsidian"
-  local dirs = self.dir:parents()
-  table.insert(dirs, 0, self.dir:absolute())
+  local dirs = self.current_workspace.path:parents()
+  table.insert(dirs, 0, self.current_workspace.path:absolute())
   for _, dirpath in pairs(dirs) do
     local dir = Path:new(dirpath)
     local maybe_vault = dir / vault_indicator_folder
@@ -74,7 +70,7 @@ Client.vault_root = function(self)
       return dir
     end
   end
-  return self.dir
+  return self.current_workspace.path
 end
 
 ---Get the name of the vault.
@@ -239,14 +235,14 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
   local cmds_done = 0 -- out of the two, one for 'search' and one for 'find'
 
   search.search_async(
-    self.dir,
+    self.current_workspace.path,
     term,
     self:_prepare_search_opts(search_opts, { fixed_strings = true, max_count_per_file = 1 }),
     on_search_match,
     on_exit
   )
 
-  search.find_async(self.dir, term, self:_prepare_search_opts(find_opts), on_find_match, on_exit)
+  search.find_async(self.current_workspace.path, term, self:_prepare_search_opts(find_opts), on_find_match, on_exit)
 
   return function()
     while cmds_done < 2 do
@@ -280,7 +276,7 @@ Client.find_notes_async = function(self, term, opts, callback)
   local next_path = self:_search_iter_async(term, opts)
   local executor = AsyncExecutor.new()
 
-  local dir = tostring(self.dir)
+  local dir = tostring(self.current_workspace.path)
   local err_count = 0
   local first_err
   local first_err_path
@@ -345,9 +341,9 @@ Client.resolve_note_async = function(self, query, callback)
   if count > 0 then
     ---@type Path
     ---@diagnostic disable-next-line: assign-type-mismatch
-    local full_path = self.dir / note_path
+    local full_path = self.current_workspace.path / note_path
     return async.run(function()
-      return Note.from_file_async(full_path, self.dir)
+      return Note.from_file_async(full_path, self.current_workspace.path)
     end, callback)
   end
 
@@ -356,12 +352,12 @@ Client.resolve_note_async = function(self, query, callback)
   if not vim.endswith(fname, ".md") then
     fname = fname .. ".md"
   end
-  local paths_to_check = { Path:new(fname), self.dir / fname }
+  local paths_to_check = { Path:new(fname), self.current_workspace.path / fname }
   if self.opts.notes_subdir ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / fname)
+    table.insert(paths_to_check, self.current_workspace.path / self.opts.notes_subdir / fname)
   end
   if self.opts.daily_notes.folder ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / fname)
+    table.insert(paths_to_check, self.current_workspace.path / self.opts.daily_notes.folder / fname)
   end
   for _, path in pairs(paths_to_check) do
     if path:is_file() and vim.endswith(tostring(path), ".md") then
@@ -438,7 +434,7 @@ Client.find_tags_async = function(self, term, opts, callback)
   local on_frontmatter_match = function(match_data)
     executor:submit(function()
       local path = vim.fs.normalize(match_data.path.text)
-      local ok, res = pcall(Note.from_file_async, path, self.dir)
+      local ok, res = pcall(Note.from_file_async, path, self.current_workspace.path)
       if ok then
         if res.tags ~= nil then
           for tag in iter(res.tags) do
@@ -460,7 +456,7 @@ Client.find_tags_async = function(self, term, opts, callback)
 
   local tx_content, rx_content = channel.oneshot()
   search.search_async(
-    self.dir,
+    self.current_workspace.path,
     "#" .. term .. search.Patterns.TagChars,
     self:_prepare_search_opts(opts, { ignore_case = true }),
     on_content_match,
@@ -471,7 +467,7 @@ Client.find_tags_async = function(self, term, opts, callback)
 
   local tx_frontmatter, rx_frontmatter = channel.oneshot()
   search.search_async(
-    self.dir,
+    self.current_workspace.path,
     { "\\s*- " .. term .. search.Patterns.TagChars, "tags: .*" .. term .. search.Patterns.TagChars },
     self:_prepare_search_opts(opts, { max_count_per_file = 1, ignore_case = true }),
     on_frontmatter_match,
@@ -526,7 +522,7 @@ end
 ---@return string|?,string,Path
 Client.parse_title_id_path = function(self, title, id, dir)
   ---@type Path
-  local base_dir = dir == nil and Path:new(self.dir) or Path:new(dir)
+  local base_dir = dir == nil and self.current_workspace.path or Path:new(dir)
   local title_is_path = false
 
   -- Clean up title and guess the right base_dir.
@@ -612,7 +608,7 @@ Client.daily_note_path = function(self, datetime)
   datetime = datetime and datetime or os.time()
 
   ---@type Path
-  local path = Path:new(self.dir)
+  local path = self.current_workspace.path
 
   if self.opts.daily_notes.folder ~= nil then
     ---@type Path
@@ -659,7 +655,7 @@ Client._daily = function(self, datetime)
     local write_frontmatter = true
     if self.opts.daily_notes.template then
       templates.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
-      note = Note.from_file(path, self.dir)
+      note = Note.from_file(path, self.current_workspace.path)
       if note.has_frontmatter then
         write_frontmatter = false
       end

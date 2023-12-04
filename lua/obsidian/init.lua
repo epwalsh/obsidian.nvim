@@ -91,7 +91,7 @@ obsidian.new = function(opts)
 end
 
 ---Create a new Obsidian client in a given vault directory.
----
+---TODO: remove this function ?
 ---@param dir string
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
@@ -112,27 +112,27 @@ obsidian.setup = function(opts)
   log.set_level(client.opts.log_level)
 
   -- Ensure directories exist.
-  client.dir:mkdir { parents = true, exists_ok = true }
-  vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(client.dir)))
-  if client:vault_root() ~= client.dir then
+  client.current_workspace.path:mkdir { parents = true, exists_ok = true }
+  vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(client.current_workspace.path)))
+  if client:vault_root() ~= client.current_workspace.path then
     vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(client:vault_root())))
   end
 
   if client.opts.notes_subdir ~= nil then
-    local notes_subdir = client.dir / client.opts.notes_subdir
+    local notes_subdir = client.current_workspace.path / client.opts.notes_subdir
     notes_subdir:mkdir { parents = true, exists_ok = true }
     vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(notes_subdir)))
   end
 
   if client.opts.daily_notes.folder ~= nil then
-    local daily_notes_subdir = client.dir / client.opts.daily_notes.folder
+    local daily_notes_subdir = client.current_workspace.path / client.opts.daily_notes.folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
     vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(daily_notes_subdir)))
   end
 
   client.templates_dir = nil
   if client.opts.templates ~= nil and client.opts.templates.subdir ~= nil then
-    client.templates_dir = Path:new(client.dir) / client.opts.templates.subdir
+    client.templates_dir = Path:new(client.current_workspace.path) / client.opts.templates.subdir
     if not client.templates_dir:is_dir() then
       log.err("%s is not a valid directory for templates", client.templates_dir)
       client.templates_dir = nil
@@ -179,14 +179,14 @@ obsidian.setup = function(opts)
   -- Add/update frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = group,
-    pattern = tostring(client.dir / "**.md"),
+    pattern = tostring(client.current_workspace.path / "**.md"),
     callback = function(ev)
       if is_template(ev.match) then
         return
       end
 
       local bufnr = ev.buf
-      local note = obsidian.Note.from_buffer(bufnr, client.dir)
+      local note = obsidian.Note.from_buffer(bufnr, client.current_workspace.path)
       if not client:should_save_frontmatter(note) then
         return
       end

@@ -306,7 +306,6 @@ end
 ---@return string[]
 M.build_find_cmd = function(path, term, opts)
   opts = SearchOpts.from_tbl(opts and opts or {})
-
   local additional_opts = {}
 
   if term ~= nil then
