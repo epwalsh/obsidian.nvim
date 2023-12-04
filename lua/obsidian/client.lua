@@ -3,7 +3,6 @@ local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local Note = require "obsidian.note"
-local workspace = require "obsidian.workspace"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
@@ -12,6 +11,7 @@ local block_on = require("obsidian.async").block_on
 local iter = require("obsidian.itertools").iter
 
 ---@class obsidian.Client : obsidian.ABC
+---@field workspaces table<obsidian.Workspace>
 ---@field current_workspace obsidian.Workspace
 ---@field dir Path
 ---@field templates_dir Path|?
@@ -29,9 +29,27 @@ local Client = abc.new_class {
 ---@return obsidian.Client
 Client.new = function(opts)
   local self = Client.init()
-  self.current_workspace = workspace.get_from_opts(opts)
-  -- NOTE: workspace.path has already been normalized
-  self.dir = Path:new(self.current_workspace.path)
+  self.workspaces = opts.workspaces
+
+  -- find and switch to the default workspace
+  local default_workspace = nil;
+  if opts.detect_cwd then
+    local cwd = vim.fn.getcwd()
+    local matches = vim.tbl_filter(
+      function(w)
+        if w.path == cwd then return true end
+        return false
+      end, self.workspaces)
+    _, default_workspace = next(matches)
+  else
+    _, default_workspace = next(self.workspaces)
+  end
+
+  self:switch_workspace(default_workspace, opts)
+
+  -- temporary
+  self.dir = default_workspace.path
+
   self.opts = opts
   self._quiet = false
   if self.opts.yaml_parser ~= nil then
@@ -722,6 +740,52 @@ end
 ---@param bufnr integer|?
 Client.update_ui = function(self, bufnr)
   require("obsidian.ui").update(self.opts.ui, bufnr)
+end
+
+--- switch the current workspace
+---@param workspace obsidian.Workspace
+Client.switch_workspace = function(self, workspace, opts)
+  if self.current_workspace ~= nil
+  then
+    self.current_workspace:clear()
+  end
+
+  workspace.path:mkdir { parents = true, exists_ok = true }
+
+  -- Register mappings.
+  workspace:register(
+    function()
+      for mapping_keys, mapping_config in pairs(opts.mappings) do
+        vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
+      end
+    end)
+
+  -- Make `gf`follow markdown files
+  workspace:register(
+    function()
+      vim.cmd [[ setlocal suffixesadd+=.md ]]
+    end)
+
+  -- Inject Obsidian as a cmp source when reading a buffer in the vault.
+  workspace:register(
+    function()
+      if opts.completion.nvim_cmp then
+        local cmp = require "cmp"
+
+        local sources = {
+          { name = "obsidian",      option = opts },
+          { name = "obsidian_new",  option = opts },
+          { name = "obsidian_tags", option = opts },
+        }
+        for _, source in pairs(cmp.get_config().sources) do
+          if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
+            table.insert(sources, source)
+          end
+        end
+        cmp.setup.buffer { sources = sources }
+      end
+    end)
+  self.current_workspace = workspace
 end
 
 return Client

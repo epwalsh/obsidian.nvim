@@ -175,36 +175,6 @@ obsidian.setup = function(opts)
   -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
-  -- Only register commands, mappings, cmp source, etc when we enter a note buffer.
-  vim.api.nvim_create_autocmd({ "BufEnter" }, {
-    group = group,
-    pattern = tostring(client.dir / "**.md"),
-    callback = function()
-      -- Register mappings.
-      for mapping_keys, mapping_config in pairs(opts.mappings) do
-        vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
-      end
-
-      vim.cmd [[ setlocal suffixesadd+=.md ]]
-
-      if opts.completion.nvim_cmp then
-        -- Inject Obsidian as a cmp source when reading a buffer in the vault.
-        local cmp = require "cmp"
-
-        local sources = {
-          { name = "obsidian", option = opts },
-          { name = "obsidian_new", option = opts },
-          { name = "obsidian_tags", option = opts },
-        }
-        for _, source in pairs(cmp.get_config().sources) do
-          if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
-            table.insert(sources, source)
-          end
-        end
-        cmp.setup.buffer { sources = sources }
-      end
-    end,
-  })
 
   -- Add/update frontmatter on BufWritePre
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
