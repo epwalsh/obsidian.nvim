@@ -45,7 +45,7 @@ Client.new = function(opts)
     _, default_workspace = next(self.workspaces)
   end
 
-  self:switch_workspace(default_workspace, opts)
+  self:switch_workspace(default_workspace)
 
   -- temporary
   self.dir = default_workspace.path
@@ -743,8 +743,9 @@ Client.update_ui = function(self, bufnr)
 end
 
 --- switch the current workspace
+---@param self obsidian.Client
 ---@param workspace obsidian.Workspace
-Client.switch_workspace = function(self, workspace, opts)
+Client.switch_workspace = function(self, workspace)
   if self.current_workspace ~= nil
   then
     self.current_workspace:clear()
@@ -755,7 +756,7 @@ Client.switch_workspace = function(self, workspace, opts)
   -- Register mappings.
   workspace:register(
     function()
-      for mapping_keys, mapping_config in pairs(opts.mappings) do
+      for mapping_keys, mapping_config in pairs(self.opts.mappings) do
         vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
       end
     end)
@@ -769,13 +770,13 @@ Client.switch_workspace = function(self, workspace, opts)
   -- Inject Obsidian as a cmp source when reading a buffer in the vault.
   workspace:register(
     function()
-      if opts.completion.nvim_cmp then
+      if self.opts.completion.nvim_cmp then
         local cmp = require "cmp"
 
         local sources = {
-          { name = "obsidian",      option = opts },
-          { name = "obsidian_new",  option = opts },
-          { name = "obsidian_tags", option = opts },
+          { name = "obsidian",      option = self.opts },
+          { name = "obsidian_new",  option = self.opts },
+          { name = "obsidian_tags", option = self.opts },
         }
         for _, source in pairs(cmp.get_config().sources) do
           if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
