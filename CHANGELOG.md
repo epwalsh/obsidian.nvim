@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.3.1) - 2023-12-03
+
 ### Added
 
 - Added `Client:update_ui()` method.
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed URL incorrect in README.md
+- Fixed autocmd registration for workspaces.
 
 ## [v2.3.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.3.0) - 2023-11-28
 
