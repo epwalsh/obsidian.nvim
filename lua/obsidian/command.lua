@@ -458,34 +458,11 @@ M.register("ObsidianSearch", {
           return false
         end
 
-        -- Set up the arguments for mini.pick
-        local grep_arguments = vim.tbl_flatten {
-          base_cmd,
-          {
-            "--color=always",
-            "--",
-            util.quote(data.args),
-            tostring(client.dir),
-          },
-        }
-        -- Prepare source with 'cwd' option
-        local source = {
-          name = "grep",
-          args = table.concat(grep_arguments, " "),
-          cwd = tostring(client.dir),
-        }
-
         -- Use mini.pick's grep_live or grep picker depending on whether there are arguments
         if data.args:len() > 0 then
-          mini_pick.builtin.grep {
-            tool = "rg",
-            source = source,
-          }
+          mini_pick.builtin.grep({}, { source = { cwd = tostring(client.dir) } })
         else
-          mini_pick.builtin.grep_live {
-            tool = "rg",
-            source = source,
-          }
+          mini_pick.builtin.grep_live({}, { source = { cwd = tostring(client.dir) } })
         end
 
         return true
