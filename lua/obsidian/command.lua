@@ -460,7 +460,9 @@ M.register("ObsidianTemplate", {
   opts = { nargs = "?" },
   ---@param client obsidian.Client
   func = function(client, data)
-    if client.templates_dir == nil then
+    local templates_dir = client:templates_dir()
+
+    if templates_dir == nil then
       log.err "Templates folder is not defined or does not exist"
       return
     end
@@ -475,7 +477,7 @@ M.register("ObsidianTemplate", {
 
     if string.len(data.args) > 0 then
       local template_name = data.args
-      local path = Path:new(client.templates_dir) / template_name
+      local path = templates_dir / template_name
       if path:is_file() then
         insert_template(data.args)
       else
@@ -497,7 +499,7 @@ M.register("ObsidianTemplate", {
 
         local choose_template = function()
           local opts = {
-            cwd = tostring(client.templates_dir),
+            cwd = tostring(templates_dir),
             attach_mappings = function(_, map)
               -- NOTE: in newer versions of Telescope we can make a single call to `map()` with
               -- `mode = { "i", "n" }`, but older versions expect mode to be string, not a table.
@@ -529,7 +531,7 @@ M.register("ObsidianTemplate", {
         local cmd = search.build_find_cmd(".", nil, search_opts)
         fzf_lua.files {
           cmd = table.concat(cmd, " "),
-          cwd = tostring(client.templates_dir),
+          cwd = tostring(templates_dir),
           file_icons = false,
           actions = {
             ["default"] = function(entry)
@@ -553,7 +555,7 @@ M.register("ObsidianTemplate", {
           vim.api.nvim_del_user_command "ApplyTemplate"
         end, { nargs = 1, bang = true })
 
-        local cmd = search.build_find_cmd(tostring(client.templates_dir), nil, search_opts)
+        local cmd = search.build_find_cmd(tostring(templates_dir), nil, search_opts)
         local fzf_options = { source = table.concat(cmd, " "), sink = "ApplyTemplate" }
 
         local ok, res = pcall(function()
