@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Templates directory location follows the workspace now.
+
+### Changed
+
+- Replaced `Client.templates_dir` field with `Client:templates_dir()` function.
+
 ## [v2.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.3.1) - 2023-12-03
 
 ### Added
