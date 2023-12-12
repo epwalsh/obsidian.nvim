@@ -41,7 +41,7 @@ _This plugin is not meant to replace Obsidian, but to complement it._ My persona
 - `:ObsidianNew [TITLE]` to create a new note.
   This command has one optional argument: the title of the new note.
 
-- `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
+- `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
 
 - `:ObsidianFollowLink` to follow a note reference under the cursor.
 
@@ -53,7 +53,7 @@ _This plugin is not meant to replace Obsidian, but to complement it._ My persona
 
 - `:ObsidianTomorrow` to open/create the daily note for the next working day.
 
-- `:ObsidianTemplate [NAME]` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
+- `:ObsidianTemplate [NAME]` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), , [fzf-lua](https://github.com/ibhagwan/fzf-lua) or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
   See ["using templates"](#using-templates) for more information.
 
 - `:ObsidianSearch [QUERY]` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), or [fzf-lua](https://github.com/ibhagwan/fzf-lua).
@@ -89,7 +89,7 @@ Specific operating systems also require additional dependencies in order to use 
 - **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
-Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives (see [plugin dependencies](#plugin-dependencies) below).
+Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library. (see [plugin dependencies](#plugin-dependencies) below).
 
 ### Install and configure
 
@@ -178,6 +178,8 @@ The only required plugin dependency is [plenary.nvim](https://github.com/nvim-lu
 - [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim): for search and quick-switch functionality.
 - [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): an alternative to telescope for search and quick-switch functionality.
 - [junegunn/fzf](https://github.com/junegunn/fzf) and [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim): another alternative to telescope for search and quick-switch functionality.
+- [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library:
+ an alternative to telescope for search and quick-switch functionality.
 
 **Syntax highlighting:**
 
@@ -351,7 +353,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_app_foreground = false,
 
   -- Optional, by default commands like `:ObsidianSearch` will attempt to use
-  -- telescope.nvim, fzf-lua, or fzf.vim (in that order), and use the
+  -- telescope.nvim, fzf-lua, fzf.vim or mini.pick (in that order), and use the
   -- first one they find. You can set this option to tell obsidian.nvim to always use this
   -- finder.
   finder = "telescope.nvim",
@@ -505,7 +507,7 @@ mappings = {
 
 ### Using templates
 
-To insert a template, run the command `:ObsidianTemplate`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported.
+To insert a template, run the command `:ObsidianTemplate`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or one of the `fzf` alternatives or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library,and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported.
 
 For example, with the following configuration
 
