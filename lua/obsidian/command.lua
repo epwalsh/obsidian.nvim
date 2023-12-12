@@ -671,6 +671,18 @@ M.register("ObsidianQuickSwitch", {
 
         return true
       end,
+      ["mini.pick"] = function()
+        -- Check if mini.pick is available
+        local has_mini_pick, mini_pick = pcall(require, "mini.pick")
+        if not has_mini_pick then
+          return false
+        end
+
+        -- Use mini.pick's file picker
+        mini_pick.builtin.files({}, { source = { cwd = tostring(client.dir) } })
+
+        return true
+      end,
     }
   end,
 })
