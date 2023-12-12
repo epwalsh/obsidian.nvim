@@ -588,6 +588,30 @@ M.register("ObsidianTemplate", {
 
         return true
       end,
+      ["mini.pick"] = function()
+        -- Check if mini.pick is available
+        local has_mini_pick, mini_pick = pcall(require, "mini.pick")
+        if not has_mini_pick then
+          return false
+        end
+
+        -- Use mini.pick's file picker
+        local chosen_template = mini_pick.builtin.files({}, { source = { cwd = tostring(client.templates_dir) } })
+
+        -- Check if the chosen template is a valid file
+        local path = Path:new(client.templates_dir) / chosen_template
+        if path:is_file() then
+          -- Insert the content of the chosen template into the current buffer
+          insert_template(chosen_template)
+          -- Delete the template buffer because
+          -- mini.pick default behaviour to open in a new buffer
+          vim.api.nvim_command "silent! bdelete"
+        else
+          log.err "Not a valid template file"
+        end
+
+        return true
+      end,
     }
   end,
 })
