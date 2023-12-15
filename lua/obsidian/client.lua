@@ -523,7 +523,7 @@ end
 ---@return string|?,string,Path
 Client.parse_title_id_path = function(self, title, id, dir)
   ---@type Path
-  local base_dir = dir == nil and Path:new(self.dir) or Path:new(dir)
+  local base_dir = dir == nil and self.dir or Path:new(dir)
   local title_is_path = false
 
   -- Clean up title and guess the right base_dir.

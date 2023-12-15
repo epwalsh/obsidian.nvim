@@ -26,7 +26,7 @@ source.complete = function(self, request, callback)
   if client.opts.completion.new_notes_location == nil then
     dir = nil -- let the client decide
   elseif client.opts.completion.new_notes_location == "notes_subdir" then
-    dir = Path:new(client.opts.dir)
+    dir = client.dir
     if client.opts.notes_subdir ~= nil then
       dir = dir / client.opts.notes_subdir
     end
