@@ -40,7 +40,9 @@ source.complete = function(self, request, callback)
   if can_complete and search ~= nil and #search >= opts.completion.min_chars then
     local new_title, new_id, path, rel_path
     new_id = client:new_note_id(search)
+    log.warn("search: '%s', new_id: '%s', dir: '%s'", search, new_id, dir)
     new_title, new_id, path = client:parse_title_id_path(search, new_id, dir)
+    log.warn("new_title: '%s', new_id: '%s', path: '%s'", new_title, new_id, path)
     rel_path = client:vault_relative_path(path)
     if rel_path == nil then
       log.err("Failed to resolve path '%s' relative to vault root '%s'", path, client:vault_root())
