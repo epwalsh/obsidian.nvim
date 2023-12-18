@@ -1,4 +1,3 @@
-local Path = require "plenary.path"
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
