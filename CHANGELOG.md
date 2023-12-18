@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Templates directory location follows the workspace now.
+- Fixed bug with completion when `min_chars = 1` and you start typing an empty check box.
 
 ### Changed
 

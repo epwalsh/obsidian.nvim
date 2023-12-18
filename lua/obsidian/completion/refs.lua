@@ -1,3 +1,5 @@
+local util = require "obsidian.util"
+
 local M = {}
 
 ---@enum obsidian.completion.RefType
@@ -33,7 +35,7 @@ M.can_complete = function(request)
   local input, search = find_search_start(request.context.cursor_before_line)
   if input == nil or search == nil then
     return false
-  elseif string.len(search) == 0 then
+  elseif string.len(search) == 0 or util.is_whitespace(search) then
     return false
   end
 
