@@ -6,7 +6,7 @@ local module_lookups = {
   backlinks = "obsidian.backlinks",
   Client = "obsidian.client",
   collections = "obsidian.collections",
-  command = "obsidian.command",
+  commands = "obsidian.commands",
   completion = "obsidian.completion",
   config = "obsidian.config",
   log = "obsidian.log",
@@ -148,7 +148,7 @@ obsidian.setup = function(opts)
 
   -- Install commands.
   -- These will be available across all buffers, not just note buffers in the vault.
-  obsidian.command.install(client)
+  obsidian.commands.install(client)
 
   -- Register cmp sources.
   if opts.completion.nvim_cmp then
