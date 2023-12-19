@@ -42,11 +42,12 @@ end
 ---@param client obsidian.Client
 ---@param title string
 M.clone_template = function(template_name, note_path, client, title)
-  if client.templates_dir == nil then
+  local templates_dir = client:templates_dir()
+  if templates_dir == nil then
     log.err "Templates folder is not defined or does not exist"
     return
   end
-  local template_path = Path:new(client.templates_dir) / template_name
+  local template_path = Path:new(templates_dir) / template_name
   local template_file = io.open(tostring(template_path), "r")
   local note_file = io.open(tostring(note_path), "wb")
   if not template_file then
@@ -68,12 +69,13 @@ end
 ---@param client obsidian.Client
 ---@param location table a tuple with {bufnr, winnr, row, col}
 M.insert_template = function(name, client, location)
-  if client.templates_dir == nil then
+  local templates_dir = client:templates_dir()
+  if templates_dir == nil then
     log.err "Templates folder is not defined or does not exist"
     return
   end
   local buf, win, row, col = unpack(location)
-  local template_path = Path:new(client.templates_dir) / name
+  local template_path = templates_dir / name
   local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
 
   local insert_lines = {}

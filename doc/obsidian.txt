@@ -246,6 +246,8 @@ please read each option carefully and customize it to your needs:
 >lua
     {
       -- A list of vault names and paths.
+      -- Each path should be the path to the vault root. If you use the Obsidian app,
+      -- the vault root is the parent directory of the `.obsidian` folder.
       workspaces = {
         {
           name = "personal",

@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added support for Mini.Pick Module.
 
+### Fixed
+
+- Templates directory location follows the workspace now.
+- Fixed bug with completion when `min_chars = 1` and you start typing an empty check box.
+
+### Changed
+
+- Replaced `Client.templates_dir` field with `Client:templates_dir()` function.
+- `:ObsidianLink` will now open your finder when the initial search comes up empty or ambiguous.
+- Improve logging when `client:vault_relative_path()` fails in `cmp_obsidian_new`.
+
 ## [v2.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.3.1) - 2023-12-03
 
 ### Added

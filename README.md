@@ -199,6 +199,8 @@ This is a complete list of all of the options that can be passed to `require("ob
 ```lua
 {
   -- A list of vault names and paths.
+  -- Each path should be the path to the vault root. If you use the Obsidian app,
+  -- the vault root is the parent directory of the `.obsidian` folder.
   workspaces = {
     {
       name = "personal",

@@ -1,4 +1,3 @@
-local Path = require "plenary.path"
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
@@ -26,7 +25,7 @@ source.complete = function(self, request, callback)
   if client.opts.completion.new_notes_location == nil then
     dir = nil -- let the client decide
   elseif client.opts.completion.new_notes_location == "notes_subdir" then
-    dir = Path:new(client.opts.dir)
+    dir = client.dir
     if client.opts.notes_subdir ~= nil then
       dir = dir / client.opts.notes_subdir
     end
@@ -41,7 +40,11 @@ source.complete = function(self, request, callback)
     local new_title, new_id, path, rel_path
     new_id = client:new_note_id(search)
     new_title, new_id, path = client:parse_title_id_path(search, new_id, dir)
-    rel_path = assert(client:vault_relative_path(path))
+    rel_path = client:vault_relative_path(path)
+    if rel_path == nil then
+      log.err("Failed to resolve path '%s' relative to vault root '%s'", path, client:vault_root())
+      return
+    end
     if vim.endswith(rel_path, ".md") then
       rel_path = string.sub(rel_path, 1, -4)
     end

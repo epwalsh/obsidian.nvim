@@ -14,7 +14,6 @@ local iter = require("obsidian.itertools").iter
 ---@class obsidian.Client : obsidian.ABC
 ---@field current_workspace obsidian.Workspace
 ---@field dir Path
----@field templates_dir Path|?
 ---@field opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
@@ -84,6 +83,22 @@ Client.vault_relative_path = function(self, path)
     end
   else
     return relative_path
+  end
+end
+
+---Get the templates folder.
+---@return Path|?
+Client.templates_dir = function(self)
+  if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
+    local templates_dir = self.dir / self.opts.templates.subdir
+    if not templates_dir:is_dir() then
+      log.err("'%s' is not a valid directory for templates", templates_dir)
+      return nil
+    else
+      return templates_dir
+    end
+  else
+    return nil
   end
 end
 
@@ -508,7 +523,7 @@ end
 ---@return string|?,string,Path
 Client.parse_title_id_path = function(self, title, id, dir)
   ---@type Path
-  local base_dir = dir == nil and Path:new(self.dir) or Path:new(dir)
+  local base_dir = dir == nil and self.dir or Path:new(dir)
   local title_is_path = false
 
   -- Clean up title and guess the right base_dir.
