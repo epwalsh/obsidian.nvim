@@ -67,7 +67,7 @@ obsidian.info = function()
     return
   end
 
-  for plugin in iter { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "fzf.vim", "vim-markdown" } do
+  for plugin in iter { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "fzf.vim", "mini.pick", "vim-markdown" } do
     local plugin_info = obsidian.util.get_plugin_info(plugin)
     if plugin_info ~= nil then
       print("[" .. plugin .. "] " .. plugin_info)

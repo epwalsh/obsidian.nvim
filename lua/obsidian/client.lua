@@ -721,7 +721,7 @@ Client._run_with_finder_backend = function(self, implementations)
     end
   end
 
-  for finder in iter { "telescope.nvim", "fzf-lua", "fzf.vim" } do
+  for finder in iter { "telescope.nvim", "fzf-lua", "fzf.vim", "mini.pick" } do
     if implementations[finder] ~= nil then
       local has_finder, res = implementations[finder]()
       if has_finder then

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added support for [Mini.Pick](https://github.com/echasnovski/mini.pick) as another alternative to telescope.nvim.
+
 ### Fixed
 
 - Templates directory location follows the workspace now.
