@@ -460,7 +460,7 @@ M.register("ObsidianSearch", {
 
         -- Use mini.pick's grep_live or grep picker depending on whether there are arguments
         if data.args:len() > 0 then
-          mini_pick.builtin.grep({}, { source = { cwd = tostring(client.dir) } })
+          mini_pick.builtin.grep({ pattern = data.args }, { source = { cwd = tostring(client.dir) } })
         else
           mini_pick.builtin.grep_live({}, { source = { cwd = tostring(client.dir) } })
         end
@@ -598,10 +598,10 @@ M.register("ObsidianTemplate", {
         end
 
         -- Use mini.pick's file picker
-        local chosen_template = mini_pick.builtin.files({}, { source = { cwd = tostring(client.templates_dir) } })
+        local chosen_template = mini_pick.builtin.files({}, { source = { cwd = tostring(client:templates_dir()) } })
 
         -- Check if the chosen template is a valid file
-        local path = Path:new(client.templates_dir) / chosen_template
+        local path = Path:new(client:templates_dir()) / chosen_template
         if path:is_file() then
           -- Insert the content of the chosen template into the current buffer
           insert_template(chosen_template)
