@@ -469,9 +469,8 @@ If you use `vim-markdown` you'll probably want to disable its frontmatter syntax
 
 #### Concealing characters
 
-If you wish to use the formatting concealment features, you will need to have `conceallevel` set to a value that allow it, so either
-`set conceallevel=1` in viml or `vim.opt.conceallevel = 1` on a lua config.
-
+If you wish to use the formatting concealment features, you will need to have `conceallevel` set to a value that allows it, for example:
+`set conceallevel=1` in viml or `vim.opt.conceallevel = 1` in a lua config.
 
 #### Note naming and location
 
