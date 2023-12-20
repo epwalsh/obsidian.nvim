@@ -44,8 +44,7 @@ obsidian._client = nil
 ---@return obsidian.Client
 obsidian.get_client = function()
   if obsidian._client == nil then
-    log.fail "Obsidian client has not been set! Did you forget to call 'setup()'?"
-    return ---@diagnostic disable-line: missing-return-value  (unreachable)
+    error "Obsidian client has not been set! Did you forget to call 'setup()'?"
   else
     return obsidian._client
   end
@@ -197,6 +196,7 @@ obsidian.setup = function(opts)
               table.insert(sources, source)
             end
           end
+          ---@diagnostic disable-next-line: missing-fields
           cmp.setup.buffer { sources = sources }
         end
       end,

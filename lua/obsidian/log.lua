@@ -95,9 +95,4 @@ end
 
 log.error_once = log.err
 
----@param msg string
-log.fail = function(msg, ...)
-  error("[Obsidian] " .. string.format(msg, ...))
-end
-
 return log

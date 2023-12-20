@@ -23,7 +23,7 @@ local function get_clip_check_command()
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
     check_cmd = 'powershell.exe "Get-Clipboard -Format Image"'
   else
-    log.fail("image saving not implemented for OS '" .. this_os .. "'")
+    error("image saving not implemented for OS '" .. this_os .. "'")
   end
   return check_cmd
 end
@@ -45,8 +45,7 @@ local function clipboard_is_img()
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
     return content ~= nil
   else
-    log.fail("image saving not implemented for OS '" .. this_os .. "'")
-    return false
+    error("image saving not implemented for OS '" .. this_os .. "'")
   end
 end
 
@@ -82,7 +81,7 @@ local function save_clipboard_image(path)
   elseif this_os == util.OSType.Darwin then
     return run_job("pngpaste", { path })
   else
-    return log.fail("image saving not implemented for OS '" .. this_os .. "'")
+    error("image saving not implemented for OS '" .. this_os .. "'")
   end
 end
 
