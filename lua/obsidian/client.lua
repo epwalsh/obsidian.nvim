@@ -12,9 +12,9 @@ local block_on = require("obsidian.async").block_on
 local iter = require("obsidian.itertools").iter
 
 ---@class obsidian.Client : obsidian.ABC
----@field current_workspace obsidian.Workspace
----@field dir Path
----@field opts obsidian.config.ClientOpts
+---@field current_workspace obsidian.Workspace The current workspace.
+---@field dir Path The root of the vault for the current workspace.
+---@field opts obsidian.config.ClientOpts The client config.
 ---@field _quiet boolean
 local Client = abc.new_class {
   __tostring = function(self)
@@ -45,33 +45,46 @@ end
 ---@param workspace obsidian.Workspace
 Client.set_workspace = function(self, workspace)
   self.current_workspace = workspace
-  -- NOTE: workspace.path has already been normalized
-  self.dir = Path:new(workspace.path)
+  self.dir = self:vault_root(workspace)
 end
 
 ---Switch to a different workspace.
 ---@param workspace obsidian.Workspace|string The workspace object or the name of an existing workspace.
 Client.switch_workspace = function(self, workspace)
   if type(workspace) == "string" then
+    if workspace == self.current_workspace.name then
+      log.info("Already in workspace '%s' @ '%s'", workspace, self.current_workspace.path)
+      return
+    end
+
     for _, ws in ipairs(self.opts.workspaces) do
       if ws.name == workspace then
         return self:switch_workspace(ws)
       end
     end
+
     error(string.format("Workspace '%s' not found", workspace))
   else
+    if workspace.path == self.current_workspace.path then
+      log.info("Already in workspace '%s' @ '%s'", workspace.name, workspace.path)
+      return
+    end
+
     log.info("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
     self:set_workspace(workspace)
   end
 end
 
----Get the absolute path to the root of the Obsidian vault (it may be in a parent of 'self.dir').
----
+---Get the absolute path to the root of the Obsidian vault for the given workspace or the
+---current workspace.
+---@param workspace obsidian.Workspace|?
 ---@return Path
-Client.vault_root = function(self)
+Client.vault_root = function(self, workspace)
+  workspace = workspace and workspace or self.current_workspace
+
   local vault_indicator_folder = ".obsidian"
-  local dirs = self.dir:parents()
-  table.insert(dirs, 1, self.dir:absolute())
+  local dirs = Path:new(workspace.path):parents()
+  table.insert(dirs, 1, workspace.path)
 
   for _, dirpath in ipairs(dirs) do
     local dir = Path:new(dirpath)
@@ -81,7 +94,7 @@ Client.vault_root = function(self)
     end
   end
 
-  return self.dir
+  return Path:new(workspace.path)
 end
 
 ---Get the name of the vault.

@@ -31,7 +31,7 @@ return function(client, _)
   ---@diagnostic disable-next-line: undefined-field
   local start_time = vim.loop.hrtime()
 
-  scan.scan_dir(vim.fs.normalize(tostring(client:vault_root())), {
+  scan.scan_dir(vim.fs.normalize(tostring(client.dir)), {
     hidden = false,
     add_dirs = false,
     respect_gitignore = true,

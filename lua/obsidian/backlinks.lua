@@ -41,7 +41,7 @@ end
 local function wipe_rogue_buffer()
   local bn = find_rogue_buffer()
   if bn then
-    local win_ids = vim.fn.win_findbuf(bn)
+    local win_ids = assert(vim.fn.win_findbuf(bn))
     for id in iter(win_ids) do
       if vim.fn.win_gettype(id) ~= "autocmd" and vim.api.nvim_win_is_valid(id) then
         vim.api.nvim_win_close(id, true)
@@ -208,20 +208,22 @@ Backlinks._set_buffer_options = function(self)
   vim.cmd "setlocal nonu"
   vim.cmd "setlocal nornu"
   vim.cmd "setlocal winfixheight"
-  vim.api.nvim_buf_set_option(0, "filetype", "ObsidianBacklinks")
-  vim.api.nvim_buf_set_option(0, "buftype", "nofile")
-  vim.api.nvim_buf_set_option(0, "swapfile", false)
-  vim.api.nvim_buf_set_option(0, "buflisted", false)
-  vim.api.nvim_buf_set_var(0, "obsidian_vault_dir", tostring(self.client:vault_root()))
+
+  vim.opt_local.filetype = "ObsidianBacklinks"
+  vim.opt_local.buftype = "nofile"
+  vim.opt_local.swapfile = false
+  vim.opt_local.buflisted = false
+  vim.opt_local.wrap = self.client.opts.backlinks.wrap
+  vim.opt_local.spell = false
+  vim.opt_local.list = false
+  vim.opt_local.signcolumn = "no"
+  vim.opt_local.foldmethod = "manual"
+  vim.opt_local.foldcolumn = "0"
+  vim.opt_local.foldlevel = 3
+  vim.opt_local.foldenable = false
+
+  vim.api.nvim_buf_set_var(0, "obsidian_vault_dir", tostring(self.client.dir))
   vim.api.nvim_buf_set_var(0, "obsidian_parent_win", self.winnr)
-  vim.api.nvim_win_set_option(0, "wrap", self.client.opts.backlinks.wrap)
-  vim.api.nvim_win_set_option(0, "spell", false)
-  vim.api.nvim_win_set_option(0, "list", false)
-  vim.api.nvim_win_set_option(0, "signcolumn", "no")
-  vim.api.nvim_win_set_option(0, "foldmethod", "manual")
-  vim.api.nvim_win_set_option(0, "foldcolumn", "0")
-  vim.api.nvim_win_set_option(0, "foldlevel", 3)
-  vim.api.nvim_win_set_option(0, "foldenable", false)
 
   vim.api.nvim_buf_set_keymap(
     0,
@@ -237,8 +239,9 @@ end
 ---@param ns_id integer
 ---@param backlink_matches BacklinkMatches[]
 Backlinks._render_buffer_lines = function(self, ns_id, backlink_matches)
-  vim.api.nvim_buf_set_option(0, "readonly", false)
-  vim.api.nvim_buf_set_option(0, "modifiable", true)
+  vim.opt_local.readonly = false
+  vim.opt_local.modifiable = true
+
   vim.api.nvim_buf_clear_namespace(0, ns_id, 0, -1)
 
   -- Render lines.
@@ -302,8 +305,8 @@ Backlinks._render_buffer_lines = function(self, ns_id, backlink_matches)
   end
 
   -- Lock the buffer.
-  vim.api.nvim_buf_set_option(0, "readonly", true)
-  vim.api.nvim_buf_set_option(0, "modifiable", false)
+  vim.opt_local.readonly = true
+  vim.opt_local.modifiable = false
 end
 
 Backlinks.open_or_fold = function()
