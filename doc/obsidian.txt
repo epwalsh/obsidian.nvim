@@ -533,6 +533,13 @@ syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I’ve found
 doesn’t work very well.
 
 
+CONCEALING CHARACTERS ~
+
+If you wish to use the formatting concealment features, you will need to have
+`conceallevel` set to a value that allows it, for example: `set conceallevel=1`
+in viml or `vim.opt.conceallevel = 1` in a lua config.
+
+
 NOTE NAMING AND LOCATION ~
 
 The `notes_subdir` and `note_id_func` options are not mutually exclusive. You
