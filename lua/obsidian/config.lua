@@ -1,5 +1,6 @@
 local log = require "obsidian.log"
-local workspace = require "obsidian.workspace"
+local util = require "obsidian.util"
+local Workspace = require "obsidian.workspace"
 
 local config = {}
 
@@ -77,9 +78,14 @@ config.SortBy = {
 ---Normalize options.
 ---
 ---@param opts table<string, any>
+---@param overrides table|obsidian.config.ClientOpts|?
 ---@return obsidian.config.ClientOpts
-config.ClientOpts.normalize = function(opts)
+config.ClientOpts.normalize = function(opts, overrides)
   local defaults = config.ClientOpts.default()
+  if overrides ~= nil then
+    defaults = config.ClientOpts.normalize(overrides)
+  end
+
   ---@type obsidian.config.ClientOpts
   opts = vim.tbl_extend("force", defaults, opts)
 
@@ -118,15 +124,19 @@ config.ClientOpts.normalize = function(opts)
     opts.overwrite_mappings = nil
   end
 
-  -- Normalize workspace paths.
-  for key, value in pairs(opts.workspaces) do
-    opts.workspaces[key].path = vim.fs.normalize(tostring(value.path))
+  -- Normalize workspaces.
+  if not util.tbl_is_array(opts.workspaces) then
+    error "'config.workspaces' should be an array/list"
+  else
+    for i, ws in ipairs(opts.workspaces) do
+      opts.workspaces[i] = Workspace.new(ws.name, ws.path, ws.overrides)
+    end
   end
 
   -- Convert dir to workspace format.
   if opts.dir ~= nil then
     -- NOTE: path will be normalized in workspace.new() fn
-    table.insert(opts.workspaces, 1, workspace.new_from_dir(opts.dir))
+    table.insert(opts.workspaces, 1, Workspace.new_from_dir(opts.dir))
   end
 
   return opts

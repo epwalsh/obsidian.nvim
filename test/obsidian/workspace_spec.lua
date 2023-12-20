@@ -9,6 +9,9 @@ local opts = {
     {
       name = "personal",
       path = "~/notes/personal",
+      overrides = {
+        notes_subdir = "notes",
+      },
     },
     {
       name = "cwd_workspace",

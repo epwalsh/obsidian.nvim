@@ -4,6 +4,7 @@ local abc = require "obsidian.abc"
 ---@class obsidian.Workspace : obsidian.ABC
 ---@field name string
 ---@field path string
+---@field overrides table|obsidian.config.ClientOpts|?
 local Workspace = abc.new_class {
   __tostring = function(self)
     return string.format("Workspace('%s', '%s')", self.name, self.path)
@@ -14,11 +15,13 @@ local Workspace = abc.new_class {
 ---
 ---@param name string Workspace name
 ---@param path string|Path Workspace path (will be normalized)
+---@param overrides table|obsidian.config.ClientOpts|?
 ---@return obsidian.Workspace
-Workspace.new = function(name, path)
+Workspace.new = function(name, path, overrides)
   local self = Workspace.init()
   self.name = name
   self.path = vim.fs.normalize(tostring(path))
+  self.overrides = overrides
   return self
 end
 
