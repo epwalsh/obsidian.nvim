@@ -467,6 +467,11 @@ require("nvim-treesitter.configs").setup({
 
 If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
 
+#### Concealing characters
+
+If you wish to use the formatting concealment features, you will need to have `conceallevel` set to a value that allows it, for example:
+`set conceallevel=1` in viml or `vim.opt.conceallevel = 1` in a lua config.
+
 #### Note naming and location
 
 The `notes_subdir` and `note_id_func` options are not mutually exclusive. You can use them both. For example, using a combination of both of the above settings, a new note called "My new note" will assigned a path like `notes/1657296016-my-new-note.md`.
