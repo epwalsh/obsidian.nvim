@@ -2,6 +2,7 @@ local Path = require "plenary.path"
 local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
+local config = require "obsidian.config"
 local Note = require "obsidian.note"
 local Workspace = require "obsidian.workspace"
 local log = require "obsidian.log"
@@ -15,6 +16,7 @@ local iter = require("obsidian.itertools").iter
 ---@field current_workspace obsidian.Workspace The current workspace.
 ---@field dir Path The root of the vault for the current workspace.
 ---@field opts obsidian.config.ClientOpts The client config.
+---@field _default_opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
   __tostring = function(self)
@@ -28,11 +30,12 @@ local Client = abc.new_class {
 ---@return obsidian.Client
 Client.new = function(opts)
   local self = Client.init()
-  local workspace = Workspace.get_from_opts(opts)
 
-  self:set_workspace(workspace)
-  self.opts = opts
+  self._default_opts = opts
   self._quiet = false
+
+  local workspace = Workspace.get_from_opts(opts)
+  self:set_workspace(workspace)
 
   if self.opts.yaml_parser ~= nil then
     local yaml = require "obsidian.yaml"
@@ -46,6 +49,7 @@ end
 Client.set_workspace = function(self, workspace)
   self.current_workspace = workspace
   self.dir = self:vault_root(workspace)
+  self.opts = config.ClientOpts.normalize(self._default_opts, workspace.overrides)
 end
 
 ---Switch to a different workspace.

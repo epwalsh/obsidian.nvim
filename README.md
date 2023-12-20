@@ -200,6 +200,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- A list of vault names and paths.
   -- Each path should be the path to the vault root. If you use the Obsidian app,
   -- the vault root is the parent directory of the `.obsidian` folder.
+  -- You can also provide configuration overrides for each workspace through the `overrides` field.
   workspaces = {
     {
       name = "personal",
@@ -208,6 +209,10 @@ This is a complete list of all of the options that can be passed to `require("ob
     {
       name = "work",
       path = "~/vaults/work",
+      -- Optional, override certain settings.
+      overrides = {
+        notes_subdir = "notes",
+      },
     },
   },
 

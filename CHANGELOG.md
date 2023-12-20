@@ -10,6 +10,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added Lua API methods `Client:set_workspace(workspace: obsidian.Workspace)` and `Client:switch_workspace(workspace: string|obsidian.Workspace)`.
+- Added the ability to override settings per workspace by providing the `overrides` field in a workspace definition. For example:
+
+    ```lua
+    require("obsidian").setup({
+      workspaces = {
+        {
+          name = "personal",
+          path = "~/vaults/personal",
+        },
+        {
+          name = "work",
+          path = "~/vaults/work",
+          -- Optional, override certain settings.
+          overrides = {
+            notes_subdir = "notes",
+          },
+        },
+      },
+
+      -- ... other options ...
+    })
+    ```
 
 ### Fixed
 
