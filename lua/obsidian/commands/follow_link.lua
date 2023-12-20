@@ -54,7 +54,7 @@ return function(client, _)
         vim.api.nvim_command("e " .. tostring(path))
       end)
     else
-      local paths_to_check = { client:vault_root() / location, Path:new(location) }
+      local paths_to_check = { client.dir / location, Path:new(location) }
       if buf_cwd ~= nil then
         paths_to_check[#paths_to_check + 1] = Path:new(buf_cwd) / location
       end
