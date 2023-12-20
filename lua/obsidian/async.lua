@@ -91,7 +91,7 @@ Executor.map = function(self, fn, task_args, callback)
       next_args = { task_args() }
     end
   else
-    return log.fail("unexpected type '%s' for 'task_args'", type(task_args))
+    error(string.format("unexpected type '%s' for 'task_args'", type(task_args)))
   end
 
   if num_tasks == 0 then
@@ -117,7 +117,7 @@ Executor._join = function(self, timeout, pause_fn)
     pause_fn(pause_for)
     ---@diagnostic disable-next-line: undefined-field
     if timeout ~= nil and (uv.hrtime() / 1000000) - start_time > timeout then
-      return log.fail "Timeout error from Executor.join()"
+      error "Timeout error from Executor.join()"
     end
   end
 end

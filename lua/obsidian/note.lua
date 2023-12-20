@@ -129,8 +129,7 @@ end
 ---@return obsidian.Note
 Note.from_file = function(path, root)
   if path == nil then
-    log.fail "note path cannot be nil"
-    error() -- unreachable
+    error "note path cannot be nil"
   end
   local n
   with(open(vim.fs.normalize(tostring(path))), function(reader)
@@ -149,8 +148,7 @@ end
 Note.from_file_async = function(path, root)
   local File = require("obsidian.async").File
   if path == nil then
-    log.fail "note path cannot be nil"
-    error()
+    error "note path cannot be nil"
   end
   local f = File.open(vim.fs.normalize(tostring(path)))
   local ok, res = pcall(Note.from_lines, function()
@@ -425,8 +423,7 @@ end
 ---@param frontmatter table|?
 Note.save = function(self, path, insert_frontmatter, frontmatter)
   if self.path == nil then
-    log.fail "note path cannot be nil"
-    error()
+    error "note path cannot be nil"
   end
 
   local lines = {}
@@ -474,8 +471,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   assert(save_path ~= nil)
   local save_f = io.open(save_path, "w")
   if save_f == nil then
-    log.fail("failed to write file at " .. save_path)
-    error()
+    error(string.format("failed to write file at " .. save_path))
   end
   for _, line in pairs(new_lines) do
     save_f:write(line)

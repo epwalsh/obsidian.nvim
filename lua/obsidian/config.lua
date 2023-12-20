@@ -126,7 +126,7 @@ config.ClientOpts.normalize = function(opts)
   -- Convert dir to workspace format.
   if opts.dir ~= nil then
     -- NOTE: path will be normalized in workspace.new() fn
-    table.insert(opts.workspaces, 1, workspace.new("dir", opts.dir))
+    table.insert(opts.workspaces, 1, workspace.new_from_dir(opts.dir))
   end
 
   return opts

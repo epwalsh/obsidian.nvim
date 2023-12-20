@@ -3,7 +3,7 @@ local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local Note = require "obsidian.note"
-local workspace = require "obsidian.workspace"
+local Workspace = require "obsidian.workspace"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
@@ -28,11 +28,12 @@ local Client = abc.new_class {
 ---@return obsidian.Client
 Client.new = function(opts)
   local self = Client.init()
-  self.current_workspace = workspace.get_from_opts(opts)
-  -- NOTE: workspace.path has already been normalized
-  self.dir = Path:new(self.current_workspace.path)
+  local workspace = Workspace.get_from_opts(opts)
+
+  self:set_workspace(workspace)
   self.opts = opts
   self._quiet = false
+
   if self.opts.yaml_parser ~= nil then
     local yaml = require "obsidian.yaml"
     yaml.set_parser(self.opts.yaml_parser)
@@ -41,20 +42,45 @@ Client.new = function(opts)
   return self
 end
 
+---@param workspace obsidian.Workspace
+Client.set_workspace = function(self, workspace)
+  self.current_workspace = workspace
+  -- NOTE: workspace.path has already been normalized
+  self.dir = Path:new(workspace.path)
+end
+
+---Switch to a different workspace.
+---@param workspace obsidian.Workspace|string The workspace object or the name of an existing workspace.
+Client.switch_workspace = function(self, workspace)
+  if type(workspace) == "string" then
+    for _, ws in ipairs(self.opts.workspaces) do
+      if ws.name == workspace then
+        return self:switch_workspace(ws)
+      end
+    end
+    error(string.format("Workspace '%s' not found", workspace))
+  else
+    log.info("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
+    self:set_workspace(workspace)
+  end
+end
+
 ---Get the absolute path to the root of the Obsidian vault (it may be in a parent of 'self.dir').
 ---
 ---@return Path
 Client.vault_root = function(self)
   local vault_indicator_folder = ".obsidian"
   local dirs = self.dir:parents()
-  table.insert(dirs, 0, self.dir:absolute())
-  for _, dirpath in pairs(dirs) do
+  table.insert(dirs, 1, self.dir:absolute())
+
+  for _, dirpath in ipairs(dirs) do
     local dir = Path:new(dirpath)
     local maybe_vault = dir / vault_indicator_folder
     if maybe_vault:is_dir() then
       return dir
     end
   end
+
   return self.dir
 end
 
