@@ -464,6 +464,11 @@ require("nvim-treesitter.configs").setup({
   },
 })
 ```
+#### Concealing characters
+
+If you wish to use the formatting concealment features, you will need to have `conceallevel` set to a value that allow it, so either
+`set conceallevel=1` in viml or `vim.opt.conceallevel = 1` on a lua config.
+
 
 If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
 
