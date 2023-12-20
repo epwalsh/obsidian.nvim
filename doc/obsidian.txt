@@ -253,6 +253,7 @@ please read each option carefully and customize it to your needs:
       -- A list of vault names and paths.
       -- Each path should be the path to the vault root. If you use the Obsidian app,
       -- the vault root is the parent directory of the `.obsidian` folder.
+      -- You can also provide configuration overrides for each workspace through the `overrides` field.
       workspaces = {
         {
           name = "personal",
@@ -261,6 +262,10 @@ please read each option carefully and customize it to your needs:
         {
           name = "work",
           path = "~/vaults/work",
+          -- Optional, override certain settings.
+          overrides = {
+            notes_subdir = "notes",
+          },
         },
       },
     
