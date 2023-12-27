@@ -11,7 +11,7 @@ local M = {}
 ---@param title string|nil
 ---@return string
 M.substitute_template_variables = function(text, client, title)
-  local methods = client.opts.templates.substitutions or {}
+  local methods = vim.deepcopy(client.opts.templates.substitutions or {})
 
   if not methods["date"] then
     methods["date"] = function()
@@ -28,14 +28,21 @@ M.substitute_template_variables = function(text, client, title)
   end
 
   if title then
-    methods["title"] = function()
-      return title
-    end
+    methods["title"] = title
   end
 
-  for key, func in pairs(methods) do
+  for key, subst in pairs(methods) do
     for m_start, m_end in util.gfind(text, "{{" .. key .. "}}", nil, true) do
-      text = string.sub(text, 1, m_start - 1) .. func() .. string.sub(text, m_end + 1)
+      ---@type string
+      local value
+      if type(subst) == "string" then
+        value = subst
+      else
+        value = subst()
+        -- cache the result
+        methods[key] = value
+      end
+      text = string.sub(text, 1, m_start - 1) .. value .. string.sub(text, m_end + 1)
     end
   end
 
