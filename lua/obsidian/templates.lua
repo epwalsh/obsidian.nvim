@@ -12,26 +12,33 @@ local M = {}
 ---@return string
 M.substitute_template_variables = function(text, client, title)
   local methods = client.opts.templates.substitutions or {}
+
   if not methods["date"] then
     methods["date"] = function()
       local date_format = client.opts.templates.date_format or "%Y-%m-%d"
       return tostring(os.date(date_format))
     end
   end
+
   if not methods["time"] then
     methods["time"] = function()
       local time_format = client.opts.templates.time_format or "%H:%M"
       return tostring(os.date(time_format))
     end
   end
+
   if title then
     methods["title"] = function()
       return title
     end
   end
-  for key, value in pairs(methods) do
-    text = string.gsub(text, "{{" .. key .. "}}", value())
+
+  for key, func in pairs(methods) do
+    for m_start, m_end in util.gfind(text, "{{" .. key .. "}}", nil, true) do
+      text = string.sub(text, 1, m_start - 1) .. func() .. string.sub(text, m_end + 1)
+    end
   end
+
   return text
 end
 

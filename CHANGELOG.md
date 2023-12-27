@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Made workspace API more robust.
+- Template substitutions are done lazily.
 
 ## [v2.4.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.4.0) - 2023-12-19
 
