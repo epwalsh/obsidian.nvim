@@ -27,12 +27,14 @@ return function(client, _)
         return false
       end
 
+      search_opts.escape_path = true
       local cmd = search.build_find_cmd(".", nil, search_opts)
       fzf_lua.files { cmd = table.concat(cmd, " "), cwd = tostring(client.dir) }
 
       return true
     end,
     ["fzf.vim"] = function()
+      search_opts.escape_path = true
       local cmd = search.build_find_cmd(dir, nil, search_opts)
       local fzf_options = { source = table.concat(cmd, " "), sink = "e" }
 

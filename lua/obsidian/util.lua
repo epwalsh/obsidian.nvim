@@ -93,9 +93,6 @@ end
 
 ---Quote a string for safe command-line usage.
 ---
----Adapted from lua-shell-games.
----https://github.com/GUI/lua-shell-games/blob/master/lib/shell-games.lua
----
 ---@param str string
 ---@return string
 util.quote = function(str)
