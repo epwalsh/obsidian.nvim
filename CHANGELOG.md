@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.5.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.0) - 2023-12-30
+
 ### Added
 
 - Added Lua API methods `Client:set_workspace(workspace: obsidian.Workspace)` and `Client:switch_workspace(workspace: string|obsidian.Workspace)`.
