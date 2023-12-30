@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made workspace API more robust.
 - Template substitutions are done lazily and only generated once per line.
 - Fixed search functionality with `fzf.vim` as a finder when the vault name contains characters that need to be escaped, such as spaces.
+- Fixed a bug with ext marks for references inside of frontmatter.
 
 ## [v2.4.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.4.0) - 2023-12-19
 
