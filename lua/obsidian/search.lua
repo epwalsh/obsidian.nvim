@@ -204,6 +204,7 @@ end
 ---@field ignore_case boolean|?
 ---@field exclude string[]|? paths to exclude
 ---@field max_count_per_file integer|?
+---@field escape_path boolean|?
 local SearchOpts = abc.new_class {
   __tostring = function(self)
     return string.format("search.SearchOpts(%s)", vim.inspect(self:as_tbl()))
@@ -290,11 +291,16 @@ M.build_search_cmd = function(dir, term, opts)
     end
   end
 
+  local path = vim.fs.normalize(tostring(dir))
+  if opts.escape_path then
+    path = assert(vim.fn.fnameescape(path))
+  end
+
   return vim.tbl_flatten {
     M._SEARCH_CMD,
     opts:to_ripgrep_opts(),
     search_terms,
-    vim.fs.normalize(tostring(dir)),
+    path,
   }
 end
 
@@ -316,7 +322,10 @@ M.build_find_cmd = function(path, term, opts)
   end
 
   if path ~= nil and path ~= "." then
-    additional_opts[#additional_opts + 1] = tostring(path)
+    if opts.escape_path then
+      path = assert(vim.fn.fnameescape(tostring(path)))
+    end
+    additional_opts[#additional_opts + 1] = path
   end
 
   return vim.tbl_flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }

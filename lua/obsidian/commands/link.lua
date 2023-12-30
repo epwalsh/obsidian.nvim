@@ -143,7 +143,7 @@ return function(client, data)
         {
           "--",
           util.quote(search_term),
-          tostring(client.dir),
+          vim.fn.fnameescape(tostring(client.dir)),
         },
       }
 

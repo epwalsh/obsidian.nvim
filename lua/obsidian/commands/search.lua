@@ -61,7 +61,7 @@ return function(client, data)
           "--color=always",
           "--",
           util.quote(data.args),
-          tostring(client.dir),
+          vim.fn.fnameescape(tostring(client.dir)),
         },
       }
 
