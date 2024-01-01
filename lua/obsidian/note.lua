@@ -323,9 +323,18 @@ Note.from_lines = function(lines, path, root)
 
   -- The ID should match the filename with or without the extension.
   local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
-  local relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
+  local relative_path_no_ext = relative_path
+  if vim.endswith(relative_path_no_ext, ".md") then
+    -- NOTE: alternatively we could use `vim.fn.fnamemodify`, but that will give us luv errors
+    -- when called from an async context on certain operating systems.
+    -- relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
+    relative_path_no_ext = relative_path_no_ext:sub(1, -4)
+  end
   local fname = assert(vim.fs.basename(relative_path))
-  local fname_no_ext = vim.fn.fnamemodify(fname, ":r")
+  local fname_no_ext = fname
+  if vim.endswith(fname_no_ext, ".md") then
+    fname_no_ext = fname_no_ext:sub(1, -4)
+  end
   if id ~= relative_path and id ~= relative_path_no_ext and id ~= fname and id ~= fname_no_ext then
     id = fname_no_ext
   end
