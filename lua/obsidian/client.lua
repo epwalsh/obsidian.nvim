@@ -114,15 +114,16 @@ Client.vault_relative_path = function(self, path)
   local normalized_path = vim.fs.normalize(tostring(path))
   local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
   if relative_path == normalized_path then
-    -- When `:make_relative()` fails it returns the absolute path.
-    -- HACK: This can happen when the vault path is configured to look behind a link but `path` is
-    -- not behind the link. In this case we look for the first occurrence of the vault name in
-    -- `path` are remove everything up to and including it.
+    -- Either `normalized_path` was already relative or `:make_relative()` failed.
+    -- When `:make_relative()` fails it returns the absolute path, which can happen when the
+    -- vault path is configured to look behind a link but `path` is not behind the link.
+    -- In this case we look for the first occurrence of the vault name in
+    -- `path` and remove everything up to and including it.
     local _, j = string.find(relative_path, self:vault_name())
     if j ~= nil then
       return string.sub(relative_path, j)
     else
-      return nil
+      return relative_path
     end
   else
     return relative_path
