@@ -118,7 +118,7 @@ Client.vault_relative_path = function(self, path)
     -- When `:make_relative()` fails it returns the absolute path, which can happen when the
     -- vault path is configured to look behind a link but `path` is not behind the link.
     -- In this case we look for the first occurrence of the vault name in
-    -- `path` are remove everything up to and including it.
+    -- `path` and remove everything up to and including it.
     local _, j = string.find(relative_path, self:vault_name())
     if j ~= nil then
       return string.sub(relative_path, j)
