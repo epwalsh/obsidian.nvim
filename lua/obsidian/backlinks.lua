@@ -125,7 +125,6 @@ Backlinks._gather = function(self)
 
   search.search_async(self.client.dir, util.tbl_unique(search_terms), opts, function(match)
     local path = match.path.text
-    print(path)
 
     local line_matches = backlink_matches[path]
     if line_matches == nil then
