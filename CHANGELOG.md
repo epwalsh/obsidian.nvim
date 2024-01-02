@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed bug with `Client:resolve_note()` that missed checking the parent directory of the current buffer.
+- Made gathering backlinks work with links of different forms, like Markdown or Wiki with just an alias.
 
 ## [v2.5.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.1) - 2024-01-01
 

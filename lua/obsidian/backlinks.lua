@@ -92,20 +92,6 @@ end
 ---
 ---@return BacklinkMatches[]
 Backlinks._gather = function(self)
-  ---@param match_data MatchData
-  ---@return boolean
-  local is_valid_backlink = function(match_data)
-    local line = match_data.lines.text
-    for _, submatch in pairs(match_data.submatches) do
-      if string.sub(line, submatch["end"] + 1, submatch["end"] + 2) == "]]" then
-        return true
-      elseif string.sub(line, submatch["end"] + 1, submatch["end"] + 1) == "|" then
-        return true
-      end
-    end
-    return false
-  end
-
   local opts = search.SearchOpts.from_tbl {
     fixed_strings = true,
     sort_by = self.client.opts.sort_by,
@@ -123,22 +109,35 @@ Backlinks._gather = function(self)
   local tx, rx = channel.oneshot()
 
   -- Collect matches.
-  search.search_async(self.client.dir, "[[" .. tostring(self.note.id), opts, function(match)
-    if is_valid_backlink(match) then
-      local path = match.path.text
+  local search_terms = {}
 
-      local line_matches = backlink_matches[path]
-      if line_matches == nil then
-        line_matches = {}
-        backlink_matches[path] = line_matches
-      end
+  for ref in iter { tostring(self.note.id), self.note:fname() } do
+    if ref ~= nil then
+      search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
+      search_terms[#search_terms + 1] = string.format("[[%s|", ref)
+      search_terms[#search_terms + 1] = string.format("(%s)", ref)
+    end
+  end
 
-      line_matches[#line_matches + 1] = { line = match.line_number, text = util.rstrip_whitespace(match.lines.text) }
+  for alias in iter(self.note.aliases) do
+    search_terms[#search_terms + 1] = string.format("[[%s]]", alias)
+  end
 
-      if path_order[path] == nil then
-        num_paths = num_paths + 1
-        path_order[path] = num_paths
-      end
+  search.search_async(self.client.dir, util.tbl_unique(search_terms), opts, function(match)
+    local path = match.path.text
+    print(path)
+
+    local line_matches = backlink_matches[path]
+    if line_matches == nil then
+      line_matches = {}
+      backlink_matches[path] = line_matches
+    end
+
+    line_matches[#line_matches + 1] = { line = match.line_number, text = util.rstrip_whitespace(match.lines.text) }
+
+    if path_order[path] == nil then
+      num_paths = num_paths + 1
+      path_order[path] = num_paths
     end
   end, function()
     tx()
