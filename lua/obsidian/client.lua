@@ -16,6 +16,7 @@ local iter = require("obsidian.itertools").iter
 ---@field current_workspace obsidian.Workspace The current workspace.
 ---@field dir Path The root of the vault for the current workspace.
 ---@field opts obsidian.config.ClientOpts The client config.
+---@field buf_dir Path|? The parent directory of the current buffer.
 ---@field _default_opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
@@ -397,13 +398,21 @@ Client.resolve_note_async = function(self, query, callback)
   if not vim.endswith(fname, ".md") then
     fname = fname .. ".md"
   end
+
   local paths_to_check = { Path:new(fname), self.dir / fname }
+
   if self.opts.notes_subdir ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / fname)
+    paths_to_check[#paths_to_check + 1] = self.dir / self.opts.notes_subdir / fname
   end
+
   if self.opts.daily_notes.folder ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / fname)
+    paths_to_check[#paths_to_check + 1] = self.dir / self.opts.daily_notes.folder / fname
   end
+
+  if self.buf_dir ~= nil then
+    paths_to_check[#paths_to_check + 1] = self.buf_dir / fname
+  end
+
   for _, path in pairs(paths_to_check) do
     if path:is_file() and vim.endswith(tostring(path), ".md") then
       return async.run(function()

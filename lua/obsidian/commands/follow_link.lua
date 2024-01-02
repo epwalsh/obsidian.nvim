@@ -27,7 +27,7 @@ return function(client, _)
     location = location:sub(1, -header_link:len() - 1)
   end
 
-  local buf_cwd = vim.fs.basename(vim.api.nvim_buf_get_name(0))
+  local buf_cwd = vim.fs.dirname(vim.api.nvim_buf_get_name(0))
 
   -- Search for matching notes.
   -- TODO: handle case where there are multiple matches by prompting user to choose.

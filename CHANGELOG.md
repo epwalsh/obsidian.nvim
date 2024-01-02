@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed bug with `Client:resolve_note()` that missed checking the parent directory of the current buffer.
+
 ## [v2.5.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.1) - 2024-01-01
 
 ### Fixed
