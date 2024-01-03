@@ -24,13 +24,21 @@ return function(client, _)
       }
       custom_actions = require("telescope.actions.mt").transform_mod(custom_actions)
 
+      local prompt_title = "ObsidianQuickSwitch | <CR> open"
+      local new_mapping = client.opts.finder_mappings.new
+      if new_mapping ~= nil then
+        prompt_title = prompt_title .. " | " .. new_mapping .. " new"
+      end
+
       telescope.find_files {
-        prompt_title = "ObsidianQuickSwitch | <CR> open | <C-x> new",
+        prompt_title = prompt_title,
         cwd = dir,
         search_file = "*.md",
         find_command = search.build_find_cmd(".", nil, search_opts),
         attach_mappings = function(_, map)
-          map({ "i", "n" }, "<C-x>", custom_actions.obsidian_new)
+          if new_mapping ~= nil then
+            map({ "i", "n" }, new_mapping, custom_actions.obsidian_new)
+          end
           return true
         end,
       }

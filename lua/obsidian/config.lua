@@ -18,6 +18,7 @@ local config = {}
 ---@field backlinks obsidian.config.BacklinksOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
+---@field finder_mappings obsidian.config.FinderMappingOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
@@ -54,6 +55,7 @@ config.ClientOpts.default = function()
     backlinks = config.BacklinksOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
+    finder_mappings = config.FinderMappingOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
@@ -92,6 +94,7 @@ config.ClientOpts.normalize = function(opts, overrides)
   opts.backlinks = vim.tbl_extend("force", defaults.backlinks, opts.backlinks)
   opts.completion = vim.tbl_extend("force", defaults.completion, opts.completion)
   opts.mappings = opts.mappings and opts.mappings or defaults.mappings
+  opts.finder_mappings = opts.finder_mappings and opts.finder_mappings or defaults.finder_mappings
   opts.daily_notes = vim.tbl_extend("force", defaults.daily_notes, opts.daily_notes)
   opts.templates = vim.tbl_extend("force", defaults.templates, opts.templates)
   opts.ui = vim.tbl_extend("force", defaults.ui, opts.ui)
@@ -190,6 +193,18 @@ config.MappingOpts.default = function()
   return {
     ["gf"] = mappings.gf_passthrough(),
     ["<leader>ch"] = mappings.toggle_checkbox(),
+  }
+end
+
+---@class obsidian.config.FinderMappingOpts
+---@field new string|?
+config.FinderMappingOpts = {}
+
+---Get defaults.
+---@return obsidian.config.FinderMappingOpts
+config.FinderMappingOpts.default = function()
+  return {
+    new = "<C-x>",
   }
 end
 
