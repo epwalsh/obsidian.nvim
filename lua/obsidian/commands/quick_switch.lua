@@ -13,33 +13,14 @@ return function(client, _)
         return false
       end
 
-      -- Search with telescope.nvim
-      local custom_actions = {
-        -- https://github.com/nvim-telescope/telescope.nvim/blob/master/lua/telescope/actions/init.lua
-        obsidian_new = function(prompt_bufnr)
-          local query = require("telescope.actions.state").get_current_line()
-          require("telescope.actions").close(prompt_bufnr)
-          client:command("ObsidianNew", { args = query })
-        end,
-      }
-      custom_actions = require("telescope.actions.mt").transform_mod(custom_actions)
-
-      local prompt_title = "ObsidianQuickSwitch | <CR> open"
-      local new_mapping = client.opts.finder_mappings.new
-      if new_mapping ~= nil then
-        prompt_title = prompt_title .. " | " .. new_mapping .. " new"
-      end
-
+      local picker_utils = require "obsidian.picker_utils"
       telescope.find_files {
-        prompt_title = prompt_title,
+        prompt_title = picker_utils.telescope_prompt_title("ObsidianQuickSwitch", client),
         cwd = dir,
         search_file = "*.md",
         find_command = search.build_find_cmd(".", nil, search_opts),
-        attach_mappings = function(_, map)
-          if new_mapping ~= nil then
-            map({ "i", "n" }, new_mapping, custom_actions.obsidian_new)
-          end
-          return true
+        attach_mappings = function(prompt_bufnr, map)
+          return picker_utils.telescope_mappings(prompt_bufnr, map, client)
         end,
       }
 
