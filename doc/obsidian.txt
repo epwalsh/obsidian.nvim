@@ -61,7 +61,8 @@ COMMANDS                                                   *obsidian-commands*
     <https://github.com/junegunn/fzf.vim>, fzf-lua
     <https://github.com/ibhagwan/fzf-lua>, or Mini.Pick
     <https://github.com/echasnovski/mini.pick> from the mini.nvim library.
-- `:ObsidianFollowLink` to follow a note reference under the cursor.
+- `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the
+    cursor, optionally opening it in a vertical or horizontal split.
 - `:ObsidianBacklinks` for getting a location list of references to the current
     buffer.
 - `:ObsidianToday [OFFSET]` to open/create a new daily note. This command also
