@@ -12,11 +12,28 @@ return function(client, _)
       if not has_telescope then
         return false
       end
+
       -- Search with telescope.nvim
+      local custom_actions = {
+        -- https://github.com/nvim-telescope/telescope.nvim/blob/master/lua/telescope/actions/init.lua
+        obsidian_new = function(prompt_bufnr)
+          local query = require("telescope.actions.state").get_current_line()
+          require("telescope.actions").close(prompt_bufnr)
+          local new = require "obsidian.commands.new"
+          new(client, { args = query })
+        end,
+      }
+      custom_actions = require("telescope.actions.mt").transform_mod(custom_actions)
+
       telescope.find_files {
+        prompt_title = "ObsidianQuickSwitch | CR open | C-x new | C-? mappings",
         cwd = dir,
         search_file = "*.md",
         find_command = search.build_find_cmd(".", nil, search_opts),
+        attach_mappings = function(_, map)
+          map("i", "<C-x>", custom_actions.obsidian_new)
+          return true
+        end,
       }
 
       return true
