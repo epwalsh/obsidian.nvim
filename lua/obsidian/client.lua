@@ -167,6 +167,23 @@ Client.should_save_frontmatter = function(self, note)
   return true
 end
 
+---Run an obsidian command directly.
+---
+---For example:
+---
+---```lua
+---    local client = require("obsidian").get_client()
+---    client:command("ObsidianNew", { args = "Foo" })
+---```
+---
+---@param cmd_name string The name of the command.
+---@param cmd_data table|? The payload for the command.
+Client.command = function(self, cmd_name, cmd_data)
+  local commands = require "obsidian.commands"
+
+  commands[cmd_name](self, cmd_data)
+end
+
 ---@class obsidian.client.SearchOpts : obsidian.ABC
 ---@field sort boolean|?
 ---@field include_templates boolean|?
