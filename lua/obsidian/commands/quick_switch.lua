@@ -25,7 +25,7 @@ return function(client, _)
       custom_actions = require("telescope.actions.mt").transform_mod(custom_actions)
 
       telescope.find_files {
-        prompt_title = "ObsidianQuickSwitch | CR open | C-x new | C-? mappings",
+        prompt_title = "ObsidianQuickSwitch | <CR> open | <C-x> new",
         cwd = dir,
         search_file = "*.md",
         find_command = search.build_find_cmd(".", nil, search_opts),
