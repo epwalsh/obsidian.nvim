@@ -45,7 +45,7 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
 
-- `:ObsidianFollowLink` to follow a note reference under the cursor.
+- `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the cursor, optionally opening it in a vertical or horizontal split.
 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
 

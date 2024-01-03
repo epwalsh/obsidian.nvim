@@ -423,19 +423,19 @@ util.get_open_strategy = function(opt)
   -- either 'leaf', 'row' for vertically split windows, or 'col' for horizontally split windows
   local cur_layout = vim.fn.winlayout()[1]
 
-  if opt == OpenStrategy.hsplit then
+  if vim.startswith(OpenStrategy.hsplit, opt) then
     if cur_layout ~= "col" then
       return "hsplit "
     else
       return "e "
     end
-  elseif opt == OpenStrategy.vsplit then
+  elseif vim.startswith(OpenStrategy.vsplit, opt) then
     if cur_layout ~= "row" then
       return "vsplit "
     else
       return "e "
     end
-  elseif opt == OpenStrategy.current then
+  elseif vim.startswith(OpenStrategy.current, opt) then
     return "e "
   else
     log.err("undefined open strategy '%s'", opt)

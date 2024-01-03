@@ -5,7 +5,7 @@ local log = require "obsidian.log"
 local iter = require("obsidian.itertools").iter
 
 ---@param client obsidian.Client
-return function(client, _)
+return function(client, data)
   local location, name, link_type = util.cursor_link(nil, nil, true)
   if location == nil then
     return
@@ -19,6 +19,11 @@ return function(client, _)
       log.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
     end
     return
+  end
+
+  local open_cmd = "e "
+  if string.len(data.args) > 0 then
+    open_cmd = util.get_open_strategy(data.args)
   end
 
   -- Remove links from the end if there are any.
@@ -41,7 +46,7 @@ return function(client, _)
           -- Create a new note.
           local aliases = name == location and {} or { name }
           note = client:new_note(location, nil, nil, aliases)
-          vim.api.nvim_command("e " .. tostring(note.path))
+          vim.api.nvim_command(open_cmd .. tostring(note.path))
         else
           log.warn "Aborting"
         end
@@ -51,7 +56,7 @@ return function(client, _)
       local path = note.path
       assert(path)
       vim.schedule(function()
-        vim.api.nvim_command("e " .. tostring(path))
+        vim.api.nvim_command(open_cmd .. tostring(path))
       end)
     else
       local paths_to_check = { client.dir / location, Path:new(location) }
@@ -62,7 +67,7 @@ return function(client, _)
       for path in iter(paths_to_check) do
         if path:is_file() then
           return vim.schedule(function()
-            vim.api.nvim_command("e " .. tostring(path))
+            vim.api.nvim_command(open_cmd .. tostring(path))
           end)
         end
       end

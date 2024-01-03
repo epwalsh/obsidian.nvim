@@ -173,7 +173,7 @@ M.register("ObsidianLinkNew", { opts = { nargs = "?", range = true } })
 M.register("ObsidianLink", { opts = { nargs = "?", range = true }, complete = M.complete_args_search })
 
 ---Follow link under cursor.
-M.register("ObsidianFollowLink", { opts = { nargs = 0 } })
+M.register("ObsidianFollowLink", { opts = { nargs = "?" } })
 
 ---Switch to a different workspace.
 M.register("ObsidianWorkspace", { opts = { nargs = "?" } })
