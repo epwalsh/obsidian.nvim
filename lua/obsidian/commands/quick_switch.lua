@@ -30,7 +30,7 @@ return function(client, _)
         search_file = "*.md",
         find_command = search.build_find_cmd(".", nil, search_opts),
         attach_mappings = function(_, map)
-          map("i", "<C-x>", custom_actions.obsidian_new)
+          map({ "i", "n" }, "<C-x>", custom_actions.obsidian_new)
           return true
         end,
       }
