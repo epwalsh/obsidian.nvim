@@ -9,7 +9,7 @@ Built for people who love the concept of Obsidian -- a simple, markdown-based no
 
 If you're new to Obsidian I highly recommend watching [this excellent YouTube video](https://youtu.be/5ht8NYkU9wQ?si=8nbnNsRVnw0xfX2S) for a great overview.
 
-_This plugin is not meant to replace Obsidian, but to complement it._ The Obsidian app is very powerful in its own way; it comes with a mobile app and has a lot of functionality that's not feasible to implement in Neovim, such as the graph explorer view. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
+_Keep in mind this plugin is not meant to replace Obsidian, but to complement it._ The Obsidian app is very powerful in its own way; it comes with a mobile app and has a lot of functionality that's not feasible to implement in Neovim, such as the graph explorer view. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
 
 ## Table of contents
 

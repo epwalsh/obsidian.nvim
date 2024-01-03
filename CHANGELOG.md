@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.5.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.3) - 2024-01-02
+
 ### Fixed
 
 - Removed some errant print statements.
