@@ -19,8 +19,7 @@ return function(client, _)
         obsidian_new = function(prompt_bufnr)
           local query = require("telescope.actions.state").get_current_line()
           require("telescope.actions").close(prompt_bufnr)
-          local new = require "obsidian.commands.new"
-          new(client, { args = query })
+          client:command("ObsidianNew", { args = query })
         end,
       }
       custom_actions = require("telescope.actions.mt").transform_mod(custom_actions)
