@@ -70,6 +70,10 @@ jobs:
           # Replace the title tag "*obsidian.txt*" with "*obsidian.nvim*"
           sed -i '1 s/obsidian\.txt/obsidian.nvim/' doc/obsidian.txt
 
+      - name: Clean up
+        run: |
+          rm -rf _neovim/
+
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: github.event_name != 'pull_request'
         with:
