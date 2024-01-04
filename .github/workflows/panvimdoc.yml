@@ -1,27 +1,58 @@
-name: panvimdoc
+name: Docs
 
 on:
+  pull_request:
+    branches:
+      - '*'
   push:
     branches: [main]
-    paths:
-      - README.md
-      - .github/workflows/panvimdoc.yml
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
+env:
+  runtime: ~/.local/share/nvim/site/pack/vendor/start
+  minidoc-git: https://github.com/echasnovski/mini.doc
+  minidoc-path: ~/.local/share/nvim/site/pack/vendor/start/mini.doc
+
 jobs:
   docs:
     runs-on: ubuntu-latest
-    name: pandoc to vimdoc
+    name: Generate Docs
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
 
-      - name: panvimdoc
+      - run: date +%F > todays-date
+
+      - name: Restore cache for today's nightly
+        uses: actions/cache@v3
+        with:
+          path: |
+            _neovim
+          key: ${{ runner.os }}-${{ hashFiles('todays-date') }}
+
+      - name: Install neovim and dependencies
+        run: |
+          mkdir -p ${{ env.runtime }}
+          test -d _neovim || {
+            mkdir -p _neovim
+            curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
+          }
+          git clone --depth 1 ${{ env.minidoc-git }} ${{ env.minidoc-path }}
+          ln -s $(pwd) ${{ env.runtime }}
+
+      - name: Generate API docs
+        run: |
+          export PATH="${PWD}/_neovim/bin:${PATH}"
+          export VIM="${PWD}/_neovim/share/nvim/runtime"
+          make api-docs
+
+      - name: Generate plugin docs
         uses: kdheepak/panvimdoc@v4.0.0
         with:
           vimdoc: obsidian
@@ -35,6 +66,7 @@ jobs:
           ignorerawblocks: true
 
       - uses: stefanzweifel/git-auto-commit-action@v5
+        if: github.event_name != 'pull_request'
         with:
           commit_user_name: github-actions[bot]
           commit_message: 'chore(docs): auto generate docs'
