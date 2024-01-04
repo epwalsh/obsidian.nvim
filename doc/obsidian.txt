@@ -434,6 +434,7 @@ please read each option carefully and customize it to your needs:
       open_notes_in = "current",
     
       -- Optional, configure additional syntax highlighting / extmarks.
+      -- This requires you have `conceallevel` set to 1 or 2. See `:help conceallevel` for more details.
       ui = {
         enable = true,  -- set to false to disable all additional syntax features
         update_debounce = 200,  -- update delay after a text change (in milliseconds)
@@ -545,8 +546,8 @@ doesn’t work very well.
 CONCEALING CHARACTERS ~
 
 If you wish to use the formatting concealment features, you will need to have
-`conceallevel` set to a value that allows it, for example: `set conceallevel=1`
-in viml or `vim.opt.conceallevel = 1` in a lua config.
+`conceallevel` set to a value that allows it (either `1` or `2`), for example:
+`set conceallevel=1` in viml or `vim.opt.conceallevel = 1` in a lua config.
 
 
 NOTE NAMING AND LOCATION ~
