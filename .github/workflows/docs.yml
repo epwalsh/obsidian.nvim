@@ -27,14 +27,14 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
 
-      - run: date +%F > todays-date
+      - run: date +%F > /tmp/todays-date
 
       - name: Restore cache for today's nightly
         uses: actions/cache@v3
         with:
           path: |
             _neovim
-          key: ${{ runner.os }}-${{ hashFiles('todays-date') }}
+          key: ${{ runner.os }}-${{ hashFiles('/tmp/todays-date') }}
 
       - name: Install neovim and dependencies
         run: |
