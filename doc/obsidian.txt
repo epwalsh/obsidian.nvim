@@ -1,4 +1,4 @@
-*obsidian.txt*           a plugin for writing and navigating an Obsidian vault
+*obsidian.nvim*           a plugin for writing and navigating an Obsidian vault
 
 obsidian.nvim
 
