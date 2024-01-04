@@ -2,9 +2,8 @@ local M = {}
 
 --- Helper to map custom telescope actions.
 --- Used by different commands.
----@param prompt_bufnr integer
 ---@param client obsidian.Client
-M.telescope_mappings = function(prompt_bufnr, map, client)
+M.telescope_mappings = function(map, client)
   -- Docs for telescope actions:
   -- https://github.com/nvim-telescope/telescope.nvim/blob/master/lua/telescope/actions/init.lua
   local telescope_actions = require("telescope.actions.mt").transform_mod {

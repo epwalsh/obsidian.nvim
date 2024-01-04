@@ -36,8 +36,8 @@ return function(client, data)
           cwd = tostring(client.dir),
           vimgrep_arguments = vimgrep_arguments,
           search = data.args,
-          attach_mappings = function(prompt_bufnr, map)
-            return require("obsidian.picker_utils").telescope_mappings(prompt_bufnr, map, client)
+          attach_mappings = function(_, map)
+            return picker_utils.telescope_mappings(map, client)
           end,
         }
       else
@@ -45,8 +45,8 @@ return function(client, data)
           prompt_title = prompt_title,
           cwd = tostring(client.dir),
           vimgrep_arguments = vimgrep_arguments,
-          attach_mappings = function(prompt_bufnr, map)
-            return require("obsidian.picker_utils").telescope_mappings(prompt_bufnr, map, client)
+          attach_mappings = function(_, map)
+            return picker_utils.telescope_mappings(map, client)
           end,
         }
       end
