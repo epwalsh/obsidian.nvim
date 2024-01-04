@@ -21,7 +21,7 @@ local align_text = function(text, width, direction)
     return text
   end
 
-  local n_left = math.max(0, 78 - visual_text_width(text))
+  local n_left = math.max(0, width - visual_text_width(text))
   if direction == "center" then
     n_left = math.floor(0.5 * n_left)
   end
