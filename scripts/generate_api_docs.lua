@@ -1,6 +1,11 @@
 require("mini.doc").setup {}
 
 local module_name = "obsidian"
+local submodules = {
+  "lua/obsidian/client.lua",
+  "lua/obsidian/note.lua",
+  "lua/obsidian/workspace.lua",
+}
 
 local visual_text_width = function(text)
   -- Ignore concealed characters (usually "invisible" in 'help' filetype)
@@ -29,7 +34,7 @@ local align_text = function(text, width, direction)
   return (" "):rep(n_left) .. text
 end
 
-MiniDoc.generate({ "lua/obsidian/client.lua" }, "doc/obsidian_api.txt", {
+MiniDoc.generate(submodules, "doc/obsidian_api.txt", {
   hooks = {
     sections = {
       ["@tag"] = function(s)
@@ -42,5 +47,11 @@ MiniDoc.generate({ "lua/obsidian/client.lua" }, "doc/obsidian_api.txt", {
         end
       end,
     },
+    file = function(_) end,
+    write_pre = function(lines)
+      -- remove the first '---' section header
+      table.remove(lines, 1)
+      return lines
+    end,
   },
 })

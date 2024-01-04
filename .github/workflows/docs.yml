@@ -65,6 +65,11 @@ jobs:
           shiftheadinglevelby: -1
           ignorerawblocks: true
 
+      - name: Patch plugin docs tag
+        run: |
+          # Replace the title tag "*obsidian.txt*" with "*obsidian.nvim*"
+          sed '1 s/obsidian\.txt/obsidian.nvim/' doc/obsidian.txt > doc/obsidian.txt
+
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: github.event_name != 'pull_request'
         with:
