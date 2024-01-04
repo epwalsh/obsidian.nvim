@@ -43,7 +43,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 - `:ObsidianNew [TITLE]` to create a new note.
   This command has one optional argument: the title of the new note.
 
-- `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
+- `:ObsidianQuickSwitch` to quickly switch to (or open) another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
+  Note: only telescope supports creating new notes.
 
 - `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the cursor, optionally opening it in a vertical or horizontal split.
 
@@ -58,8 +59,9 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 - `:ObsidianTemplate [NAME]` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
   See ["using templates"](#using-templates) for more information.
 
-- `:ObsidianSearch [QUERY]` to search for notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick).
+- `:ObsidianSearch [QUERY]` to search for (or create) notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick).
   This command has one optional argument: a search query to start with.
+  Note: only telescope supports creating new notes.
 
 - `:ObsidianLink [QUERY]` to link an inline visual selection of text to a note.
   This command has one optional argument: a query that will be used to resolve the note by ID, path, or alias. If not given, the selected text will be used as the query.
@@ -365,6 +367,14 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- first one they find. You can set this option to tell obsidian.nvim to always use this
   -- finder.
   finder = "telescope.nvim",
+
+  -- Optional, configure key mappings for the finder. These are the defaults.
+  -- If you don't want to set any mappings this way then set
+  finder_mappings = {
+    -- Create a new note from your query from `:ObsidianSearch` and `:ObsidianQuickSwitch`.
+    -- Only telescope is supported.
+    new = "<C-x>",
+  },
 
   -- Optional, sort search results by "path", "modified", "accessed", or "created".
   -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example,
