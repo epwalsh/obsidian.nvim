@@ -42,7 +42,7 @@ return function(client, data)
         local confirmation = string.lower(vim.fn.input {
           prompt = "Create new note '" .. location .. "'? [Y/n] ",
         })
-        if confirmation == "y" or confirmation == "yes" then
+        if confirmation == "" or confirmation == "y" or confirmation == "yes" then
           -- Create a new note.
           local aliases = name == location and {} or { name }
           note = client:new_note(location, nil, client.buf_dir, aliases)

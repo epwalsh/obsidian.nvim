@@ -122,7 +122,7 @@ M.paste_img = function(fname, default_dir)
     local confirmation = string.lower(vim.fn.input {
       prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
     })
-    if not (confirmation == "y" or confirmation == "yes") then
+    if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
       log.warn "Paste canceled"
       return
     end
