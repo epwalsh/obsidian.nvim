@@ -22,10 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     name: Generate Docs
     steps:
-      - name: Checkout
+      - name: Checkout with token
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout without token
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
 
       - run: date +%F > /tmp/todays-date
 
