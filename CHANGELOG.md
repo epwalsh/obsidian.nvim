@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- Fixed a bug with :ObsidianFollowLink where new notes were always created at the vault's root.
+
 ### Added
 
 - `:ObsidianFollowLink` now takes an optional "open strategy" argument. For example `:ObsidianFollowLink vsplit` or `:ObsidianFollowLink vsp` opens the note in a vertical split.
