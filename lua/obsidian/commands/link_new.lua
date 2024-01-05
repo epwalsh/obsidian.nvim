@@ -24,7 +24,7 @@ return function(client, data)
   else
     title = string.sub(line, cscol, cecol)
   end
-  local note = client:new_note(title, nil, vim.fn.expand "%:p:h")
+  local note = client:new_note(title, nil, client.buf_dir)
 
   line = string.sub(line, 1, cscol - 1)
     .. "[["
