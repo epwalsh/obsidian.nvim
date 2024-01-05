@@ -99,7 +99,7 @@ return function(client, data)
         .. "Do you want to continue? [Y/n] ",
     })
   end
-  if not (confirmation == "y" or confirmation == "yes") then
+  if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
     log.warn "Rename canceled, doing nothing"
     return
   end
