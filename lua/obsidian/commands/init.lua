@@ -50,7 +50,7 @@ M.register = function(name, config)
     config.func = function(client, data)
       return M[name](client, data)
     end
- ObsidianFollowLink end
+end
   M.commands[name] = config
 end
 
