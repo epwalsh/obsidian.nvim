@@ -442,6 +442,10 @@ This is a complete list of all of the options that can be passed to `require("ob
     end,
   },
 
+  -- If you're using MacOS and your 'Obsidian.app' happens to be in a non-standard location,
+  -- (i.e. not '/Applications/Obsidian.app') you can set the path here.
+  obsidian_app = nil,
+
   -- Optional, set the YAML parser to use. The valid options are:
   --  * "native" - uses a pure Lua parser that's fast but potentially misses some edge cases.
   --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is more robust

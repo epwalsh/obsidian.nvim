@@ -69,10 +69,14 @@ return function(client, data)
     args = { "Start-Process '" .. uri .. "'" }
   elseif this_os == util.OSType.Darwin then
     cmd = "open"
+    local app_path = "/Applications/Obsidian.app"
+    if client.opts.obsidian_app ~= nil then
+      app_path = tostring(client.opts.obsidian_app)
+    end
     if client.opts.open_app_foreground then
-      args = { "-a", "/Applications/Obsidian.app", uri }
+      args = { "-a", app_path, uri }
     else
-      args = { "-a", "/Applications/Obsidian.app", "--background", uri }
+      args = { "-a", app_path, "--background", uri }
     end
   else
     log.err("open command does not support OS type '" .. this_os .. "'")

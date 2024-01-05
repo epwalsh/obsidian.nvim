@@ -28,6 +28,7 @@ local config = {}
 ---@field ui obsidian.config.UIOpts
 ---@field attachments obsidian.config.AttachmentsOpts
 ---@field yaml_parser string|?
+---@field obsidian_app string|Path|? Override the path to your Obsidian application (MacOS only).
 config.ClientOpts = {}
 
 ---@enum obsidian.config.OpenStrategy
