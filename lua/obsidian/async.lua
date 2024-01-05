@@ -326,7 +326,7 @@ end
 ---@param on_exit function|? (integer) -> nil
 ---@return Job
 local init_job = function(cmd, args, on_stdout, on_exit)
-  local stderr_lines = {}
+  local stderr_lines = false
 
   log.debug("Initializing job '%s' with args '%s'", cmd, args)
 
@@ -345,27 +345,20 @@ local init_job = function(cmd, args, on_stdout, on_exit)
       if err then
         return log.err("Error running command '%s' with args '%s'\n:%s", cmd, args, err)
       elseif line ~= nil then
-        stderr_lines[#stderr_lines + 1] = line
+        if not stderr_lines then
+          log.err("Captured stderr output while running command '%s' with args '%s'", cmd, args)
+          stderr_lines = true
+        end
+        log.err("[stderr] %s", line)
       end
     end,
     on_exit = function(_, code, _)
       --- NOTE: commands like `rg` return a non-zero exit code when there are no matches, which is okay.
       --- So we only log no-zero exit codes as errors when there's also stderr lines.
-      if code > 0 and #stderr_lines > 0 then
-        log.err(
-          "Command '%s' with args '%s' exited with non-zero code %s\n\n[stderr]\n\n",
-          cmd,
-          args,
-          code,
-          table.concat(stderr_lines, "\n")
-        )
-      elseif #stderr_lines > 0 then
-        log.warn(
-          "Captured stderr output while running command '%s' with args '%s':\n",
-          cmd,
-          args,
-          table.concat(stderr_lines)
-        )
+      if code > 0 and stderr_lines then
+        log.err("Command '%s' with args '%s' exited with non-zero code %s. See logs for stderr.", cmd, args, code)
+      elseif stderr_lines then
+        log.warn("Captured stderr output while running command '%s' with args '%s'. See logs for details.", cmd, args)
       end
       if on_exit ~= nil then
         on_exit(code)
