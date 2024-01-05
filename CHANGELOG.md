@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Fixed
-- Fixed a bug with :ObsidianFollowLink where new notes were always created at the vault's root.
+### Changed
+
+- Creating new notes via `:ObsidianFollowLink` now matches the behavior of `:ObsidianLinkNew`, where the new note will be placed in the same directory as the current buffer note. This doesn't affect you if you use a flat directory structure for all of your notes.
 
 ### Added
 
