@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added client method `Client:command(...)` for running commands directly. For example: `:lua require("obsidian").get_client():command("ObsidianNew", { args = "Foo" })`.
 - Added vim docs for the Lua API. See `:help obsidian-api` or `:help obsidian.Client`.
 
+### Fixed
+
+- Fixed bug with YAML encoder where strings with a colon followed by whitespace were not quoted.
+
 ## [v2.5.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.3) - 2024-01-02
 
 ### Fixed
