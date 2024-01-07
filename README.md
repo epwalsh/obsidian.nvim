@@ -371,8 +371,8 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, configure key mappings for the finder. These are the defaults.
   -- If you don't want to set any mappings this way then set
   finder_mappings = {
-    -- Create a new note from your query from `:ObsidianSearch` and `:ObsidianQuickSwitch`.
-    -- Only telescope is supported.
+    -- Create a new note from your query with `:ObsidianSearch` and `:ObsidianQuickSwitch`.
+    -- Currently only telescope supports this.
     new = "<C-x>",
   },
 
