@@ -361,7 +361,7 @@ end
 --- Find notes matching the given term. Notes are searched based on ID, title, filename, and aliases.
 ---
 ---@param term string The term to search for
----@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
 ---@param timeout integer|? Timeout to wait in milliseconds
 ---
 ---@return obsidian.Note[]
@@ -423,6 +423,47 @@ Client.find_notes_async = function(self, term, opts, callback)
       callback(results_)
     end)
   end, function(_) end)
+end
+
+--- Find non-markdown files in the vault.
+---
+---@param term string The search term.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
+---@param timeout integer|? Timeout to wait in milliseconds.
+---
+---@return Path[]
+Client.find_files = function(self, term, opts, timeout)
+  return block_on(function(cb)
+    return self:find_files_async(term, opts, cb)
+  end, timeout)
+end
+
+--- An async version of `find_files`.
+---
+---@param term string The search term.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
+---@param callback function (Path[]) -> nil
+Client.find_files_async = function(self, term, opts, callback)
+  local matches = {}
+  local tx, rx = channel.oneshot()
+  local on_find_match = function(path_match)
+    matches[#matches + 1] = Path:new(vim.fs.normalize(path_match))
+  end
+
+  local on_exit = function(_)
+    tx()
+  end
+
+  local find_opts = self:_prepare_search_opts(opts)
+  find_opts:add_exclude "*.md"
+  find_opts.include_non_markdown = true
+
+  search.find_async(self.dir, term, find_opts, on_find_match, on_exit)
+
+  async.run(function()
+    rx()
+    return matches
+  end, callback)
 end
 
 --- Resolve the query to a single note if possible, otherwise `nil` is returned.
