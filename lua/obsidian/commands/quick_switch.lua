@@ -12,11 +12,16 @@ return function(client, _)
       if not has_telescope then
         return false
       end
-      -- Search with telescope.nvim
+
+      local picker_utils = require "obsidian.picker_utils"
       telescope.find_files {
+        prompt_title = picker_utils.telescope_prompt_title("ObsidianQuickSwitch", client),
         cwd = dir,
         search_file = "*.md",
         find_command = search.build_find_cmd(".", nil, search_opts),
+        attach_mappings = function(_, map)
+          return picker_utils.telescope_mappings(map, client)
+        end,
       }
 
       return true

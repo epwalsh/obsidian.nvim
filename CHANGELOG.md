@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `:ObsidianFollowLink` now takes an optional "open strategy" argument. For example `:ObsidianFollowLink vsplit` or `:ObsidianFollowLink vsp` opens the note in a vertical split.
 - Added client method `Client:command(...)` for running commands directly. For example: `:lua require("obsidian").get_client():command("ObsidianNew", { args = "Foo" })`.
 - Added vim docs for the Lua API. See `:help obsidian-api` or `:help obsidian.Client`.
+- Added the option to create notes with a mapping from the telescope finder with `:ObsidianQuickSwitch` and `:ObsidianSearch`.
 
 ### Fixed
 
