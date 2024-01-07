@@ -3,12 +3,16 @@ local M = {}
 --- Helper to map custom telescope actions.
 --- Used by different commands.
 ---@param client obsidian.Client
-M.telescope_mappings = function(map, client)
+---@param initial_query string|?
+M.telescope_mappings = function(map, client, initial_query)
   -- Docs for telescope actions:
   -- https://github.com/nvim-telescope/telescope.nvim/blob/master/lua/telescope/actions/init.lua
   local telescope_actions = require("telescope.actions.mt").transform_mod {
     obsidian_new = function(prompt_bufnr)
       local query = require("telescope.actions.state").get_current_line()
+      if not query or string.len(query) == 0 then
+        query = initial_query
+      end
       require("telescope.actions").close(prompt_bufnr)
       client:command("ObsidianNew", { args = query })
     end,

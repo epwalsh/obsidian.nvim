@@ -19,8 +19,8 @@ return function(client, _)
         cwd = dir,
         search_file = "*.md",
         find_command = search.build_find_cmd(".", nil, search_opts),
-        attach_mappings = function(prompt_bufnr, map)
-          return picker_utils.telescope_mappings(prompt_bufnr, map, client)
+        attach_mappings = function(_, map)
+          return picker_utils.telescope_mappings(map, client)
         end,
       }
 

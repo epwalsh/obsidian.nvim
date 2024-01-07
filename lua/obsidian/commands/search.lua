@@ -37,7 +37,7 @@ return function(client, data)
           vimgrep_arguments = vimgrep_arguments,
           search = data.args,
           attach_mappings = function(_, map)
-            return picker_utils.telescope_mappings(map, client)
+            return picker_utils.telescope_mappings(map, client, data.args)
           end,
         }
       else
@@ -46,7 +46,7 @@ return function(client, data)
           cwd = tostring(client.dir),
           vimgrep_arguments = vimgrep_arguments,
           attach_mappings = function(_, map)
-            return picker_utils.telescope_mappings(map, client)
+            return picker_utils.telescope_mappings(map, client, data.args)
           end,
         }
       end
