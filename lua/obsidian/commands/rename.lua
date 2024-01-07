@@ -12,7 +12,22 @@ local zip = require("obsidian.itertools").zip
 return function(client, data)
   -- Validate args.
   local dry_run = false
-  local arg = util.strip_whitespace(data.args)
+  ---@type string
+  local arg
+
+  if data.args == "--dry-run" then
+    dry_run = true
+    data.args = nil
+  end
+
+  if data.args ~= nil and string.len(data.args) > 0 then
+    arg = util.strip_whitespace(data.args)
+  else
+    arg = vim.fn.input {
+      prompt = "Enter new note ID/name/path: ",
+    }
+  end
+
   if vim.endswith(arg, " --dry-run") then
     dry_run = true
     arg = util.strip_whitespace(string.sub(arg, 1, -string.len " --dry-run" - 1))
@@ -27,7 +42,7 @@ return function(client, data)
   local cur_note_id = util.cursor_link()
   if cur_note_id == nil then
     is_current_buf = true
-    cur_note_bufnr = vim.fn.bufnr()
+    cur_note_bufnr = assert(vim.fn.bufnr())
     cur_note_path = vim.fs.normalize(vim.api.nvim_buf_get_name(cur_note_bufnr))
     cur_note = Note.from_file(cur_note_path)
     cur_note_id = tostring(cur_note.id)

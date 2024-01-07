@@ -179,7 +179,7 @@ M.register("ObsidianFollowLink", { opts = { nargs = "?" } })
 M.register("ObsidianWorkspace", { opts = { nargs = "?" } })
 
 ---Rename a note and update all backlinks.
-M.register("ObsidianRename", { opts = { nargs = 1 }, complete = M.complete_args_id })
+M.register("ObsidianRename", { opts = { nargs = "?" }, complete = M.complete_args_id })
 
 ---Paste an image into a note.
 M.register("ObsidianPasteImg", { opts = { nargs = "?", complete = "file" } })
