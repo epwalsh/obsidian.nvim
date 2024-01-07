@@ -62,6 +62,7 @@ M.clone_template = function(template_name, note_path, client, title)
     return
   end
   local template_path = Path:new(templates_dir) / template_name
+  Path:new(note_path):parent():mkdir { parents = true }
   local template_file = io.open(tostring(template_path), "r")
   local note_file = io.open(tostring(note_path), "wb")
   if not template_file then
