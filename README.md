@@ -7,7 +7,9 @@ A Neovim plugin for writing and navigating an [Obsidian](https://obsidian.md) va
 
 Built for people who love the concept of Obsidian -- a simple, markdown-based notes app -- but love Neovim too much to stand typing characters into anything else.
 
-_This plugin is not meant to replace Obsidian, but to complement it._ My personal workflow involves writing Obsidian notes in Neovim using this plugin, while viewing and reading them using the Obsidian app. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
+If you're new to Obsidian I highly recommend watching [this excellent YouTube video](https://youtu.be/5ht8NYkU9wQ?si=8nbnNsRVnw0xfX2S) for a great overview.
+
+_Keep in mind this plugin is not meant to replace Obsidian, but to complement it._ The Obsidian app is very powerful in its own way; it comes with a mobile app and has a lot of functionality that's not feasible to implement in Neovim, such as the graph explorer view. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
 
 ## Table of contents
 
@@ -43,7 +45,7 @@ _This plugin is not meant to replace Obsidian, but to complement it._ My persona
 
 - `:ObsidianQuickSwitch` to quickly switch to another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
 
-- `:ObsidianFollowLink` to follow a note reference under the cursor.
+- `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the cursor, optionally opening it in a vertical or horizontal split.
 
 - `:ObsidianBacklinks` for getting a location list of references to the current buffer.
 
@@ -377,6 +379,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_notes_in = "current",
 
   -- Optional, configure additional syntax highlighting / extmarks.
+  -- This requires you have `conceallevel` set to 1 or 2. See `:help conceallevel` for more details.
   ui = {
     enable = true,  -- set to false to disable all additional syntax features
     update_debounce = 200,  -- update delay after a text change (in milliseconds)
@@ -474,7 +477,7 @@ If you use `vim-markdown` you'll probably want to disable its frontmatter syntax
 
 #### Concealing characters
 
-If you wish to use the formatting concealment features, you will need to have `conceallevel` set to a value that allows it, for example:
+If you wish to use the formatting concealment features, you will need to have `conceallevel` set to a value that allows it (either `1` or `2`), for example:
 `set conceallevel=1` in viml or `vim.opt.conceallevel = 1` in a lua config.
 
 #### Note naming and location

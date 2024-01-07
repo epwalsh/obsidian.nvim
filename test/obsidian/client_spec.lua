@@ -98,7 +98,14 @@ describe("Client", function()
 
   it("should prepare search opts properly", function()
     local client = tmp_client()
+    ---@diagnostic disable-next-line: invisible
     local opts = client:_prepare_search_opts(true, { max_count_per_file = 1 })
     assert.are_same(opts:to_ripgrep_opts(), { "--sortr=modified", "-m=1" })
+  end)
+
+  it("should resolve relative paths", function()
+    local client = tmp_client()
+    assert.are_same(client:vault_relative_path "foo.md", "foo.md")
+    assert.are_same(client:vault_relative_path(client.dir / "foo.md"), "foo.md")
   end)
 end)

@@ -1,3 +1,13 @@
+--- *obsidian-api*
+---
+--- The Obsidian.nvim Lua API.
+---
+--- ==============================================================================
+---
+--- Table of contents
+---
+---@toc
+
 local Path = require "plenary.path"
 local abc = require "obsidian.abc"
 local async = require "plenary.async"
@@ -12,10 +22,47 @@ local AsyncExecutor = require("obsidian.async").AsyncExecutor
 local block_on = require("obsidian.async").block_on
 local iter = require("obsidian.itertools").iter
 
+---@class obsidian.SearchOpts : obsidian.ABC
+---
+---@field sort boolean|?
+---@field include_templates boolean|?
+---@field ignore_case boolean|?
+local SearchOpts = abc.new_class {
+  __tostring = function(self)
+    return string.format("SearchOpts(%s)", vim.inspect(self:as_tbl()))
+  end,
+}
+
+---@param opts obsidian.SearchOpts|table<string, any>
+---
+---@return obsidian.SearchOpts
+SearchOpts.from_tbl = function(opts)
+  setmetatable(opts, SearchOpts.mt)
+  return opts
+end
+
+---@return obsidian.SearchOpts
+SearchOpts.default = function()
+  return SearchOpts.from_tbl {
+    sort = false,
+    include_templates = false,
+    ignore_case = false,
+  }
+end
+
+--- The Obsidian client is the main API for programmatically interacting with obsidian.nvim's features
+--- in Lua. To get the client instance, run:
+---
+--- `local client = require("obsidian").get_client()`
+---
+---@toc_entry obsidian.Client
+---
 ---@class obsidian.Client : obsidian.ABC
+---
 ---@field current_workspace obsidian.Workspace The current workspace.
 ---@field dir Path The root of the vault for the current workspace.
 ---@field opts obsidian.config.ClientOpts The client config.
+---@field buf_dir Path|? The parent directory of the current buffer.
 ---@field _default_opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
@@ -24,9 +71,14 @@ local Client = abc.new_class {
   end,
 }
 
----Create a new Obsidian client without additional setup.
+--- Create a new Obsidian client without additional setup.
+--- This is mostly used for testing. In practice you usually want to obtain the existing
+--- client through:
+---
+--- `require("obsidian").get_client()`
 ---
 ---@param opts obsidian.config.ClientOpts
+---
 ---@return obsidian.Client
 Client.new = function(opts)
   local self = Client.init()
@@ -52,7 +104,8 @@ Client.set_workspace = function(self, workspace)
   self.opts = config.ClientOpts.normalize(self._default_opts, workspace.overrides)
 end
 
----Switch to a different workspace.
+--- Switch to a different workspace.
+---
 ---@param workspace obsidian.Workspace|string The workspace object or the name of an existing workspace.
 Client.switch_workspace = function(self, workspace)
   if type(workspace) == "string" then
@@ -79,9 +132,11 @@ Client.switch_workspace = function(self, workspace)
   end
 end
 
----Get the absolute path to the root of the Obsidian vault for the given workspace or the
----current workspace.
+--- Get the absolute path to the root of the Obsidian vault for the given workspace or the
+--- current workspace.
+---
 ---@param workspace obsidian.Workspace|?
+---
 ---@return Path
 Client.vault_root = function(self, workspace)
   workspace = workspace and workspace or self.current_workspace
@@ -101,35 +156,40 @@ Client.vault_root = function(self, workspace)
   return Path:new(workspace.path)
 end
 
----Get the name of the vault.
+--- Get the name of the current vault.
+---
 ---@return string
 Client.vault_name = function(self)
   return assert(vim.fs.basename(tostring(self:vault_root())))
 end
 
----Make a path relative to the vault root.
+--- Make a path relative to the vault root, if possible.
+---
 ---@param path string|Path
+---
 ---@return string|?
 Client.vault_relative_path = function(self, path)
   local normalized_path = vim.fs.normalize(tostring(path))
   local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
   if relative_path == normalized_path then
-    -- When `:make_relative()` fails it returns the absolute path.
-    -- HACK: This can happen when the vault path is configured to look behind a link but `path` is
-    -- not behind the link. In this case we look for the first occurrence of the vault name in
-    -- `path` are remove everything up to and including it.
+    -- Either `normalized_path` was already relative or `:make_relative()` failed.
+    -- When `:make_relative()` fails it returns the absolute path, which can happen when the
+    -- vault path is configured to look behind a link but `path` is not behind the link.
+    -- In this case we look for the first occurrence of the vault name in
+    -- `path` and remove everything up to and including it.
     local _, j = string.find(relative_path, self:vault_name())
     if j ~= nil then
       return string.sub(relative_path, j)
     else
-      return nil
+      return relative_path
     end
   else
     return relative_path
   end
 end
 
----Get the templates folder.
+--- Get the templates folder.
+---
 ---@return Path|?
 Client.templates_dir = function(self)
   if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
@@ -145,9 +205,10 @@ Client.templates_dir = function(self)
   end
 end
 
----Determines whether a note's frontmatter is managed by obsidian.nvim.
+--- Determines whether a note's frontmatter is managed by obsidian.nvim.
 ---
 ---@param note obsidian.Note
+---
 ---@return boolean
 Client.should_save_frontmatter = function(self, note)
   if not note:should_save_frontmatter() then
@@ -165,34 +226,21 @@ Client.should_save_frontmatter = function(self, note)
   return true
 end
 
----@class obsidian.client.SearchOpts : obsidian.ABC
----@field sort boolean|?
----@field include_templates boolean|?
----@field ignore_case boolean|?
-local SearchOpts = abc.new_class {
-  __tostring = function(self)
-    return string.format("SearchOpts(%s)", vim.inspect(self:as_tbl()))
-  end,
-}
+--- Run an obsidian command directly.
+---
+---@usage `client:command("ObsidianNew", { args = "Foo" })`
+---
+---@param cmd_name string The name of the command.
+---@param cmd_data table|? The payload for the command.
+Client.command = function(self, cmd_name, cmd_data)
+  local commands = require "obsidian.commands"
 
----@param opts obsidian.client.SearchOpts|table<string, any>
----@return obsidian.client.SearchOpts
-SearchOpts.from_tbl = function(opts)
-  setmetatable(opts, SearchOpts.mt)
-  return opts
+  commands[cmd_name](self, cmd_data)
 end
 
----@return obsidian.client.SearchOpts
-SearchOpts.default = function()
-  return SearchOpts.from_tbl {
-    sort = false,
-    include_templates = false,
-    ignore_case = false,
-  }
-end
-
----Get the default search options.
----@return obsidian.client.SearchOpts
+--- Get the default search options.
+---
+---@return obsidian.SearchOpts
 Client.search_defaults = function(self)
   local opts = SearchOpts.default()
   if opts.sort and self.opts.sort_by == nil then
@@ -201,8 +249,11 @@ Client.search_defaults = function(self)
   return opts
 end
 
----@param opts obsidian.client.SearchOpts|boolean|?
----@return obsidian.client.SearchOpts
+---@param opts obsidian.SearchOpts|boolean|?
+---
+---@return obsidian.SearchOpts
+---
+---@private
 Client._search_opts_from_arg = function(self, opts)
   if opts == nil then
     opts = self:search_defaults()
@@ -218,9 +269,12 @@ Client._search_opts_from_arg = function(self, opts)
   return opts
 end
 
----@param opts obsidian.client.SearchOpts|boolean|?
+---@param opts obsidian.SearchOpts|boolean|?
 ---@param additional_opts obsidian.search.SearchOpts|?
+---
 ---@return obsidian.search.SearchOpts
+---
+---@private
 Client._prepare_search_opts = function(self, opts, additional_opts)
   opts = self:_search_opts_from_arg(opts)
 
@@ -247,9 +301,12 @@ Client._prepare_search_opts = function(self, opts, additional_opts)
 end
 
 ---@param term string
----@param search_opts obsidian.client.SearchOpts|boolean|?
----@param find_opts obsidian.client.SearchOpts|boolean|?
+---@param search_opts obsidian.SearchOpts|boolean|?
+---@param find_opts obsidian.SearchOpts|boolean|?
+---
 ---@return function
+---
+---@private
 Client._search_iter_async = function(self, term, search_opts, find_opts)
   local tx, rx = channel.mpsc()
   local found = {}
@@ -301,10 +358,12 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
   end
 end
 
----Find notes matching the given term. Notes are searched based on ID, title, filename, and aliases.
+--- Find notes matching the given term. Notes are searched based on ID, title, filename, and aliases.
+---
 ---@param term string The term to search for
----@param opts obsidian.client.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
 ---@param timeout integer|? Timeout to wait in milliseconds
+---
 ---@return obsidian.Note[]
 Client.find_notes = function(self, term, opts, timeout)
   return block_on(function(cb)
@@ -312,9 +371,10 @@ Client.find_notes = function(self, term, opts, timeout)
   end, timeout)
 end
 
----An async version of `find_notes()` that runs the callback with an array of all matching notes.
+--- An async version of `find_notes()` that runs the callback with an array of all matching notes.
+---
 ---@param term string The term to search for
----@param opts obsidian.client.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
 ---@param callback function (obsidian.Note[]) -> nil
 Client.find_notes_async = function(self, term, opts, callback)
   local next_path = self:_search_iter_async(term, opts)
@@ -365,9 +425,11 @@ Client.find_notes_async = function(self, term, opts, callback)
   end, function(_) end)
 end
 
----Resolve the query to a single note if possible, otherwise `nil` is returned.
----The 'query' can be a path, filename, note ID, alias, title, etc.
+--- Resolve the query to a single note if possible, otherwise `nil` is returned.
+--- The 'query' can be a path, filename, note ID, alias, title, etc.
+---
 ---@param query string
+---
 ---@return obsidian.Note|?
 Client.resolve_note = function(self, query, timeout)
   return block_on(function(cb)
@@ -375,9 +437,11 @@ Client.resolve_note = function(self, query, timeout)
   end, timeout)
 end
 
----An async version of `resolve_note()`.
+--- An async version of `resolve_note()`.
+---
 ---@param query string
 ---@param callback function(obsidian.Note|?)
+---
 ---@return obsidian.Note|?
 Client.resolve_note_async = function(self, query, callback)
   -- Autocompletion for command args will have this format.
@@ -396,13 +460,21 @@ Client.resolve_note_async = function(self, query, callback)
   if not vim.endswith(fname, ".md") then
     fname = fname .. ".md"
   end
+
   local paths_to_check = { Path:new(fname), self.dir / fname }
+
   if self.opts.notes_subdir ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.notes_subdir / fname)
+    paths_to_check[#paths_to_check + 1] = self.dir / self.opts.notes_subdir / fname
   end
+
   if self.opts.daily_notes.folder ~= nil then
-    table.insert(paths_to_check, self.dir / self.opts.daily_notes.folder / fname)
+    paths_to_check[#paths_to_check + 1] = self.dir / self.opts.daily_notes.folder / fname
   end
+
+  if self.buf_dir ~= nil then
+    paths_to_check[#paths_to_check + 1] = self.buf_dir / fname
+  end
+
   for _, path in pairs(paths_to_check) do
     if path:is_file() and vim.endswith(tostring(path), ".md") then
       return async.run(function()
@@ -437,10 +509,12 @@ Client.resolve_note_async = function(self, query, callback)
   end)
 end
 
----Find all tags starting with the given term.
+--- Find all tags starting with the given term.
+---
 ---@param term string
----@param opts obsidian.client.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
+---@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param timeout integer|?
+---
 ---@return string[]
 Client.find_tags = function(self, term, opts, timeout)
   return block_on(function(cb)
@@ -448,9 +522,10 @@ Client.find_tags = function(self, term, opts, timeout)
   end, timeout)
 end
 
----An async version of 'find_tags()'.
+--- An async version of 'find_tags()'.
+---
 ---@param term string
----@param opts obsidian.client.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
+---@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param callback function(string[]) -> nil
 Client.find_tags_async = function(self, term, opts, callback)
   assert(string.len(term) > 0)
@@ -542,9 +617,10 @@ Client.find_tags_async = function(self, term, opts, callback)
   end, callback)
 end
 
----Create a new Zettel ID
+--- Create a new note ID.
 ---
 ---@param title string|?
+---
 ---@return string
 Client.new_note_id = function(self, title)
   if self.opts.note_id_func ~= nil then
@@ -557,7 +633,7 @@ Client.new_note_id = function(self, title)
   end
 end
 
----Parse the title, ID, and path for a new note.
+--- Parse the title, ID, and path for a new note.
 ---
 ---@param title string|?
 ---@param id string|?
@@ -609,7 +685,7 @@ Client.parse_title_id_path = function(self, title, id, dir)
   return title, new_id, path
 end
 
----Create and save a new note.
+--- Create and save a new note.
 ---
 ---@param title string|?
 ---@param id string|?
@@ -644,9 +720,10 @@ Client.new_note = function(self, title, id, dir, aliases)
   return note
 end
 
----Get the path to a daily note.
+--- Get the path to a daily note.
 ---
 ---@param datetime integer|?
+---
 ---@return Path, string
 Client.daily_note_path = function(self, datetime)
   datetime = datetime and datetime or os.time()
@@ -676,11 +753,14 @@ Client.daily_note_path = function(self, datetime)
   return path, id
 end
 
----Open (or create) the daily note.
+--- Open (or create) the daily note.
 ---
 ---@param self obsidian.Client
 ---@param datetime integer
+---
 ---@return obsidian.Note
+---
+---@private
 Client._daily = function(self, datetime)
   local templates = require "obsidian.templates"
 
@@ -717,29 +797,31 @@ Client._daily = function(self, datetime)
   return note
 end
 
----Open (or create) the daily note for today.
+--- Open (or create) the daily note for today.
 ---
 ---@return obsidian.Note
 Client.today = function(self)
   return self:_daily(os.time())
 end
 
----Open (or create) the daily note from the last weekday.
+--- Open (or create) the daily note from the last weekday.
 ---
 ---@return obsidian.Note
 Client.yesterday = function(self)
   return self:_daily(util.working_day_before(os.time()))
 end
 
----Open (or create) the daily note for the next weekday.
+--- Open (or create) the daily note for the next weekday.
 ---
 ---@return obsidian.Note
 Client.tomorrow = function(self)
   return self:_daily(util.working_day_after(os.time()))
 end
 
----Open (or create) the daily note for today + `offset_days`.
+--- Open (or create) the daily note for today + `offset_days`.
+---
 ---@param offset_days integer|?
+---
 ---@return obsidian.Note
 Client.daily = function(self, offset_days)
   return self:_daily(os.time() + (offset_days * 3600 * 24))
@@ -776,7 +858,8 @@ Client._run_with_finder_backend = function(self, implementations)
   log.err "No finders available. One of 'telescope.nvim', 'fzf-lua', or 'fzf.vim' is required."
 end
 
----Manually update extmarks in a buffer.
+--- Manually update extmarks in a buffer.
+---
 ---@param bufnr integer|?
 Client.update_ui = function(self, bufnr)
   require("obsidian.ui").update(self.opts.ui, bufnr)

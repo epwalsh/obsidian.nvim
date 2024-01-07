@@ -5,7 +5,7 @@ local log = require "obsidian.log"
 local iter = require("obsidian.itertools").iter
 
 ---@param client obsidian.Client
-return function(client, _)
+return function(client, data)
   local location, name, link_type = util.cursor_link(nil, nil, true)
   if location == nil then
     return
@@ -21,13 +21,18 @@ return function(client, _)
     return
   end
 
+  local open_cmd = "e "
+  if string.len(data.args) > 0 then
+    open_cmd = util.get_open_strategy(data.args)
+  end
+
   -- Remove links from the end if there are any.
   local header_link = location:match "#[%a%d%s-_^]+$"
   if header_link ~= nil then
     location = location:sub(1, -header_link:len() - 1)
   end
 
-  local buf_cwd = vim.fs.basename(vim.api.nvim_buf_get_name(0))
+  local buf_cwd = vim.fs.dirname(vim.api.nvim_buf_get_name(0))
 
   -- Search for matching notes.
   -- TODO: handle case where there are multiple matches by prompting user to choose.
@@ -37,11 +42,11 @@ return function(client, _)
         local confirmation = string.lower(vim.fn.input {
           prompt = "Create new note '" .. location .. "'? [Y/n] ",
         })
-        if confirmation == "y" or confirmation == "yes" then
+        if confirmation == "" or confirmation == "y" or confirmation == "yes" then
           -- Create a new note.
           local aliases = name == location and {} or { name }
-          note = client:new_note(location, nil, nil, aliases)
-          vim.api.nvim_command("e " .. tostring(note.path))
+          note = client:new_note(location, nil, client.buf_dir, aliases)
+          vim.api.nvim_command(open_cmd .. tostring(note.path))
         else
           log.warn "Aborting"
         end
@@ -51,7 +56,7 @@ return function(client, _)
       local path = note.path
       assert(path)
       vim.schedule(function()
-        vim.api.nvim_command("e " .. tostring(path))
+        vim.api.nvim_command(open_cmd .. tostring(path))
       end)
     else
       local paths_to_check = { client.dir / location, Path:new(location) }
@@ -62,7 +67,7 @@ return function(client, _)
       for path in iter(paths_to_check) do
         if path:is_file() then
           return vim.schedule(function()
-            vim.api.nvim_command("e " .. tostring(path))
+            vim.api.nvim_command(open_cmd .. tostring(path))
           end)
         end
       end

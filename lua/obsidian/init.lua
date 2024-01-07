@@ -172,6 +172,12 @@ obsidian.setup = function(opts)
       group = group,
       pattern = pattern,
       callback = function()
+        -- Set the current directory of the buffer.
+        local buf_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(0))
+        if buf_dir then
+          client.buf_dir = Path:new(buf_dir)
+        end
+
         -- Register mappings.
         for mapping_keys, mapping_config in pairs(opts.mappings) do
           vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)

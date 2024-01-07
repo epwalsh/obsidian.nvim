@@ -247,7 +247,7 @@ local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
       marks[#marks + 1] = ExtMark.new(
         nil,
         lnum,
-        m_end - 1,
+        m_end - 2,
         ExtMarkOpts.from_tbl {
           end_row = lnum,
           end_col = m_end,
@@ -283,7 +283,7 @@ local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
       marks[#marks + 1] = ExtMark.new(
         nil,
         lnum,
-        m_end - 1,
+        m_end - 2,
         ExtMarkOpts.from_tbl {
           end_row = lnum,
           end_col = m_end,
@@ -570,6 +570,26 @@ M.setup = function(ui_opts)
   local group = vim.api.nvim_create_augroup("obsidian_ui", { clear = true })
 
   install_hl_groups(ui_opts)
+
+  vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    group = group,
+    pattern = "*.md",
+    callback = function()
+      local conceallevel = vim.opt_local.conceallevel:get()
+
+      if conceallevel < 1 or conceallevel > 2 then
+        log.warn(
+          "Obsidian additional syntax features require 'conceallevel' to be set to 1 or 2, "
+            .. "but you have 'conceallevel' set to '%s'.\n"
+            .. "See https://github.com/epwalsh/obsidian.nvim/issues/286 for more details.",
+          conceallevel
+        )
+      end
+
+      -- delete the autocommand
+      return true
+    end,
+  })
 
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,

@@ -85,8 +85,8 @@ M.complete_args_search = function(client, _, cmd_line, _)
       query = cmd_arg
     end
   else
-    local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
-    local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
+    local _, csrow, cscol, _ = unpack(assert(vim.fn.getpos "'<"))
+    local _, cerow, cecol, _ = unpack(assert(vim.fn.getpos "'>"))
     local lines = vim.fn.getline(csrow, cerow)
     assert(type(lines) == "table")
 
@@ -128,7 +128,7 @@ M.complete_args_id = function(_, _, cmd_line, _)
   else
     local note_id = util.cursor_link()
     if note_id == nil then
-      local bufpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
+      local bufpath = vim.api.nvim_buf_get_name(assert(vim.fn.bufnr()))
       local note = Note.from_file(bufpath)
       note_id = tostring(note.id)
     end
@@ -173,7 +173,7 @@ M.register("ObsidianLinkNew", { opts = { nargs = "?", range = true } })
 M.register("ObsidianLink", { opts = { nargs = "?", range = true }, complete = M.complete_args_search })
 
 ---Follow link under cursor.
-M.register("ObsidianFollowLink", { opts = { nargs = 0 } })
+M.register("ObsidianFollowLink", { opts = { nargs = "?" } })
 
 ---Switch to a different workspace.
 M.register("ObsidianWorkspace", { opts = { nargs = "?" } })

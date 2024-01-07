@@ -10,7 +10,12 @@ local iter = require("obsidian.itertools").iter
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
+--- A class that represents a note within a vault.
+---
+---@toc_entry obsidian.Note
+---
 ---@class obsidian.Note : obsidian.ABC
+---
 ---@field id string|integer
 ---@field aliases string[]
 ---@field tags string[]
@@ -24,12 +29,15 @@ local Note = abc.new_class {
   end,
 }
 
----Create new note.
+--- Create new note object.
+---
+--- Keep in mind that you have to call `note:save(...)` to create/update the note on disk.
 ---
 ---@param id string|number
 ---@param aliases string[]
 ---@param tags string[]
 ---@param path string|Path|?
+---
 ---@return obsidian.Note
 Note.new = function(id, aliases, tags, path)
   local self = Note.init()
@@ -43,7 +51,7 @@ Note.new = function(id, aliases, tags, path)
   return self
 end
 
----Get markdown display info about the note.
+--- Get markdown display info about the note.
 ---@return string
 Note.display_info = function(self)
   ---@type string[]
@@ -64,7 +72,7 @@ Note.display_info = function(self)
   return table.concat(info, "\n")
 end
 
----Check if the note exists on the file system.
+--- Check if the note exists on the file system.
 ---
 ---@return boolean
 Note.exists = function(self)
@@ -72,7 +80,7 @@ Note.exists = function(self)
   return self.path ~= nil and self.path:is_file()
 end
 
----Get the filename associated with the note.
+--- Get the filename associated with the note.
 ---
 ---@return string|?
 Note.fname = function(self)
@@ -88,23 +96,25 @@ Note.should_save_frontmatter = function(self)
   return (fname ~= nil and not util.tbl_contains(SKIP_UPDATING_FRONTMATTER, fname))
 end
 
----Check if a note has a given alias.
+--- Check if a note has a given alias.
 ---
 ---@param alias string
+---
 ---@return boolean
 Note.has_alias = function(self, alias)
   return util.tbl_contains(self.aliases, alias)
 end
 
----Check if a note has a given tag.
+--- Check if a note has a given tag.
 ---
 ---@param tag string
+---
 ---@return boolean
 Note.has_tag = function(self, tag)
   return util.tbl_contains(self.tags, tag)
 end
 
----Add an alias to the note.
+--- Add an alias to the note.
 ---
 ---@param alias string
 Note.add_alias = function(self, alias)
@@ -113,7 +123,7 @@ Note.add_alias = function(self, alias)
   end
 end
 
----Add a tag to the note.
+--- Add a tag to the note.
 ---
 ---@param tag string
 Note.add_tag = function(self, tag)
@@ -122,10 +132,11 @@ Note.add_tag = function(self, tag)
   end
 end
 
----Initialize a note from a file.
+--- Initialize a note from a file.
 ---
 ---@param path string|Path
 ---@param root string|Path|?
+---
 ---@return obsidian.Note
 Note.from_file = function(path, root)
   if path == nil then
@@ -140,10 +151,11 @@ Note.from_file = function(path, root)
   return n
 end
 
----An async version of `.from_file()`.
+--- An async version of `.from_file()`.
 ---
 ---@param path string|Path
 ---@param root string|Path|?
+---
 ---@return obsidian.Note
 Note.from_file_async = function(path, root)
   local File = require("obsidian.async").File
@@ -162,10 +174,11 @@ Note.from_file_async = function(path, root)
   end
 end
 
----Initialize a note from a buffer.
+--- Initialize a note from a buffer.
 ---
 ---@param bufnr integer|?
 ---@param root string|Path|?
+---
 ---@return obsidian.Note
 Note.from_buffer = function(bufnr, root)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -188,7 +201,7 @@ Note.from_buffer = function(bufnr, root)
   return Note.from_lines(lines_iter, path, root)
 end
 
----Get the display name for note.
+--- Get the display name for note.
 ---
 ---@return string
 Note.display_name = function(self)
@@ -198,11 +211,12 @@ Note.display_name = function(self)
   return tostring(self.id)
 end
 
----Initialize a note from an iterator of lines.
+--- Initialize a note from an iterator of lines.
 ---
 ---@param lines function
 ---@param path string|Path
 ---@param root string|Path|?
+---
 ---@return obsidian.Note
 Note.from_lines = function(lines, path, root)
   local cwd = tostring(root and root or "./")
@@ -323,9 +337,18 @@ Note.from_lines = function(lines, path, root)
 
   -- The ID should match the filename with or without the extension.
   local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
-  local relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
+  local relative_path_no_ext = relative_path
+  if vim.endswith(relative_path_no_ext, ".md") then
+    -- NOTE: alternatively we could use `vim.fn.fnamemodify`, but that will give us luv errors
+    -- when called from an async context on certain operating systems.
+    -- relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
+    relative_path_no_ext = relative_path_no_ext:sub(1, -4)
+  end
   local fname = assert(vim.fs.basename(relative_path))
-  local fname_no_ext = vim.fn.fnamemodify(fname, ":r")
+  local fname_no_ext = fname
+  if vim.endswith(fname_no_ext, ".md") then
+    fname_no_ext = fname_no_ext:sub(1, -4)
+  end
   if id ~= relative_path and id ~= relative_path_no_ext and id ~= fname and id ~= fname_no_ext then
     id = fname_no_ext
   end
@@ -338,23 +361,28 @@ Note.from_lines = function(lines, path, root)
   return n
 end
 
----Check if a line matches a frontmatter boundary.
+--- Check if a line matches a frontmatter boundary.
 ---
 ---@param line string
+---
 ---@return boolean
+---
+---@private
 Note._is_frontmatter_boundary = function(line)
   return line:match "^---+$" ~= nil
 end
 
----Try parsing a header from a line.
+--- Try parsing a header from a line.
 ---
 ---@param line string
+---
 ---@return string|?
 Note._parse_header = function(line)
   return line:match "^#+ (.+)$"
 end
 
----Get the frontmatter table to save.
+--- Get the frontmatter table to save.
+---
 ---@return table
 Note.frontmatter = function(self)
   local out = { id = self.id, aliases = self.aliases, tags = self.tags }
@@ -366,10 +394,11 @@ Note.frontmatter = function(self)
   return out
 end
 
----Get frontmatter lines that can be written to a buffer.
+--- Get frontmatter lines that can be written to a buffer.
 ---
 ---@param eol boolean|?
 ---@param frontmatter table|?
+---
 ---@return string[]
 Note.frontmatter_lines = function(self, eol, frontmatter)
   local new_lines = { "---" }
@@ -416,7 +445,7 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
   end
 end
 
----Save note to file.
+--- Save note to file.
 ---
 ---@param path string|Path|?
 ---@param insert_frontmatter boolean|?

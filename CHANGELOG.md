@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Creating new notes via `:ObsidianFollowLink` now matches the behavior of `:ObsidianLinkNew`, where the new note will be placed in the same directory as the current buffer note. This doesn't affect you if you use a flat directory structure for all of your notes.
+
+### Added
+
+- `:ObsidianFollowLink` now takes an optional "open strategy" argument. For example `:ObsidianFollowLink vsplit` or `:ObsidianFollowLink vsp` opens the note in a vertical split.
+- Added client method `Client:command(...)` for running commands directly. For example: `:lua require("obsidian").get_client():command("ObsidianNew", { args = "Foo" })`.
+- Added vim docs for the Lua API. See `:help obsidian-api` or `:help obsidian.Client`.
+
+### Fixed
+
+- Fixed bug with YAML encoder where strings with a colon followed by whitespace were not quoted.
+- Parent directories are created when using a template (for example, for daily notes).
+
+## [v2.5.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.3) - 2024-01-02
+
+### Fixed
+
+- Removed some errant print statements.
+
+## [v2.5.2](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.2) - 2024-01-02
+
+### Fixed
+
+- Fixed bug with `Client:resolve_note()` that missed checking the parent directory of the current buffer.
+- Made gathering backlinks work with links of different forms, like Markdown or Wiki with just an alias.
+
+## [v2.5.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.1) - 2024-01-01
+
+### Fixed
+
+- Fixed a bug on Linux where we call a restricted function in an async context.
+- Fixed bug with resolving relative path in vault when path is already relative.
+
+## [v2.5.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.0) - 2023-12-30
+
 ### Added
 
 - Added Lua API methods `Client:set_workspace(workspace: obsidian.Workspace)` and `Client:switch_workspace(workspace: string|obsidian.Workspace)`.
@@ -37,7 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Made workspace API more robust.
 - Template substitutions are done lazily and only generated once per line.
-- Parent directories are created when using a template (for example, for daily notes).
+- Fixed search functionality with `fzf.vim` as a finder when the vault name contains characters that need to be escaped, such as spaces.
+- Fixed a bug with ext marks for references inside of frontmatter.
 
 ## [v2.4.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.4.0) - 2023-12-19
 

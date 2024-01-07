@@ -75,7 +75,9 @@ return function(client, data)
         return false
       end
 
+      search_opts.escape_path = true
       local cmd = search.build_find_cmd(".", nil, search_opts)
+
       fzf_lua.files {
         cmd = table.concat(cmd, " "),
         cwd = tostring(templates_dir),
@@ -102,6 +104,7 @@ return function(client, data)
         vim.api.nvim_del_user_command "ApplyTemplate"
       end, { nargs = 1, bang = true })
 
+      search_opts.escape_path = true
       local cmd = search.build_find_cmd(tostring(templates_dir), nil, search_opts)
       local fzf_options = { source = table.concat(cmd, " "), sink = "ApplyTemplate" }
 

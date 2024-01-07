@@ -111,7 +111,6 @@ return function(client, data)
             -- fzf-lua gives us the filename with some non-ascii characters at the start,
             -- or "M" plus some non-ascii characters if the file has been modified.
             entry = entry[1]
-            vim.print(entry)
             if vim.startswith(entry, "M") then
               entry = entry:sub(5)
             else
@@ -119,7 +118,6 @@ return function(client, data)
             end
             local path_end = assert(string.find(entry, ":", 1, true))
             local path = string.sub(entry, 1, path_end - 1)
-            vim.print(path)
             insert_ref(Note.from_file(path))
           end,
         },
@@ -143,7 +141,7 @@ return function(client, data)
         {
           "--",
           util.quote(search_term),
-          tostring(client.dir),
+          vim.fn.fnameescape(tostring(client.dir)),
         },
       }
 
