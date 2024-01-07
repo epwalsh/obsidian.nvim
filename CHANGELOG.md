@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added client method `Client:command(...)` for running commands directly. For example: `:lua require("obsidian").get_client():command("ObsidianNew", { args = "Foo" })`.
 - Added vim docs for the Lua API. See `:help obsidian-api` or `:help obsidian.Client`.
 - Added the option to create notes with a mapping from the telescope finder with `:ObsidianQuickSwitch` and `:ObsidianSearch`.
+- Added client methods `Client:find_files()` and `Client:find_files_async()` for finding non-markdown files in the vault.
 
 ### Fixed
 

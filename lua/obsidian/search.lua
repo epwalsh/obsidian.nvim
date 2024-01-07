@@ -205,6 +205,7 @@ end
 ---@field exclude string[]|? paths to exclude
 ---@field max_count_per_file integer|?
 ---@field escape_path boolean|?
+---@field include_non_markdown boolean|?
 local SearchOpts = abc.new_class {
   __tostring = function(self)
     return string.format("search.SearchOpts(%s)", vim.inspect(self:as_tbl()))
@@ -316,7 +317,11 @@ M.build_find_cmd = function(path, term, opts)
   local additional_opts = {}
 
   if term ~= nil then
-    term = "*" .. term .. "*.md"
+    if opts.include_non_markdown then
+      term = "*" .. term .. "*"
+    else
+      term = "*" .. term .. "*.md"
+    end
     additional_opts[#additional_opts + 1] = "-g"
     additional_opts[#additional_opts + 1] = term
   end

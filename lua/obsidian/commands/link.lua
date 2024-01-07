@@ -5,8 +5,8 @@ local iter = require("obsidian.itertools").iter
 
 ---@param client obsidian.Client
 return function(client, data)
-  local _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
-  local _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
+  local _, csrow, cscol, _ = unpack(assert(vim.fn.getpos "'<"))
+  local _, cerow, cecol, _ = unpack(assert(vim.fn.getpos "'>"))
 
   if data.line1 ~= csrow or data.line2 ~= cerow then
     log.err "ObsidianLink must be called with visual selection"
@@ -19,7 +19,7 @@ return function(client, data)
     return
   end
 
-  local line = lines[1]
+  local line = assert(lines[1])
 
   ---@param note obsidian.Note
   local function insert_ref(note)
