@@ -164,7 +164,7 @@ Find notes matching the given term. Notes are searched based on ID, title, filen
 
 Parameters ~
 {term} `(string)` The term to search for
-{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
 {timeout} `(integer|?)` Timeout to wait in milliseconds
 
 Return ~
@@ -179,6 +179,29 @@ Parameters ~
 {term} `(string)` The term to search for
 {opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
 {callback} `(function)` (obsidian.Note[]) -> nil
+
+------------------------------------------------------------------------------
+                                                  *obsidian.Client.find_files()*
+             `Client.find_files`({self}, {term}, {opts}, {timeout})
+Find non-markdown files in the vault.
+
+Parameters ~
+{term} `(string)` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
+{timeout} `(integer|?)` Timeout to wait in milliseconds.
+
+Return ~
+Path[]
+
+------------------------------------------------------------------------------
+                                            *obsidian.Client.find_files_async()*
+         `Client.find_files_async`({self}, {term}, {opts}, {callback})
+An async version of `find_files`.
+
+Parameters ~
+{term} `(string)` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
+{callback} `(function)` (Path[]) -> nil
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.resolve_note()*
