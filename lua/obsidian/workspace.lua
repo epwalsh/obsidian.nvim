@@ -1,7 +1,12 @@
 local Path = require "plenary.path"
 local abc = require "obsidian.abc"
 
+--- Each workspace represents a vault and a set of configuration options specific to that vault.
+---
+---@toc_entry obsidian.Workspace
+---
 ---@class obsidian.Workspace : obsidian.ABC
+---
 ---@field name string
 ---@field path string
 ---@field overrides table|obsidian.config.ClientOpts|?
@@ -11,11 +16,12 @@ local Workspace = abc.new_class {
   end,
 }
 
----Create a new workspace
+--- Create a new workspace object. This assumes the workspace already exists on the filesystem.
 ---
 ---@param name string Workspace name
 ---@param path string|Path Workspace path (will be normalized)
 ---@param overrides table|obsidian.config.ClientOpts|?
+---
 ---@return obsidian.Workspace
 Workspace.new = function(name, path, overrides)
   local self = Workspace.init()
@@ -45,15 +51,17 @@ Workspace.new_from_cwd = function()
 end
 
 ---@param dir string|Path
+---
 ---@return obsidian.Workspace
 Workspace.new_from_dir = function(dir)
   return Workspace.new(assert(vim.fs.basename(tostring(dir))), dir)
 end
 
----Get the workspace corresponding to the current working directory (or a parent of), if there
----is one.
+--- Get the workspace corresponding to the current working directory (or a parent of), if there
+--- is one.
 ---
 ---@param workspaces obsidian.Workspace[]
+---
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_from_cwd = function(workspaces)
   local cwd = assert(vim.fn.getcwd())
@@ -71,18 +79,20 @@ Workspace.get_workspace_from_cwd = function(workspaces)
   return nil
 end
 
----Returns the default workspace
+--- Returns the default workspace.
 ---
 ---@param workspaces table<obsidian.Workspace>
+---
 ---@return obsidian.Workspace|nil
 Workspace.get_default_workspace = function(workspaces)
   local _, value = next(workspaces)
   return value
 end
 
----Resolves current workspace from client config
+--- Resolves current workspace from the client config.
 ---
 ---@param opts obsidian.config.ClientOpts
+---
 ---@return obsidian.Workspace
 Workspace.get_from_opts = function(opts)
   local current_workspace

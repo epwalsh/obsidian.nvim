@@ -1,0 +1,87 @@
+name: Docs
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  runtime: ~/.local/share/nvim/site/pack/vendor/start
+  minidoc-git: https://github.com/echasnovski/mini.doc
+  minidoc-path: ~/.local/share/nvim/site/pack/vendor/start/mini.doc
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    name: Generate Docs
+    steps:
+      - name: Checkout with token
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout without token
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+
+      - run: date +%F > /tmp/todays-date
+
+      - name: Restore cache for today's nightly
+        uses: actions/cache@v3
+        with:
+          path: |
+            _neovim
+          key: ${{ runner.os }}-${{ hashFiles('/tmp/todays-date') }}
+
+      - name: Install neovim and dependencies
+        run: |
+          mkdir -p ${{ env.runtime }}
+          test -d _neovim || {
+            mkdir -p _neovim
+            curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
+          }
+          git clone --depth 1 ${{ env.minidoc-git }} ${{ env.minidoc-path }}
+          ln -s $(pwd) ${{ env.runtime }}
+
+      - name: Generate API docs
+        run: |
+          export PATH="${PWD}/_neovim/bin:${PATH}"
+          export VIM="${PWD}/_neovim/share/nvim/runtime"
+          make api-docs
+
+      - name: Generate plugin docs
+        uses: kdheepak/panvimdoc@v4.0.0
+        with:
+          vimdoc: obsidian
+          description: a plugin for writing and navigating an Obsidian vault
+          pandoc: README.md
+          toc: false
+          version: NVIM v0.9.4
+          demojify: false
+          dedupsubheadings: false
+          shiftheadinglevelby: -1
+          ignorerawblocks: true
+
+      - name: Patch plugin docs tag
+        run: |
+          # Replace the title tag "*obsidian.txt*" with "*obsidian.nvim*"
+          sed -i '1 s/obsidian\.txt/obsidian.nvim/' doc/obsidian.txt
+
+      - name: Clean up
+        run: |
+          rm -rf _neovim/
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        if: github.event_name != 'pull_request'
+        with:
+          commit_user_name: github-actions[bot]
+          commit_message: 'chore(docs): auto generate docs'
+          branch: ${{ github.head_ref }}
