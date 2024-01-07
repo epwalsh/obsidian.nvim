@@ -28,14 +28,27 @@ return function(client, data)
           "--color=never",
         } }
 
+      local picker_utils = require "obsidian.picker_utils"
+      local prompt_title = picker_utils.telescope_prompt_title("ObsidianSearch", client)
       if data.args:len() > 0 then
         telescope.grep_string {
+          prompt_title = prompt_title,
           cwd = tostring(client.dir),
-          search = data.args,
           vimgrep_arguments = vimgrep_arguments,
+          search = data.args,
+          attach_mappings = function(_, map)
+            return picker_utils.telescope_mappings(map, client, data.args)
+          end,
         }
       else
-        telescope.live_grep { cwd = tostring(client.dir), vimgrep_arguments = vimgrep_arguments }
+        telescope.live_grep {
+          prompt_title = prompt_title,
+          cwd = tostring(client.dir),
+          vimgrep_arguments = vimgrep_arguments,
+          attach_mappings = function(_, map)
+            return picker_utils.telescope_mappings(map, client, data.args)
+          end,
+        }
       end
 
       return true

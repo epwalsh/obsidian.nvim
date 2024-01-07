@@ -8,7 +8,13 @@ return function(client, data)
   if data.args:len() > 0 then
     note = client:new_note(data.args)
   else
-    note = client:new_note()
+    local title = vim.fn.input {
+      prompt = "Enter title (optional): ",
+    }
+    if string.len(title) == 0 then
+      title = nil
+    end
+    note = client:new_note(title)
   end
   vim.api.nvim_command(open_in .. tostring(note.path))
 end

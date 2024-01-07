@@ -1,3 +1,5 @@
+---@diagnostic disable: invisible
+
 local Note = require "obsidian.note"
 local util = require "obsidian.util"
 
