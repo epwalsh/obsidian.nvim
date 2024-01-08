@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed bug with YAML encoder where strings with a colon followed by whitespace were not quoted.
 - Parent directories are created when using a template (for example, for daily notes).
+- Fixed bug with finder/picker in `:ObsidianLink` when current working directory is not vault root.
 
 ## [v2.5.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.5.3) - 2024-01-02
 
