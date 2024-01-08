@@ -85,7 +85,7 @@ return function(client, data)
             map(mode, "<CR>", function(prompt_bufnr)
               local path = require("telescope.actions.state").get_selected_entry().filename
               require("telescope.actions").close(prompt_bufnr)
-              insert_ref(Note.from_file(path))
+              insert_ref(Note.from_file(client.dir / path))
               client:update_ui()
             end)
           end
@@ -118,7 +118,7 @@ return function(client, data)
             end
             local path_end = assert(string.find(entry, ":", 1, true))
             local path = string.sub(entry, 1, path_end - 1)
-            insert_ref(Note.from_file(path))
+            insert_ref(Note.from_file(client.dir / path))
           end,
         },
       }
@@ -126,14 +126,14 @@ return function(client, data)
       return true
     end,
     ["fzf.vim"] = function()
-      vim.api.nvim_create_user_command("ApplyTemplate", function(d)
+      vim.api.nvim_create_user_command("ObsInsertLink", function(d)
         -- remove escaped whitespace and extract the file name
         local result = string.gsub(d.args, "\\ ", " ")
         local path_end = assert(string.find(result, ":", 1, true))
         local path = string.sub(result, 1, path_end - 1)
         insert_ref(Note.from_file(path))
         client:update_ui()
-        vim.api.nvim_del_user_command "ApplyTemplate"
+        vim.api.nvim_del_user_command "ObsInsertLink"
       end, { nargs = 1, bang = true })
 
       local grep_cmd = vim.tbl_flatten {
@@ -145,7 +145,7 @@ return function(client, data)
         },
       }
 
-      local fzf_options = { source = table.concat(grep_cmd, " "), sink = "ApplyTemplate" }
+      local fzf_options = { source = table.concat(grep_cmd, " "), sink = "ObsInsertLink" }
 
       local ok, res = pcall(function()
         vim.api.nvim_call_function("fzf#run", {
@@ -182,7 +182,7 @@ return function(client, data)
       -- mini.pick's default behavior is to open in a new buffer
       vim.api.nvim_command "silent! bdelete"
 
-      insert_ref(Note.from_file(path))
+      insert_ref(Note.from_file(client.dir / path))
       client:update_ui()
 
       return true
