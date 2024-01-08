@@ -148,6 +148,12 @@ managers. The full set of |obsidian-plugin-dependencies| and
 |obsidian-configuration-options| are listed below.
 
 
+  ⚠️ WARNING: if you install from the latest release (recommended for
+  stability) instead of `main`, be aware that the README on `main` may reference
+  features that haven’t been released yet. For that reason I recommend viewing
+  the README on the tag for the latest release
+  <https://github.com/epwalsh/obsidian.nvim/releases> instead of `main`.
+
 USING LAZY.NVIM ~
 
 >lua
