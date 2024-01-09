@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.6.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.6.0) - 2024-01-09
+
 ### Changed
 
 - Creating new notes via `:ObsidianFollowLink` now matches the behavior of `:ObsidianLinkNew`, where the new note will be placed in the same directory as the current buffer note. This doesn't affect you if you use a flat directory structure for all of your notes.
