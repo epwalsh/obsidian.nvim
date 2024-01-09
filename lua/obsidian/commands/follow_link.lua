@@ -21,6 +21,10 @@ return function(client, data)
     return
   end
 
+  -- The Obsidian app will follow links with spaces encoded as "%20" (as they are in URLs),
+  -- so we should too.
+  location = util.string_replace(location, "%20", " ")
+
   local open_cmd = "e "
   if string.len(data.args) > 0 then
     open_cmd = util.get_open_strategy(data.args)
