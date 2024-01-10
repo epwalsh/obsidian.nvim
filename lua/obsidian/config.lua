@@ -248,6 +248,7 @@ end
 ---@field tick integer
 ---@field update_debounce integer
 ---@field checkboxes table{string, obsidian.config.UICharSpec}
+---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
 ---@field reference_text obsidian.config.UIStyleSpec
 ---@field highlight_text obsidian.config.UIStyleSpec
@@ -273,6 +274,7 @@ config.UIOpts.default = function()
       [">"] = { char = "", hl_group = "ObsidianRightArrow" },
       ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
     },
+    bullets = { char = "•", hl_group = "ObsidianBullet" },
     external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
     reference_text = { hl_group = "ObsidianRefText" },
     highlight_text = { hl_group = "ObsidianHighlightText" },
@@ -282,6 +284,7 @@ config.UIOpts.default = function()
       ObsidianDone = { bold = true, fg = "#89ddff" },
       ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
       ObsidianTilde = { bold = true, fg = "#ff5370" },
+      ObsidianBullet = { bold = true, fg = "#89ddff" },
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
       ObsidianTag = { italic = true, fg = "#89ddff" },

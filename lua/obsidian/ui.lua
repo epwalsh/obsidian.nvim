@@ -202,9 +202,25 @@ local function get_line_check_extmarks(marks, line, lnum, ui_opts)
           hl_group = opts.hl_group,
         }
       )
-      break
+      return marks
     end
   end
+
+  if ui_opts.bullets ~= nil and string.match(line, "^%s*- ") then
+    local indent = util.count_indent(line)
+    marks[#marks + 1] = ExtMark.new(
+      nil,
+      lnum,
+      indent,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = indent + 1,
+        conceal = ui_opts.bullets.char,
+        hl_group = ui_opts.bullets.hl_group,
+      }
+    )
+  end
+
   return marks
 end
 
