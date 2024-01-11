@@ -597,7 +597,9 @@ M.setup = function(ui_opts)
         log.warn(
           "Obsidian additional syntax features require 'conceallevel' to be set to 1 or 2, "
             .. "but you have 'conceallevel' set to '%s'.\n"
-            .. "See https://github.com/epwalsh/obsidian.nvim/issues/286 for more details.",
+            .. "See https://github.com/epwalsh/obsidian.nvim/issues/286 for more details.\n"
+            .. "If you don't want Obsidian's additional UI features, you can disable them and suppress "
+            .. "this warning by setting 'ui.enable = false' in your Obsidian nvim config.",
           conceallevel
         )
       end
