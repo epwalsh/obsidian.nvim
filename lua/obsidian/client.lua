@@ -179,7 +179,7 @@ Client.vault_relative_path = function(self, path)
     -- `path` and remove everything up to and including it.
     local _, j = string.find(relative_path, self:vault_name())
     if j ~= nil then
-      return string.sub(relative_path, j)
+      return string.sub(relative_path, j + 2)
     else
       return relative_path
     end
