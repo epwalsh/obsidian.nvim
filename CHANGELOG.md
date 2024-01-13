@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added extmarks that conceal "-" with "•" by default. This can turned off by setting `.ui.bullets` to `nil` in your config.
+- Added extmarks that conceal "-", "*", or "+" with "•" by default. This can turned off by setting `.ui.bullets` to `nil` in your config.
 
 ### Fixed
 
