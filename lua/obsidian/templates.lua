@@ -116,6 +116,9 @@ M.insert_template = function(name, client, location)
     end
     template_file:close()
     table.insert(insert_lines, "")
+  else
+    log.err("Template file '%s' not found", template_path)
+    return
   end
 
   vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
