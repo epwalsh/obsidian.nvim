@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed bug with resolving the vault-relative path when the vault is behind a symlink.
+- Fixed bug with completion after changing workspaces.
 
 ## [v2.6.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.6.0) - 2024-01-09
 

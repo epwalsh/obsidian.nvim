@@ -1,7 +1,6 @@
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
-local config = require "obsidian.config"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
@@ -17,12 +16,11 @@ source.get_trigger_characters = completion.get_trigger_characters
 
 source.get_keyword_pattern = completion.get_keyword_pattern
 
-source.complete = function(self, request, callback)
-  local opts = self:option(request)
-  local client = obsidian.new(opts)
+source.complete = function(_, request, callback)
+  local client = assert(obsidian.get_client())
   local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
-  if can_complete and search ~= nil and #search >= opts.completion.min_chars then
+  if can_complete and search ~= nil and #search >= client.opts.completion.min_chars then
     local function search_callback(results)
       local items = {}
       for note in iter(results) do
@@ -60,14 +58,14 @@ source.complete = function(self, request, callback)
             if ref_type == completion.RefType.Wiki then
               if client.opts.completion.use_path_only then
                 label = "[[" .. rel_path .. "]]"
-              elseif opts.completion.prepend_note_path then
+              elseif client.opts.completion.prepend_note_path then
                 label = "[[" .. rel_path
                 if option ~= tostring(note.id) then
                   label = label .. "|" .. option .. "]]"
                 else
                   label = label .. "]]"
                 end
-              elseif opts.completion.prepend_note_id then
+              elseif client.opts.completion.prepend_note_id then
                 label = "[[" .. tostring(note.id)
                 if option ~= tostring(note.id) then
                   label = label .. "|" .. option .. "]]"
@@ -131,13 +129,6 @@ source.complete = function(self, request, callback)
   else
     callback { isIncomplete = true }
   end
-end
-
----Get opts.
----
----@return obsidian.config.ClientOpts
-source.option = function(_, params)
-  return config.ClientOpts.normalize(params.option)
 end
 
 return source
