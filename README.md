@@ -199,7 +199,7 @@ If you choose to use any of these you should include them in the "dependencies" 
 
 ### Configuration options
 
-This is a complete list of all of the options that can be passed to `require("obsidian").setup()`. The values represent reasonable defaults, but please read each option carefully and customize it to your needs:
+This is a complete list of all of the options that can be passed to `require("obsidian").setup()`. The settings below are not necessarily the defaults, but represent reasonable default settings. Please read each option carefully and customize it to your needs:
 
 ```lua
 {
