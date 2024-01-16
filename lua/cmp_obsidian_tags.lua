@@ -1,7 +1,6 @@
 local abc = require "obsidian.abc"
 local obsidian = require "obsidian"
 local completion = require "obsidian.completion.tags"
-local config = require "obsidian.config"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 
@@ -16,12 +15,11 @@ source.get_trigger_characters = completion.get_trigger_characters
 
 source.get_keyword_pattern = completion.get_keyword_pattern
 
-source.complete = function(self, request, callback)
-  local opts = self:option(request)
-  local client = obsidian.new(opts)
+source.complete = function(_, request, callback)
+  local client = assert(obsidian.get_client())
   local can_complete, search, in_frontmatter = completion.can_complete(request)
 
-  if not (can_complete and search ~= nil and #search >= opts.completion.min_chars) then
+  if not (can_complete and search ~= nil and #search >= client.opts.completion.min_chars) then
     return callback { isIncomplete = true }
   end
 
@@ -59,13 +57,6 @@ source.execute = function(_, item, callback)
     vim.api.nvim_buf_set_lines(item.data.bufnr, item.data.line, item.data.line + 1, true, { line })
   end
   return callback {}
-end
-
----Get opts.
----
----@return obsidian.config.ClientOpts
-source.option = function(_, params)
-  return config.ClientOpts.normalize(params.option)
 end
 
 return source

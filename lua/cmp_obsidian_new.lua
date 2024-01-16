@@ -1,7 +1,6 @@
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
-local config = require "obsidian.config"
 local log = require "obsidian.log"
 
 ---@class cmp_obsidian_new.Source : obsidian.ABC
@@ -15,9 +14,8 @@ source.get_trigger_characters = completion.get_trigger_characters
 
 source.get_keyword_pattern = completion.get_keyword_pattern
 
-source.complete = function(self, request, callback)
-  local opts = self:option(request)
-  local client = obsidian.new(opts)
+source.complete = function(_, request, callback)
+  local client = assert(obsidian.get_client())
   local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
   ---@type string|Path|?
@@ -36,7 +34,7 @@ source.complete = function(self, request, callback)
     return
   end
 
-  if can_complete and search ~= nil and #search >= opts.completion.min_chars then
+  if can_complete and search ~= nil and #search >= client.opts.completion.min_chars then
     local new_title, new_id, path, rel_path
     new_id = client:new_note_id(search)
     new_title, new_id, path = client:parse_title_id_path(search, new_id, dir)
@@ -52,11 +50,11 @@ source.complete = function(self, request, callback)
     ---@type string, string
     local sort_text, label, new_text
     if ref_type == completion.RefType.Wiki then
-      if opts.completion.use_path_only then
+      if client.opts.completion.use_path_only then
         new_title = rel_path
-      elseif opts.completion.prepend_note_path then
+      elseif client.opts.completion.prepend_note_path then
         new_title = rel_path .. "|" .. new_title
-      elseif opts.completion.prepend_note_id then
+      elseif client.opts.completion.prepend_note_id then
         new_title = new_id .. "|" .. new_title
       else
         log.err "Invalid completion options"
@@ -92,7 +90,6 @@ source.complete = function(self, request, callback)
           },
         },
         data = {
-          opts = opts,
           id = new_id,
           title = search,
           dir = dir,
@@ -110,19 +107,10 @@ source.complete = function(self, request, callback)
 end
 
 source.execute = function(_, item, callback)
+  local client = assert(obsidian.get_client())
   local data = item.data
-  ---@type obsidian.Client
-  local client = obsidian.new(data.opts)
-
   client:new_note(data.title, data.id, data.dir)
   return callback {}
-end
-
----Get opts.
----
----@return obsidian.config.ClientOpts
-source.option = function(_, params)
-  return config.ClientOpts.normalize(params.option)
 end
 
 return source

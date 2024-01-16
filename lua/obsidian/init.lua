@@ -190,9 +190,9 @@ obsidian.setup = function(opts)
           local cmp = require "cmp"
 
           local sources = {
-            { name = "obsidian", option = opts },
-            { name = "obsidian_new", option = opts },
-            { name = "obsidian_tags", option = opts },
+            { name = "obsidian" },
+            { name = "obsidian_new" },
+            { name = "obsidian_tags" },
           }
           for _, source in pairs(cmp.get_config().sources) do
             if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
