@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.6.1) - 2024-01-16
+
 ### Added
 
 - Added extmarks that conceal "-", "*", or "+" with "•" by default. This can turned off by setting `.ui.bullets` to `nil` in your config.
