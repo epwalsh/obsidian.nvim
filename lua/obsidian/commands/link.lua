@@ -113,7 +113,7 @@ return function(client, data)
             entry = entry[1]
             if vim.startswith(entry, "M") then
               entry = entry:sub(5)
-            else
+            elseif vim.startswith(entry, "  ") then
               entry = entry:sub(7)
             end
             local path_end = assert(string.find(entry, ":", 1, true))

@@ -84,11 +84,14 @@ return function(client, data)
         file_icons = false,
         actions = {
           ["default"] = function(entry)
-            -- for some reason fzf-lua passes the filename with 6 characters
-            -- at the start that appear on screen as 2 whitespace characters
-            -- so we need to start on the 7th character
-            local template = entry[1]:sub(7)
-            insert_location(template)
+            local template = entry[1]
+            if vim.startswith(template, "  ") then
+              -- With certain versions of fzf and fzf-lua, fzf-lua passes the filename
+              -- with 6 characters that usually appear as 2 whitespace characters. So the actual
+              -- filename starts at the 7th character.
+              template = string.sub(template, 7)
+            end
+            insert_template(template)
           end,
         },
       }
