@@ -85,6 +85,12 @@ return function(client, data)
         actions = {
           ["default"] = function(entry)
             local template = entry[1]
+            if vim.startswith(template, "  ") then
+              -- With certain versions of fzf and fzf-lua, fzf-lua passes the filename
+              -- with 6 characters that usually appear as 2 whitespace characters. So the actual
+              -- filename starts at the 7th character.
+              template = string.sub(template, 7)
+            end
             insert_template(template)
           end,
         },
