@@ -4,6 +4,7 @@ local templates = require "obsidian.templates"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
+local picker_utils = require "obsidian.picker_utils"
 
 ---@param client obsidian.Client
 return function(client, data)
@@ -84,13 +85,7 @@ return function(client, data)
         file_icons = false,
         actions = {
           ["default"] = function(entry)
-            local template = entry[1]
-            if vim.startswith(template, "  ") then
-              -- With certain versions of fzf and fzf-lua, fzf-lua passes the filename
-              -- with 6 characters that usually appear as 2 whitespace characters. So the actual
-              -- filename starts at the 7th character.
-              template = string.sub(template, 7)
-            end
+            local template = picker_utils.fzf_lua_clean_selection(entry[1])
             insert_template(template)
           end,
         },

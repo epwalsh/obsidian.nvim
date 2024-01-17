@@ -2,6 +2,7 @@ local Note = require "obsidian.note"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
+local picker_utils = require "obsidian.picker_utils"
 
 ---@param client obsidian.Client
 return function(client, data)
@@ -108,14 +109,7 @@ return function(client, data)
         file_icons = false,
         actions = {
           ["default"] = function(entry)
-            -- fzf-lua gives us the filename with some non-ascii characters at the start,
-            -- or "M" plus some non-ascii characters if the file has been modified.
-            entry = entry[1]
-            if vim.startswith(entry, "M") then
-              entry = entry:sub(5)
-            elseif vim.startswith(entry, "  ") then
-              entry = entry:sub(7)
-            end
+            entry = picker_utils.fzf_lua_clean_selection(entry[1])
             local path_end = assert(string.find(entry, ":", 1, true))
             local path = string.sub(entry, 1, path_end - 1)
             insert_ref(Note.from_file(client.dir / path))

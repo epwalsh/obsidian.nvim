@@ -38,4 +38,20 @@ M.telescope_prompt_title = function(name, client)
   return prompt_title
 end
 
+--- With certain versions of fzf and fzf-lua, fzf-lua passes the selection
+--- with some odd unicode characters as a prefix.
+---
+---@param entry string
+---
+---@return string
+M.fzf_lua_clean_selection = function(entry)
+  if vim.startswith(entry, "M") then
+    entry = entry:sub(5)
+  elseif vim.startswith(entry, "  ") then
+    -- these two whitespace-looking characters are actual 6 chars in length.
+    entry = string.sub(entry, 7)
+  end
+  return entry
+end
+
 return M
