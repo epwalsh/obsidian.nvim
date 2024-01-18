@@ -297,6 +297,8 @@ Note.from_lines = function(lines, path, root)
                 )
               end
             end
+          elseif type(v) == "string" then
+            table.insert(aliases, v)
           else
             log.warn("Invalid 'aliases' in frontmatter for " .. tostring(path))
           end

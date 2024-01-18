@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed fzf-lua implementation of insert template and linking.
 
+### Added
+
+- Added support for parsing single aliases specified as a string, not a list, in frontmatter. E.g. `aliases: foo` as opposed to `aliases: [foo]`. Though when the frontmatter is saved it will always be saved as a YAML list, so `aliases: foo` gets saved as `aliases: [foo]` (or equivalent).
+
 ## [v2.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.6.1) - 2024-01-16
 
 ### Added
