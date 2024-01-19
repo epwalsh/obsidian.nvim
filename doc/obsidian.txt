@@ -258,8 +258,8 @@ or "requires" field of the obsidian.nvim plugin spec for your package manager.
 CONFIGURATION OPTIONS                         *obsidian-configuration-options*
 
 This is a complete list of all of the options that can be passed to
-`require("obsidian").setup()`. The settings below are not necessarily the
-defaults, but represent reasonable default settings. Please read each option
+`require("obsidian").setup()`. The settings below are _not necessarily the
+defaults, but represent reasonable default settings_. Please read each option
 carefully and customize it to your needs:
 
 >lua
