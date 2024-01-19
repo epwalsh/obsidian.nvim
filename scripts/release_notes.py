@@ -63,7 +63,7 @@ def get_commit_history() -> str:
             last_tag = tag
             break
     if last_tag is not None:
-        commits = os.popen(f"git log {last_tag}..{TAG}^ --oneline --first-parent").read()
+        commits = os.popen(f"git log {last_tag}..{TAG} --oneline --first-parent").read()
     else:
         commits = os.popen("git log --oneline --first-parent").read()
     return "## Commits\n\n" + commits
