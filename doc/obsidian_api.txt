@@ -251,6 +251,26 @@ Parameters ~
 {callback} `(function(string[]))` -> nil
 
 ------------------------------------------------------------------------------
+                                                 *obsidian.Client.apply_async()*
+         `Client.apply_async`({self}, {on_note}, {on_done}, {timeout})
+Apply a function over all notes in the current vault.
+
+Parameters ~
+{on_note} `(function)` (obsidian.Note,) -> nil
+{on_done} `(function)` () -> nil
+{timeout} `(integer|?)` Timeout in milliseconds.
+
+------------------------------------------------------------------------------
+                                             *obsidian.Client.apply_async_raw()*
+       `Client.apply_async_raw`({self}, {on_path}, {on_done}, {timeout})
+Like apply, but the callback takes a path instead of a note instance.
+
+Parameters ~
+{on_path} `(function)` (string,) -> nil
+{on_done} `(function)` () -> nil
+{timeout} `(integer|?)` Timeout in milliseconds.
+
+------------------------------------------------------------------------------
                                                  *obsidian.Client.new_note_id()*
                      `Client.new_note_id`({self}, {title})
 Create a new note ID.
