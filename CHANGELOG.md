@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added support for parsing single aliases specified as a string, not a list, in frontmatter. E.g. `aliases: foo` as opposed to `aliases: [foo]`. Though when the frontmatter is saved it will always be saved as a YAML list, so `aliases: foo` gets saved as `aliases: [foo]` (or equivalent).
+- Added `Client` methods `Client:apply_async()` and `Client:apply_async_raw()`.
 
 ## [v2.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.6.1) - 2024-01-16
 
