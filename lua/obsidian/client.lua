@@ -658,6 +658,60 @@ Client.find_tags_async = function(self, term, opts, callback)
   end, callback)
 end
 
+--- Apply a function over all notes in the current vault.
+---
+---@param on_note function (obsidian.Note,) -> nil
+---@param on_done function () -> nil
+---@param timeout integer|? Timeout in milliseconds.
+Client.apply_async = function(self, on_note, on_done, timeout)
+  self:apply_async_raw(function(path)
+    local ok, res = pcall(Note.from_file_async, path, self.dir)
+    if not ok then
+      log.warn("Failed to load note at '%s': %s", path, res)
+    else
+      on_note(res)
+    end
+  end, on_done, timeout)
+end
+
+--- Like apply, but the callback takes a path instead of a note instance.
+---
+---@param on_path function (string,) -> nil
+---@param on_done function () -> nil
+---@param timeout integer|? Timeout in milliseconds.
+Client.apply_async_raw = function(self, on_path, on_done, timeout)
+  local scan = require "plenary.scandir"
+
+  local skip_dirs = {}
+  if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
+    skip_dirs[#skip_dirs + 1] = Path:new(self.opts.templates.subdir)
+  end
+
+  local executor = AsyncExecutor.new()
+
+  scan.scan_dir(vim.fs.normalize(tostring(self.dir)), {
+    hidden = false,
+    add_dirs = false,
+    respect_gitignore = true,
+    search_pattern = ".*%.md",
+    on_insert = function(entry)
+      local relative_path = self:vault_relative_path(entry)
+      for skip_dir in iter(skip_dirs) do
+        if relative_path and vim.startswith(relative_path, tostring(skip_dir) .. skip_dir._sep) then
+          return
+        end
+      end
+      executor:submit(on_path, nil, entry)
+    end,
+  })
+
+  if on_done then
+    executor:join_and_then(timeout, on_done)
+  else
+    executor:join_and_then(timeout, function() end)
+  end
+end
+
 --- Create a new note ID.
 ---
 ---@param title string|?
