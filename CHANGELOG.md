@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed fzf-lua implementation of insert template and linking.
+- Fixed minor bug with `cmp_obsidian_new`.
 
 ### Added
 

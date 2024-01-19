@@ -38,11 +38,17 @@ source.complete = function(_, request, callback)
     local new_title, new_id, path, rel_path
     new_id = client:new_note_id(search)
     new_title, new_id, path = client:parse_title_id_path(search, new_id, dir)
+
+    if not new_title or string.len(new_title) == 0 then
+      return
+    end
+
     rel_path = client:vault_relative_path(path)
     if rel_path == nil then
       log.err("Failed to resolve path '%s' relative to vault root '%s'", path, client:vault_root())
       return
     end
+
     if vim.endswith(rel_path, ".md") then
       rel_path = string.sub(rel_path, 1, -4)
     end
