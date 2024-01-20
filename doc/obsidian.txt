@@ -137,7 +137,7 @@ Search functionality (e.g. via the `:ObsidianSearch` and
 `:ObsidianQuickSwitch` commands) also requires telescope.nvim
 <https://github.com/nvim-telescope/telescope.nvim>, one of the `fzf`
 alternatives, or Mini.Pick <https://github.com/echasnovski/mini.pick> from the
-mini.nvim library. (see |obsidian-plugin-dependencies| below).
+mini.nvim library (see |obsidian-plugin-dependencies| below).
 
 
 INSTALL AND CONFIGURE                         *obsidian-install-and-configure*
