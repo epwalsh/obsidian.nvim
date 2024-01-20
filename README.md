@@ -93,7 +93,7 @@ Specific operating systems also require additional dependencies in order to use 
 - **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
-Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), one of the `fzf` alternatives, or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library. (see [plugin dependencies](#plugin-dependencies) below).
+Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), one of the `fzf` alternatives, or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library (see [plugin dependencies](#plugin-dependencies) below).
 
 ### Install and configure
 
