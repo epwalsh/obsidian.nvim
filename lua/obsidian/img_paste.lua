@@ -71,11 +71,8 @@ local function save_clipboard_image(path)
       return result
     end
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
-    local cmd = 'powershell.exe "'
-      .. string.format(
-        "$content = Get-Clipboard -Format Image;$content.Save('%s', 'png')",
-        string.gsub(path, "/", "\\")
-      )
+    local cmd = 'powershell.exe -c "'
+      .. string.format("(get-clipboard -format image).save('%s', 'png')", string.gsub(path, "/", "\\"))
       .. '"'
     return os.execute(cmd)
   elseif this_os == util.OSType.Darwin then
