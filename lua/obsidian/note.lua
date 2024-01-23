@@ -270,7 +270,7 @@ Note.from_lines = function(lines, path, root)
   if #frontmatter_lines > 0 then
     local frontmatter = table.concat(frontmatter_lines, "\n")
     local ok, data = pcall(yaml.loads, frontmatter)
-    if type(data) == "string" then
+    if type(data) ~= "table" then
       data = {}
     end
     if ok then
