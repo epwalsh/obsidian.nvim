@@ -16,6 +16,10 @@ describe("Parser class", function()
     assert.equals("foo", parser:parse_string [['foo']])
   end)
 
+  it("should parse strings with escaped quotes", function()
+    assert.equals([["foo"]], parser:parse_string [["\"foo\""]])
+  end)
+
   it("should parse numbers while trimming whitespace", function()
     assert.equals(1, parser:parse_number " 1")
     assert.equals(1.5, parser:parse_number " 1.5")
