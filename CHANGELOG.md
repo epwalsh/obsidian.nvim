@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed powershell command for `:ObsidianPasteImg` in wsl
 - Fixed bug with YAML parser that led to incorrectly parsing double-quoted strings with escaped quotes inside.
 
 ## [v2.7.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.7.0) - 2024-01-19
