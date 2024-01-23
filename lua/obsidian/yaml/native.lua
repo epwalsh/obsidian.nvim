@@ -524,6 +524,10 @@ end
 ---@return boolean, string|?, string
 ---@diagnostic disable-next-line: unused-local
 Parser._parse_string = function(self, i, text)
+  if vim.startswith(text, [["]]) and vim.endswith(text, [["]]) then
+    -- when the text is enclosed with double-quotes we need to un-escape certain characters.
+    text = util.string_replace(text, [[\"]], [["]])
+  end
   return true, nil, util.strip_enclosing_chars(util.strip_whitespace(text))
 end
 

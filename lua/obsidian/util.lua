@@ -309,10 +309,8 @@ end
 ---@param str string
 ---@return boolean
 util.has_enclosing_chars = function(str)
-  local c_start = string.sub(str, 1, 1)
-  local c_end = string.sub(str, #str, #str)
   for _, enclosing_char in ipairs(util.string_enclosing_chars) do
-    if c_start == enclosing_char and c_end == enclosing_char then
+    if vim.startswith(str, enclosing_char) and vim.endswith(str, enclosing_char) then
       return true
     end
   end
