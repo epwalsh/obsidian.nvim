@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.7.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.7.1) - 2024-01-23
+
 ### Fixed
 
 - Fixed powershell command for `:ObsidianPasteImg` in wsl
