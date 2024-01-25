@@ -40,6 +40,15 @@ Return ~
 obsidian.SearchOpts
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.TagLocation}
+
+Fields ~
+{tag} `(string)`
+{path} `(string|Path)`
+{line} `(integer)`
+
+------------------------------------------------------------------------------
                                                                *obsidian.Client*
                                     `Client`
 The Obsidian client is the main API for programmatically interacting with obsidian.nvim's features
@@ -238,7 +247,7 @@ Parameters ~
 {timeout} `(integer|?)`
 
 Return ~
-`(string[])`
+obsidian.TagLocation[]
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.find_tags_async()*
@@ -248,7 +257,7 @@ An async version of 'find_tags()'.
 Parameters ~
 {term} `(string)`
 {opts} `(obsidian.SearchOpts|table|boolean|?)` search options or a boolean indicating if sorting should be used
-{callback} `(function(string[]))` -> nil
+{callback} `(function(obsidian.TagLocation[]))` -> nil
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.apply_async()*
