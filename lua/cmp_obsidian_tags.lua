@@ -23,9 +23,14 @@ source.complete = function(_, request, callback)
     return callback { isIncomplete = true }
   end
 
-  client:find_tags_async(search, false, function(tags)
+  client:find_tags_async(search, false, function(tag_locs)
+    local tags = {}
+    for tag_loc in iter(tag_locs) do
+      tags[tag_loc.tag] = true
+    end
+
     local items = {}
-    for tag in iter(tags) do
+    for tag, _ in pairs(tags) do
       items[#items + 1] = {
         sortText = "#" .. tag,
         label = "Tag: #" .. tag,

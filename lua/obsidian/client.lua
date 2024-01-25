@@ -50,6 +50,12 @@ SearchOpts.default = function()
   }
 end
 
+---@class obsidian.TagLocation
+---
+---@field tag string
+---@field path string|Path
+---@field line integer
+
 --- The Obsidian client is the main API for programmatically interacting with obsidian.nvim's features
 --- in Lua. To get the client instance, run:
 ---
@@ -556,7 +562,7 @@ end
 ---@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param timeout integer|?
 ---
----@return string[]
+---@return obsidian.TagLocation[]
 Client.find_tags = function(self, term, opts, timeout)
   return block_on(function(cb)
     return self:find_tags_async(term, opts, cb)
@@ -567,7 +573,7 @@ end
 ---
 ---@param term string
 ---@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
----@param callback function(string[]) -> nil
+---@param callback function(obsidian.TagLocation[]) -> nil
 Client.find_tags_async = function(self, term, opts, callback)
   assert(string.len(term) > 0)
   term = string.lower(term)
@@ -579,13 +585,25 @@ Client.find_tags_async = function(self, term, opts, callback)
   local executor = AsyncExecutor.new()
 
   ---@param match_data MatchData
+  local add_match = function(tag, match_data)
+    local path = match_data.path
+    if tags[tag] == nil then
+      tags[tag] = {}
+    end
+    if tags[tag][path] == nil then
+      tags[tag][path] = {}
+    end
+    tags[tag][path][match_data.line_number] = true
+  end
+
+  ---@param match_data MatchData
   local on_content_match = function(match_data)
     local line = match_data.lines.text
     for match in iter(search.find_tags(line)) do
       local m_start, m_end, _ = unpack(match)
       local tag = string.sub(line, m_start + 1, m_end)
       if vim.startswith(string.lower(tag), term) then
-        tags[tag] = true
+        add_match(tag, match_data)
       end
     end
   end
@@ -600,7 +618,9 @@ Client.find_tags_async = function(self, term, opts, callback)
           for tag in iter(res.tags) do
             tag = tostring(tag)
             if vim.startswith(string.lower(tag), term) then
-              tags[tag] = true
+              -- TODO: make this more robust, since the line number extracted here may not
+              -- actually be the line number where the tag is found.
+              add_match(tag, match_data)
             end
           end
         end
@@ -641,9 +661,18 @@ Client.find_tags_async = function(self, term, opts, callback)
     rx_frontmatter()
     executor:join_async()
 
+    ---@type obsidian.TagLocation[]
     local tags_list = {}
-    for tag in iter(tags) do
-      tags_list[#tags_list + 1] = tag
+    for tag, locations in pairs(tags) do
+      for path, lnums in pairs(locations) do
+        for lnum, _ in pairs(lnums) do
+          tags_list[#tags_list + 1] = {
+            tag = tag,
+            path = path,
+            line = lnum,
+          }
+        end
+      end
     end
 
     if first_err ~= nil and first_err_path ~= nil then
