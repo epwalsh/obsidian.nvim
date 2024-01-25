@@ -19,6 +19,7 @@ local module_lookups = {
   ui = "obsidian.ui",
   util = "obsidian.util",
   VERSION = "obsidian.version",
+  quickfix = "obsidian.quickfix",
   workspace = "obsidian.workspace",
   yaml = "obsidian.yaml",
 }
