@@ -55,6 +55,10 @@ end
 ---@field tag string
 ---@field path string|Path
 ---@field line integer
+---@field note obsidian.Note
+---@field text string
+---@field col_start integer|?
+---@field col_end integer|?
 
 --- The Obsidian client is the main API for programmatically interacting with obsidian.nvim's features
 --- in Lua. To get the client instance, run:
@@ -556,9 +560,9 @@ Client.resolve_note_async = function(self, query, callback)
   end)
 end
 
---- Find all tags starting with the given term.
+--- Find all tags starting with the given term(s).
 ---
----@param term string
+---@param term string|string[]
 ---@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param timeout integer|?
 ---
@@ -571,110 +575,169 @@ end
 
 --- An async version of 'find_tags()'.
 ---
----@param term string
+---@param term string|string[]
 ---@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
 ---@param callback function(obsidian.TagLocation[]) -> nil
 Client.find_tags_async = function(self, term, opts, callback)
-  assert(string.len(term) > 0)
-  term = string.lower(term)
+  ---@type string[]
+  local terms
+  if type(term) == "string" then
+    terms = { term }
+  else
+    terms = term
+  end
 
-  local tags = {}
+  for i, t in ipairs(terms) do
+    if string.len(t) == 0 then
+      log.err "Empty search terms are not allowed when searching for tags"
+      return
+    elseif vim.startswith(t, "#") then
+      terms[i] = string.sub(t, 2)
+    end
+  end
+
+  terms = util.tbl_unique(terms)
+
+  -- Maps paths to tag locations.
+  ---@type table<string, obsidian.TagLocation[]>
+  local path_to_tag_loc = {}
+  local path_to_note = {}
+  -- Keeps track of the order of the paths.
+  ---@type table<string, integer>
+  local path_order = {}
+  local num_paths = 0
   local err_count = 0
   local first_err = nil
   local first_err_path = nil
+
   local executor = AsyncExecutor.new()
 
-  ---@param match_data MatchData
-  local add_match = function(tag, match_data)
-    local path = match_data.path
-    if tags[tag] == nil then
-      tags[tag] = {}
+  ---@param tag string
+  ---@param path string
+  ---@param note obsidian.Note
+  ---@param lnum integer
+  ---@param text string
+  ---@param col_start integer|?
+  ---@param col_end integer|?
+  local add_match = function(tag, path, note, lnum, text, col_start, col_end)
+    if not path_to_tag_loc[path] then
+      path_to_tag_loc[path] = {}
     end
-    if tags[tag][path] == nil then
-      tags[tag][path] = {}
-    end
-    tags[tag][path][match_data.line_number] = true
+    path_to_tag_loc[path][#path_to_tag_loc[path] + 1] = {
+      tag = tag,
+      path = path,
+      note = note,
+      line = lnum,
+      text = text,
+      col_start = col_start,
+      col_end = col_end,
+    }
   end
 
   ---@param match_data MatchData
-  local on_content_match = function(match_data)
-    local line = match_data.lines.text
-    for match in iter(search.find_tags(line)) do
-      local m_start, m_end, _ = unpack(match)
-      local tag = string.sub(line, m_start + 1, m_end)
-      if vim.startswith(string.lower(tag), term) then
-        add_match(tag, match_data)
-      end
-    end
-  end
+  local on_match = function(match_data)
+    local path = vim.fs.normalize(match_data.path.text)
 
-  ---@param match_data MatchData
-  local on_frontmatter_match = function(match_data)
+    if path_order[path] == nil then
+      num_paths = num_paths + 1
+      path_order[path] = num_paths
+    end
+
     executor:submit(function()
-      local path = vim.fs.normalize(match_data.path.text)
-      local ok, res = pcall(Note.from_file_async, path, self.dir)
-      if ok then
-        if res.tags ~= nil then
-          for tag in iter(res.tags) do
-            tag = tostring(tag)
-            if vim.startswith(string.lower(tag), term) then
-              -- TODO: make this more robust, since the line number extracted here may not
-              -- actually be the line number where the tag is found.
-              add_match(tag, match_data)
-            end
+      -- Load note.
+      local note = path_to_note[path]
+      if not note then
+        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        if ok then
+          note = res
+          path_to_note[path] = note
+        else
+          err_count = err_count + 1
+          if first_err == nil then
+            first_err = res
+            first_err_path = path
+          end
+          return
+        end
+      end
+
+      local line = util.strip_whitespace(match_data.lines.text)
+      local n_matches = 0
+
+      -- check for tag in the wild of the form '#{tag}'
+      for match in iter(search.find_tags(line)) do
+        local m_start, m_end, _ = unpack(match)
+        local tag = string.sub(line, m_start + 1, m_end)
+        for t in iter(terms) do
+          if vim.startswith(string.lower(tag), t) then
+            add_match(tag, path, note, match_data.line_number, line, m_start, m_end)
+            n_matches = n_matches + 1
+            break
           end
         end
-      else
-        err_count = err_count + 1
-        if first_err == nil then
-          first_err = res
-          first_err_path = path
+      end
+
+      -- check for tags in frontmatter
+      if n_matches == 0 and note.tags ~= nil and (vim.startswith(line, "tags:") or string.match(line, "%s*- ")) then
+        for tag in iter(note.tags) do
+          tag = tostring(tag)
+          for t in iter(terms) do
+            if vim.startswith(string.lower(tag), t) then
+              add_match(tag, path, note, match_data.line_number, line)
+              break
+            end
+          end
         end
       end
     end)
   end
 
-  local tx_content, rx_content = channel.oneshot()
-  search.search_async(
-    self.dir,
-    "#" .. term .. search.Patterns.TagChars,
-    self:_prepare_search_opts(opts, { ignore_case = true }),
-    on_content_match,
-    function(_)
-      tx_content()
-    end
-  )
+  local tx, rx = channel.oneshot()
 
-  local tx_frontmatter, rx_frontmatter = channel.oneshot()
+  local search_terms = {}
+  for t in iter(terms) do
+    search_terms[#search_terms + 1] = "#" .. t .. search.Patterns.TagChars -- tag in the wild
+    search_terms[#search_terms + 1] = "\\s*- " .. t .. search.Patterns.TagChars -- frontmatter tag in multiline list
+    search_terms[#search_terms + 1] = "tags: .*" .. t .. search.Patterns.TagChars -- frontmatter tag in inline list
+  end
+
   search.search_async(
     self.dir,
-    { "\\s*- " .. term .. search.Patterns.TagChars, "tags: .*" .. term .. search.Patterns.TagChars },
-    self:_prepare_search_opts(opts, { max_count_per_file = 1, ignore_case = true }),
-    on_frontmatter_match,
+    search_terms,
+    self:_prepare_search_opts(opts, { ignore_case = true }),
+    on_match,
     function(_)
-      tx_frontmatter()
+      tx()
     end
   )
 
   async.run(function()
-    rx_content()
-    rx_frontmatter()
+    rx()
     executor:join_async()
 
     ---@type obsidian.TagLocation[]
     local tags_list = {}
-    for tag, locations in pairs(tags) do
-      for path, lnums in pairs(locations) do
-        for lnum, _ in pairs(lnums) do
-          tags_list[#tags_list + 1] = {
-            tag = tag,
-            path = path,
-            line = lnum,
-          }
+
+    -- Order by path.
+    local paths = {}
+    for path, idx in pairs(path_order) do
+      paths[idx] = path
+    end
+
+    -- Gather results in path order.
+    for _, path in ipairs(paths) do
+      local tag_locs = path_to_tag_loc[path]
+      if tag_locs ~= nil then
+        table.sort(tag_locs, function(a, b)
+          return a.line < b.line
+        end)
+        for _, tag_loc in ipairs(tag_locs) do
+          tags_list[#tags_list + 1] = tag_loc
         end
       end
     end
 
+    -- Log any errors.
     if first_err ~= nil and first_err_path ~= nil then
       log.err(
         "%d error(s) occurred during search. First error from note at '%s':\n%s",
@@ -683,6 +746,7 @@ Client.find_tags_async = function(self, term, opts, callback)
         first_err
       )
     end
+
     return tags_list
   end, callback)
 end

@@ -16,7 +16,7 @@ local function find_rogue_buffer(bufname)
   return nil
 end
 
---- Find pre-existing quickfix buffer, delete its windows then wipe it.
+--- Find pre-existing location list buffer, delete its windows then wipe it.
 ---
 ---@param bufname string
 ---
@@ -38,7 +38,7 @@ local function wipe_rogue_buffer(bufname)
   end
 end
 
---- Parse path and line number from a line in a quickfix buffer.
+--- Parse path and line number from a line in a location list buffer.
 ---
 ---@param line string
 ---
@@ -57,7 +57,7 @@ local function parse_path_and_line_nr(line)
   return nil, nil
 end
 
----@class obsidian.QuickFix : obsidian.ABC
+---@class obsidian.LocationList : obsidian.ABC
 ---
 ---@field client obsidian.Client
 ---@field bufnr integer
@@ -66,19 +66,19 @@ end
 ---@field namespace string
 ---@field wrap boolean
 ---@field height integer
-local QuickFix = abc.new_class()
+local LocationList = abc.new_class()
 
---- Create a new QuickFix instance.
+--- Create a new LocationList instance.
 ---
 ---@param client obsidian.Client
 ---@param bufnr integer
 ---@param winnr integer
 ---@param namespace string
----@param opts table { wrap: boolean, height: integer }
+---@param opts obsidian.config.LocationListOpts
 ---
----@return obsidian.QuickFix
-QuickFix.new = function(client, bufnr, winnr, namespace, opts)
-  local self = QuickFix.init()
+---@return obsidian.LocationList
+LocationList.new = function(client, bufnr, winnr, namespace, opts)
+  local self = LocationList.init()
   self.client = client
   self.bufnr = bufnr
   self.winnr = winnr
@@ -89,12 +89,12 @@ QuickFix.new = function(client, bufnr, winnr, namespace, opts)
   return self
 end
 
-QuickFix._set_buffer_options = function(self)
+LocationList._set_buffer_options = function(self)
   vim.cmd "setlocal nonu"
   vim.cmd "setlocal nornu"
   vim.cmd "setlocal winfixheight"
 
-  vim.opt_local.filetype = "ObsidianQuickFix"
+  vim.opt_local.filetype = "ObsidianLocationList"
   vim.opt_local.buftype = "nofile"
   vim.opt_local.swapfile = false
   vim.opt_local.buflisted = false
@@ -114,31 +114,33 @@ QuickFix._set_buffer_options = function(self)
     0,
     "n",
     "<CR>",
-    [[<cmd>lua require("obsidian.quickfix").open_or_fold()<CR>]],
+    [[<cmd>lua require("obsidian.location_list").open_or_fold()<CR>]],
     { silent = true, noremap = true, nowait = true }
   )
 
-  vim.wo.foldtext = [[v:lua.require("obsidian.quickfix").foldtext()]]
+  vim.wo.foldtext = [[v:lua.require("obsidian.location_list").foldtext()]]
 end
 
---- Render the quickfix buffer.
+--- Render the location list buffer.
 ---
 ---@param lines string[]
 ---@param folds table[]
 ---@param highlights table[]
-QuickFix.render = function(self, lines, folds, highlights)
+LocationList.render = function(self, lines, folds, highlights)
   -- Save view of current window so we can return focus after.
   local cur_winnr = vim.api.nvim_get_current_win()
   local cur_win_view = vim.fn.winsaveview()
 
-  -- Clear any existing quickfix buffer.
+  -- Clear any existing location list buffer.
   wipe_rogue_buffer(self.namespace)
 
   -- Create namespace (if it doesn't already exist).
   local ns_id = vim.api.nvim_create_namespace(self.namespace)
 
   -- Open buffer.
-  vim.api.nvim_command("botright " .. tostring(self.height) .. "split " .. self.namespace)
+  vim.api.nvim_command(
+    "botright " .. tostring(self.height) .. "split " .. self.namespace .. " | resize " .. tostring(self.height)
+  )
 
   -- Configure buffer.
   self:_set_buffer_options()
@@ -168,7 +170,7 @@ QuickFix.render = function(self, lines, folds, highlights)
   vim.fn.winrestview(cur_win_view) ---@diagnostic disable-line: param-type-mismatch
 end
 
-QuickFix.open_or_fold = function()
+LocationList.open_or_fold = function()
   local vault_dir = Path:new(vim.api.nvim_buf_get_var(0, "obsidian_vault_dir"))
   local parent_win = vim.api.nvim_buf_get_var(0, "obsidian_parent_win")
   local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
@@ -186,7 +188,7 @@ QuickFix.open_or_fold = function()
   end
 end
 
-QuickFix.foldtext = function()
+LocationList.foldtext = function()
   local foldstart = vim.api.nvim_get_vvar "foldstart"
   local foldend = vim.api.nvim_get_vvar "foldend"
   local num_links = foldend - foldstart
@@ -197,4 +199,4 @@ QuickFix.foldtext = function()
   return match
 end
 
-return QuickFix
+return LocationList
