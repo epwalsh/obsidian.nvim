@@ -1,3 +1,4 @@
+local Path = require "plenary.path"
 local iter = require("obsidian.itertools").iter
 local log = require "obsidian.log"
 
@@ -369,6 +370,27 @@ util.string_replace = function(s, what, with, n)
 
   s = replace(s)
   return s, count
+end
+
+------------------
+-- Path helpers --
+------------------
+
+--- Get the parent directory of a path.
+---
+---@param path string|Path
+---
+---@return Path
+util.parent_directory = function(path)
+  -- 'Path:parent()' has bugs on Windows, so we try 'vim.fs.dirname' first instead.
+  if vim.fs and vim.fs.dirname then
+    local dirname = vim.fs.dirname(tostring(path))
+    if dirname ~= nil then
+      return Path:new(dirname)
+    end
+  end
+
+  return Path:new(path):parent()
 end
 
 ------------------------------------
