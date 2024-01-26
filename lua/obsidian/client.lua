@@ -966,7 +966,7 @@ Client._daily = function(self, datetime)
   if not note:exists() then
     local write_frontmatter = true
     if self.opts.daily_notes.template then
-      templates.clone_template(self.opts.daily_notes.template, tostring(path), self, note:display_name())
+      templates.clone_template(self.opts.daily_notes.template, path, self, note:display_name())
       note = Note.from_file(path, self.dir)
       if note.has_frontmatter then
         write_frontmatter = false

@@ -52,7 +52,7 @@ end
 ---Clone Template
 ---
 ---@param template_name string  - name of a template in the configured templates folder
----@param note_path string
+---@param note_path Path
 ---@param client obsidian.Client
 ---@param title string
 M.clone_template = function(template_name, note_path, client, title)
@@ -61,19 +61,24 @@ M.clone_template = function(template_name, note_path, client, title)
     log.err "Templates folder is not defined or does not exist"
     return
   end
+
+  note_path:parent():mkdir { parents = true }
+
   local template_path = Path:new(templates_dir) / template_name
-  Path:new(note_path):parent():mkdir { parents = true }
   local template_file = io.open(tostring(template_path), "r")
-  local note_file = io.open(tostring(note_path), "wb")
   if not template_file then
-    return error("Unable to read template at " .. template_path)
+    return log.error("Unable to read template at '%s'", template_path)
   end
+
+  local note_file = io.open(tostring(note_path), "wb")
   if not note_file then
-    return error("Unable to write note at " .. note_path)
+    return log.error("Unable to write note at '%s'", note_path)
   end
+
   for line in template_file:lines "L" do
     note_file:write(M.substitute_template_variables(line, client, title))
   end
+
   template_file:close()
   note_file:close()
 end
