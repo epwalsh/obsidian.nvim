@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.8.0) - 2024-01-26
+
 ### Added
 
 - Added `:ObsidianTags` command.
@@ -14,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changed API of client methods `Client:find_tags()` and `Client:find_tags_async()`. The return value (or value passed to the callback) is now a list of objects representing the location of tags found. These objects have the following fields: `tag: string`, `path: string|Path`, `line: integer`.
+
+### Fixed
+
+- Fixed a YAML parsing issue with unquoted URLs in an array item.
+- Fixed an issue on Windows when cloning a template into a new note. The root cause was this bug in plenary: https://github.com/nvim-lua/plenary.nvim/issues/489. We've added a work-around.
 
 ## [v2.7.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.7.1) - 2024-01-23
 

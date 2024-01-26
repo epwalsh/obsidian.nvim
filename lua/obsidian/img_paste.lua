@@ -125,7 +125,7 @@ M.paste_img = function(fname, default_dir)
     end
 
     -- Ensure parent directory exists.
-    path:parent():mkdir { exists_ok = true, parents = true }
+    util.parent_directory(path):mkdir { exists_ok = true, parents = true }
 
     -- Paste image.
     local result = save_clipboard_image(tostring(path))
