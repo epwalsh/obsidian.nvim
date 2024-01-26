@@ -11,6 +11,7 @@ local command_lookups = {
   ObsidianOpen = "obsidian.commands.open",
   ObsidianBacklinks = "obsidian.commands.backlinks",
   ObsidianSearch = "obsidian.commands.search",
+  ObsidianTags = "obsidian.commands.tags",
   ObsidianTemplate = "obsidian.commands.template",
   ObsidianQuickSwitch = "obsidian.commands.quick_switch",
   ObsidianLinkNew = "obsidian.commands.link_new",
@@ -156,6 +157,9 @@ M.register("ObsidianOpen", { opts = { nargs = "?" }, complete = M.complete_args_
 
 ---Get backlinks to a note.
 M.register("ObsidianBacklinks", { opts = { nargs = 0 } })
+
+---Find all instances of any number of tags.
+M.register("ObsidianTags", { opts = { nargs = "+" } })
 
 ---Search notes.
 M.register("ObsidianSearch", { opts = { nargs = "?" } })

@@ -2,11 +2,11 @@ local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local AsyncExecutor = require("obsidian.async").AsyncExecutor
+local LocationList = require "obsidian.location_list"
 local Note = require "obsidian.note"
 local search = require "obsidian.search"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
-local qf = require "obsidian.quickfix"
 local iter = require("obsidian.itertools").iter
 
 local NAMESPACE = "ObsidianBacklinks"
@@ -129,7 +129,7 @@ Backlinks.view = function(self, callback)
   end, function(backlink_matches)
     vim.schedule(function()
       if not vim.tbl_isempty(backlink_matches) then
-        local qfw = qf.new(self.client, self.bufnr, self.winnr, NAMESPACE, self.client.opts.backlinks)
+        local loclist = LocationList.new(self.client, self.bufnr, self.winnr, NAMESPACE, self.client.opts.backlinks)
 
         local view_lines = {}
         local highlights = {}
@@ -141,9 +141,10 @@ Backlinks.view = function(self, callback)
           highlights[#highlights + 1] = { group = "CursorLineNr", line = #view_lines - 1, col_start = 0, col_end = 1 }
           highlights[#highlights + 1] = { group = "Directory", line = #view_lines - 1, col_start = 2, col_end = -1 }
 
+          local display_path = assert(self.client:vault_relative_path(match.note.path))
+
           -- Line for backlink within note.
           for line_match in iter(match.matches) do
-            local display_path = assert(self.client:vault_relative_path(match.note.path))
             local text, ref_indices, ref_strs = search.find_and_replace_refs(line_match.text)
             local text_start = 4 + display_path:len() + tostring(line_match.line):len()
             view_lines[#view_lines + 1] = ("  %s:%s:%s"):format(display_path, line_match.line, text)
@@ -152,32 +153,32 @@ Backlinks.view = function(self, callback)
             for i, ref_idx in ipairs(ref_indices) do
               local ref_str = ref_strs[i]
               if string.find(ref_str, tostring(self.note.id), 1, true) ~= nil then
-                table.insert(highlights, {
+                highlights[#highlights + 1] = {
                   group = "Search",
                   line = #view_lines - 1,
                   col_start = text_start + ref_idx[1] - 1,
                   col_end = text_start + ref_idx[2],
-                })
+                }
               end
             end
 
             -- Add highlight for path and line number
-            table.insert(highlights, {
+            highlights[#highlights + 1] = {
               group = "Comment",
               line = #view_lines - 1,
               col_start = 2,
               col_end = text_start,
-            })
+            }
           end
 
-          table.insert(folds, { range = { #view_lines - #match.matches, #view_lines } })
-          table.insert(view_lines, "")
+          folds[#folds + 1] = { range = { #view_lines - #match.matches, #view_lines } }
+          view_lines[#view_lines + 1] = ""
         end
 
         -- Remove last blank line.
         view_lines[#view_lines] = nil
 
-        qfw:render(view_lines, folds, highlights)
+        loclist:render(view_lines, folds, highlights)
       end
 
       if callback ~= nil then

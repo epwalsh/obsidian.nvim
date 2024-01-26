@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `:ObsidianTags` command.
+
 ### Changed
 
 - Changed API of client methods `Client:find_tags()` and `Client:find_tags_async()`. The return value (or value passed to the callback) is now a list of objects representing the location of tags found. These objects have the following fields: `tag: string`, `path: string|Path`, `line: integer`.

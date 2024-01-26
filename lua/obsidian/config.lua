@@ -15,7 +15,8 @@ local config = {}
 ---@field follow_url_func function|?
 ---@field note_frontmatter_func function|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
----@field backlinks obsidian.config.BacklinksOpts
+---@field backlinks obsidian.config.LocationListOpts
+---@field tags obsidian.config.LocationListOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
 ---@field finder_mappings obsidian.config.FinderMappingOpts
@@ -52,7 +53,8 @@ config.ClientOpts.default = function()
     follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
-    backlinks = config.BacklinksOpts.default(),
+    backlinks = config.LocationListOpts.default(),
+    tags = config.LocationListOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
     finder_mappings = config.FinderMappingOpts.default(),
@@ -145,14 +147,14 @@ config.ClientOpts.normalize = function(opts, overrides)
   return opts
 end
 
----@class obsidian.config.BacklinksOpts
+---@class obsidian.config.LocationListOpts
 ---@field height integer
 ---@field wrap boolean
-config.BacklinksOpts = {}
+config.LocationListOpts = {}
 
 ---Get defaults.
----@return obsidian.config.BacklinksOpts
-config.BacklinksOpts.default = function()
+---@return obsidian.config.LocationListOpts
+config.LocationListOpts.default = function()
   return {
     height = 10,
     wrap = true,

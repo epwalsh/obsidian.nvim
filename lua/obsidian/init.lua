@@ -9,6 +9,7 @@ local module_lookups = {
   commands = "obsidian.commands",
   completion = "obsidian.completion",
   config = "obsidian.config",
+  LocationList = "obsidian.location_list",
   log = "obsidian.log",
   img_paste = "obsidian.img_paste",
   itertools = "obsidian.itertools",
@@ -19,7 +20,6 @@ local module_lookups = {
   ui = "obsidian.ui",
   util = "obsidian.util",
   VERSION = "obsidian.version",
-  quickfix = "obsidian.quickfix",
   workspace = "obsidian.workspace",
   yaml = "obsidian.yaml",
 }
