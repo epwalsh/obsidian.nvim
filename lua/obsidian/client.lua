@@ -50,16 +50,6 @@ SearchOpts.default = function()
   }
 end
 
----@class obsidian.TagLocation
----
----@field tag string
----@field path string|Path
----@field line integer
----@field note obsidian.Note
----@field text string
----@field col_start integer|?
----@field col_end integer|?
-
 --- The Obsidian client is the main API for programmatically interacting with obsidian.nvim's features
 --- in Lua. To get the client instance, run:
 ---
@@ -385,7 +375,7 @@ end
 ---
 ---@param term string The term to search for
 ---@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
----@param callback function (obsidian.Note[]) -> nil
+---@param callback fun(notes: obsidian.Note[])
 Client.find_notes_async = function(self, term, opts, callback)
   local next_path = self:_search_iter_async(term, opts)
   local executor = AsyncExecutor.new()
@@ -452,7 +442,7 @@ end
 ---
 ---@param term string The search term.
 ---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
----@param callback function (Path[]) -> nil
+---@param callback fun(paths: Path[])
 Client.find_files_async = function(self, term, opts, callback)
   local matches = {}
   local tx, rx = channel.oneshot()
@@ -491,7 +481,7 @@ end
 --- An async version of `resolve_note()`.
 ---
 ---@param query string
----@param callback function(obsidian.Note|?)
+---@param callback fun(note: obsidian.Note|?)
 ---
 ---@return obsidian.Note|?
 Client.resolve_note_async = function(self, query, callback)
@@ -560,10 +550,20 @@ Client.resolve_note_async = function(self, query, callback)
   end)
 end
 
+---@class obsidian.TagLocation
+---
+---@field tag string The tag found.
+---@field note obsidian.Note The note instance where the tag was found.
+---@field path string|Path The path to the note where the tag was found.
+---@field line integer The line number (1-indexed) where the tag was found.
+---@field text string The text (with whitespace stripped) of the line where the tag was found.
+---@field tag_start integer|? The index within 'text' where the tag starts.
+---@field tag_end integer|? The index within 'text' where the tag ends.
+
 --- Find all tags starting with the given term(s).
 ---
 ---@param term string|string[]
----@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
+---@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
 ---@param timeout integer|?
 ---
 ---@return obsidian.TagLocation[]
@@ -576,8 +576,8 @@ end
 --- An async version of 'find_tags()'.
 ---
 ---@param term string|string[]
----@param opts obsidian.SearchOpts|table|boolean|? search options or a boolean indicating if sorting should be used
----@param callback function(obsidian.TagLocation[]) -> nil
+---@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param callback fun(tags: obsidian.TagLocation[])
 Client.find_tags_async = function(self, term, opts, callback)
   ---@type string[]
   local terms
@@ -629,8 +629,8 @@ Client.find_tags_async = function(self, term, opts, callback)
       note = note,
       line = lnum,
       text = text,
-      col_start = col_start,
-      col_end = col_end,
+      tag_start = col_start,
+      tag_end = col_end,
     }
   end
 
@@ -753,8 +753,8 @@ end
 
 --- Apply a function over all notes in the current vault.
 ---
----@param on_note function (obsidian.Note,) -> nil
----@param on_done function () -> nil
+---@param on_note fun(note: obsidian.Note)
+---@param on_done fun()
 ---@param timeout integer|? Timeout in milliseconds.
 Client.apply_async = function(self, on_note, on_done, timeout)
   self:apply_async_raw(function(path)
@@ -769,8 +769,8 @@ end
 
 --- Like apply, but the callback takes a path instead of a note instance.
 ---
----@param on_path function (string,) -> nil
----@param on_done function () -> nil
+---@param on_path fun(path: string)
+---@param on_done fun()
 ---@param timeout integer|? Timeout in milliseconds.
 Client.apply_async_raw = function(self, on_path, on_done, timeout)
   local scan = require "plenary.scandir"

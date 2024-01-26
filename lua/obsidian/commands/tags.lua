@@ -23,6 +23,7 @@ return function(client, data)
 
   -- Group tag locations by path, keeping order.
   -- Note: tag locations will be in order by path+line in the flat.
+  ---@type { [1]: string, [2]: obsidian.Note, [3]: obsidian.TagLocation[]}[]
   local matches_by_path = {}
   for _, tag_loc in ipairs(tag_locations) do
     local path = tag_loc.path
@@ -43,7 +44,12 @@ return function(client, data)
   local folds = {}
 
   for _, path_matches in ipairs(matches_by_path) do
-    local _, note, matches = unpack(path_matches)
+    ---@type obsidian.Note
+    local note
+    ---@type obsidian.TagLocation[]
+    local matches
+    _, note, matches = unpack(path_matches)
+
     local display_path = assert(client:vault_relative_path(note.path))
 
     -- Header for note.
@@ -58,12 +64,12 @@ return function(client, data)
       view_lines[#view_lines + 1] = ("  %s:%s:%s"):format(display_path, line_match.line, line_match.text)
 
       -- Add highlight for tag match in the text.
-      if line_match.col_start and line_match.col_end then
+      if line_match.tag_start and line_match.tag_end then
         table.insert(highlights, {
           group = "Search",
           line = #view_lines - 1,
-          col_start = text_start + line_match.col_start - 1,
-          col_end = text_start + line_match.col_end,
+          col_start = text_start + line_match.tag_start - 1,
+          col_end = text_start + line_match.tag_end,
         })
       end
 
