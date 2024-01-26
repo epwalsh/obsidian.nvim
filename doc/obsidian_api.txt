@@ -40,15 +40,6 @@ Return ~
 obsidian.SearchOpts
 
 ------------------------------------------------------------------------------
-Class ~
-{obsidian.TagLocation}
-
-Fields ~
-{tag} `(string)`
-{path} `(string|Path)`
-{line} `(integer)`
-
-------------------------------------------------------------------------------
                                                                *obsidian.Client*
                                     `Client`
 The Obsidian client is the main API for programmatically interacting with obsidian.nvim's features
@@ -187,7 +178,7 @@ An async version of `find_notes()` that runs the callback with an array of all m
 Parameters ~
 {term} `(string)` The term to search for
 {opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
-{callback} `(function)` (obsidian.Note[]) -> nil
+{callback} `(fun(notes: obsidian.Note[]))`
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Client.find_files()*
@@ -210,7 +201,7 @@ An async version of `find_files`.
 Parameters ~
 {term} `(string)` The search term.
 {opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
-{callback} `(function)` (Path[]) -> nil
+{callback} `(fun(paths: Path[]))`
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.resolve_note()*
@@ -231,19 +222,32 @@ An async version of `resolve_note()`.
 
 Parameters ~
 {query} `(string)`
-{callback} `(function(obsidian.Note|?))`
+{callback} `(fun(note: obsidian.Note|?))`
 
 Return ~
 obsidian.Note| `(optional)`
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.TagLocation}
+
+Fields ~
+{tag} `(string)` The tag found.
+{note} obsidian.Note The note instance where the tag was found.
+{path} `(string|Path)` The path to the note where the tag was found.
+{line} `(integer)` The line number (1-indexed) where the tag was found.
+{text} `(string)` The text (with whitespace stripped) of the line where the tag was found.
+{tag_start} `(integer|?)` The index within 'text' where the tag starts.
+{tag_end} `(integer|?)` The index within 'text' where the tag ends.
+
+------------------------------------------------------------------------------
                                                    *obsidian.Client.find_tags()*
              `Client.find_tags`({self}, {term}, {opts}, {timeout})
-Find all tags starting with the given term.
+Find all tags starting with the given term(s).
 
 Parameters ~
-{term} `(string)`
-{opts} `(obsidian.SearchOpts|table|boolean|?)` search options or a boolean indicating if sorting should be used
+{term} `(string|string[])`
+{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
 {timeout} `(integer|?)`
 
 Return ~
@@ -255,9 +259,9 @@ obsidian.TagLocation[]
 An async version of 'find_tags()'.
 
 Parameters ~
-{term} `(string)`
-{opts} `(obsidian.SearchOpts|table|boolean|?)` search options or a boolean indicating if sorting should be used
-{callback} `(function(obsidian.TagLocation[]))` -> nil
+{term} `(string|string[])`
+{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
+{callback} `(fun(tags: obsidian.TagLocation[]))`
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.apply_async()*
@@ -265,8 +269,8 @@ Parameters ~
 Apply a function over all notes in the current vault.
 
 Parameters ~
-{on_note} `(function)` (obsidian.Note,) -> nil
-{on_done} `(function)` () -> nil
+{on_note} `(fun(note: obsidian.Note))`
+{on_done} `(fun())`
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 ------------------------------------------------------------------------------
@@ -275,8 +279,8 @@ Parameters ~
 Like apply, but the callback takes a path instead of a note instance.
 
 Parameters ~
-{on_path} `(function)` (string,) -> nil
-{on_done} `(function)` () -> nil
+{on_path} `(fun(path: string))`
+{on_done} `(fun())`
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 ------------------------------------------------------------------------------
