@@ -55,6 +55,8 @@ return function(client, data)
     uri = ("obsidian://open?vault=%s&file=%s"):format(encoded_vault, encoded_path)
   end
 
+  uri = vim.fn.shellescape(uri)
+
   ---@type string, string[]
   local cmd, args
   if this_os == util.OSType.Linux then
@@ -81,5 +83,12 @@ return function(client, data)
   assert(cmd)
   assert(args)
 
-  vim.fn.jobstart(cmd .. " " .. vim.fn.shellescape(table.concat(args, " ")), { detach = true })
+  vim.fn.jobstart(cmd .. " " .. table.concat(args, " "), {
+    detach = true,
+    on_exit = function(_, exit_code)
+      if exit_code ~= 0 then
+        log.err("open command's job failed with exit code: " .. exit_code)
+      end
+    end,
+  })
 end
