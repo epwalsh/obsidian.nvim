@@ -1,7 +1,6 @@
 local util = require "obsidian.util"
 local log = require "obsidian.log"
 local RefTypes = require("obsidian.search").RefTypes
-local run_job = require("obsidian.async").run_job
 
 ---@param client obsidian.Client
 return function(client, data)
@@ -81,5 +80,13 @@ return function(client, data)
 
   assert(cmd)
   assert(args)
-  run_job(cmd, args)
+
+  vim.uv.spawn(cmd, { args = args, detach = true }, function(code, signal)
+    if code ~= 0 then
+      log.err("open command failed with code " .. code)
+    end
+    if signal ~= 0 then
+      log.err("open command failed with signal " .. signal)
+    end
+  end)
 end
