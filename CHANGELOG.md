@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed a YAML parsing issue with unquoted URLs in an array item.
+- Fixed an issue on Windows when cloning a template into a new note. The root cause was this bug in plenary: https://github.com/nvim-lua/plenary.nvim/issues/489. We've added a work-around.
 
 ## [v2.7.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.7.1) - 2024-01-23
 
