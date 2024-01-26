@@ -81,12 +81,5 @@ return function(client, data)
   assert(cmd)
   assert(args)
 
-  vim.uv.spawn(cmd, { args = args, detach = true }, function(code, signal)
-    if code ~= 0 then
-      log.err("open command failed with code " .. code)
-    end
-    if signal ~= 0 then
-      log.err("open command failed with signal " .. signal)
-    end
-  end)
+  vim.fn.jobstart(cmd .. " " .. vim.fn.shellescape(table.concat(args, " ")), { detach = true })
 end
