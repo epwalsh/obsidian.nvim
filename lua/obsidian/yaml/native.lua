@@ -216,8 +216,16 @@ end
 Parser._try_parse_field = function(self, lines, i, text)
   local line = lines[i]
   text = text and text or util.strip_comments(line.content)
+
   local _, key, value
-  _, _, key, value = string.find(text, "([a-zA-Z0-9_-]+):(.*)")
+
+  -- First look for start of mapping, array, block, etc, e.g. 'foo:'
+  _, _, key = string.find(text, "([a-zA-Z0-9_-]+):$")
+  if not key then
+    -- Then try inline field, e.g. 'foo: bar'
+    _, _, key, value = string.find(text, "([a-zA-Z0-9_-]+): (.*)")
+  end
+
   value = value and util.strip_whitespace(value) or nil
   if value == "" then
     value = nil

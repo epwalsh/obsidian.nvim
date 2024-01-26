@@ -201,7 +201,9 @@ describe("Parser class", function()
     local result = parser:parse(table.concat({
       "aliases:",
       ' - "Research project: staged training"',
+      "sources:",
+      " - https://example.com",
     }, "\n"))
-    assert.are_same({ aliases = { "Research project: staged training" } }, result)
+    assert.are_same({ aliases = { "Research project: staged training" }, sources = { "https://example.com" } }, result)
   end)
 end)
