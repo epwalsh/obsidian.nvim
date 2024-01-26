@@ -87,7 +87,7 @@ return function(client, data)
     detach = true,
     on_exit = function(_, exit_code)
       if exit_code ~= 0 then
-        log.err("open command's job failed with exit code: " .. exit_code)
+        log.err("open command's job failed with exit code '" .. exit_code .. "'")
       end
     end,
   })
