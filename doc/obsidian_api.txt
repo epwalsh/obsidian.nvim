@@ -228,6 +228,14 @@ Return ~
 obsidian.Note| `(optional)`
 
 ------------------------------------------------------------------------------
+                                                *obsidian.Client.current_note()*
+                         `Client.current_note`({self})
+Get the current note.
+
+Return ~
+obsidian.Note| `(optional)`
+
+------------------------------------------------------------------------------
 Class ~
 {obsidian.TagLocation}
 
@@ -470,6 +478,15 @@ Parameters ~
 {tag} `(string)`
 
 ------------------------------------------------------------------------------
+                                                     *obsidian.Note.add_field()*
+                    `Note.add_field`({self}, {key}, {value})
+Add or update a field in the frontmatter.
+
+Parameters ~
+{key} `(string)`
+{value} `(any)`
+
+------------------------------------------------------------------------------
                                                      *obsidian.Note.from_file()*
                         `Note.from_file`({path}, {root})
 Initialize a note from a file.
@@ -560,12 +577,24 @@ Return ~
 ------------------------------------------------------------------------------
                                                           *obsidian.Note.save()*
         `Note.save`({self}, {path}, {insert_frontmatter}, {frontmatter})
-Save note to file.
+Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
 
 Parameters ~
 {path} `(string|Path|?)`
 {insert_frontmatter} `(boolean|?)`
 {frontmatter} `(table|?)`
+
+------------------------------------------------------------------------------
+                                                *obsidian.Note.save_to_buffer()*
+             `Note.save_to_buffer`({self}, {bufnr}, {frontmatter})
+Save frontmatter to the given buffer.
+
+Parameters ~
+{bufnr} `(integer|?)`
+{frontmatter} `(table|?)`
+
+Return ~
+`(boolean)` updated True if the buffer lines were updated, false otherwise.
 
 ------------------------------------------------------------------------------
                                                             *obsidian.Workspace*
