@@ -132,6 +132,22 @@ Note.add_tag = function(self, tag)
   end
 end
 
+--- Add or update a field in the frontmatter.
+---
+---@param key string
+---@param value any
+Note.add_field = function(self, key, value)
+  if key == "id" or key == "aliases" or key == "tags" then
+    error "Updating field '%s' this way is not allowed. Please update the corresponding attribute directly instead"
+  end
+
+  if not self.metadata then
+    self.metadata = {}
+  end
+
+  self.metadata[key] = value
+end
+
 --- Initialize a note from a file.
 ---
 ---@param path string|Path
@@ -447,7 +463,7 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
   end
 end
 
---- Save note to file.
+--- Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
 ---
 ---@param path string|Path|?
 ---@param insert_frontmatter boolean|?
@@ -467,7 +483,8 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   if self_f ~= nil then
     local contents = self_f:read "*a"
     for idx, line in ipairs(vim.split(contents, "\n")) do
-      table.insert(lines, line .. "\n")
+      lines[#lines + 1] = line .. "\n"
+
       if idx == 1 then
         if Note._is_frontmatter_boundary(line) then
           has_frontmatter = true
@@ -480,6 +497,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
         end
       end
     end
+
     self_f:close()
   elseif #self.aliases > 0 then
     -- Add a header.
@@ -510,6 +528,33 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   save_f:close()
 
   return lines
+end
+
+--- Save frontmatter to the given buffer.
+---
+---@param bufnr integer|?
+---@param frontmatter table|?
+---
+---@return boolean updated True if the buffer lines were updated, false otherwise.
+Note.save_to_buffer = function(self, bufnr, frontmatter)
+  bufnr = bufnr and bufnr or 0
+
+  local cur_buf_note = Note.from_buffer(bufnr)
+  local new_lines = self:frontmatter_lines(nil, frontmatter)
+  local cur_lines
+  if cur_buf_note.frontmatter_end_line ~= nil then
+    cur_lines = vim.api.nvim_buf_get_lines(bufnr, 0, cur_buf_note.frontmatter_end_line, false)
+  end
+
+  vim.api.nvim_buf_set_lines(
+    bufnr,
+    0,
+    cur_buf_note.frontmatter_end_line and cur_buf_note.frontmatter_end_line or 0,
+    false,
+    new_lines
+  )
+
+  return not vim.deep_equal(cur_lines, new_lines)
 end
 
 return Note

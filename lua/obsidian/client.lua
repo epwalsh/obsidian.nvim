@@ -550,6 +550,17 @@ Client.resolve_note_async = function(self, query, callback)
   end)
 end
 
+--- Get the current note.
+---
+---@return obsidian.Note|?
+Client.current_note = function(self)
+  if vim.bo.filetype ~= "markdown" then
+    return nil
+  end
+
+  return Note.from_buffer(0, self.dir)
+end
+
 ---@class obsidian.TagLocation
 ---
 ---@field tag string The tag found.
