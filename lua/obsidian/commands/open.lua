@@ -58,18 +58,18 @@ return function(client, data)
   uri = vim.fn.shellescape(uri)
 
   ---@type string, string[]
-  local cmd, args
+  local executable, args
   if this_os == util.OSType.Linux then
-    cmd = "xdg-open"
+    executable = "xdg-open"
     args = { uri }
   elseif this_os == util.OSType.Wsl then
-    cmd = "wsl-open"
+    executable = "wsl-open"
     args = { uri }
   elseif this_os == util.OSType.Windows then
-    cmd = "powershell"
+    executable = "powershell"
     args = { "Start-Process '" .. uri .. "'" }
   elseif this_os == util.OSType.Darwin then
-    cmd = "open"
+    executable = "open"
     if client.opts.open_app_foreground then
       args = { "-a", "/Applications/Obsidian.app", uri }
     else
@@ -80,14 +80,16 @@ return function(client, data)
     return
   end
 
-  assert(cmd)
+  assert(executable)
   assert(args)
 
-  vim.fn.jobstart(cmd .. " " .. table.concat(args, " "), {
+  local cmd = executable .. " " .. table.concat(args, " ")
+
+  vim.fn.jobstart(cmd, {
     detach = true,
     on_exit = function(_, exit_code)
       if exit_code ~= 0 then
-        log.err("open command's job failed with exit code '" .. exit_code .. "'")
+        log.err("open command failed with exit code '%s': %s", exit_code, cmd)
       end
     end,
   })
