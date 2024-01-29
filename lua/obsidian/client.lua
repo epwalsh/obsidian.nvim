@@ -765,7 +765,7 @@ end
 --- Apply a function over all notes in the current vault.
 ---
 ---@param on_note fun(note: obsidian.Note)
----@param on_done fun()
+---@param on_done fun()|?
 ---@param timeout integer|? Timeout in milliseconds.
 Client.apply_async = function(self, on_note, on_done, timeout)
   self:apply_async_raw(function(path)
@@ -781,7 +781,7 @@ end
 --- Like apply, but the callback takes a path instead of a note instance.
 ---
 ---@param on_path fun(path: string)
----@param on_done fun()
+---@param on_done fun()|?
 ---@param timeout integer|? Timeout in milliseconds.
 Client.apply_async_raw = function(self, on_path, on_done, timeout)
   local scan = require "plenary.scandir"
