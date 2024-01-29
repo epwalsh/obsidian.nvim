@@ -152,7 +152,7 @@ end
 util.is_url = function(s)
   local search = require "obsidian.search"
 
-  if string.match(util.strip_whitespace(s), search.Patterns[search.RefTypes.NakedUrl]) then
+  if string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$") then
     return true
   else
     return false

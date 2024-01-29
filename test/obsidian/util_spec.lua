@@ -164,3 +164,13 @@ describe("util.string_replace()", function()
     )
   end)
 end)
+
+describe("util.is_url()", function()
+  it("should identify basic URLs", function()
+    assert.is_true(util.is_url "https://example.com")
+  end)
+
+  it("should identify semantic scholar API URLS", function()
+    assert.is_true(util.is_url "https://api.semanticscholar.org/CorpusID:235829052")
+  end)
+end)
