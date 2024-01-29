@@ -278,7 +278,7 @@ Apply a function over all notes in the current vault.
 
 Parameters ~
 {on_note} `(fun(note: obsidian.Note))`
-{on_done} `(fun())`
+{on_done} `(fun()|?)`
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 ------------------------------------------------------------------------------
@@ -288,7 +288,7 @@ Like apply, but the callback takes a path instead of a note instance.
 
 Parameters ~
 {on_path} `(fun(path: string))`
-{on_done} `(fun())`
+{on_done} `(fun()|?)`
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 ------------------------------------------------------------------------------
