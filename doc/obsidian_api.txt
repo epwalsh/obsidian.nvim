@@ -487,6 +487,17 @@ Parameters ~
 {value} `(any)`
 
 ------------------------------------------------------------------------------
+                                                     *obsidian.Note.get_field()*
+                        `Note.get_field`({self}, {key})
+Get a field in the frontmatter.
+
+Parameters ~
+{key} `(string)`
+
+Return ~
+`(any)` result
+
+------------------------------------------------------------------------------
                                                      *obsidian.Note.from_file()*
                         `Note.from_file`({path}, {root})
 Initialize a note from a file.
