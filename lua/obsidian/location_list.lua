@@ -195,7 +195,7 @@ LocationList.foldtext = function()
 
   local line = vim.api.nvim_buf_get_lines(0, foldstart - 1, foldstart, true)[1]
 
-  local match, _ = line:gsub("^ (.+)", " %1 " .. ("(%s link%s)"):format(num_links, num_links > 1 and "s" or ""))
+  local match, _ = line:gsub("^ (.+)", " %1 " .. ("(%s match%s)"):format(num_links, num_links > 1 and "s" or ""))
   return match
 end
 
