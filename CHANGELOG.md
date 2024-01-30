@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added client method `Client:current_note()` to get the note corresponding to the current buffer.
 - Added note method `Note.add_field(key: string, value: any)` to add/update an additional field in the frontmatter.
+- Added note method `Note.get_field(key: string)`.
 - Added note method ` Note.save_to_buffer(bufnr: integer|?, frontmatter: table|?)` for saving the frontmatter to a buffer.
 
 ## [v2.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.8.0) - 2024-01-26

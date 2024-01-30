@@ -148,6 +148,23 @@ Note.add_field = function(self, key, value)
   self.metadata[key] = value
 end
 
+--- Get a field in the frontmatter.
+---
+---@param key string
+---
+---@return any result
+Note.get_field = function(self, key)
+  if key == "id" or key == "aliases" or key == "tags" then
+    error "Getting field '%s' this way is not allowed. Please use the corresponding attribute directly instead"
+  end
+
+  if not self.metadata then
+    return nil
+  end
+
+  return self.metadata[key]
+end
+
 --- Initialize a note from a file.
 ---
 ---@param path string|Path
