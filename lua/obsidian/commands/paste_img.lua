@@ -9,7 +9,13 @@ return function(client, data)
     img_folder = client.dir / client.opts.attachments.img_folder
   end
 
-  local path = paste_img(data.args, img_folder)
+  ---@type string|?
+  local default_name
+  if client.opts.image_name_func then
+    default_name = client.opts.image_name_func()
+  end
+
+  local path = paste_img(data.args, img_folder, default_name)
 
   if path ~= nil then
     util.insert_text(client.opts.attachments.img_text_func(client, path))

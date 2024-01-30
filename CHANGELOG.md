@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added configuration option `image_name_func: (fun(): string)|?` for customizing the default image name/prefix when pasting images via `:ObsidianPasteImg`.
 - Added client method `Client:current_note()` to get the note corresponding to the current buffer.
 - Added note method `Note.add_field(key: string, value: any)` to add/update an additional field in the frontmatter.
 - Added note method `Note.get_field(key: string)`.

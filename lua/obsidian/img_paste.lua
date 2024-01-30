@@ -28,7 +28,8 @@ local function get_clip_check_command()
   return check_cmd
 end
 
----Check if clipboard contains image data.
+--- Check if clipboard contains image data.
+---
 ---@return boolean
 local function clipboard_is_img()
   local content = {}
@@ -49,8 +50,9 @@ local function clipboard_is_img()
   end
 end
 
----Save image from clipboard to `path`.
+--- Save image from clipboard to `path`.
 ---@param path string
+---
 ---@return boolean|integer|? result
 local function save_clipboard_image(path)
   local this_os = util.get_os()
@@ -84,15 +86,17 @@ end
 
 ---@param fname string|?
 ---@param default_dir Path|string
+---@param default_name string|?
+---
 ---@return Path|? image_path the absolute path to the image file
-M.paste_img = function(fname, default_dir)
+M.paste_img = function(fname, default_dir, default_name)
   if not clipboard_is_img() then
     log.err "There is no image data in the clipboard"
     return
   else
     -- Get filename to save to.
     if fname == "" then
-      fname = vim.fn.input { prompt = "Enter file name: " }
+      fname = vim.fn.input { prompt = "Enter file name: ", default = default_name }
     end
 
     if fname == "" then

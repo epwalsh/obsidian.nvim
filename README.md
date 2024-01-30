@@ -316,6 +316,12 @@ This is a complete list of all of the options that can be passed to `require("ob
     return tostring(os.time()) .. "-" .. suffix
   end,
 
+  -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
+  image_name_func = function()
+    -- Prefix image names with timestamp.
+    return string.format("%s-", os.time())
+  end,
+
   -- Optional, boolean or a function that takes a filename and returns a boolean.
   -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
   disable_frontmatter = false,
