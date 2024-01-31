@@ -398,6 +398,13 @@ Return ~
 obsidian.Note
 
 ------------------------------------------------------------------------------
+                                    *obsidian.Client._run_with_finder_backend()*
+`Client._run_with_finder_backend`({self}, {implementations}, {on_not_implemented})
+Parameters ~
+{implementations} `(table<string, fun(): boolean>)`
+{on_not_implemented} `(fun()|?)` A function to run when no finder is available for the operation
+
+------------------------------------------------------------------------------
                                                    *obsidian.Client.update_ui()*
                       `Client.update_ui`({self}, {bufnr})
 Manually update extmarks in a buffer.
