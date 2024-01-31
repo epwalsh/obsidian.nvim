@@ -478,8 +478,17 @@ end
 util.toggle_checkbox = function()
   local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
   local line = vim.api.nvim_get_current_line()
-  if not string.match(line, "^%s*- %[.*") then
-    line = string.gsub(line, "^([ ]*)", "%1- [ ] ")
+
+  local checkbox_pattern = "^%s*- %[.*"
+
+  if not string.match(line, checkbox_pattern) then
+    local unordered_list_pattern = "^([ ]*)[-*+] ([^%[])"
+
+    if string.match(line, unordered_list_pattern) then
+      line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")
+    else
+      line = string.gsub(line, "^([%s]*)", "%1- [ ] ")
+    end
   elseif string.match(line, "^%s*- %[ %].*") then
     line = util.string_replace(line, "- [ ]", "- [x]", 1)
   else
