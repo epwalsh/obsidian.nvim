@@ -12,7 +12,7 @@ M.gf_passthrough = function()
 end
 
 M.toggle_checkbox = function()
-  return { action = util.toggle_checkbox, opts = { buffer = true } }
+  return { action = util.toggle_checkbox, opts = { buffer = true, desc = "Toggle Checkbox" } }
 end
 
 return M
