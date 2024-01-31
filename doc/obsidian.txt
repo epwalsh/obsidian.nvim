@@ -229,24 +229,24 @@ USING PACKER.NVIM ~
 
 PLUGIN DEPENDENCIES                             *obsidian-plugin-dependencies*
 
-The only required plugin dependency is plenary.nvim
+The only **required** plugin dependency is plenary.nvim
 <https://github.com/nvim-lua/plenary.nvim>, but there are a number of optional
 dependencies that enhance the obsidian.nvim experience.
 
 **Completion:**
 
-- hrsh7th/nvim-cmp <https://github.com/hrsh7th/nvim-cmp>: for completion of note references.
+- **[recommended]** hrsh7th/nvim-cmp <https://github.com/hrsh7th/nvim-cmp>: for completion of note references.
 
 **Search functionality:**
 
-- nvim-telescope/telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>: for search and quick-switch functionality.
-- ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>: an alternative to telescope for search and quick-switch functionality.
-- junegunn/fzf <https://github.com/junegunn/fzf> and junegunn/fzf.vim <https://github.com/junegunn/fzf.vim>: another alternative to telescope for search and quick-switch functionality.
-- Mini.Pick <https://github.com/echasnovski/mini.pick> from the mini.nvim library: another alternative to telescope for search and quick-switch functionality.
+- **[recommended]** nvim-telescope/telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>: for search and quick-switch functionality.
+- Mini.Pick <https://github.com/echasnovski/mini.pick> from the mini.nvim library: an alternative to telescope for search and quick-switch functionality.
+- **[deprecated]** ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>: another alternative to telescope for search and quick-switch functionality.
+- **[deprecated]** junegunn/fzf <https://github.com/junegunn/fzf> and junegunn/fzf.vim <https://github.com/junegunn/fzf.vim>: another alternative to telescope for search and quick-switch functionality.
 
 **Syntax highlighting:**
 
-- nvim-treesitter <https://github.com/nvim-treesitter/nvim-treesitter>: for base markdown syntax highlighting. See |obsidian-syntax-highlighting| for more details.
+- **[recommended]** nvim-treesitter <https://github.com/nvim-treesitter/nvim-treesitter>: for base markdown syntax highlighting. See |obsidian-syntax-highlighting| for more details.
 - preservim/vim-markdown <https://github.com/preservim/vim-markdown>: an alternative to nvim-treesitter for syntax highlighting (see |obsidian-syntax-highlighting| for more details), plus other cool features.
 
 **Miscellaneous:**
