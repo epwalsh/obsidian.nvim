@@ -251,10 +251,10 @@ Fields ~
 ------------------------------------------------------------------------------
                                                    *obsidian.Client.find_tags()*
              `Client.find_tags`({self}, {term}, {opts}, {timeout})
-Find all tags starting with the given term(s).
+Find all tags starting with the given search term(s).
 
 Parameters ~
-{term} `(string|string[])`
+{term} `(string|string[])` The search term
 {opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
 {timeout} `(integer|?)` Timeout in milliseconds.
 
@@ -267,28 +267,31 @@ obsidian.TagLocation[]
 An async version of 'find_tags()'.
 
 Parameters ~
-{term} `(string|string[])`
+{term} `(string|string[])` The search term
 {opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
 {callback} `(fun(tags: obsidian.TagLocation[]))`
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Client.list_tags()*
-                     `Client.list_tags`({self}, {timeout})
-Gather a list of all tags in the vault.
+                 `Client.list_tags`({self}, {term}, {timeout})
+Gather a list of all tags in the vault. If 'term' is provided, only tags that partially match the search
+term will be included.
 
 Parameters ~
-{timeout} `(integer|?)` Timeout in milliseconds.
+{term} `(string|?)` An optional search term to match tags
+{timeout} `(integer|?)` Timeout in milliseconds
 
 Return ~
 `(string[])`
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.list_tags_async()*
-                  `Client.list_tags_async`({self}, {callback})
+              `Client.list_tags_async`({self}, {callback}, {term})
 An async version of 'list_tags()'.
 
 Parameters ~
 {callback} `(fun(tags: string[]))`
+{term} `(string|?)`
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.apply_async()*
