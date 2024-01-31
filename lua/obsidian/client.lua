@@ -1065,7 +1065,9 @@ Client.daily = function(self, offset_days)
   return self:_daily(os.time() + (offset_days * 3600 * 24))
 end
 
-Client._run_with_finder_backend = function(self, implementations)
+---@param implementations table<string, fun(): boolean>
+---@param on_not_implemented fun()|? A function to run when no finder is available for the operation
+Client._run_with_finder_backend = function(self, implementations, on_not_implemented)
   if self.opts.finder then
     if implementations[self.opts.finder] ~= nil then
       local ok, res = pcall(implementations[self.opts.finder])
@@ -1079,7 +1081,7 @@ Client._run_with_finder_backend = function(self, implementations)
         return res
       end
     else
-      log.err("invalid finder '" .. self.opts.finder .. "' in config")
+      log.err("operation not implemented for finder '%s'", self.opts.finder)
       return
     end
   end
@@ -1093,7 +1095,11 @@ Client._run_with_finder_backend = function(self, implementations)
     end
   end
 
-  log.err "No finders available. One of 'telescope.nvim', 'fzf-lua', or 'fzf.vim' is required."
+  if on_not_implemented then
+    on_not_implemented()
+  else
+    log.err "No finders available for operation. One of 'telescope.nvim', 'fzf-lua', 'fzf.vim', or 'mini.pick' is required."
+  end
 end
 
 --- Manually update extmarks in a buffer.

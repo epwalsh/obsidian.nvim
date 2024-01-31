@@ -138,12 +138,53 @@ return function(client, data)
     end
   end
 
-  if vim.tbl_isempty(tags) then
-    log.warn "Please provide a tag argument"
-    return
+  if not vim.tbl_isempty(tags) then
+    return gather_tag_location_list(client, util.tbl_unique(tags))
+  else
+    -- Open finder with tags.
+    client:_run_with_finder_backend({
+      ["telescope.nvim"] = function()
+        -- try with telescope.nvim
+        local has_telescope, _ = pcall(require, "telescope")
+        if not has_telescope then
+          return false
+        end
+
+        local pickers = require "telescope.pickers"
+        local finders = require "telescope.finders"
+        local conf = require("telescope.config").values
+
+        local opts = {
+          attach_mappings = function(_, map)
+            -- NOTE: in newer versions of Telescope we can make a single call to `map()` with
+            -- `mode = { "i", "n" }`, but older versions expect mode to be string, not a table.
+            for _, mode in ipairs { "i", "n" } do
+              map(mode, "<CR>", function(prompt_bufnr)
+                local tag = require("telescope.actions.state").get_selected_entry()[1]
+                require("telescope.actions").close(prompt_bufnr)
+                gather_tag_location_list(client, { tag })
+              end)
+            end
+            return true
+          end,
+        }
+
+        client:list_tags_async(function(all_tags)
+          pickers
+            .new(opts, {
+              prompt_title = "Tags",
+              finder = finders.new_table {
+                results = all_tags,
+              },
+              sorter = conf.generic_sorter(opts),
+            })
+            :find()
+        end)
+
+        return true
+      end,
+    }, function()
+      log.warn "Finder not available for tags, please provide a tag argument to the command"
+    end)
   end
-
-  tags = util.tbl_unique(tags)
-
-  return gather_tag_location_list(client, tags)
 end
