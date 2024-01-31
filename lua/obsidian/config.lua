@@ -11,7 +11,7 @@ local config = {}
 ---@field log_level integer
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
----@field note_id_func (fun(title: string): string)|?
+---@field note_id_func (fun(title: string|?): string)|?
 ---@field follow_url_func fun(url: string)|?
 ---@field image_name_func (fun(): string)|?
 ---@field note_frontmatter_func fun(note: obsidian.Note)|?
