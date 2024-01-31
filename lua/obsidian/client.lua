@@ -575,7 +575,7 @@ end
 ---
 ---@param term string|string[]
 ---@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
----@param timeout integer|?
+---@param timeout integer|? Timeout in milliseconds.
 ---
 ---@return obsidian.TagLocation[]
 Client.find_tags = function(self, term, opts, timeout)
@@ -599,10 +599,7 @@ Client.find_tags_async = function(self, term, opts, callback)
   end
 
   for i, t in ipairs(terms) do
-    if string.len(t) == 0 then
-      log.err "Empty search terms are not allowed when searching for tags"
-      return
-    elseif vim.startswith(t, "#") then
+    if vim.startswith(t, "#") then
       terms[i] = string.sub(t, 2)
     end
   end
@@ -680,6 +677,7 @@ Client.find_tags_async = function(self, term, opts, callback)
         local m_start, m_end, _ = unpack(match)
         local tag = string.sub(line, m_start + 1, m_end)
         for t in iter(terms) do
+          -- NOTE: this works when 't' is an empty string too.
           if vim.startswith(string.lower(tag), t) then
             add_match(tag, path, note, match_data.line_number, line, m_start, m_end)
             n_matches = n_matches + 1
@@ -707,9 +705,15 @@ Client.find_tags_async = function(self, term, opts, callback)
 
   local search_terms = {}
   for t in iter(terms) do
-    search_terms[#search_terms + 1] = "#" .. t .. search.Patterns.TagChars -- tag in the wild
-    search_terms[#search_terms + 1] = "\\s*- " .. t .. search.Patterns.TagChars -- frontmatter tag in multiline list
-    search_terms[#search_terms + 1] = "tags: .*" .. t .. search.Patterns.TagChars -- frontmatter tag in inline list
+    if string.len(t) > 0 then
+      search_terms[#search_terms + 1] = "#" .. t .. search.Patterns.TagCharsOptional -- tag in the wild
+      search_terms[#search_terms + 1] = "\\s*- " .. t .. search.Patterns.TagCharsOptional -- frontmatter tag in multiline list
+      search_terms[#search_terms + 1] = "tags: .*" .. t .. search.Patterns.TagCharsOptional -- frontmatter tag in inline list
+    else
+      search_terms[#search_terms + 1] = "#" .. search.Patterns.TagCharsRequired -- tag in the wild
+      search_terms[#search_terms + 1] = "\\s*- " .. search.Patterns.TagCharsRequired -- frontmatter tag in multiline list
+      search_terms[#search_terms + 1] = "tags: .*" .. search.Patterns.TagCharsRequired -- frontmatter tag in inline list
+    end
   end
 
   search.search_async(
@@ -760,6 +764,32 @@ Client.find_tags_async = function(self, term, opts, callback)
 
     return tags_list
   end, callback)
+end
+
+--- Gather a list of all tags in the vault.
+---
+---@param timeout integer|? Timeout in milliseconds.
+---
+---@return string[]
+Client.list_tags = function(self, timeout)
+  local tags = {}
+  for _, tag_loc in ipairs(self:find_tags("", nil, timeout)) do
+    tags[tag_loc.tag] = true
+  end
+  return vim.tbl_keys(tags)
+end
+
+--- An async version of 'list_tags()'.
+---
+---@param callback fun(tags: string[])
+Client.list_tags_async = function(self, callback)
+  self:find_tags_async("", nil, function(tag_locations)
+    local tags = {}
+    for _, tag_loc in ipairs(tag_locations) do
+      tags[tag_loc.tag] = true
+    end
+    callback(vim.tbl_keys(tags))
+  end)
 end
 
 --- Apply a function over all notes in the current vault.
