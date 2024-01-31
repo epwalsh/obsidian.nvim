@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.9.0) - 2024-01-31
+
 ### Added
 
 - Added configuration option `image_name_func: (fun(): string)|?` for customizing the default image name/prefix when pasting images via `:ObsidianPasteImg`.
@@ -14,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added client method `Client:list_tags()` for listing all tags in the vault, along with async version `Client:list_tags_async(callback: fun(tags: string[]))`.
 - Added note method `Note.add_field(key: string, value: any)` to add/update an additional field in the frontmatter.
 - Added note method `Note.get_field(key: string)`.
-- Added note method ` Note.save_to_buffer(bufnr: integer|?, frontmatter: table|?)` for saving the frontmatter to a buffer.
+- Added note method `Note.save_to_buffer(bufnr: integer|?, frontmatter: table|?)` for saving the frontmatter to a buffer.
 
 ### Changed
 
