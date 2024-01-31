@@ -28,12 +28,17 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 ## Features
 
-- ▶️ Ultra-fast, asynchronous autocompletion for note references and tags via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links, `[` for markdown links, or `#` for tags), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep)
-- 🏃 Navigate throughout your vault by typing `gf` on any link to another note
-- 📷 Paste images into notes
-- 💅 Additional markdown syntax highlighting, concealing, and extmarks for references, tags, and check-boxes
+▶️ **Completion:** Ultra-fast, asynchronous autocompletion for note references and tags via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links, `[` for markdown links, or `#` for tags), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep).
 
-[![See this screenshot](https://github.com/epwalsh/obsidian.nvim/assets/8812459/7344a1bd-6701-404a-9be8-cbb756013e6a)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/7344a1bd-6701-404a-9be8-cbb756013e6a)
+[![See this screenshot](https://github.com/epwalsh/obsidian.nvim/assets/8812459/90d5f218-06cd-4ebb-b00b-b59c2f5c3cc1)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/90d5f218-06cd-4ebb-b00b-b59c2f5c3cc1)
+
+🏃 **Navigation:** Navigate throughout your vault by typing `gf` on any link to another note.
+
+📷 **Images:** Paste images into notes.
+
+💅 **Syntax:** Additional markdown syntax highlighting, concealing, and extmarks for references, tags, and check-boxes.
+
+[![See this screenshot](https://github.com/epwalsh/obsidian.nvim/assets/8812459/e74f5267-21b5-49bc-a3bb-3b9db5fa6687)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/e74f5267-21b5-49bc-a3bb-3b9db5fa6687)
 
 ### Commands
 
