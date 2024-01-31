@@ -256,7 +256,7 @@ Find all tags starting with the given term(s).
 Parameters ~
 {term} `(string|string[])`
 {opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
-{timeout} `(integer|?)`
+{timeout} `(integer|?)` Timeout in milliseconds.
 
 Return ~
 obsidian.TagLocation[]
@@ -270,6 +270,25 @@ Parameters ~
 {term} `(string|string[])`
 {opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
 {callback} `(fun(tags: obsidian.TagLocation[]))`
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Client.list_tags()*
+                     `Client.list_tags`({self}, {timeout})
+Gather a list of all tags in the vault.
+
+Parameters ~
+{timeout} `(integer|?)` Timeout in milliseconds.
+
+Return ~
+`(string[])`
+
+------------------------------------------------------------------------------
+                                             *obsidian.Client.list_tags_async()*
+                  `Client.list_tags_async`({self}, {callback})
+An async version of 'list_tags()'.
+
+Parameters ~
+{callback} `(fun(tags: string[]))`
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.apply_async()*
