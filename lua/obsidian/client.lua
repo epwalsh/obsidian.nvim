@@ -677,7 +677,7 @@ Client.find_tags_async = function(self, term, opts, callback)
         local m_start, m_end, _ = unpack(match)
         local tag = string.sub(line, m_start + 1, m_end)
         if string.match(tag, "^" .. search.Patterns.TagCharsRequired .. "$") then
-          add_match(tag, path, note, match_data.line_number, line)
+          add_match(tag, path, note, match_data.line_number, line, m_start, m_end)
         end
       end
 
@@ -953,7 +953,9 @@ Client.new_note = function(self, title, id, dir, aliases)
     frontmatter = self.opts.note_frontmatter_func(note)
   end
   note:save(nil, self:should_save_frontmatter(note), frontmatter)
-  log.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+
+  local rel_path = self:vault_relative_path(note.path)
+  log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
 
   return note
 end
@@ -1029,7 +1031,9 @@ Client._daily = function(self, datetime)
       end
       note:save(nil, self:should_save_frontmatter(note), frontmatter)
     end
-    log.info("Created note " .. tostring(note.id) .. " at " .. tostring(note.path))
+
+    local rel_path = self:vault_relative_path(note.path)
+    log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
   end
 
   return note

@@ -170,15 +170,17 @@ return function(client, data)
         }
 
         client:list_tags_async(function(all_tags)
-          pickers
-            .new(opts, {
-              prompt_title = "Tags",
-              finder = finders.new_table {
-                results = all_tags,
-              },
-              sorter = conf.generic_sorter(opts),
-            })
-            :find()
+          vim.schedule(function()
+            pickers
+              .new(opts, {
+                prompt_title = "Tags",
+                finder = finders.new_table {
+                  results = all_tags,
+                },
+                sorter = conf.generic_sorter(opts),
+              })
+              :find()
+          end)
         end)
 
         return true
