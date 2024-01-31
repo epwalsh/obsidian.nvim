@@ -26,6 +26,7 @@ M.Patterns = {
   -- Tags
   TagCharsOptional = "[A-Za-z0-9_/-]*",
   TagCharsRequired = "[A-Za-z]+[A-Za-z0-9_/-]*[A-Za-z0-9]+", -- assumes tag is at least 2 chars
+  Tag = "#[A-Za-z]+[A-Za-z0-9_/-]*[A-Za-z0-9]+",
 
   -- Miscellaneous
   Highlight = "==[^=]+==", -- ==text==
@@ -35,7 +36,6 @@ M.Patterns = {
   Wiki = "%[%[[^][%|]+%]%]", -- [[xxx]]
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:%%-]+[a-zA-Z0-9]", -- https://xyz.com
-  Tag = "#[a-zA-Z0-9_/-]+", -- #tag
 }
 
 --- Find all matches of a pattern

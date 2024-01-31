@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added note method `Note.get_field(key: string)`.
 - Added note method ` Note.save_to_buffer(bufnr: integer|?, frontmatter: table|?)` for saving the frontmatter to a buffer.
 
+### Changed
+
+- `:ObsidianTags` command can take a visual selection or look for a tag under the cursor instead of explicitly provided arguments.
+
 ## [v2.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.8.0) - 2024-01-26
 
 ### Added

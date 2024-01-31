@@ -159,7 +159,7 @@ M.register("ObsidianOpen", { opts = { nargs = "?" }, complete = M.complete_args_
 M.register("ObsidianBacklinks", { opts = { nargs = 0 } })
 
 ---Find all instances of any number of tags.
-M.register("ObsidianTags", { opts = { nargs = "+" } })
+M.register("ObsidianTags", { opts = { nargs = "*", range = true } })
 
 ---Search notes.
 M.register("ObsidianSearch", { opts = { nargs = "?" } })

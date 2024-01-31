@@ -1,12 +1,13 @@
 local log = require "obsidian.log"
 local util = require "obsidian.util"
+local search = require "obsidian.search"
 local LocationList = require "obsidian.location_list"
 
 ---@param client obsidian.Client
-return function(client, data)
+---@param tags string[]
+local function gather_tag_location_list(client, tags)
   -- Gather tag locations.
   local tag_locations = {}
-  local tags = util.tbl_unique(data.fargs)
   local tag_locs = client:find_tags(tags, { sort = true })
   for _, tag_loc in ipairs(tag_locs) do
     for _, tag in ipairs(tags) do
@@ -92,9 +93,57 @@ return function(client, data)
   loclist:render(view_lines, folds, highlights)
 
   log.info(
-    "Showing tag locations.\n\n"
+    "Showing tag locations for '%s'.\n\n"
       .. "TIPS:\n\n"
       .. "- Hit ENTER on a match to go to the tag location\n"
-      .. "- Hit ENTER on a group header to toggle the fold, or use normal fold mappings"
+      .. "- Hit ENTER on a group header to toggle the fold, or use normal fold mappings",
+    table.concat(tags, "', '")
   )
+end
+
+---@param client obsidian.Client
+return function(client, data)
+  local tags = data.fargs
+
+  if vim.tbl_isempty(tags) then
+    -- Check for visual selection.
+    local _, csrow, cscol, _ = unpack(assert(vim.fn.getpos "'<"))
+    local _, cerow, cecol, _ = unpack(assert(vim.fn.getpos "'>"))
+    if data.line1 == csrow and data.line2 == cerow then
+      local lines = vim.fn.getline(csrow, cerow)
+      if #lines ~= 1 then
+        log.err "Only in-line visual selections allowed"
+        return
+      end
+
+      local line = assert(lines[1])
+      local tag = string.sub(line, cscol, cecol)
+
+      if not string.match(tag, "^#?" .. search.Patterns.TagCharsRequired .. "$") then
+        log.err("Visual selection '%s' is not a valid tag", tag)
+        return
+      end
+
+      if vim.startswith(tag, "#") then
+        tag = string.sub(tag, 2)
+      end
+
+      tags = { tag }
+    else
+      -- Otherwise check for a tag under the cursor.
+      local tag = util.cursor_tag()
+      if tag then
+        tags = { tag }
+      end
+    end
+  end
+
+  if vim.tbl_isempty(tags) then
+    log.warn "Please provide a tag argument"
+    return
+  end
+
+  tags = util.tbl_unique(tags)
+
+  return gather_tag_location_list(client, tags)
 end

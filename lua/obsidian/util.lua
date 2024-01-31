@@ -605,6 +605,29 @@ util.cursor_link = function(line, col, include_naked_urls)
   return link_location, link_name, link_type
 end
 
+--- Get the tag under the cursor, if there is one.
+---
+---@param line string|?
+---@param col integer|?
+---
+---@return string|?
+util.cursor_tag = function(line, col)
+  local search = require "obsidian.search"
+
+  local current_line = line and line or vim.api.nvim_get_current_line()
+  local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
+  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
+
+  for match in iter(search.find_tags(current_line)) do
+    local open, close, _ = unpack(match)
+    if open <= cur_col and cur_col <= close then
+      return string.sub(current_line, open + 1, close)
+    end
+  end
+
+  return nil
+end
+
 util.gf_passthrough = function()
   if util.cursor_on_markdown_link(nil, nil, true) then
     return "<cmd>ObsidianFollowLink<CR>"
