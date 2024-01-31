@@ -478,7 +478,9 @@ end
 util.toggle_checkbox = function()
   local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
   local line = vim.api.nvim_get_current_line()
-  if string.match(line, "^%s*- %[ %].*") then
+  if not string.match(line, "^%s*- %[.*") then
+    line = string.gsub(line, "^([ ]*)", "%1- [ ] ")
+  elseif string.match(line, "^%s*- %[ %].*") then
     line = util.string_replace(line, "- [ ]", "- [x]", 1)
   else
     for check_char in iter { "x", "~", ">", "-" } do
