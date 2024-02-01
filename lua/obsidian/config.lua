@@ -63,29 +63,38 @@ config.ClientOpts.default = function()
   }
 end
 
+local tbl_override = function(defaults, overrides)
+  local out = vim.tbl_extend("force", defaults, overrides)
+  for k, v in pairs(out) do
+    if v == vim.NIL then
+      out[k] = nil
+    end
+  end
+  return out
+end
+
 --- Normalize options.
 ---
 ---@param opts table<string, any>
----@param overrides table|obsidian.config.ClientOpts|?
+---@param defaults obsidian.config.ClientOpts|?
 ---
 ---@return obsidian.config.ClientOpts
-config.ClientOpts.normalize = function(opts, overrides)
-  local defaults = config.ClientOpts.default()
-  if overrides ~= nil then
-    defaults = config.ClientOpts.normalize(overrides)
+config.ClientOpts.normalize = function(opts, defaults)
+  if not defaults then
+    defaults = config.ClientOpts.default()
   end
 
   ---@type obsidian.config.ClientOpts
-  opts = vim.tbl_extend("force", defaults, opts)
+  opts = tbl_override(defaults, opts)
 
-  opts.backlinks = vim.tbl_extend("force", defaults.backlinks, opts.backlinks)
-  opts.completion = vim.tbl_extend("force", defaults.completion, opts.completion)
+  opts.backlinks = tbl_override(defaults.backlinks, opts.backlinks)
+  opts.completion = tbl_override(defaults.completion, opts.completion)
   opts.mappings = opts.mappings and opts.mappings or defaults.mappings
   opts.finder_mappings = opts.finder_mappings and opts.finder_mappings or defaults.finder_mappings
-  opts.daily_notes = vim.tbl_extend("force", defaults.daily_notes, opts.daily_notes)
-  opts.templates = vim.tbl_extend("force", defaults.templates, opts.templates)
-  opts.ui = vim.tbl_extend("force", defaults.ui, opts.ui)
-  opts.attachments = vim.tbl_extend("force", defaults.attachments, opts.attachments)
+  opts.daily_notes = tbl_override(defaults.daily_notes, opts.daily_notes)
+  opts.templates = tbl_override(defaults.templates, opts.templates)
+  opts.ui = tbl_override(defaults.ui, opts.ui)
+  opts.attachments = tbl_override(defaults.attachments, opts.attachments)
 
   -- Rename old fields for backwards compatibility.
   if opts.ui.tick ~= nil then
@@ -135,10 +144,6 @@ config.ClientOpts.normalize = function(opts, overrides)
     table.insert(opts.workspaces, 1, { path = opts.dir })
   end
 
-  if vim.tbl_isempty(opts.workspaces) then
-    error "Invalid obsidian.nvim config, at least one workspace spec in 'config.workspaces' is required."
-  end
-
   return opts
 end
 
@@ -172,11 +177,17 @@ config.LocationListOpts.default = function()
   }
 end
 
+---@enum obsidian.config.CompletionNewNotesLocation
+config.CompletionNewNotesLocation = {
+  current_dir = "current_dir",
+  notes_subdir = "notes_subdir",
+}
+
 ---@class obsidian.config.CompletionOpts
 ---
 ---@field nvim_cmp boolean
 ---@field min_chars integer
----@field new_notes_location "current_dir"|"notes_subdir"
+---@field new_notes_location obsidian.config.CompletionNewNotesLocation
 ---@field prepend_note_id boolean
 ---@field prepend_note_path boolean
 ---@field use_path_only boolean
@@ -190,7 +201,7 @@ config.CompletionOpts.default = function()
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
-    new_notes_location = "current_dir",
+    new_notes_location = config.CompletionNewNotesLocation.current_dir,
     prepend_note_id = true,
     prepend_note_path = false,
     use_path_only = false,

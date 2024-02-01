@@ -4,7 +4,7 @@ local util = require "obsidian.util"
 
 ---@class obsidian.workspace.WorkspaceSpec
 ---
----@field path string|Path
+---@field path string|Path|?
 ---@field name string|?
 ---@field strict boolean|? If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
 ---@field overrides table|obsidian.config.ClientOpts|?
@@ -58,18 +58,21 @@ local function find_vault_root(base_dir)
   return nil
 end
 
---- Initialize a new 'Workspace' object from a workspace spec.
+--- Create a new 'Workspace' object. This assumes the workspace already exists on the filesystem.
 ---
----@param spec obsidian.workspace.WorkspaceSpec
+---@param path string|Path Workspace path.
+---@param opts obsidian.workspace.WorkspaceOpts|?
 ---
 ---@return obsidian.Workspace
-Workspace.new_from_spec = function(spec)
-  local self = Workspace.init()
-  self.path = vim.fs.normalize(tostring(spec.path))
-  self.name = spec.name and spec.name or assert(vim.fs.basename(self.path))
-  self.overrides = spec.overrides
+Workspace.new = function(path, opts)
+  opts = opts and opts or {}
 
-  if spec.strict then
+  local self = Workspace.init()
+  self.path = vim.fs.normalize(tostring(path))
+  self.name = opts.name and opts.name or assert(vim.fs.basename(self.path))
+  self.overrides = opts.overrides
+
+  if opts.strict then
     self.root = self.path
   else
     local vault_root = find_vault_root(self.path)
@@ -83,20 +86,22 @@ Workspace.new_from_spec = function(spec)
   return self
 end
 
---- Create a new 'Workspace' object. This assumes the workspace already exists on the filesystem.
+--- Initialize a new 'Workspace' object from a workspace spec.
 ---
----@param path string|Path Workspace path.
----@param opts obsidian.workspace.WorkspaceOpts|?
+---@param spec obsidian.workspace.WorkspaceSpec
 ---
 ---@return obsidian.Workspace
-Workspace.new = function(path, opts)
-  opts = opts and opts or {}
-  return Workspace.new_from_spec {
-    path = path,
-    name = opts.name,
-    strict = opts.strict,
-    overrides = opts.overrides,
-  }
+Workspace.new_from_spec = function(spec)
+  local path = spec.path
+  if not path then
+    path = assert(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
+  end
+
+  return Workspace.new(path, {
+    name = spec.name,
+    strict = spec.strict,
+    overrides = spec.overrides,
+  })
 end
 
 --- Initialize a 'Workspace' object from the current working directory.
@@ -132,16 +137,23 @@ Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
   local dirs = cur_dir:parents()
   table.insert(dirs, 1, tostring(cur_dir))
 
+  ---@type obsidian.Workspace|?
+  local default_for_buf
   for _, spec in ipairs(workspaces) do
     local w = Workspace.new_from_spec(spec)
-    for _, dir in ipairs(dirs) do
-      if w.path == dir then
-        return w
+
+    if spec.path == nil then
+      default_for_buf = w
+    else
+      for _, dir in ipairs(dirs) do
+        if w.path == dir then
+          return w
+        end
       end
     end
   end
 
-  return nil
+  return default_for_buf
 end
 
 --- Get the workspace corresponding to the current working directory (or a parent of), if there

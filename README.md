@@ -23,6 +23,7 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
   - [Configuration options](#configuration-options)
   - [Notes on configuration](#notes-on-configuration)
   - [Using templates](#using-templates)
+  - [Using obsidian.nvim outside of a workspace / Obsidian vault](#using-obsidiannvim-outside-of-a-workspace--obsidian-vault)
 - 🐞 [Known issues](#known-issues)
 - ➕ [Contributing](#contributing)
 
@@ -210,10 +211,9 @@ This is a complete list of all of the options that can be passed to `require("ob
 
 ```lua
 {
-  -- A list of vault names and paths.
-  -- Each path should be the path to the vault root. If you use the Obsidian app,
-  -- the vault root is the parent directory of the `.obsidian` folder.
-  -- You can also provide configuration overrides for each workspace through the `overrides` field.
+  -- A list of workspace names, paths, and configuration overrides.
+  -- If you use the Obsidian app, the 'path' of a workspace should generally be
+  -- your vault root (where the `.obsidian` folder is located).
   workspaces = {
     {
       name = "personal",
@@ -600,6 +600,41 @@ templates = {
   }
 }
 ```
+
+### Using obsidian.nvim outside of a workspace / Obsidian vault
+
+It's possible to configure obsidian.nvim to work on individual markdown files outside of a regular workspace / Obsidian vault. To do so you just need to add a special workspace without a `path` field, which tells obsidian.nvim to just use the parent directory of the current buffer as the workspace `path` and `root` (vault root) when the buffer is not located inside another workspace.
+
+For example, to extend the configuration above this way:
+
+```diff
+{
+  workspaces = {
+     {
+       name = "personal",
+       path = "~/vaults/personal",
+     },
+     ...
++    {
++      name = "no-vault",
++      overrides = {
++        notes_subdir = vim.NIL,  -- have to use 'vim.NIL' instead of 'nil'
++        completion = {
++          new_notes_location = "current_dir",
++        },
++        templates = {
++          subdir = vim.NIL,
++        },
++        disable_frontmatter = true,
++      },
++    },
++  },
+   ...
+}
+```
+
+Please note that in order to avoid unexpected behavior (like a new directory being created for `notes_subdir`) it's important to carefully set the workspace `overrides` options.
+And keep in mind that to reset a configuration option to `nil` you'll have to use `vim.NIL` there instead of the builtin Lua `nil` due to the way Lua tables work.
 
 ## Known Issues
 

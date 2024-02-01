@@ -150,7 +150,10 @@ obsidian.setup = function(opts)
       end
 
       -- Switch to the workspace and complete the workspace setup.
-      client:set_workspace(workspace)
+      if workspace ~= client.current_workspace then
+        log.info("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
+        client:set_workspace(workspace)
+      end
 
       -- Register mappings.
       for mapping_keys, mapping_config in pairs(opts.mappings) do

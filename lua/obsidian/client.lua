@@ -128,7 +128,7 @@ end
 ---@return obsidian.config.ClientOpts
 Client.opts_for_workspace = function(self, workspace)
   if workspace then
-    return config.ClientOpts.normalize(self._default_opts, workspace.overrides)
+    return config.ClientOpts.normalize(workspace.overrides and workspace.overrides or {}, self._default_opts)
   else
     return self.opts
   end

@@ -2,6 +2,7 @@ local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
 local log = require "obsidian.log"
+local NewNotesLocation = require("obsidian.config").CompletionNewNotesLocation
 
 ---@class cmp_obsidian_new.Source : obsidian.ABC
 local source = abc.new_class()
@@ -22,12 +23,12 @@ source.complete = function(_, request, callback)
   local dir
   if client.opts.completion.new_notes_location == nil then
     dir = nil -- let the client decide
-  elseif client.opts.completion.new_notes_location == "notes_subdir" then
+  elseif client.opts.completion.new_notes_location == NewNotesLocation.notes_subdir then
     dir = client.dir
     if client.opts.notes_subdir ~= nil then
       dir = dir / client.opts.notes_subdir
     end
-  elseif client.opts.completion.new_notes_location == "current_dir" then
+  elseif client.opts.completion.new_notes_location == NewNotesLocation.current_dir then
     dir = vim.fn.expand "%:p:h"
   else
     log.err "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
