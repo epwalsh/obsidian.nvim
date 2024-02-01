@@ -109,14 +109,17 @@ config.ClientOpts.normalize = function(opts, overrides)
   -- Warn about deprecated fields.
   ---@diagnostic disable-next-line undefined-field
   if opts.overwrite_mappings ~= nil then
-    log.warn_once "the 'overwrite_mappings' config option is deprecated and no longer has any affect"
+    log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
     ---@diagnostic disable-next-line
     opts.overwrite_mappings = nil
   end
 
   ---@diagnostic disable-next-line undefined-field
   if opts.detect_cwd ~= nil then
-    log.warn_once "the 'detect_cwd' field is deprecated and no longer has any affect"
+    log.warn_once(
+      "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
+    )
   end
 
   -- Normalize workspaces.
