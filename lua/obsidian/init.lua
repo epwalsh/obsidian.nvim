@@ -96,7 +96,7 @@ end
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
   local opts = obsidian.config.ClientOpts.default()
-  opts.workspaces = vim.tbl_extend("force", { path = dir }, opts.workspaces)
+  opts.workspaces = { { path = dir } }
   return obsidian.new(opts)
 end
 
