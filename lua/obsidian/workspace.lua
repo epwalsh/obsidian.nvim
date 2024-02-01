@@ -4,7 +4,7 @@ local util = require "obsidian.util"
 
 ---@class obsidian.workspace.WorkspaceSpec
 ---
----@field path string|Path|?
+---@field path string|Path|(fun(): string|Path)
 ---@field name string|?
 ---@field strict boolean|? If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
 ---@field overrides table|obsidian.config.ClientOpts|?
@@ -92,11 +92,16 @@ end
 ---
 ---@return obsidian.Workspace
 Workspace.new_from_spec = function(spec)
-  local path = spec.path
-  if not path then
-    path = assert(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
+  ---@type string|Path
+  local path
+  if type(spec.path) == "function" then
+    path = spec.path()
+  else
+    ---@diagnostic disable-next-line: cast-local-type
+    path = spec.path
   end
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   return Workspace.new(path, {
     name = spec.name,
     strict = spec.strict,
@@ -137,23 +142,14 @@ Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
   local dirs = cur_dir:parents()
   table.insert(dirs, 1, tostring(cur_dir))
 
-  ---@type obsidian.Workspace|?
-  local default_for_buf
   for _, spec in ipairs(workspaces) do
     local w = Workspace.new_from_spec(spec)
-
-    if spec.path == nil then
-      default_for_buf = w
-    else
-      for _, dir in ipairs(dirs) do
-        if w.path == dir then
-          return w
-        end
+    for _, dir in ipairs(dirs) do
+      if w.path == dir then
+        return w
       end
     end
   end
-
-  return default_for_buf
 end
 
 --- Get the workspace corresponding to the current working directory (or a parent of), if there

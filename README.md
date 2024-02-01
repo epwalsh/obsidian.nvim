@@ -603,7 +603,7 @@ templates = {
 
 ### Using obsidian.nvim outside of a workspace / Obsidian vault
 
-It's possible to configure obsidian.nvim to work on individual markdown files outside of a regular workspace / Obsidian vault. To do so you just need to add a special workspace without a `path` field, which tells obsidian.nvim to just use the parent directory of the current buffer as the workspace `path` and `root` (vault root) when the buffer is not located inside another workspace.
+It's possible to configure obsidian.nvim to work on individual markdown files outside of a regular workspace / Obsidian vault by configuring a "dynamic" workspace. To do so you just need to add a special workspace with a function for the `path` field (instead of a string), which should return a *parent* directory of the current buffer. This tells obsidian.nvim to use that directory as the workspace `path` and `root` (vault root) when the buffer is not located inside another fixed workspace.
 
 For example, to extend the configuration above this way:
 
@@ -617,6 +617,11 @@ For example, to extend the configuration above this way:
      ...
 +    {
 +      name = "no-vault",
++      path = function()
++        -- alternatively use the CWD:
++        -- return assert(vim.fn.getcwd())
++        return assert(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
++      end,
 +      overrides = {
 +        notes_subdir = vim.NIL,  -- have to use 'vim.NIL' instead of 'nil'
 +        completion = {
@@ -632,6 +637,8 @@ For example, to extend the configuration above this way:
    ...
 }
 ```
+
+With this configuration, anytime you enter a markdown buffer outside of "~/vaults/personal" or any other configured fixed vault, obsidian.nvim will switch to the dynamic workspace with the path / root set to the parent directory of the buffer.
 
 Please note that in order to avoid unexpected behavior (like a new directory being created for `notes_subdir`) it's important to carefully set the workspace `overrides` options.
 And keep in mind that to reset a configuration option to `nil` you'll have to use `vim.NIL` there instead of the builtin Lua `nil` due to the way Lua tables work.
