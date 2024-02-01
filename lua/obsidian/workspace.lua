@@ -1,74 +1,139 @@
 local Path = require "plenary.path"
 local abc = require "obsidian.abc"
+local util = require "obsidian.util"
 
---- Each workspace represents a vault and a set of configuration options specific to that vault.
+---@class obsidian.workspace.WorkspaceSpec
+---
+---@field path string|Path
+---@field name string|?
+---@field strict boolean|? If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
+---@field overrides table|obsidian.config.ClientOpts|?
+
+---@class obsidian.workspace.WorkspaceOpts
+---
+---@field name string|?
+---@field strict boolean|? If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
+---@field overrides table|obsidian.config.ClientOpts|?
+
+--- Each workspace represents a working directory (usually an Obsidian vault) along with
+--- a set of configuration options specific to the workspace.
+---
+--- Workspaces are a little more general than Obsidian vaults as you can have a workspace
+--- outside of a vault or as a subdirectory of a vault.
 ---
 ---@toc_entry obsidian.Workspace
 ---
 ---@class obsidian.Workspace : obsidian.ABC
 ---
----@field name string
----@field path string
+---@field name string An arbitrary name for the workspace.
+---@field path string The normalized path to the workspace.
+---@field root string The normalized path to the vault root of the workspace. This usually matches 'path'.
 ---@field overrides table|obsidian.config.ClientOpts|?
 local Workspace = abc.new_class {
   __tostring = function(self)
-    return string.format("Workspace('%s', '%s')", self.name, self.path)
+    return string.format("Workspace(name='%s', path='%s', root='%s')", self.name, self.path, self.root)
   end,
 }
 
---- Create a new workspace object. This assumes the workspace already exists on the filesystem.
+--- Find the vault root from a given directory.
 ---
----@param name string Workspace name
----@param path string|Path Workspace path (will be normalized)
----@param overrides table|obsidian.config.ClientOpts|?
+--- This will traverse the directory tree upwards until a '.obsidian/' folder is found to
+--- indicate the root of a vault, otherwise the given directory is used as-is.
 ---
----@return obsidian.Workspace
-Workspace.new = function(name, path, overrides)
-  local self = Workspace.init()
-  self.name = name
-  self.path = vim.fs.normalize(tostring(path))
-  self.overrides = overrides
-  return self
-end
-
----@return obsidian.Workspace
-Workspace.new_from_cwd = function()
-  -- First traverse upwards to find the root of the obsidian vault.
-  -- If found, use that, otherwise use the current directory as is.
+---@param base_dir string|Path
+---
+---@return Path|?
+local function find_vault_root(base_dir)
   local vault_indicator_folder = ".obsidian"
-  local cwd = assert(vim.fn.getcwd())
-  local dirs = Path:new(cwd):parents()
-  table.insert(dirs, 1, cwd)
+  local dirs = Path:new(base_dir):parents()
+  table.insert(dirs, 1, base_dir)
 
   for _, dir in ipairs(dirs) do
     local maybe_vault = Path:new(dir) / vault_indicator_folder
     if maybe_vault:is_dir() then
-      return Workspace.new_from_dir(dir)
+      return dir
     end
   end
 
-  return Workspace.new_from_dir(cwd)
+  return nil
 end
 
----@param dir string|Path
+--- Initialize a new 'Workspace' object from a workspace spec.
+---
+---@param spec obsidian.workspace.WorkspaceSpec
 ---
 ---@return obsidian.Workspace
-Workspace.new_from_dir = function(dir)
-  return Workspace.new(assert(vim.fs.basename(tostring(dir))), dir)
+Workspace.new_from_spec = function(spec)
+  local self = Workspace.init()
+  self.path = vim.fs.normalize(tostring(spec.path))
+  self.name = spec.name and spec.name or assert(vim.fs.basename(self.path))
+  self.overrides = spec.overrides
+
+  if spec.strict then
+    self.root = self.path
+  else
+    local vault_root = find_vault_root(self.path)
+    if vault_root then
+      self.root = vim.fs.normalize(tostring(vault_root))
+    else
+      self.root = self.path
+    end
+  end
+
+  return self
 end
 
---- Get the workspace corresponding to the current working directory (or a parent of), if there
+--- Create a new 'Workspace' object. This assumes the workspace already exists on the filesystem.
+---
+---@param path string|Path Workspace path.
+---@param opts obsidian.workspace.WorkspaceOpts|?
+---
+---@return obsidian.Workspace
+Workspace.new = function(path, opts)
+  opts = opts and opts or {}
+  return Workspace.new_from_spec {
+    path = path,
+    name = opts.name,
+    strict = opts.strict,
+    overrides = opts.overrides,
+  }
+end
+
+--- Initialize a 'Workspace' object from the current working directory.
+---
+---@param opts obsidian.workspace.WorkspaceOpts|?
+---
+---@return obsidian.Workspace
+Workspace.new_from_cwd = function(opts)
+  local cwd = assert(vim.fn.getcwd())
+  return Workspace.new(cwd, opts)
+end
+
+--- Initialize a 'Workspace' object from the parent directory of the current buffer.
+---
+---@param bufnr integer|?
+---@param opts obsidian.workspace.WorkspaceOpts|?
+---
+---@return obsidian.Workspace
+Workspace.new_from_buf = function(bufnr, opts)
+  local bufdir = util.parent_directory(vim.api.nvim_buf_get_name(bufnr and bufnr or 0))
+  return Workspace.new(bufdir, opts)
+end
+
+--- Get the workspace corresponding to the directory (or a parent of), if there
 --- is one.
 ---
----@param workspaces obsidian.Workspace[]
+---@param cur_dir string|Path
+---@param workspaces obsidian.workspace.WorkspaceSpec[]
 ---
 ---@return obsidian.Workspace|?
-Workspace.get_workspace_from_cwd = function(workspaces)
-  local cwd = assert(vim.fn.getcwd())
-  local dirs = Path:new(cwd):parents()
-  table.insert(dirs, 1, cwd)
+Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
+  cur_dir = Path:new(vim.fs.normalize(tostring(cur_dir)))
+  local dirs = cur_dir:parents()
+  table.insert(dirs, 1, tostring(cur_dir))
 
-  for _, w in ipairs(workspaces) do
+  for _, spec in ipairs(workspaces) do
+    local w = Workspace.new_from_spec(spec)
     for _, dir in ipairs(dirs) do
       if w.path == dir then
         return w
@@ -79,32 +144,40 @@ Workspace.get_workspace_from_cwd = function(workspaces)
   return nil
 end
 
+--- Get the workspace corresponding to the current working directory (or a parent of), if there
+--- is one.
+---
+---@param workspaces obsidian.workspace.WorkspaceSpec[]
+---
+---@return obsidian.Workspace|?
+Workspace.get_workspace_for_cwd = function(workspaces)
+  local cwd = assert(vim.fn.getcwd())
+  return Workspace.get_workspace_for_dir(cwd, workspaces)
+end
+
 --- Returns the default workspace.
 ---
----@param workspaces table<obsidian.Workspace>
+---@param workspaces obsidian.workspace.WorkspaceSpec[]
 ---
 ---@return obsidian.Workspace|nil
 Workspace.get_default_workspace = function(workspaces)
-  local _, value = next(workspaces)
-  return value
+  if not vim.tbl_isempty(workspaces) then
+    return Workspace.new_from_spec(workspaces[1])
+  else
+    return nil
+  end
 end
 
 --- Resolves current workspace from the client config.
 ---
 ---@param opts obsidian.config.ClientOpts
 ---
----@return obsidian.Workspace
+---@return obsidian.Workspace|?
 Workspace.get_from_opts = function(opts)
-  local current_workspace
-
-  if opts.detect_cwd then
-    current_workspace = Workspace.get_workspace_from_cwd(opts.workspaces)
-  else
-    current_workspace = Workspace.get_default_workspace(opts.workspaces)
-  end
+  local current_workspace = Workspace.get_workspace_for_cwd(opts.workspaces)
 
   if not current_workspace then
-    current_workspace = Workspace.new_from_cwd()
+    current_workspace = Workspace.get_default_workspace(opts.workspaces)
   end
 
   return current_workspace

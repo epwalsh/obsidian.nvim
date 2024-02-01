@@ -1,13 +1,11 @@
 local log = require "obsidian.log"
 local util = require "obsidian.util"
-local Workspace = require "obsidian.workspace"
 
 local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field dir string|?
----@field workspaces obsidian.Workspace[]|?
----@field detect_cwd boolean
+---@field workspaces obsidian.workspace.WorkspaceSpec[]|?
 ---@field log_level integer
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
@@ -33,20 +31,13 @@ local config = {}
 ---@field yaml_parser string|?
 config.ClientOpts = {}
 
----@enum obsidian.config.OpenStrategy
-config.OpenStrategy = {
-  current = "current",
-  vsplit = "vsplit",
-  hsplit = "hsplit",
-}
-
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.default = function()
   return {
     dir = nil,
     workspaces = {},
-    detect_cwd = false,
     log_level = vim.log.levels.INFO,
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
@@ -72,18 +63,11 @@ config.ClientOpts.default = function()
   }
 end
 
----@enum obsidian.config.SortBy
-config.SortBy = {
-  path = "path",
-  modified = "modified",
-  accessed = "accessed",
-  created = "created",
-}
-
----Normalize options.
+--- Normalize options.
 ---
 ---@param opts table<string, any>
 ---@param overrides table|obsidian.config.ClientOpts|?
+---
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.normalize = function(opts, overrides)
   local defaults = config.ClientOpts.default()
@@ -130,25 +114,41 @@ config.ClientOpts.normalize = function(opts, overrides)
     opts.overwrite_mappings = nil
   end
 
+  ---@diagnostic disable-next-line undefined-field
+  if opts.detect_cwd ~= nil then
+    log.warn_once "the 'detect_cwd' field is deprecated and no longer has any affect"
+  end
+
   -- Normalize workspaces.
   if not util.tbl_is_array(opts.workspaces) then
     error "'config.workspaces' should be an array/list"
-  else
-    for i, ws in ipairs(opts.workspaces) do
-      opts.workspaces[i] = Workspace.new(ws.name, ws.path, ws.overrides)
-    end
   end
 
   -- Convert dir to workspace format.
   if opts.dir ~= nil then
-    -- NOTE: path will be normalized in workspace.new() fn
-    table.insert(opts.workspaces, 1, Workspace.new_from_dir(opts.dir))
+    table.insert(opts.workspaces, 1, { path = opts.dir })
   end
 
   return opts
 end
 
+---@enum obsidian.config.OpenStrategy
+config.OpenStrategy = {
+  current = "current",
+  vsplit = "vsplit",
+  hsplit = "hsplit",
+}
+
+---@enum obsidian.config.SortBy
+config.SortBy = {
+  path = "path",
+  modified = "modified",
+  accessed = "accessed",
+  created = "created",
+}
+
 ---@class obsidian.config.LocationListOpts
+---
 ---@field height integer
 ---@field wrap boolean
 config.LocationListOpts = {}
@@ -163,6 +163,7 @@ config.LocationListOpts.default = function()
 end
 
 ---@class obsidian.config.CompletionOpts
+---
 ---@field nvim_cmp boolean
 ---@field min_chars integer
 ---@field new_notes_location "current_dir"|"notes_subdir"
@@ -171,7 +172,8 @@ end
 ---@field use_path_only boolean
 config.CompletionOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.CompletionOpts
 config.CompletionOpts.default = function()
   local has_nvim_cmp, _ = pcall(require, "cmp")
@@ -200,6 +202,7 @@ config.MappingOpts.default = function()
 end
 
 ---@class obsidian.config.FinderMappingOpts
+---
 ---@field new string|?
 config.FinderMappingOpts = {}
 
@@ -212,13 +215,15 @@ config.FinderMappingOpts.default = function()
 end
 
 ---@class obsidian.config.DailyNotesOpts
+---
 ---@field folder string|?
 ---@field date_format string|?
 ---@field alias_format string|?
 ---@field template string|?
 config.DailyNotesOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.DailyNotesOpts
 config.DailyNotesOpts.default = function()
   return {
@@ -229,13 +234,15 @@ config.DailyNotesOpts.default = function()
 end
 
 ---@class obsidian.config.TemplateOpts
+---
 ---@field subdir string
 ---@field date_format string|?
 ---@field time_format string|?
 ---@field substitutions table<string, function|string>|?
 config.TemplateOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.TemplateOpts
 config.TemplateOpts.default = function()
   return {
@@ -247,6 +254,7 @@ config.TemplateOpts.default = function()
 end
 
 ---@class obsidian.config.UIOpts
+---
 ---@field enable boolean
 ---@field tick integer
 ---@field update_debounce integer
@@ -260,10 +268,12 @@ end
 config.UIOpts = {}
 
 ---@class obsidian.config.UICharSpec
+---
 ---@field char string
 ---@field hl_group string
 
 ---@class obsidian.config.UIStyleSpec
+---
 ---@field hl_group string
 
 ---@return obsidian.config.UIOpts
@@ -297,6 +307,7 @@ config.UIOpts.default = function()
 end
 
 ---@class obsidian.config.AttachmentsOpts
+---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
 ---@field img_text_func function (obsidian.Client, Path,) -> string
 config.AttachmentsOpts = {}
