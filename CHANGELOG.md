@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added support for "dynamic" workspaces where the workspace `path` field is a function instead of a `string` / `Path`. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+
 ### Changed
 
-- Changed behavior of workspace detection. When you have multiple workspaces configured, obsidian.nvim will now automatically switch workspaces when you open a buffer in a different workspace.
-- Various changes to the `Workspace` Lua API.
+- Changed behavior of workspace detection. When you have multiple workspaces configured, obsidian.nvim will now automatically switch workspaces when you open a buffer in a different workspace. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+- Various changes to the `Workspace` Lua API. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
 
 ### Removed
 
-- Removed configuration option `detect_cwd`. This wasn't well-defined before and is no longer relevant with the new workspace detection behavior.
+- Removed configuration option `detect_cwd`. This wasn't well-defined before and is no longer relevant with the new workspace detection behavior. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
 
 ## [v2.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.9.0) - 2024-01-31
 

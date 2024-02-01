@@ -638,7 +638,7 @@ For example, to extend the configuration above this way:
 }
 ```
 
-With this configuration, anytime you enter a markdown buffer outside of "~/vaults/personal" or any other configured fixed vault, obsidian.nvim will switch to the dynamic workspace with the path / root set to the parent directory of the buffer.
+With this configuration, anytime you enter a markdown buffer outside of "~/vaults/personal" (or whatever your configured fixed vaults are), obsidian.nvim will switch to the dynamic workspace with the path / root set to the parent directory of the buffer.
 
 Please note that in order to avoid unexpected behavior (like a new directory being created for `notes_subdir`) it's important to carefully set the workspace `overrides` options.
 And keep in mind that to reset a configuration option to `nil` you'll have to use `vim.NIL` there instead of the builtin Lua `nil` due to the way Lua tables work.
