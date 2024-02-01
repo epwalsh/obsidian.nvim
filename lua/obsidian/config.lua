@@ -95,7 +95,7 @@ config.ClientOpts.normalize = function(opts, overrides)
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
-    error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
+    error("Invalid 'sort_by' option '" .. opts.sort_by .. "' in obsidian.nvim config.")
   end
 
   if
@@ -103,7 +103,10 @@ config.ClientOpts.normalize = function(opts, overrides)
     and not opts.completion.prepend_note_path
     and not opts.completion.use_path_only
   then
-    error "invalid 'completion' options"
+    error(
+      "Invalid 'completion' options in obsidian.nvim config.\n"
+        .. "One of 'prepend_note_id', 'prepend_note_path', or 'use_path_only' should be set to 'true'."
+    )
   end
 
   -- Warn about deprecated fields.
@@ -124,12 +127,16 @@ config.ClientOpts.normalize = function(opts, overrides)
 
   -- Normalize workspaces.
   if not util.tbl_is_array(opts.workspaces) then
-    error "'config.workspaces' should be an array/list"
+    error "Invalid obsidian.nvim config, the 'config.workspaces' should be an array/list."
   end
 
   -- Convert dir to workspace format.
   if opts.dir ~= nil then
     table.insert(opts.workspaces, 1, { path = opts.dir })
+  end
+
+  if vim.tbl_isempty(opts.workspaces) then
+    error "Invalid obsidian.nvim config, at least one workspace spec in 'config.workspaces' is required."
   end
 
   return opts
