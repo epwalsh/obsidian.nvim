@@ -152,7 +152,7 @@ Client.switch_workspace = function(self, workspace)
 
     error(string.format("Workspace '%s' not found", workspace))
   else
-    if workspace.path == self.current_workspace.path then
+    if workspace == self.current_workspace then
       log.info("Already in workspace '%s' @ '%s'", workspace.name, workspace.path)
       return
     end

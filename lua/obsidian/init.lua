@@ -151,7 +151,7 @@ obsidian.setup = function(opts)
 
       -- Switch to the workspace and complete the workspace setup.
       if workspace ~= client.current_workspace then
-        log.info("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
+        log.debug("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
         client:set_workspace(workspace)
       end
 
