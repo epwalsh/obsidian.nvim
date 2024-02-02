@@ -100,9 +100,10 @@ obsidian.new_from_dir = function(dir)
   return obsidian.new(opts)
 end
 
----Setup a new Obsidian client.
+--- Setup a new Obsidian client. This should only be called once from an Nvim session.
 ---
 ---@param opts obsidian.config.ClientOpts
+---
 ---@return obsidian.Client
 obsidian.setup = function(opts)
   local Path = require "plenary.path"
@@ -129,10 +130,9 @@ obsidian.setup = function(opts)
     obsidian.ui.setup(client.opts.ui)
   end
 
-  -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
-  -- Complete setup when entering a markdown buffer.
+  -- Complete setup and update workspace (if needed) when entering a markdown buffer.
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,
     pattern = "*.md",
@@ -160,8 +160,8 @@ obsidian.setup = function(opts)
         vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
       end
 
+      -- Inject Obsidian as a cmp source.
       if opts.completion.nvim_cmp then
-        -- Inject Obsidian as a cmp source when reading a buffer in the vault.
         local cmp = require "cmp"
 
         local sources = {
@@ -180,7 +180,7 @@ obsidian.setup = function(opts)
     end,
   })
 
-  -- Add/update frontmatter on BufWritePre for notes.
+  -- Add/update frontmatter for notes before writing.
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = group,
     pattern = "*.md",
