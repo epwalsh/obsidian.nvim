@@ -1,9 +1,9 @@
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
-local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
+local LinkStyle = require("obsidian.config").LinkStyle
 
 ---@class cmp_obsidian.Source : obsidian.ABC
 local source = abc.new_class()
@@ -48,39 +48,17 @@ source.complete = function(_, request, callback)
           table.insert(options, alias)
 
           for option in iter(options) do
-            local rel_path = assert(client:vault_relative_path(note.path))
-            if vim.endswith(rel_path, ".md") then
-              rel_path = string.sub(rel_path, 1, -4)
-            end
-
-            ---@type string
-            local label
+            ---@type obsidian.config.LinkStyle
+            local link_style
             if ref_type == completion.RefType.Wiki then
-              if client.opts.completion.use_path_only then
-                label = "[[" .. rel_path .. "]]"
-              elseif client.opts.completion.prepend_note_path then
-                label = "[[" .. rel_path
-                if option ~= tostring(note.id) then
-                  label = label .. "|" .. option .. "]]"
-                else
-                  label = label .. "]]"
-                end
-              elseif client.opts.completion.prepend_note_id then
-                label = "[[" .. tostring(note.id)
-                if option ~= tostring(note.id) then
-                  label = label .. "|" .. option .. "]]"
-                else
-                  label = label .. "]]"
-                end
-              else
-                log.err "Invalid completion options"
-                return
-              end
+              link_style = LinkStyle.wiki
             elseif ref_type == completion.RefType.Markdown then
-              label = "[" .. option .. "](" .. rel_path .. ".md)"
+              link_style = LinkStyle.markdown
             else
               error "not implemented"
             end
+
+            local label = client:format_link(note, { label = option, link_style = link_style })
 
             if not labels_seen[label] then
               ---@type string

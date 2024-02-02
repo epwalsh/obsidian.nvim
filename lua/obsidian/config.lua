@@ -183,6 +183,12 @@ config.CompletionNewNotesLocation = {
   notes_subdir = "notes_subdir",
 }
 
+---@enum obsidian.config.LinkStyle
+config.LinkStyle = {
+  wiki = "wiki",
+  markdown = "markdown",
+}
+
 ---@class obsidian.config.CompletionOpts
 ---
 ---@field nvim_cmp boolean

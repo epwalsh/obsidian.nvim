@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added support for "dynamic" workspaces where the workspace `path` field is a function instead of a `string` / `Path`. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+- Added client method `Client:format_link()` for creating markdown / wiki links.
 
 ### Changed
 

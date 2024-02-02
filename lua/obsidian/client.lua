@@ -1165,4 +1165,59 @@ Client.update_ui = function(self, bufnr)
   require("obsidian.ui").update(self.opts.ui, bufnr)
 end
 
+--- Create a formatted markdown / wiki link for a note.
+---
+---@param note obsidian.Note|string The note/path to link to.
+---@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|? } Options.
+---
+---@return string
+Client.format_link = function(self, note, opts)
+  ---@type string, string, string|?
+  local rel_path, label, note_id
+  if type(note) == "string" then
+    rel_path = assert(self:vault_relative_path(note))
+    label = opts.label and opts.label or note
+    note_id = opts.id
+  else
+    rel_path = assert(self:vault_relative_path(note.path))
+    label = opts.label and opts.label or note:display_name()
+    note_id = tostring(note.id)
+  end
+
+  if vim.endswith(rel_path, ".md") then
+    rel_path = string.sub(rel_path, 1, -4)
+  end
+
+  ---@type string
+  local link
+  if opts.link_style == config.LinkStyle.markdown then
+    link = "[" .. label .. "](" .. rel_path .. ".md)"
+  elseif opts.link_style == config.LinkStyle.wiki or opts.link_style == nil then
+    if self.opts.completion.use_path_only then
+      link = "[[" .. rel_path .. "]]"
+    elseif self.opts.completion.prepend_note_path then
+      link = "[[" .. rel_path
+      if label ~= note_id then
+        link = link .. "|" .. label .. "]]"
+      else
+        link = link .. "]]"
+      end
+    elseif self.opts.completion.prepend_note_id then
+      assert(note_id, "missing 'id' field in 'format_link()' options")
+      link = "[[" .. note_id
+      if label ~= note_id then
+        link = link .. "|" .. label .. "]]"
+      else
+        link = link .. "]]"
+      end
+    else
+      link = "[[" .. label .. "]]"
+    end
+  else
+    error(string.format("Invalid link style '%s'", opts.link_style))
+  end
+
+  return link
+end
+
 return Client
