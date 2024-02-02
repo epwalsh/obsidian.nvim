@@ -413,6 +413,18 @@ Parameters ~
 {bufnr} `(integer|?)`
 
 ------------------------------------------------------------------------------
+                                                 *obsidian.Client.format_link()*
+                  `Client.format_link`({self}, {note}, {opts})
+Create a formatted markdown / wiki link for a note.
+
+Parameters ~
+{note} `(obsidian.Note|string)` The note/path to link to.
+{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|? } Options.
+
+Return ~
+`(string)`
+
+------------------------------------------------------------------------------
                                                                  *obsidian.Note*
                                      `Note`
 A class that represents a note within a vault.
