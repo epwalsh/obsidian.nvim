@@ -217,7 +217,7 @@ config.FinderMappingOpts = {}
 config.FinderMappingOpts.default = function()
   return {
     new = "<C-x>",
-    insert_link = "<C-i>",
+    insert_link = "<C-l>",
   }
 end
 
