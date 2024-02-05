@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added note field `Note.title` to provide more useful info for `note_frontmatter_func`.
+
+### Added
+
 - Added client method `Client:format_link()` for creating markdown / wiki links.
 
 ### Fixed
