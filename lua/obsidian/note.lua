@@ -413,7 +413,12 @@ end
 ---
 ---@return string|?
 Note._parse_header = function(line)
-  return line:match "^#+ (.+)$"
+  local header = line:match "^#+ (.+)$"
+  if header then
+    return util.strip_whitespace(header)
+  else
+    return nil
+  end
 end
 
 --- Get the frontmatter table to save.

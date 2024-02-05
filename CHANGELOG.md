@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed configuration option `detect_cwd`. This wasn't well-defined before and is no longer relevant with the new workspace detection behavior. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
 
+### Fixed
+
+- Fixed parsing header with trailing whitespace (https://github.com/epwalsh/obsidian.nvim/issues/341#issuecomment-1925445271).
+
 ## [v2.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.9.0) - 2024-01-31
 
 ### Added
