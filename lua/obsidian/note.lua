@@ -18,6 +18,7 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 ---
 ---@field id string|integer
 ---@field aliases string[]
+---@field title string|?
 ---@field tags string[]
 ---@field path Path|?
 ---@field metadata table|?
@@ -390,6 +391,7 @@ Note.from_lines = function(lines, path, root)
   assert(id)
 
   local n = Note.new(id, aliases, tags, path)
+  n.title = title
   n.metadata = metadata
   n.has_frontmatter = has_frontmatter
   n.frontmatter_end_line = frontmatter_end_line
