@@ -1,13 +1,11 @@
 local log = require "obsidian.log"
 local util = require "obsidian.util"
-local Workspace = require "obsidian.workspace"
 
 local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field dir string|?
----@field workspaces obsidian.Workspace[]|?
----@field detect_cwd boolean
+---@field workspaces obsidian.workspace.WorkspaceSpec[]|?
 ---@field log_level integer
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
@@ -33,20 +31,13 @@ local config = {}
 ---@field yaml_parser string|?
 config.ClientOpts = {}
 
----@enum obsidian.config.OpenStrategy
-config.OpenStrategy = {
-  current = "current",
-  vsplit = "vsplit",
-  hsplit = "hsplit",
-}
-
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.default = function()
   return {
     dir = nil,
     workspaces = {},
-    detect_cwd = false,
     log_level = vim.log.levels.INFO,
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
@@ -72,36 +63,38 @@ config.ClientOpts.default = function()
   }
 end
 
----@enum obsidian.config.SortBy
-config.SortBy = {
-  path = "path",
-  modified = "modified",
-  accessed = "accessed",
-  created = "created",
-}
+local tbl_override = function(defaults, overrides)
+  local out = vim.tbl_extend("force", defaults, overrides)
+  for k, v in pairs(out) do
+    if v == vim.NIL then
+      out[k] = nil
+    end
+  end
+  return out
+end
 
----Normalize options.
+--- Normalize options.
 ---
 ---@param opts table<string, any>
----@param overrides table|obsidian.config.ClientOpts|?
+---@param defaults obsidian.config.ClientOpts|?
+---
 ---@return obsidian.config.ClientOpts
-config.ClientOpts.normalize = function(opts, overrides)
-  local defaults = config.ClientOpts.default()
-  if overrides ~= nil then
-    defaults = config.ClientOpts.normalize(overrides)
+config.ClientOpts.normalize = function(opts, defaults)
+  if not defaults then
+    defaults = config.ClientOpts.default()
   end
 
   ---@type obsidian.config.ClientOpts
-  opts = vim.tbl_extend("force", defaults, opts)
+  opts = tbl_override(defaults, opts)
 
-  opts.backlinks = vim.tbl_extend("force", defaults.backlinks, opts.backlinks)
-  opts.completion = vim.tbl_extend("force", defaults.completion, opts.completion)
+  opts.backlinks = tbl_override(defaults.backlinks, opts.backlinks)
+  opts.completion = tbl_override(defaults.completion, opts.completion)
   opts.mappings = opts.mappings and opts.mappings or defaults.mappings
   opts.finder_mappings = opts.finder_mappings and opts.finder_mappings or defaults.finder_mappings
-  opts.daily_notes = vim.tbl_extend("force", defaults.daily_notes, opts.daily_notes)
-  opts.templates = vim.tbl_extend("force", defaults.templates, opts.templates)
-  opts.ui = vim.tbl_extend("force", defaults.ui, opts.ui)
-  opts.attachments = vim.tbl_extend("force", defaults.attachments, opts.attachments)
+  opts.daily_notes = tbl_override(defaults.daily_notes, opts.daily_notes)
+  opts.templates = tbl_override(defaults.templates, opts.templates)
+  opts.ui = tbl_override(defaults.ui, opts.ui)
+  opts.attachments = tbl_override(defaults.attachments, opts.attachments)
 
   -- Rename old fields for backwards compatibility.
   if opts.ui.tick ~= nil then
@@ -111,7 +104,7 @@ config.ClientOpts.normalize = function(opts, overrides)
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
-    error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
+    error("Invalid 'sort_by' option '" .. opts.sort_by .. "' in obsidian.nvim config.")
   end
 
   if
@@ -119,36 +112,58 @@ config.ClientOpts.normalize = function(opts, overrides)
     and not opts.completion.prepend_note_path
     and not opts.completion.use_path_only
   then
-    error "invalid 'completion' options"
+    error(
+      "Invalid 'completion' options in obsidian.nvim config.\n"
+        .. "One of 'prepend_note_id', 'prepend_note_path', or 'use_path_only' should be set to 'true'."
+    )
   end
 
   -- Warn about deprecated fields.
   ---@diagnostic disable-next-line undefined-field
   if opts.overwrite_mappings ~= nil then
-    log.warn_once "the 'overwrite_mappings' config option is deprecated and no longer has any affect"
+    log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
     ---@diagnostic disable-next-line
     opts.overwrite_mappings = nil
   end
 
+  ---@diagnostic disable-next-line undefined-field
+  if opts.detect_cwd ~= nil then
+    log.warn_once(
+      "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
+    )
+  end
+
   -- Normalize workspaces.
   if not util.tbl_is_array(opts.workspaces) then
-    error "'config.workspaces' should be an array/list"
-  else
-    for i, ws in ipairs(opts.workspaces) do
-      opts.workspaces[i] = Workspace.new(ws.name, ws.path, ws.overrides)
-    end
+    error "Invalid obsidian.nvim config, the 'config.workspaces' should be an array/list."
   end
 
   -- Convert dir to workspace format.
   if opts.dir ~= nil then
-    -- NOTE: path will be normalized in workspace.new() fn
-    table.insert(opts.workspaces, 1, Workspace.new_from_dir(opts.dir))
+    table.insert(opts.workspaces, 1, { path = opts.dir })
   end
 
   return opts
 end
 
+---@enum obsidian.config.OpenStrategy
+config.OpenStrategy = {
+  current = "current",
+  vsplit = "vsplit",
+  hsplit = "hsplit",
+}
+
+---@enum obsidian.config.SortBy
+config.SortBy = {
+  path = "path",
+  modified = "modified",
+  accessed = "accessed",
+  created = "created",
+}
+
 ---@class obsidian.config.LocationListOpts
+---
 ---@field height integer
 ---@field wrap boolean
 config.LocationListOpts = {}
@@ -162,6 +177,12 @@ config.LocationListOpts.default = function()
   }
 end
 
+---@enum obsidian.config.CompletionNewNotesLocation
+config.CompletionNewNotesLocation = {
+  current_dir = "current_dir",
+  notes_subdir = "notes_subdir",
+}
+
 ---@enum obsidian.config.LinkStyle
 config.LinkStyle = {
   wiki = "wiki",
@@ -169,23 +190,25 @@ config.LinkStyle = {
 }
 
 ---@class obsidian.config.CompletionOpts
+---
 ---@field nvim_cmp boolean
 ---@field min_chars integer
----@field new_notes_location "current_dir"|"notes_subdir"
+---@field new_notes_location obsidian.config.CompletionNewNotesLocation
 ---@field prepend_note_id boolean
 ---@field prepend_note_path boolean
 ---@field use_path_only boolean
 ---@field perferred_link_style obsidian.config.LinkStyle
 config.CompletionOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.CompletionOpts
 config.CompletionOpts.default = function()
   local has_nvim_cmp, _ = pcall(require, "cmp")
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
-    new_notes_location = "current_dir",
+    new_notes_location = config.CompletionNewNotesLocation.current_dir,
     prepend_note_id = true,
     prepend_note_path = false,
     use_path_only = false,
@@ -208,6 +231,7 @@ config.MappingOpts.default = function()
 end
 
 ---@class obsidian.config.FinderMappingOpts
+---
 ---@field new string|?
 ---@field insert_link string|?
 config.FinderMappingOpts = {}
@@ -222,13 +246,15 @@ config.FinderMappingOpts.default = function()
 end
 
 ---@class obsidian.config.DailyNotesOpts
+---
 ---@field folder string|?
 ---@field date_format string|?
 ---@field alias_format string|?
 ---@field template string|?
 config.DailyNotesOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.DailyNotesOpts
 config.DailyNotesOpts.default = function()
   return {
@@ -239,13 +265,15 @@ config.DailyNotesOpts.default = function()
 end
 
 ---@class obsidian.config.TemplateOpts
+---
 ---@field subdir string
 ---@field date_format string|?
 ---@field time_format string|?
 ---@field substitutions table<string, function|string>|?
 config.TemplateOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.TemplateOpts
 config.TemplateOpts.default = function()
   return {
@@ -257,6 +285,7 @@ config.TemplateOpts.default = function()
 end
 
 ---@class obsidian.config.UIOpts
+---
 ---@field enable boolean
 ---@field tick integer
 ---@field update_debounce integer
@@ -270,10 +299,12 @@ end
 config.UIOpts = {}
 
 ---@class obsidian.config.UICharSpec
+---
 ---@field char string
 ---@field hl_group string
 
 ---@class obsidian.config.UIStyleSpec
+---
 ---@field hl_group string
 
 ---@return obsidian.config.UIOpts
@@ -307,6 +338,7 @@ config.UIOpts.default = function()
 end
 
 ---@class obsidian.config.AttachmentsOpts
+---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
 ---@field img_text_func function (obsidian.Client, Path,) -> string
 config.AttachmentsOpts = {}

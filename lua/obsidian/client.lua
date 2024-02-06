@@ -1,4 +1,4 @@
---- *obsidian-api*
+--- *obidian-api*
 ---
 --- The Obsidian.nvim Lua API.
 ---
@@ -87,6 +87,10 @@ Client.new = function(opts)
   self._quiet = false
 
   local workspace = Workspace.get_from_opts(opts)
+  if not workspace then
+    error "At least one workspace is required!\nPlease specify a workspace in your Obsidian.nvim config."
+  end
+
   self:set_workspace(workspace)
 
   if self.opts.yaml_parser ~= nil then
@@ -101,7 +105,33 @@ end
 Client.set_workspace = function(self, workspace)
   self.current_workspace = workspace
   self.dir = self:vault_root(workspace)
-  self.opts = config.ClientOpts.normalize(self._default_opts, workspace.overrides)
+  self.opts = self:opts_for_workspace(workspace)
+
+  -- Ensure directories exist.
+  self.dir:mkdir { parents = true, exists_ok = true }
+
+  if self.opts.notes_subdir ~= nil then
+    local notes_subdir = self.dir / self.opts.notes_subdir
+    notes_subdir:mkdir { parents = true, exists_ok = true }
+  end
+
+  if self.opts.daily_notes.folder ~= nil then
+    local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
+    daily_notes_subdir:mkdir { parents = true, exists_ok = true }
+  end
+end
+
+--- Get the normalize opts for a given workspace.
+---
+---@param workspace obsidian.Workspace|?
+---
+---@return obsidian.config.ClientOpts
+Client.opts_for_workspace = function(self, workspace)
+  if workspace then
+    return config.ClientOpts.normalize(workspace.overrides and workspace.overrides or {}, self._default_opts)
+  else
+    return self.opts
+  end
 end
 
 --- Switch to a different workspace.
@@ -116,13 +146,13 @@ Client.switch_workspace = function(self, workspace)
 
     for _, ws in ipairs(self.opts.workspaces) do
       if ws.name == workspace then
-        return self:switch_workspace(ws)
+        return self:switch_workspace(Workspace.new_from_spec(ws))
       end
     end
 
     error(string.format("Workspace '%s' not found", workspace))
   else
-    if workspace.path == self.current_workspace.path then
+    if workspace == self.current_workspace then
       log.info("Already in workspace '%s' @ '%s'", workspace.name, workspace.path)
       return
     end
@@ -130,6 +160,34 @@ Client.switch_workspace = function(self, workspace)
     log.info("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
     self:set_workspace(workspace)
   end
+end
+
+--- Check if a path represents a note in the workspace.
+---
+---@param path string|Path
+---@param workspace obsidian.Workspace|?
+---
+---@return boolean
+Client.path_is_note = function(self, path, workspace)
+  path = vim.fs.normalize(tostring(path))
+
+  -- Notes have to be markdown file.
+  if not vim.endswith(path, ".md") then
+    return false
+  end
+
+  -- Ignore markdown files in the templates directory.
+  local templates_dir = self:templates_dir(workspace)
+  if templates_dir ~= nil then
+    local templates_pattern = tostring(templates_dir)
+    templates_pattern = util.escape_magic_characters(templates_pattern)
+    templates_pattern = "^" .. templates_pattern .. ".*"
+    if string.find(path, templates_pattern) then
+      return false
+    end
+  end
+
+  return true
 end
 
 --- Get the absolute path to the root of the Obsidian vault for the given workspace or the
@@ -140,20 +198,7 @@ end
 ---@return Path
 Client.vault_root = function(self, workspace)
   workspace = workspace and workspace or self.current_workspace
-
-  local vault_indicator_folder = ".obsidian"
-  local dirs = Path:new(workspace.path):parents()
-  table.insert(dirs, 1, workspace.path)
-
-  for _, dirpath in ipairs(dirs) do
-    local dir = Path:new(dirpath)
-    local maybe_vault = dir / vault_indicator_folder
-    if maybe_vault:is_dir() then
-      return dir
-    end
-  end
-
-  return Path:new(workspace.path)
+  return Path:new(workspace.root)
 end
 
 --- Get the name of the current vault.
@@ -190,10 +235,17 @@ end
 
 --- Get the templates folder.
 ---
+---@param workspace obsidian.Workspace|?
+---
 ---@return Path|?
-Client.templates_dir = function(self)
-  if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
-    local templates_dir = self.dir / self.opts.templates.subdir
+Client.templates_dir = function(self, workspace)
+  local opts = self.opts
+  if workspace and workspace ~= self.current_workspace then
+    opts = self:opts_for_workspace(workspace)
+  end
+
+  if opts.templates ~= nil and opts.templates.subdir ~= nil then
+    local templates_dir = self:vault_root(workspace) / opts.templates.subdir
     if not templates_dir:is_dir() then
       log.err("'%s' is not a valid directory for templates", templates_dir)
       return nil

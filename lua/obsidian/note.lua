@@ -542,6 +542,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   --Write new lines.
   local save_path = vim.fs.normalize(tostring(path and path or self.path))
   assert(save_path ~= nil)
+  util.parent_directory(save_path):mkdir { parents = true, exists_ok = true }
   local save_f = io.open(save_path, "w")
   if save_f == nil then
     error(string.format("failed to write file at " .. save_path))
