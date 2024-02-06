@@ -1,4 +1,4 @@
-*obsidian-api*
+*obidian-api*
 
 The Obsidian.nvim Lua API.
 
@@ -80,12 +80,35 @@ Parameters ~
 {workspace} obsidian.Workspace
 
 ------------------------------------------------------------------------------
+                                          *obsidian.Client.opts_for_workspace()*
+                `Client.opts_for_workspace`({self}, {workspace})
+Get the normalize opts for a given workspace.
+
+Parameters ~
+{workspace} obsidian.Workspace|?
+
+Return ~
+obsidian.config.ClientOpts
+
+------------------------------------------------------------------------------
                                             *obsidian.Client.switch_workspace()*
                  `Client.switch_workspace`({self}, {workspace})
 Switch to a different workspace.
 
 Parameters ~
 {workspace} `(obsidian.Workspace|string)` The workspace object or the name of an existing workspace.
+
+------------------------------------------------------------------------------
+                                                *obsidian.Client.path_is_note()*
+               `Client.path_is_note`({self}, {path}, {workspace})
+Check if a path represents a note in the workspace.
+
+Parameters ~
+{path} `(string|Path)`
+{workspace} obsidian.Workspace|?
+
+Return ~
+`(boolean)`
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Client.vault_root()*
@@ -120,8 +143,11 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                *obsidian.Client.templates_dir()*
-                         `Client.templates_dir`({self})
+                  `Client.templates_dir`({self}, {workspace})
 Get the templates folder.
+
+Parameters ~
+{workspace} obsidian.Workspace|?
 
 Return ~
 Path| `(optional)`
@@ -650,54 +676,123 @@ Return ~
 `(boolean)` updated True if the buffer lines were updated, false otherwise.
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.workspace.WorkspaceSpec}
+
+Fields ~
+{path} `(string|Path|(fun():)` string|Path)
+{name} `(string|?)`
+{strict} `(boolean|?)` If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
+{overrides} `(table|obsidian.config.ClientOpts|?)`
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.workspace.WorkspaceOpts}
+
+Fields ~
+{name} `(string|?)`
+{strict} `(boolean|?)` If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
+{overrides} `(table|obsidian.config.ClientOpts|?)`
+
+------------------------------------------------------------------------------
                                                             *obsidian.Workspace*
                                   `Workspace`
-Each workspace represents a vault and a set of configuration options specific to that vault.
+Each workspace represents a working directory (usually an Obsidian vault) along with
+a set of configuration options specific to the workspace.
+
+Workspaces are a little more general than Obsidian vaults as you can have a workspace
+outside of a vault or as a subdirectory of a vault.
 
 Class ~
 {obsidian.Workspace} : obsidian.ABC
 
 Fields ~
-{name} `(string)`
-{path} `(string)`
+{name} `(string)` An arbitrary name for the workspace.
+{path} `(string)` The normalized path to the workspace.
+{root} `(string)` The normalized path to the vault root of the workspace. This usually matches 'path'.
 {overrides} `(table|obsidian.config.ClientOpts|?)`
 
 ------------------------------------------------------------------------------
-                                                      *obsidian.Workspace.new()*
-                  `Workspace.new`({name}, {path}, {overrides})
-Create a new workspace object. This assumes the workspace already exists on the filesystem.
+                                                    *obsidian.find_vault_root()*
+                         `find_vault_root`({base_dir})
+Find the vault root from a given directory.
+
+This will traverse the directory tree upwards until a '.obsidian/' folder is found to
+indicate the root of a vault, otherwise the given directory is used as-is.
 
 Parameters ~
-{name} `(string)` Workspace name
-{path} `(string|Path)` Workspace path (will be normalized)
-{overrides} `(table|obsidian.config.ClientOpts|?)`
+{base_dir} `(string|Path)`
+
+Return ~
+Path| `(optional)`
+
+------------------------------------------------------------------------------
+                                                      *obsidian.Workspace.new()*
+                        `Workspace.new`({path}, {opts})
+Create a new 'Workspace' object. This assumes the workspace already exists on the filesystem.
+
+Parameters ~
+{path} `(string|Path)` Workspace path.
+{opts} obsidian.workspace.WorkspaceOpts|?
+
+Return ~
+obsidian.Workspace
+
+------------------------------------------------------------------------------
+                                            *obsidian.Workspace.new_from_spec()*
+                       `Workspace.new_from_spec`({spec})
+Initialize a new 'Workspace' object from a workspace spec.
+
+Parameters ~
+{spec} obsidian.workspace.WorkspaceSpec
 
 Return ~
 obsidian.Workspace
 
 ------------------------------------------------------------------------------
                                              *obsidian.Workspace.new_from_cwd()*
-                           `Workspace.new_from_cwd`()
-Return ~
-obsidian.Workspace
+                        `Workspace.new_from_cwd`({opts})
+Initialize a 'Workspace' object from the current working directory.
 
-------------------------------------------------------------------------------
-                                             *obsidian.Workspace.new_from_dir()*
-                        `Workspace.new_from_dir`({dir})
 Parameters ~
-{dir} `(string|Path)`
+{opts} obsidian.workspace.WorkspaceOpts|?
 
 Return ~
 obsidian.Workspace
 
 ------------------------------------------------------------------------------
-                                   *obsidian.Workspace.get_workspace_from_cwd()*
-                `Workspace.get_workspace_from_cwd`({workspaces})
+                                             *obsidian.Workspace.new_from_buf()*
+                   `Workspace.new_from_buf`({bufnr}, {opts})
+Initialize a 'Workspace' object from the parent directory of the current buffer.
+
+Parameters ~
+{bufnr} `(integer|?)`
+{opts} obsidian.workspace.WorkspaceOpts|?
+
+Return ~
+obsidian.Workspace
+
+------------------------------------------------------------------------------
+                                    *obsidian.Workspace.get_workspace_for_dir()*
+           `Workspace.get_workspace_for_dir`({cur_dir}, {workspaces})
+Get the workspace corresponding to the directory (or a parent of), if there
+is one.
+
+Parameters ~
+{cur_dir} `(string|Path)`
+{workspaces} obsidian.workspace.WorkspaceSpec[]
+
+Return ~
+obsidian.Workspace| `(optional)`
+
+------------------------------------------------------------------------------
+                                    *obsidian.Workspace.get_workspace_for_cwd()*
+                `Workspace.get_workspace_for_cwd`({workspaces})
 Get the workspace corresponding to the current working directory (or a parent of), if there
 is one.
 
 Parameters ~
-{workspaces} obsidian.Workspace[]
+{workspaces} obsidian.workspace.WorkspaceSpec[]
 
 Return ~
 obsidian.Workspace| `(optional)`
@@ -708,7 +803,7 @@ obsidian.Workspace| `(optional)`
 Returns the default workspace.
 
 Parameters ~
-{workspaces} `(table<obsidian.Workspace>)`
+{workspaces} obsidian.workspace.WorkspaceSpec[]
 
 Return ~
 `(obsidian.Workspace|nil)`
@@ -722,6 +817,6 @@ Parameters ~
 {opts} obsidian.config.ClientOpts
 
 Return ~
-obsidian.Workspace
+obsidian.Workspace| `(optional)`
 
  vim:tw=78:ts=8:noet:ft=help:norl:
