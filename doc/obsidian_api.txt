@@ -435,6 +435,7 @@ Class ~
 Fields ~
 {id} `(string|integer)`
 {aliases} `(string[])`
+{title} `(string|?)`
 {tags} `(string[])`
 {path} Path|?
 {metadata} `(table|?)`

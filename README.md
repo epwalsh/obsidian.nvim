@@ -264,6 +264,9 @@ This is a complete list of all of the options that can be passed to `require("ob
     --  * "notes_subdir" - put new notes in the default notes subdirectory.
     new_notes_location = "current_dir",
 
+    -- Either 'wiki' or 'markdown'.
+    preferred_link_style = "wiki",
+
     -- Control how wiki links are completed with these (mutually exclusive) options:
     --
     -- 1. Whether to add the note ID during completion.

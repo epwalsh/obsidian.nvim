@@ -197,6 +197,7 @@ config.LinkStyle = {
 ---@field prepend_note_id boolean
 ---@field prepend_note_path boolean
 ---@field use_path_only boolean
+---@field perferred_link_style obsidian.config.LinkStyle
 config.CompletionOpts = {}
 
 --- Get defaults.
@@ -211,6 +212,7 @@ config.CompletionOpts.default = function()
     prepend_note_id = true,
     prepend_note_path = false,
     use_path_only = false,
+    preferred_link_style = config.LinkStyle.wiki,
   }
 end
 
@@ -231,6 +233,7 @@ end
 ---@class obsidian.config.FinderMappingOpts
 ---
 ---@field new string|?
+---@field insert_link string|?
 config.FinderMappingOpts = {}
 
 ---Get defaults.
@@ -238,6 +241,7 @@ config.FinderMappingOpts = {}
 config.FinderMappingOpts.default = function()
   return {
     new = "<C-x>",
+    insert_link = "<C-l>",
   }
 end
 
