@@ -28,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added client method `Client:format_link()` for creating markdown / wiki links.
 - Added telescope action to insert a note link in certain finder scenarios.
 
-
 ### Fixed
 
 - Fixed parsing header with trailing whitespace (https://github.com/epwalsh/obsidian.nvim/issues/341#issuecomment-1925445271).
