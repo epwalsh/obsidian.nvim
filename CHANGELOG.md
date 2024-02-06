@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added note field `Note.title` to provide more useful info for `note_frontmatter_func`.
 - Added client method `Client:format_link()` for creating markdown / wiki links.
+- Added telescope action to insert a note link in certain finder scenarios.
 
 ### Fixed
 
