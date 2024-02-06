@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added client method `Client:format_link()` for creating markdown / wiki links.
+- Added telescope action to insert a note link in certain finder scenarios.
 
 ### Fixed
 

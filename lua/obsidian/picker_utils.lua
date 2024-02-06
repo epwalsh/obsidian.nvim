@@ -16,12 +16,26 @@ M.telescope_mappings = function(map, client, initial_query)
       require("telescope.actions").close(prompt_bufnr)
       client:command("ObsidianNew", { args = query })
     end,
+
+    obsidian_insert_link = function(prompt_bufnr)
+      require("telescope.actions").close(prompt_bufnr)
+      local path = require("telescope.actions.state").get_selected_entry().path
+      local note = require("obsidian").Note.from_file(path, client.dir)
+      local link = client:format_link(note, {})
+      vim.api.nvim_put({ link }, "", false, true)
+    end,
   }
 
   local new_mapping = client.opts.finder_mappings.new
   if new_mapping ~= nil then
     map({ "i", "n" }, new_mapping, telescope_actions.obsidian_new)
   end
+
+  local insert_link_mapping = client.opts.finder_mappings.insert_link
+  if insert_link_mapping ~= nil then
+    map({ "i", "n" }, insert_link_mapping, telescope_actions.obsidian_insert_link)
+  end
+
   return true
 end
 
@@ -34,6 +48,10 @@ M.telescope_prompt_title = function(name, client)
   local keys = client.opts.finder_mappings.new
   if keys ~= nil then
     prompt_title = prompt_title .. " | " .. keys .. " new"
+  end
+  keys = client.opts.finder_mappings.insert_link
+  if keys ~= nil then
+    prompt_title = prompt_title .. " | " .. keys .. " insert link"
   end
   return prompt_title
 end
