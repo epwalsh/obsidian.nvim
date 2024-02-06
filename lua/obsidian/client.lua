@@ -1120,6 +1120,8 @@ end
 ---
 ---@return string
 Client.format_link = function(self, note, opts)
+  opts = opts and opts or {}
+
   ---@type string, string, string|?
   local rel_path, label, note_id
   if type(note) == "string" then
