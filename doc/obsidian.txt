@@ -2,8 +2,8 @@
 
 obsidian.nvim
 
-A Neovim plugin for writing and navigating an Obsidian <https://obsidian.md>
-vault, written in Lua.
+A Neovim plugin for writing and navigating Obsidian <https://obsidian.md>
+vaults, written in Lua.
 
 Built for people who love the concept of Obsidian – a simple, markdown-based
 notes app – but love Neovim too much to stand typing characters into anything
