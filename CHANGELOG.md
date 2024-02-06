@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v2.10.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.10.0) - 2024-02-05
+
 ### Added
 
 - Added note field `Note.title` to provide more useful info for `note_frontmatter_func`.
