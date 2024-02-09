@@ -1030,8 +1030,6 @@ end
 ---
 ---@return obsidian.Note
 Client.new_note = function(self, title, id, dir, aliases)
-  opts = opts and opts or {}
-
   local new_title, new_id, path = self:parse_title_id_path(title, id, dir)
 
   if new_id == tostring(os.date "%Y-%m-%d") then
