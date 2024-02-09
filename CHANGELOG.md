@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed parsing header with trailing whitespace (https://github.com/epwalsh/obsidian.nvim/issues/341#issuecomment-1925445271).
+- Fixed unnecessary frontmatter update when no change needed
 
 ## [v2.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.9.0) - 2024-01-31
 

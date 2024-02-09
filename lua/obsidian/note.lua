@@ -570,6 +570,11 @@ Note.save_to_buffer = function(self, bufnr, frontmatter)
     cur_lines = vim.api.nvim_buf_get_lines(bufnr, 0, cur_buf_note.frontmatter_end_line, false)
   end
 
+  local unchanged = vim.deep_equal(cur_lines, new_lines)
+  if unchanged then
+    return false
+  end
+
   vim.api.nvim_buf_set_lines(
     bufnr,
     0,
@@ -578,7 +583,7 @@ Note.save_to_buffer = function(self, bufnr, frontmatter)
     new_lines
   )
 
-  return not vim.deep_equal(cur_lines, new_lines)
+  return true
 end
 
 return Note
