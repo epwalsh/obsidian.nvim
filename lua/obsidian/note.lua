@@ -566,15 +566,18 @@ Note.save_to_buffer = function(self, bufnr, frontmatter)
     cur_lines = vim.api.nvim_buf_get_lines(bufnr, 0, cur_buf_note.frontmatter_end_line, false)
   end
 
-  vim.api.nvim_buf_set_lines(
-    bufnr,
-    0,
-    cur_buf_note.frontmatter_end_line and cur_buf_note.frontmatter_end_line or 0,
-    false,
-    new_lines
-  )
-
-  return not vim.deep_equal(cur_lines, new_lines)
+  if not vim.deep_equal(cur_lines, new_lines) then
+    vim.api.nvim_buf_set_lines(
+      bufnr,
+      0,
+      cur_buf_note.frontmatter_end_line and cur_buf_note.frontmatter_end_line or 0,
+      false,
+      new_lines
+    )
+    return true
+  else
+    return false
+  end
 end
 
 return Note
