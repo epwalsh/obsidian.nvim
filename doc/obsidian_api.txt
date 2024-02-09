@@ -75,9 +75,10 @@ obsidian.Client
 
 ------------------------------------------------------------------------------
                                                *obsidian.Client.set_workspace()*
-                  `Client.set_workspace`({self}, {workspace})
+              `Client.set_workspace`({self}, {workspace}, {opts})
 Parameters ~
 {workspace} obsidian.Workspace
+{opts} { lock: `(boolean|?)` }|?
 
 ------------------------------------------------------------------------------
                                           *obsidian.Client.opts_for_workspace()*
@@ -92,11 +93,12 @@ obsidian.config.ClientOpts
 
 ------------------------------------------------------------------------------
                                             *obsidian.Client.switch_workspace()*
-                 `Client.switch_workspace`({self}, {workspace})
+             `Client.switch_workspace`({self}, {workspace}, {opts})
 Switch to a different workspace.
 
 Parameters ~
 {workspace} `(obsidian.Workspace|string)` The workspace object or the name of an existing workspace.
+{opts} { lock: `(boolean|?)` }|?
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.path_is_note()*
@@ -711,6 +713,7 @@ Fields ~
 {path} `(string)` The normalized path to the workspace.
 {root} `(string)` The normalized path to the vault root of the workspace. This usually matches 'path'.
 {overrides} `(table|obsidian.config.ClientOpts|?)`
+{locked} `(boolean|?)`
 
 ------------------------------------------------------------------------------
                                                     *obsidian.find_vault_root()*
@@ -771,6 +774,16 @@ Parameters ~
 
 Return ~
 obsidian.Workspace
+
+------------------------------------------------------------------------------
+                                                     *obsidian.Workspace.lock()*
+                            `Workspace.lock`({self})
+Lock the workspace.
+
+------------------------------------------------------------------------------
+                                                  *obsidian.Workspace._unlock()*
+                          `Workspace._unlock`({self})
+Unlock the workspace.
 
 ------------------------------------------------------------------------------
                                     *obsidian.Workspace.get_workspace_for_dir()*
