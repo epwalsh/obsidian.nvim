@@ -976,7 +976,7 @@ Client.parse_title_id_path = function(self, title, id, dir)
     end
   end
 
-  local parent, title_is_path
+  local parent, _, title_is_path
   if id then
     id, _, parent = parse_as_path(id, false)
   elseif title then

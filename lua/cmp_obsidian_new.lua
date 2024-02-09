@@ -1,8 +1,6 @@
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
-local log = require "obsidian.log"
-local NewNotesLocation = require("obsidian.config").CompletionNewNotesLocation
 local LinkStyle = require("obsidian.config").LinkStyle
 
 ---@class cmp_obsidian_new.Source : obsidian.ABC
