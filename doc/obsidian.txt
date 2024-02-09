@@ -32,7 +32,7 @@ own as well. You don’t necessarily need to use it alongside the Obsidian app.
     - |obsidian-configuration-options|
     - |obsidian-notes-on-configuration|
     - |obsidian-using-templates|
-    - |obsidian-using-obsidian.nvim-outside-of-a-workspace-/-obsidian-vault|
+    - |obsidian-usage-outside-of-a-workspace-or-vault|
 - 🐞 |obsidian-known-issues|
 - ➕ |obsidian-contributing|
 
@@ -789,7 +789,7 @@ to your config:
 <
 
 
-USING OBSIDIAN.NVIM OUTSIDE OF A WORKSPACE / OBSIDIAN VAULT*obsidian-using-obsidian.nvim-outside-of-a-workspace-/-obsidian-vault*
+USAGE OUTSIDE OF A WORKSPACE OR VAULT*obsidian-usage-outside-of-a-workspace-or-vault*
 
 It’s possible to configure obsidian.nvim to work on individual markdown files
 outside of a regular workspace / Obsidian vault by configuring a "dynamic"
