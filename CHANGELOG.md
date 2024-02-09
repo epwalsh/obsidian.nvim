@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.0.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.0.0) - 2024-02-09
+
+⚠️ POTENTIALLY BREAKING CHANGES! PLEASE READ BELOW ⚠️
+
 ### Added
 
 - Added support for "dynamic" workspaces where the workspace `path` field is a function instead of a `string` / `Path`. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
