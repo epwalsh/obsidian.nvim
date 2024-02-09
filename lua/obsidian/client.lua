@@ -946,8 +946,9 @@ Client.parse_title_id_path = function(self, title, id, dir)
   end
 
   ---@param s string
-  ---@return string, boolean, string|?
-  local parse_as_path = function(s)
+  ---@param strict_paths_only boolean
+  ---@return string|?, boolean, string|?
+  local parse_as_path = function(s, strict_paths_only)
     local is_path = false
     ---@type string|?
     local parent
@@ -962,18 +963,24 @@ Client.parse_title_id_path = function(self, title, id, dir)
     local parts = vim.split(s, Path.path.sep)
     if #parts > 1 then
       s = parts[#parts]
-      is_path = true
+      if not strict_paths_only then
+        is_path = true
+      end
       parent = table.concat(parts, Path.path.sep, 1, #parts - 1)
     end
 
-    return s, is_path, parent
+    if s == "" then
+      return nil, is_path, parent
+    else
+      return s, is_path, parent
+    end
   end
 
   local parent, title_is_path
   if id then
-    id, _, parent = parse_as_path(id)
+    id, _, parent = parse_as_path(id, false)
   elseif title then
-    title, title_is_path, parent = parse_as_path(title)
+    title, title_is_path, parent = parse_as_path(title, true)
     if title_is_path then
       id = title
     end

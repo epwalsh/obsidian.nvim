@@ -56,12 +56,20 @@ describe("Client", function()
     assert.is_false(saved_note.has_frontmatter)
   end)
 
-  it("should parse a title that's a partial path", function()
+  it("should parse a title that's a partial path and generate new ID", function()
     local client = tmp_client()
     local title, id, path = client:parse_title_id_path "notes/Foo"
     assert.equals(title, "Foo")
     assert.equals(id, "foo")
     assert.equals(tostring(path), tostring(Path:new(client.dir) / "notes" / "foo.md"))
+  end)
+
+  it("should parse an ID that's a path", function()
+    local client = tmp_client()
+    local title, id, path = client:parse_title_id_path("Foo", "notes/1234-foo")
+    assert.equals(title, "Foo")
+    assert.equals(id, "1234-foo")
+    assert.equals(tostring(path), tostring(Path:new(client.dir) / "notes" / "1234-foo.md"))
   end)
 
   it("should parse a title that's an exact path", function()
