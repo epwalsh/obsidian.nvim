@@ -102,7 +102,9 @@ Client.new = function(opts)
 end
 
 ---@param workspace obsidian.Workspace
-Client.set_workspace = function(self, workspace)
+---@param opts { lock: boolean|? }|?
+Client.set_workspace = function(self, workspace, opts)
+  opts = opts and opts or {}
   self.current_workspace = workspace
   self.dir = self:vault_root(workspace)
   self.opts = self:opts_for_workspace(workspace)
@@ -118,6 +120,10 @@ Client.set_workspace = function(self, workspace)
   if self.opts.daily_notes.folder ~= nil then
     local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
+  end
+
+  if opts.lock then
+    self.current_workspace:lock()
   end
 end
 
@@ -137,7 +143,10 @@ end
 --- Switch to a different workspace.
 ---
 ---@param workspace obsidian.Workspace|string The workspace object or the name of an existing workspace.
-Client.switch_workspace = function(self, workspace)
+---@param opts { lock: boolean|? }|?
+Client.switch_workspace = function(self, workspace, opts)
+  opts = opts and opts or {}
+
   if type(workspace) == "string" then
     if workspace == self.current_workspace.name then
       log.info("Already in workspace '%s' @ '%s'", workspace, self.current_workspace.path)
@@ -146,7 +155,7 @@ Client.switch_workspace = function(self, workspace)
 
     for _, ws in ipairs(self.opts.workspaces) do
       if ws.name == workspace then
-        return self:switch_workspace(Workspace.new_from_spec(ws))
+        return self:switch_workspace(Workspace.new_from_spec(ws), opts)
       end
     end
 
@@ -158,7 +167,7 @@ Client.switch_workspace = function(self, workspace)
     end
 
     log.info("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
-    self:set_workspace(workspace)
+    self:set_workspace(workspace, opts)
   end
 end
 

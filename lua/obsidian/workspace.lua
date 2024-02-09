@@ -29,6 +29,7 @@ local util = require "obsidian.util"
 ---@field path string The normalized path to the workspace.
 ---@field root string The normalized path to the vault root of the workspace. This usually matches 'path'.
 ---@field overrides table|obsidian.config.ClientOpts|?
+---@field locked boolean|?
 local Workspace = abc.new_class {
   __tostring = function(self)
     return string.format("Workspace(name='%s', path='%s', root='%s')", self.name, self.path, self.root)
@@ -128,6 +129,16 @@ end
 Workspace.new_from_buf = function(bufnr, opts)
   local bufdir = util.parent_directory(vim.api.nvim_buf_get_name(bufnr and bufnr or 0))
   return Workspace.new(bufdir, opts)
+end
+
+--- Lock the workspace.
+Workspace.lock = function(self)
+  self.locked = true
+end
+
+--- Unlock the workspace.
+Workspace._unlock = function(self)
+  self.locked = false
 end
 
 --- Get the workspace corresponding to the directory (or a parent of), if there

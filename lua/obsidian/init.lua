@@ -143,14 +143,14 @@ obsidian.setup = function(opts)
         client.buf_dir = Path:new(buf_dir)
       end
 
-      -- Check if we're in a workspace.
+      -- Check if we're in *any* workspace.
       local workspace = obsidian.Workspace.get_workspace_for_dir(buf_dir, client.opts.workspaces)
       if not workspace then
         return
       end
 
       -- Switch to the workspace and complete the workspace setup.
-      if workspace ~= client.current_workspace then
+      if not client.current_workspace.locked and workspace ~= client.current_workspace then
         log.debug("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
         client:set_workspace(workspace)
       end

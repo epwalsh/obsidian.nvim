@@ -6,6 +6,6 @@ return function(client, data)
     log.info("Current workspace: '%s' @ '%s'", client.current_workspace.name, client.current_workspace.path)
     return
   else
-    client:switch_workspace(data.args)
+    client:switch_workspace(data.args, { lock = true })
   end
 end
