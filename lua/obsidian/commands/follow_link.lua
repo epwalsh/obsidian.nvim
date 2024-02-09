@@ -48,8 +48,16 @@ return function(client, data)
         })
         if confirmation == "" or confirmation == "y" or confirmation == "yes" then
           -- Create a new note.
-          local aliases = name == location and {} or { name }
-          note = client:new_note(location, nil, client.buf_dir, aliases)
+          ---@type string|?, string[]
+          local id, aliases
+          if name == location then
+            aliases = {}
+          else
+            aliases = { name }
+            id = location
+          end
+
+          note = client:new_note(name, id, nil, aliases)
           vim.api.nvim_command(open_cmd .. tostring(note.path))
         else
           log.warn "Aborting"

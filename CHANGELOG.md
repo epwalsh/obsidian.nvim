@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed configuration option `detect_cwd`. This wasn't well-defined before and is no longer relevant with the new workspace detection behavior. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
 
+### Fixed
+
+- Fixed two bugs with creating new notes through `:ObsidianFollowLink` (and `gf`) where it wouldn't respect the `completion.new_notes_location` settings, and wouldn't respect paths in certain formats.
+
 ## [v2.10.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.10.0) - 2024-02-05
 
 ### Added

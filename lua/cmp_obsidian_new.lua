@@ -1,8 +1,6 @@
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
-local log = require "obsidian.log"
-local NewNotesLocation = require("obsidian.config").CompletionNewNotesLocation
 local LinkStyle = require("obsidian.config").LinkStyle
 
 ---@class cmp_obsidian_new.Source : obsidian.ABC
@@ -20,26 +18,10 @@ source.complete = function(_, request, callback)
   local client = assert(obsidian.get_client())
   local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
-  ---@type string|Path|?
-  local dir
-  if client.opts.completion.new_notes_location == nil then
-    dir = nil -- let the client decide
-  elseif client.opts.completion.new_notes_location == NewNotesLocation.notes_subdir then
-    dir = client.dir
-    if client.opts.notes_subdir ~= nil then
-      dir = dir / client.opts.notes_subdir
-    end
-  elseif client.opts.completion.new_notes_location == NewNotesLocation.current_dir then
-    dir = vim.fn.expand "%:p:h"
-  else
-    log.err "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
-    return
-  end
-
   if can_complete and search ~= nil and #search >= client.opts.completion.min_chars then
     local new_title, new_id, path
     new_id = client:new_note_id(search)
-    new_title, new_id, path = client:parse_title_id_path(search, new_id, dir)
+    new_title, new_id, path = client:parse_title_id_path(search, new_id)
 
     if not new_title or string.len(new_title) == 0 then
       return
@@ -81,7 +63,6 @@ source.complete = function(_, request, callback)
         data = {
           id = new_id,
           title = search,
-          dir = dir,
         },
       },
     }
@@ -98,7 +79,7 @@ end
 source.execute = function(_, item, callback)
   local client = assert(obsidian.get_client())
   local data = item.data
-  client:new_note(data.title, data.id, data.dir)
+  client:new_note(data.title, data.id)
   return callback {}
 end
 
