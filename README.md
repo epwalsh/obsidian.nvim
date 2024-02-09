@@ -214,6 +214,9 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- A list of workspace names, paths, and configuration overrides.
   -- If you use the Obsidian app, the 'path' of a workspace should generally be
   -- your vault root (where the `.obsidian` folder is located).
+  -- When obsidian.nvim is loaded by your plugin manager, it will automatically set
+  -- the workspace to the first workspace in the list whose `path` is a parent of the
+  -- current markdown file being edited.
   workspaces = {
     {
       name = "personal",
@@ -494,6 +497,69 @@ This is a complete list of all of the options that can be passed to `require("ob
 ```
 
 ### Notes on configuration
+
+#### Workspaces
+
+For most Obsidian users, each workspace you configure in your obsidian.nvim config should correspond to a unique Obsidian vault, in which case the `path` of each workspace should be set to the corresponding vault root path.
+
+For example, suppose you have an Obsidian vault at `~/vaults/personal`, then the `workspaces` field in your config would look like this:
+
+```lua
+config = {
+  workspaces = {
+    {
+      name = "personal",
+      path = "~/vaults/personal",
+    },
+  }
+}
+```
+
+However obsidian.nvim's concept of workspaces is a little more general than that of vaults, since it's also valid to configure a workspace that doesn't correspond to a vault, or to configure multiple workspaces for a single vault. The latter case can be useful if you want to segment a single vault into multiple directories with different settings applied to each directory. For example:
+
+```lua
+config = {
+  workspaces = {
+    {
+      name = "project-1",
+      path = "~/vaults/personal/project-1",
+      -- `strict=true` here tells obsidian to use the `path` as the workspace/vault root,
+      -- even though the actual Obsidian vault root may be `~/vaults/personal/`.
+      strict = true,
+      overrides = {
+        -- ...
+      },
+    },
+    {
+      name = "project-2",
+      path = "~/vaults/personal/project-2",
+      strict = true,
+      overrides = {
+        -- ...
+      },
+    },
+  }
+}
+```
+
+obsidian.nvim also supports "dynamic" workspaces. These are simply workspaces where the `path` is set to a Lua function (that returns a path) instead of a hard-coded path. This can be useful in several scenarios, such as when you want a workspace whose `path` is always set to the parent directory of the current buffer:
+
+
+```lua
+config = {
+  workspaces = {
+    {
+      name = "buf-parent",
+      path = function()
+        return assert(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
+      end,
+    },
+  }
+}
+```
+
+Dynamic workspaces are also useful when you want to use a subset of this plugin's functionality on markdown files outside of your "fixed" vaults.
+See [using obsidian.nvim outside of a workspace / Obsidian vault](#using-obsidiannvim-outside-of-a-workspace--obsidian-vault).
 
 #### Completion
 
