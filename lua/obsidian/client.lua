@@ -931,48 +931,87 @@ end
 ---
 ---@return string|?,string,Path
 Client.parse_title_id_path = function(self, title, id, dir)
-  ---@type Path
-  local base_dir = dir == nil and self.dir or Path:new(dir)
-  local title_is_path = false
+  if title then
+    title = util.strip_whitespace(title)
+    if title == "" then
+      title = nil
+    end
+  end
 
-  -- Clean up title and guess the right base_dir.
-  if title ~= nil then
-    -- Trim whitespace.
-    title = title:match "^%s*(.-)%s*$"
+  if id then
+    id = util.strip_whitespace(id)
+    if id == "" then
+      id = nil
+    end
+  end
 
-    if title:match "%.md" then
+  ---@param s string
+  ---@return string, boolean, string|?
+  local parse_as_path = function(s)
+    local is_path = false
+    ---@type string|?
+    local parent
+
+    if s:match "%.md" then
       -- Remove suffix.
-      title = title:sub(1, title:len() - 3)
-      title_is_path = true
+      s = s:sub(1, s:len() - 3)
+      is_path = true
     end
 
     -- Pull out any parent dirs from title.
-    local parts = vim.split(title, Path.path.sep)
+    local parts = vim.split(s, Path.path.sep)
     if #parts > 1 then
-      -- 'title' will just be the final part of the path.
-      title = parts[#parts]
-      -- Add the other parts to the base_dir.
-      base_dir = base_dir / table.concat(parts, Path.path.sep, 1, #parts - 1)
-    elseif dir == nil and self.opts.notes_subdir ~= nil then
-      base_dir = base_dir / self.opts.notes_subdir
+      s = parts[#parts]
+      is_path = true
+      parent = table.concat(parts, Path.path.sep, 1, #parts - 1)
     end
-  elseif dir == nil and self.opts.notes_subdir ~= nil then
-    base_dir = base_dir / self.opts.notes_subdir
+
+    return s, is_path, parent
   end
 
-  if title == "" then
-    title = nil
+  local parent, title_is_path
+  if id then
+    id, _, parent = parse_as_path(id)
+  elseif title then
+    title, title_is_path, parent = parse_as_path(title)
+    if title_is_path then
+      id = title
+    end
+  end
+
+  ---@type Path
+  local base_dir
+  if parent then
+    base_dir = self.dir / parent
+  else
+    local new_notes_location = self.opts.completion.new_notes_location
+    if not dir and new_notes_location then
+      if new_notes_location == config.CompletionNewNotesLocation.notes_subdir then
+        base_dir = self.dir
+        if self.opts.notes_subdir then
+          base_dir = base_dir / self.opts.notes_subdir
+        end
+      elseif new_notes_location == config.CompletionNewNotesLocation.current_dir then
+        base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
+      else
+        error "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
+      end
+    else
+      base_dir = Path:new(dir)
+    end
   end
 
   -- Generate new ID if needed.
-  local new_id = id and id or (title_is_path and title or self:new_note_id(title))
+  if not id then
+    id = self:new_note_id(title)
+  end
 
   -- Get path.
   ---@type Path
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local path = base_dir / (new_id .. ".md")
+  local path = base_dir / (id .. ".md")
 
-  return title, new_id, path
+  return title, id, path
 end
 
 --- Create and save a new note.
@@ -984,6 +1023,8 @@ end
 ---
 ---@return obsidian.Note
 Client.new_note = function(self, title, id, dir, aliases)
+  opts = opts and opts or {}
+
   local new_title, new_id, path = self:parse_title_id_path(title, id, dir)
 
   if new_id == tostring(os.date "%Y-%m-%d") then
