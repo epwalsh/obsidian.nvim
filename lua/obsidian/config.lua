@@ -18,11 +18,10 @@ local config = {}
 ---@field tags obsidian.config.LocationListOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
----@field finder_mappings obsidian.config.FinderMappingOpts
+---@field picker obsidian.config.PickerOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
----@field finder string|?
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
 ---@field open_notes_in obsidian.config.OpenStrategy
@@ -49,11 +48,10 @@ config.ClientOpts.default = function()
     tags = config.LocationListOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
-    finder_mappings = config.FinderMappingOpts.default(),
+    picker = config.PickerOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
-    finder = nil,
     sort_by = "modified",
     sort_reversed = true,
     open_notes_in = "current",
@@ -84,23 +82,34 @@ config.ClientOpts.normalize = function(opts, defaults)
     defaults = config.ClientOpts.default()
   end
 
+  -- Rename old fields for backwards compatibility.
+  if opts.ui and opts.ui.tick then
+    opts.ui.update_debounce = opts.ui.tick
+    opts.ui.tick = nil
+  end
+
+  if not opts.picker then
+    opts.picker = {}
+    if opts.finder then
+      opts.picker.name = opts.finder
+      opts.finder = nil
+    end
+    if opts.finder_mappings then
+      opts.picker.mappings = opts.finder_mappings
+    end
+  end
+
   ---@type obsidian.config.ClientOpts
   opts = tbl_override(defaults, opts)
 
   opts.backlinks = tbl_override(defaults.backlinks, opts.backlinks)
   opts.completion = tbl_override(defaults.completion, opts.completion)
   opts.mappings = opts.mappings and opts.mappings or defaults.mappings
-  opts.finder_mappings = opts.finder_mappings and opts.finder_mappings or defaults.finder_mappings
+  opts.picker = tbl_override(defaults.picker, opts.picker)
   opts.daily_notes = tbl_override(defaults.daily_notes, opts.daily_notes)
   opts.templates = tbl_override(defaults.templates, opts.templates)
   opts.ui = tbl_override(defaults.ui, opts.ui)
   opts.attachments = tbl_override(defaults.attachments, opts.attachments)
-
-  -- Rename old fields for backwards compatibility.
-  if opts.ui.tick ~= nil then
-    opts.ui.update_debounce = opts.ui.tick
-    opts.ui.tick = nil
-  end
 
   -- Validate.
   if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
@@ -230,18 +239,42 @@ config.MappingOpts.default = function()
   }
 end
 
----@class obsidian.config.FinderMappingOpts
+---@class obsidian.config.PickerMappingOpts
 ---
 ---@field new string|?
 ---@field insert_link string|?
-config.FinderMappingOpts = {}
+config.PickerMappingOpts = {}
 
 ---Get defaults.
----@return obsidian.config.FinderMappingOpts
-config.FinderMappingOpts.default = function()
+---@return obsidian.config.PickerMappingOpts
+config.PickerMappingOpts.default = function()
   return {
     new = "<C-x>",
     insert_link = "<C-l>",
+  }
+end
+
+---@enum obsidian.config.Picker
+config.Picker = {
+  telescope = "telescope.nvim",
+  fzf_lua = "fzf-lua",
+  fzf = "fzf.vim",
+  mini = "mini.pick",
+}
+
+---@class obsidian.config.PickerOpts
+---
+---@field name obsidian.config.Picker|?
+---@field mappings obsidian.config.PickerMappingOpts
+config.PickerOpts = {}
+
+--- Get the defaults.
+---
+---@return obsidian.config.PickerOpts
+config.PickerOpts.default = function()
+  return {
+    name = nil,
+    mappings = config.PickerMappingOpts.default(),
   }
 end
 

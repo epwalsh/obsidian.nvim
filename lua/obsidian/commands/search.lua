@@ -1,4 +1,5 @@
 local util = require "obsidian.util"
+local Picker = require("obsidian.config").Picker
 
 ---@param client obsidian.Client
 return function(client, data)
@@ -13,8 +14,8 @@ return function(client, data)
     "--no-heading",
   }
 
-  client:_run_with_finder_backend {
-    ["telescope.nvim"] = function()
+  client:_run_with_picker_backend {
+    [Picker.telescope] = function()
       local has_telescope, telescope = pcall(require, "telescope.builtin")
 
       if not has_telescope then
@@ -53,7 +54,7 @@ return function(client, data)
 
       return true
     end,
-    ["fzf-lua"] = function()
+    [Picker.fzf_lua] = function()
       local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
       if not has_fzf_lua then
         return false
@@ -67,7 +68,7 @@ return function(client, data)
 
       return true
     end,
-    ["fzf.vim"] = function()
+    [Picker.fzf] = function()
       local grep_cmd = vim.tbl_flatten {
         base_cmd,
         {
@@ -95,7 +96,7 @@ return function(client, data)
 
       return true
     end,
-    ["mini.pick"] = function()
+    [Picker.mini] = function()
       -- Check if mini.pick is available
       local has_mini_pick, mini_pick = pcall(require, "mini.pick")
       if not has_mini_pick then

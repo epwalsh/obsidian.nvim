@@ -1,4 +1,5 @@
 local search = require "obsidian.search"
+local Picker = require("obsidian.config").Picker
 
 ---@param client obsidian.Client
 return function(client, _)
@@ -6,8 +7,8 @@ return function(client, _)
   local search_opts =
     search.SearchOpts.from_tbl { sort_by = client.opts.sort_by, sort_reversed = client.opts.sort_reversed }
 
-  client:_run_with_finder_backend {
-    ["telescope.nvim"] = function()
+  client:_run_with_picker_backend {
+    [Picker.telescope] = function()
       local has_telescope, telescope = pcall(require, "telescope.builtin")
       if not has_telescope then
         return false
@@ -26,7 +27,7 @@ return function(client, _)
 
       return true
     end,
-    ["fzf-lua"] = function()
+    [Picker.fzf_lua] = function()
       local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
       if not has_fzf_lua then
         return false
@@ -38,7 +39,7 @@ return function(client, _)
 
       return true
     end,
-    ["fzf.vim"] = function()
+    [Picker.fzf] = function()
       search_opts.escape_path = true
       local cmd = search.build_find_cmd(dir, nil, search_opts)
       local fzf_options = { source = table.concat(cmd, " "), sink = "e" }
@@ -59,7 +60,7 @@ return function(client, _)
 
       return true
     end,
-    ["mini.pick"] = function()
+    [Picker.mini] = function()
       -- Check if mini.pick is available
       local has_mini_pick, mini_pick = pcall(require, "mini.pick")
       if not has_mini_pick then

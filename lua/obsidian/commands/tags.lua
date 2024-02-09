@@ -2,6 +2,7 @@ local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
 local LocationList = require "obsidian.location_list"
+local Picker = require("obsidian.config").Picker
 
 ---@param client obsidian.Client
 ---@param tags string[]
@@ -141,9 +142,9 @@ return function(client, data)
   if not vim.tbl_isempty(tags) then
     return gather_tag_location_list(client, util.tbl_unique(tags))
   else
-    -- Open finder with tags.
-    client:_run_with_finder_backend({
-      ["telescope.nvim"] = function()
+    -- Open picker with tags.
+    client:_run_with_picker_backend({
+      [Picker.telescope] = function()
         -- try with telescope.nvim
         local has_telescope, _ = pcall(require, "telescope")
         if not has_telescope then
@@ -186,7 +187,7 @@ return function(client, data)
         return true
       end,
     }, function()
-      log.warn "Finder not available for tags, please provide a tag argument to the command"
+      log.warn "Picker not available for tags, please provide a tag argument to the command"
     end)
   end
 end

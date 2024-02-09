@@ -3,6 +3,7 @@ local log = require "obsidian.log"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 local picker_utils = require "obsidian.picker_utils"
+local Picker = require("obsidian.config").Picker
 
 ---@param client obsidian.Client
 return function(client, data)
@@ -49,7 +50,7 @@ return function(client, data)
     return insert_ref(note)
   end
 
-  -- Otherwise run the preferred finder to search for notes.
+  -- Otherwise run the preferred picker to search for notes.
   local base_cmd = {
     "rg",
     "--no-config",
@@ -61,8 +62,8 @@ return function(client, data)
     "--no-heading",
   }
 
-  client:_run_with_finder_backend {
-    ["telescope.nvim"] = function()
+  client:_run_with_picker_backend {
+    [Picker.telescope] = function()
       -- try with telescope.nvim
       local has_telescope, telescope = pcall(require, "telescope.builtin")
       if not has_telescope then
@@ -96,7 +97,7 @@ return function(client, data)
 
       return true
     end,
-    ["fzf-lua"] = function()
+    [Picker.fzf_lua] = function()
       -- try with fzf-lua
       local has_fzf_lua, fzf_lua = pcall(require, "fzf-lua")
       if not has_fzf_lua then
@@ -119,7 +120,7 @@ return function(client, data)
 
       return true
     end,
-    ["fzf.vim"] = function()
+    [Picker.fzf] = function()
       vim.api.nvim_create_user_command("ObsInsertLink", function(d)
         -- remove escaped whitespace and extract the file name
         local result = string.gsub(d.args, "\\ ", " ")
@@ -157,7 +158,7 @@ return function(client, data)
 
       return true
     end,
-    ["mini.pick"] = function()
+    [Picker.mini] = function()
       -- Check if mini.pick is available
       local has_mini_pick, mini_pick = pcall(require, "mini.pick")
       if not has_mini_pick then

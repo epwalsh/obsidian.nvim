@@ -393,18 +393,17 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
   open_app_foreground = false,
 
-  -- Optional, by default commands like `:ObsidianSearch` will attempt to use
-  -- telescope.nvim, fzf-lua, fzf.vim, or mini.pick (in that order), and use the
-  -- first one they find. You can set this option to tell obsidian.nvim to always use this
-  -- finder.
-  finder = "telescope.nvim",
-
-  -- Optional, configure key mappings for the finder. These are the defaults.
-  -- If you don't want to set any mappings this way then set
-  finder_mappings = {
-    -- Create a new note from your query with `:ObsidianSearch` and `:ObsidianQuickSwitch`.
-    -- Currently only telescope supports this.
-    new = "<C-x>",
+  picker = {
+    -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'fzf.vim', or 'mini.pick'.
+    name = "telescope.nvim",
+    -- Optional, configure key mappings for the picker. These are the defaults.
+    -- Not all pickers support these.
+    mappings = {
+      -- Create a new note from your query.
+      new = "<C-x>",
+      -- Insert a link to the selected note.
+      insert_link = "<C-l>",
+    },
   },
 
   -- Optional, sort search results by "path", "modified", "accessed", or "created".

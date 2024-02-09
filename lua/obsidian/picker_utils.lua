@@ -26,12 +26,12 @@ M.telescope_mappings = function(map, client, initial_query)
     end,
   }
 
-  local new_mapping = client.opts.finder_mappings.new
+  local new_mapping = client.opts.picker.mappings.new
   if new_mapping ~= nil then
     map({ "i", "n" }, new_mapping, telescope_actions.obsidian_new)
   end
 
-  local insert_link_mapping = client.opts.finder_mappings.insert_link
+  local insert_link_mapping = client.opts.picker.mappings.insert_link
   if insert_link_mapping ~= nil then
     map({ "i", "n" }, insert_link_mapping, telescope_actions.obsidian_insert_link)
   end
@@ -45,11 +45,11 @@ end
 ---@param client obsidian.Client
 M.telescope_prompt_title = function(name, client)
   local prompt_title = name .. " | <CR> open"
-  local keys = client.opts.finder_mappings.new
+  local keys = client.opts.picker.mappings.new
   if keys ~= nil then
     prompt_title = prompt_title .. " | " .. keys .. " new"
   end
-  keys = client.opts.finder_mappings.insert_link
+  keys = client.opts.picker.mappings.insert_link
   if keys ~= nil then
     prompt_title = prompt_title .. " | " .. keys .. " insert link"
   end
