@@ -23,7 +23,7 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
   - [Configuration options](#configuration-options)
   - [Notes on configuration](#notes-on-configuration)
   - [Using templates](#using-templates)
-  - [Using obsidian.nvim outside of a workspace / Obsidian vault](#using-obsidiannvim-outside-of-a-workspace--obsidian-vault)
+  - [Usage outside of a workspace or vault](#usage-outside-of-a-workspace-or-vault)
 - 🐞 [Known issues](#known-issues)
 - ➕ [Contributing](#contributing)
 
@@ -559,7 +559,7 @@ config = {
 ```
 
 Dynamic workspaces are also useful when you want to use a subset of this plugin's functionality on markdown files outside of your "fixed" vaults.
-See [using obsidian.nvim outside of a workspace / Obsidian vault](#using-obsidiannvim-outside-of-a-workspace--obsidian-vault).
+See [using obsidian.nvim outside of a workspace / Obsidian vault](#usage-outside-of-a-workspace-or-vault).
 
 #### Completion
 
@@ -676,7 +676,7 @@ templates = {
 }
 ```
 
-### Using obsidian.nvim outside of a workspace / Obsidian vault
+### Usage outside of a workspace or vault
 
 It's possible to configure obsidian.nvim to work on individual markdown files outside of a regular workspace / Obsidian vault by configuring a "dynamic" workspace. To do so you just need to add a special workspace with a function for the `path` field (instead of a string), which should return a *parent* directory of the current buffer. This tells obsidian.nvim to use that directory as the workspace `path` and `root` (vault root) when the buffer is not located inside another fixed workspace.
 
