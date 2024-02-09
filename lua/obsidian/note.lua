@@ -366,11 +366,6 @@ Note.from_lines = function(lines, path, root)
     end
   end
 
-  -- Use title as an alias.
-  if title ~= nil and not util.tbl_contains(aliases, title) then
-    table.insert(aliases, title)
-  end
-
   -- The ID should match the filename with or without the extension.
   local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
   local relative_path_no_ext = relative_path

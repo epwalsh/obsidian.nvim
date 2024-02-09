@@ -1,7 +1,6 @@
 ---
 id: note_without_frontmatter
-aliases:
-  - Hey there
+aliases: []
 tags: []
 ---
 

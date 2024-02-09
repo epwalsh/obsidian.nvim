@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed behavior of workspace detection. When you have multiple workspaces configured, obsidian.nvim will now automatically switch workspaces when you open a buffer in a different workspace. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
 - Various changes to the `Workspace` Lua API. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+- Changed the behavior of the default frontmatter function so it no longer automatically adds the title of the note as an alias. See the `note_frontmatter_func` example in the README if you want the old behavior.
 
 ### Removed
 

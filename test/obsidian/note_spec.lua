@@ -31,8 +31,8 @@ describe("Note", function()
   it("should be able to be initialized from a note w/o frontmatter", function()
     local note = Note.from_file "test_fixtures/notes/note_without_frontmatter.md"
     assert.equals(note.id, "note_without_frontmatter")
-    assert.equals(#note.aliases, 1)
-    assert.equals(note.aliases[1], "Hey there")
+    assert.equals(note.title, "Hey there")
+    assert.equals(#note.aliases, 0)
     assert.equals(#note.tags, 0)
     assert.is_not(note:fname(), nil)
     assert.is_false(note.has_frontmatter)
@@ -81,8 +81,7 @@ describe("Note", function()
       table.concat({
         "---",
         "id: note_with_additional_metadata",
-        "aliases:",
-        "  - Note with additional metadata",
+        "aliases: []",
         "tags: []",
         "foo: bar",
         "---",
@@ -95,10 +94,10 @@ describe("Note", function()
     local note = Note.from_file "test_fixtures/notes/note_with_different_frontmatter_format.md"
     assert.equals(note.id, "note_with_different_frontmatter_format")
     assert.is_not(note.metadata, nil)
-    assert.equals(#note.aliases, 4)
+    assert.equals(#note.aliases, 3)
     assert.equals(note.aliases[1], "Amanda Green")
     assert.equals(note.aliases[2], "Detective Green")
     assert.equals(note.aliases[3], "Mandy")
-    assert.equals(note.aliases[4], "Detective")
+    assert.equals(note.title, "Detective")
   end)
 end)
