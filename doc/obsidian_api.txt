@@ -426,13 +426,6 @@ Return ~
 obsidian.Note
 
 ------------------------------------------------------------------------------
-                                    *obsidian.Client._run_with_picker_backend()*
-`Client._run_with_picker_backend`({self}, {implementations}, {on_not_implemented})
-Parameters ~
-{implementations} `(table<obsidian.config.Picker, fun(): boolean>)`
-{on_not_implemented} `(fun()|?)` A function to run when no picker is available for the operation
-
-------------------------------------------------------------------------------
                                                    *obsidian.Client.update_ui()*
                       `Client.update_ui`({self}, {bufnr})
 Manually update extmarks in a buffer.
@@ -451,6 +444,14 @@ Parameters ~
 
 Return ~
 `(string)`
+
+------------------------------------------------------------------------------
+                                                      *obsidian.Client.picker()*
+                            `Client.picker`({self})
+Get the default Picker.
+
+Return ~
+obsidian.Picker| `(optional)`
 
 ------------------------------------------------------------------------------
                                                                  *obsidian.Note*

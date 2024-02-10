@@ -69,12 +69,8 @@ COMMANDS                                                   *obsidian-commands*
     argument: the title of the new note.
 - `:ObsidianQuickSwitch` to quickly switch to (or open) another note in your
     vault, searching by its name using ripgrep
-    <https://github.com/BurntSushi/ripgrep> with telescope.nvim
-    <https://github.com/nvim-telescope/telescope.nvim>, fzf.vim
-    <https://github.com/junegunn/fzf.vim>, fzf-lua
-    <https://github.com/ibhagwan/fzf-lua>, or Mini.Pick
-    <https://github.com/echasnovski/mini.pick> from the mini.nvim library. Note:
-    only telescope supports creating new notes.
+    <https://github.com/BurntSushi/ripgrep> with your preferred picker (see
+    |obsidian-plugin-dependencies| below).
 - `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the
     cursor, optionally opening it in a vertical or horizontal split.
 - `:ObsidianBacklinks` for getting a location list of references to the current
@@ -89,20 +85,10 @@ COMMANDS                                                   *obsidian-commands*
     day.
 - `:ObsidianTomorrow` to open/create the daily note for the next working day.
 - `:ObsidianTemplate [NAME]` to insert a template from the templates folder,
-    selecting from a list using telescope.nvim
-    <https://github.com/nvim-telescope/telescope.nvim>, fzf.vim
-    <https://github.com/junegunn/fzf.vim>, fzf-lua
-    <https://github.com/ibhagwan/fzf-lua>, or Mini.Pick
-    <https://github.com/echasnovski/mini.pick> from the mini.nvim library. See
+    selecting from a list using your preferred picker. See
     |obsidian-"using-templates"| for more information.
 - `:ObsidianSearch [QUERY]` to search for (or create) notes in your vault using
-    ripgrep <https://github.com/BurntSushi/ripgrep> with telescope.nvim
-    <https://github.com/nvim-telescope/telescope.nvim>, fzf.vim
-    <https://github.com/junegunn/fzf.vim>, fzf-lua
-    <https://github.com/ibhagwan/fzf-lua>, or Mini.Pick
-    <https://github.com/echasnovski/mini.pick>. This command has one optional
-    argument: a search query to start with. Note: only telescope supports creating
-    new notes.
+    `ripgrep` with your preferred picker.
 - `:ObsidianLink [QUERY]` to link an inline visual selection of text to a note.
     This command has one optional argument: a query that will be used to resolve
     the note by ID, path, or alias. If not given, the selected text will be used as
@@ -148,10 +134,9 @@ all of obsidian.nvim’s functionality:
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
 Search functionality (e.g. via the `:ObsidianSearch` and
-`:ObsidianQuickSwitch` commands) also requires telescope.nvim
-<https://github.com/nvim-telescope/telescope.nvim>, one of the `fzf`
-alternatives, or Mini.Pick <https://github.com/echasnovski/mini.pick> from the
-mini.nvim library (see |obsidian-plugin-dependencies| below).
+`:ObsidianQuickSwitch` commands) also requires a picker such telescope.nvim
+<https://github.com/nvim-telescope/telescope.nvim> (see
+|obsidian-plugin-dependencies| below).
 
 
 INSTALL AND CONFIGURE                         *obsidian-install-and-configure*
@@ -249,12 +234,11 @@ dependencies that enhance the obsidian.nvim experience.
 
 - **[recommended]** hrsh7th/nvim-cmp <https://github.com/hrsh7th/nvim-cmp>: for completion of note references.
 
-**Search functionality:**
+**Pickers:**
 
 - **[recommended]** nvim-telescope/telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>: for search and quick-switch functionality.
 - Mini.Pick <https://github.com/echasnovski/mini.pick> from the mini.nvim library: an alternative to telescope for search and quick-switch functionality.
-- **[deprecated]** ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>: another alternative to telescope for search and quick-switch functionality.
-- **[deprecated]** junegunn/fzf <https://github.com/junegunn/fzf> and junegunn/fzf.vim <https://github.com/junegunn/fzf.vim>: another alternative to telescope for search and quick-switch functionality.
+- ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>: another alternative to telescope for search and quick-switch functionality.
 
 **Syntax highlighting:**
 
@@ -461,10 +445,10 @@ carefully and customize it to your needs:
       open_app_foreground = false,
     
       picker = {
-        -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'fzf.vim', or 'mini.pick'.
+        -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
         name = "telescope.nvim",
         -- Optional, configure key mappings for the picker. These are the defaults.
-        -- Not all pickers support these.
+        -- Not all pickers support all mappings.
         mappings = {
           -- Create a new note from your query.
           new = "<C-x>",
@@ -730,12 +714,10 @@ different key:
 
 USING TEMPLATES                                     *obsidian-using-templates*
 
-To insert a template, run the command `:ObsidianTemplate`. This will open
-telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>, one of the
-`fzf` alternatives, or Mini.Pick <https://github.com/echasnovski/mini.pick>
-from the mini.nvim library, and allow you to select a template from the
-templates folder. Select a template and hit `<CR>` to insert. Substitution of
-`{{date}}`, `{{time}}`, and `{{title}}` is supported.
+To insert a template, run the command `:ObsidianTemplate`. This will open a
+list of available templates in your templates folder with your preferred
+picker. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`,
+`{{time}}`, and `{{title}}` is supported.
 
 For example, with the following configuration
 
