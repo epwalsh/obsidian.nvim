@@ -8,12 +8,12 @@ local M = {}
 ---
 ---@return obsidian.Picker|?
 M.get = function(client)
-  local picker_name = client.opts.picker.name
-  if picker_name == PickerName.telescope then
+  local picker_name = string.lower(client.opts.picker.name)
+  if picker_name == string.lower(PickerName.telescope) then
     return require("obsidian.pickers._telescope").new(client)
-  elseif picker_name == PickerName.mini then
+  elseif picker_name == string.lower(PickerName.mini) then
     return require("obsidian.pickers._mini").new(client)
-  elseif picker_name == PickerName.fzf_lua then
+  elseif picker_name == string.lower(PickerName.fzf_lua) then
     return require("obsidian.pickers._fzf").new(client)
   elseif picker_name then
     error("not implemented for " .. picker_name)
