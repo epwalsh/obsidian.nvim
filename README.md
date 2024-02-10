@@ -49,8 +49,7 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 - `:ObsidianNew [TITLE]` to create a new note.
   This command has one optional argument: the title of the new note.
 
-- `:ObsidianQuickSwitch` to quickly switch to (or open) another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
-  Note: only telescope supports creating new notes.
+- `:ObsidianQuickSwitch` to quickly switch to (or open) another note in your vault, searching by its name using [ripgrep](https://github.com/BurntSushi/ripgrep) with your preferred picker (see [plugin dependencies](#plugin-dependencies) below).
 
 - `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the cursor, optionally opening it in a vertical or horizontal split.
 
@@ -64,12 +63,9 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianTomorrow` to open/create the daily note for the next working day.
 
-- `:ObsidianTemplate [NAME]` to insert a template from the templates folder, selecting from a list using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library.
-  See ["using templates"](#using-templates) for more information.
+- `:ObsidianTemplate [NAME]` to insert a template from the templates folder, selecting from a list using your preferred picker. See ["using templates"](#using-templates) for more information.
 
-- `:ObsidianSearch [QUERY]` to search for (or create) notes in your vault using [ripgrep](https://github.com/BurntSushi/ripgrep) with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf.vim](https://github.com/junegunn/fzf.vim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [Mini.Pick](https://github.com/echasnovski/mini.pick).
-  This command has one optional argument: a search query to start with.
-  Note: only telescope supports creating new notes.
+- `:ObsidianSearch [QUERY]` to search for (or create) notes in your vault using `ripgrep` with your preferred picker.
 
 - `:ObsidianLink [QUERY]` to link an inline visual selection of text to a note.
   This command has one optional argument: a query that will be used to resolve the note by ID, path, or alias. If not given, the selected text will be used as the query.
@@ -101,7 +97,7 @@ Specific operating systems also require additional dependencies in order to use 
 - **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
-Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), one of the `fzf` alternatives, or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library (see [plugin dependencies](#plugin-dependencies) below).
+Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires a picker such [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) (see [plugin dependencies](#plugin-dependencies) below).
 
 ### Install and configure
 
@@ -187,12 +183,11 @@ The only **required** plugin dependency is [plenary.nvim](https://github.com/nvi
 
 - **[recommended]** [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp): for completion of note references.
 
-**Search functionality:**
+**Pickers:**
 
 - **[recommended]** [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim): for search and quick-switch functionality.
 - [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library: an alternative to telescope for search and quick-switch functionality.
-- **[deprecated]** [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): another alternative to telescope for search and quick-switch functionality.
-- **[deprecated]** [junegunn/fzf](https://github.com/junegunn/fzf) and [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim): another alternative to telescope for search and quick-switch functionality.
+- [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): another alternative to telescope for search and quick-switch functionality.
 
 **Syntax highlighting:**
 
@@ -394,10 +389,10 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_app_foreground = false,
 
   picker = {
-    -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'fzf.vim', or 'mini.pick'.
+    -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
     name = "telescope.nvim",
     -- Optional, configure key mappings for the picker. These are the defaults.
-    -- Not all pickers support these.
+    -- Not all pickers support all mappings.
     mappings = {
       -- Create a new note from your query.
       new = "<C-x>",
@@ -627,7 +622,7 @@ mappings = {
 
 ### Using templates
 
-To insert a template, run the command `:ObsidianTemplate`. This will open [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), one of the `fzf` alternatives, or [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library, and allow you to select a template from the templates folder. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported.
+To insert a template, run the command `:ObsidianTemplate`. This will open a list of available templates in your templates folder with your preferred picker. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported.
 
 For example, with the following configuration
 
