@@ -214,6 +214,7 @@ end
 ---@field sort_reversed boolean|?
 ---@field fixed_strings boolean|?
 ---@field ignore_case boolean|?
+---@field smart_case boolean|?
 ---@field exclude string[]|? paths to exclude
 ---@field max_count_per_file integer|?
 ---@field escape_path boolean|?
@@ -270,6 +271,10 @@ SearchOpts.to_ripgrep_opts = function(self)
 
   if self.ignore_case then
     opts[#opts + 1] = "--ignore-case"
+  end
+
+  if self.smart_case then
+    opts[#opts + 1] = "--smart-case"
   end
 
   if self.exclude ~= nil then
@@ -348,6 +353,25 @@ M.build_find_cmd = function(path, term, opts)
   end
 
   return vim.tbl_flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }
+end
+
+--- Build the 'rg' grep command for pickers.
+---
+---@param opts obsidian.search.SearchOpts|?
+---
+---@return string[]
+M.build_grep_cmd = function(opts)
+  opts = SearchOpts.from_tbl(opts and opts or {})
+
+  return vim.tbl_flatten {
+    M._BASE_CMD,
+    opts:to_ripgrep_opts(),
+    "--column",
+    "--line-number",
+    "--no-heading",
+    "--with-filename",
+    "--color=never",
+  }
 end
 
 ---@class MatchPath

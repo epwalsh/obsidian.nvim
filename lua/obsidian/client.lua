@@ -1176,46 +1176,6 @@ Client.daily = function(self, offset_days)
   return self:_daily(os.time() + (offset_days * 3600 * 24))
 end
 
----@param implementations table<obsidian.config.Picker, fun(): boolean>
----@param on_not_implemented fun()|? A function to run when no picker is available for the operation
-Client._run_with_picker_backend = function(self, implementations, on_not_implemented)
-  if self.opts.picker.name then
-    if implementations[self.opts.picker.name] ~= nil then
-      local ok, res = pcall(implementations[self.opts.picker.name])
-      if not ok then
-        log.err("error running picker '%s':\n%s", self.opts.picker.name, res)
-        return
-      elseif res == false then
-        log.err("unable to load picker '%s'. Are you sure it's installed?", self.opts.picker.name)
-        return
-      else
-        return res
-      end
-    else
-      log.err("operation not implemented for picker '%s'", self.opts.picker.name)
-      return
-    end
-  end
-
-  for picker in iter { config.Picker.telescope, config.Picker.fzf_lua, config.Picker.fzf, config.Picker.mini } do
-    if implementations[picker] ~= nil then
-      local has_picker, res = implementations[picker]()
-      if has_picker then
-        return res
-      end
-    end
-  end
-
-  if on_not_implemented then
-    on_not_implemented()
-  else
-    log.err(
-      "No pickers available for operation. One of %s is required.",
-      table.concat(vim.tbl_values(config.Picker), ", ")
-    )
-  end
-end
-
 --- Manually update extmarks in a buffer.
 ---
 ---@param bufnr integer|?
@@ -1278,6 +1238,13 @@ Client.format_link = function(self, note, opts)
   end
 
   return link
+end
+
+--- Get the default Picker.
+---
+---@return obsidian.Picker|?
+Client.picker = function(self)
+  return require("obsidian.pickers").get(self)
 end
 
 return Client

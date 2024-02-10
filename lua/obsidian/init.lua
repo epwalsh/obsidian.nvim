@@ -15,6 +15,7 @@ local module_lookups = {
   itertools = "obsidian.itertools",
   mappings = "obsidian.mappings",
   Note = "obsidian.note",
+  pickers = "obsidian.pickers",
   search = "obsidian.search",
   templates = "obsidian.templates",
   ui = "obsidian.ui",

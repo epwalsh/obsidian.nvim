@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Major internal refactoring / improvements for how we integrate with pickers.
+- Configuration option `finder` and `finder_mappings` have been consolidated into `picker = { name: string, mappings: { ... } }`.
+
+### Removed
+
+- Removed support for `fzf.vim` as a picker (`fzf-lua` is still supported).
+
 ## [v3.0.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.0.0) - 2024-02-09
 
 ⚠️ POTENTIALLY BREAKING CHANGES! PLEASE READ BELOW ⚠️
