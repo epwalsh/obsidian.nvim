@@ -149,7 +149,7 @@ end
 ---
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
-  cur_dir = Path:new(vim.fs.normalize(tostring(cur_dir)))
+  cur_dir = Path:new(vim.fn.resolve(vim.fs.normalize(tostring(cur_dir))))
   local dirs = cur_dir:parents()
   table.insert(dirs, 1, tostring(cur_dir))
 
