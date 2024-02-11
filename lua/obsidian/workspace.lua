@@ -69,7 +69,7 @@ Workspace.new = function(path, opts)
   opts = opts and opts or {}
 
   local self = Workspace.init()
-  self.path = vim.fs.normalize(tostring(path))
+  self.path = vim.fn.resolve(vim.fs.normalize(tostring(path)))
   self.name = opts.name and opts.name or assert(vim.fs.basename(self.path))
   self.overrides = opts.overrides
 
