@@ -34,6 +34,13 @@ local Workspace = abc.new_class {
   __tostring = function(self)
     return string.format("Workspace(name='%s', path='%s', root='%s')", self.name, self.path, self.root)
   end,
+  __eq = function(a, b)
+    local a_fields = a:as_tbl()
+    a_fields.locked = nil
+    local b_fields = b:as_tbl()
+    b_fields.locked = nil
+    return vim.deep_equal(a_fields, b_fields)
+  end,
 }
 
 --- Find the vault root from a given directory.

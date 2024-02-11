@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Major internal refactoring / improvements for how we integrate with pickers.
 - Configuration option `finder` and `finder_mappings` have been consolidated into `picker = { name: string, mappings: { ... } }`.
+- When `:ObsidianWorkspace` is called without any arguments, obsidian.nvim will open your picker to select a workspace to switch to.
 
 ### Fixed
 
