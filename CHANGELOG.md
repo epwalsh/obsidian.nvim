@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Major internal refactoring / improvements for how we integrate with pickers.
 - Configuration option `finder` and `finder_mappings` have been consolidated into `picker = { name: string, mappings: { ... } }`.
 
+### Fixed
+
+- Resolve workspace path when behind symlinks.
+
 ### Removed
 
 - Removed support for `fzf.vim` as a picker (`fzf-lua` is still supported).
