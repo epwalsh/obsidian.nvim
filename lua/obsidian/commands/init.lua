@@ -137,55 +137,50 @@ M.complete_args_id = function(_, _, cmd_line, _)
   end
 end
 
----Check the directory for notes with missing/invalid frontmatter.
-M.register("ObsidianCheck", { opts = { nargs = 0 } })
+M.register("ObsidianCheck", { opts = { nargs = 0, desc = "Check for issues in your vault" } })
 
----Create or open a new daily note.
-M.register("ObsidianToday", { opts = { nargs = "?" } })
+M.register("ObsidianToday", { opts = { nargs = "?", desc = "Open today's daily note" } })
 
----Create (or open) the daily note from the last weekday.
-M.register("ObsidianYesterday", { opts = { nargs = 0 } })
+M.register("ObsidianYesterday", { opts = { nargs = 0, desc = "Open yesterday's daily note" } })
 
----Create (or open) the daily note for the next weekday.
-M.register("ObsidianTomorrow", { opts = { nargs = 0 } })
+M.register("ObsidianTomorrow", { opts = { nargs = 0, desc = "Open tomorrow's daily note" } })
 
----Create a new note.
-M.register("ObsidianNew", { opts = { nargs = "?" } })
+M.register("ObsidianNew", { opts = { nargs = "?", desc = "Create a new note" } })
 
----Open a note in the Obsidian app.
-M.register("ObsidianOpen", { opts = { nargs = "?" }, complete = M.complete_args_search })
+M.register(
+  "ObsidianOpen",
+  { opts = { nargs = "?", desc = "Open in the Obsidian app" }, complete = M.complete_args_search }
+)
 
----Get backlinks to a note.
-M.register("ObsidianBacklinks", { opts = { nargs = 0 } })
+M.register("ObsidianBacklinks", { opts = { nargs = 0, desc = "Collect backlinks" } })
 
----Find all instances of any number of tags.
-M.register("ObsidianTags", { opts = { nargs = "*", range = true } })
+M.register("ObsidianTags", { opts = { nargs = "*", range = true, desc = "Find tags" } })
 
----Search notes.
-M.register("ObsidianSearch", { opts = { nargs = "?" } })
+M.register("ObsidianSearch", { opts = { nargs = "?", desc = "Search vault" } })
 
---- Insert a template
-M.register("ObsidianTemplate", { opts = { nargs = "?" } })
+M.register("ObsidianTemplate", { opts = { nargs = "?", desc = "Insert a template" } })
 
----Quick switch to an obsidian note
-M.register("ObsidianQuickSwitch", { opts = { nargs = 0 } })
+M.register("ObsidianQuickSwitch", { opts = { nargs = 0, desc = "Switch notes" } })
 
----Create a new note and link to it.
-M.register("ObsidianLinkNew", { opts = { nargs = "?", range = true } })
+M.register("ObsidianLinkNew", { opts = { nargs = "?", range = true, desc = "Link selected text to a new note" } })
 
----Create a link to an existing note on the current visual selection.
-M.register("ObsidianLink", { opts = { nargs = "?", range = true }, complete = M.complete_args_search })
+M.register("ObsidianLink", {
+  opts = { nargs = "?", range = true, desc = "Link selected text to an existing note" },
+  complete = M.complete_args_search,
+})
 
----Follow link under cursor.
-M.register("ObsidianFollowLink", { opts = { nargs = "?" } })
+M.register("ObsidianFollowLink", { opts = { nargs = "?", desc = "Follow reference or link under cursor" } })
 
----Switch to a different workspace.
-M.register("ObsidianWorkspace", { opts = { nargs = "?" } })
+M.register("ObsidianWorkspace", { opts = { nargs = "?", desc = "Check or switch workspace" } })
 
----Rename a note and update all backlinks.
-M.register("ObsidianRename", { opts = { nargs = "?" }, complete = M.complete_args_id })
+M.register(
+  "ObsidianRename",
+  { opts = { nargs = "?", desc = "Rename note and update all references to it" }, complete = M.complete_args_id }
+)
 
----Paste an image into a note.
-M.register("ObsidianPasteImg", { opts = { nargs = "?", complete = "file" } })
+M.register(
+  "ObsidianPasteImg",
+  { opts = { nargs = "?", complete = "file", desc = "Paste and image from the clipboard" } }
+)
 
 return M

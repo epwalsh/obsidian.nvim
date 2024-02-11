@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added descriptions to all commands.
+
 ### Changed
 
 - Major internal refactoring / improvements for how we integrate with pickers.
