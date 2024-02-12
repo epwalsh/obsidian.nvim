@@ -572,23 +572,59 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls)
   return nil
 end
 
----Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
+--- Deprecated, use `parse_cursor_link()` instead.
 ---
 ---@param line string|?
 ---@param col integer|?
 ---@param include_naked_urls boolean|?
+---
 ---@return string|?, string|?, obsidian.search.RefTypes|?
 util.cursor_link = function(line, col, include_naked_urls)
-  local search = require "obsidian.search"
+  return util.parse_cursor_link { line = line, col = col, include_naked_urls = include_naked_urls }
+end
 
-  local current_line = line and line or vim.api.nvim_get_current_line()
+--- Get the link location and name of the link under the cursor, if there is one.
+---
+---@param opts { line: string|?, col: integer|?, include_naked_urls: boolean|? }|?
+---
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.parse_cursor_link = function(opts)
+  opts = opts and opts or {}
 
-  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
+  local current_line = opts.line and opts.line or vim.api.nvim_get_current_line()
+  local open, close, link_type = util.cursor_on_markdown_link(current_line, opts.col, opts.include_naked_urls)
   if open == nil or close == nil then
     return
   end
 
   local link = current_line:sub(open, close)
+  return util.parse_link(link, { link_type = link_type, include_naked_urls = opts.include_naked_urls })
+end
+
+---@param link string
+---@param opts { include_naked_urls: boolean|?, link_type: obsidian.search.RefTypes|? }|?
+---
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.parse_link = function(link, opts)
+  local search = require "obsidian.search"
+
+  opts = opts and opts or {}
+
+  local link_type = opts.link_type
+  if link_type == nil then
+    for match in iter(search.find_refs(link, { include_naked_urls = opts.include_naked_urls })) do
+      local _, _, m_type = unpack(match)
+      if m_type then
+        link_type = m_type
+        break
+      end
+    end
+  end
+
+  if link_type == nil then
+    return nil
+  end
+
   local link_location, link_name
   if link_type == search.RefTypes.Markdown then
     link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")

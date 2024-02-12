@@ -127,7 +127,7 @@ M.complete_args_id = function(_, _, cmd_line, _)
   if string.len(cmd_arg) > 0 then
     return {}
   else
-    local note_id = util.cursor_link()
+    local note_id = util.parse_cursor_link()
     if note_id == nil then
       local bufpath = vim.api.nvim_buf_get_name(assert(vim.fn.bufnr()))
       local note = Note.from_file(bufpath)

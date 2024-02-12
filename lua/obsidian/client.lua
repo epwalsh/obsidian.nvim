@@ -578,7 +578,7 @@ Client.resolve_note_async = function(self, query, callback)
   end
 
   for _, path in pairs(paths_to_check) do
-    if path:is_file() and vim.endswith(tostring(path), ".md") then
+    if path:is_file() then
       return async.run(function()
         return Note.from_file_async(path)
       end, callback)
@@ -608,6 +608,68 @@ Client.resolve_note_async = function(self, query, callback)
     else
       return callback(nil)
     end
+  end)
+end
+
+---@class obsidian.ResolveLinkResult
+---
+---@field location string
+---@field name string
+---@field link_type obsidian.search.RefTypes
+---@field path Path|?
+---@field note obsidian.Note|?
+---@field url string|?
+
+--- Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
+---
+---@param link string|?
+---@param callback fun(res: obsidian.ResolveLinkResult|?)
+Client.resolve_link_async = function(self, link, callback)
+  local location, name, link_type
+  if link then
+    location, name, link_type = util.parse_link(link, { include_naked_urls = true })
+  else
+    location, name, link_type = util.parse_cursor_link { include_naked_urls = true }
+  end
+
+  if location == nil or name == nil or link_type == nil then
+    return callback(nil)
+  end
+
+  ---@type obsidian.ResolveLinkResult
+  local res = { location = location, name = name, link_type = link_type }
+
+  if util.is_url(location) then
+    res.url = location
+    return callback(res)
+  end
+
+  -- The Obsidian app will follow links with spaces encoded as "%20" (as they are in URLs),
+  -- so we should too.
+  location = util.string_replace(location, "%20", " ")
+
+  -- Remove links from the end if there are any.
+  local header_link = location:match "#[%a%d%s-_^]+$"
+  if header_link ~= nil then
+    location = location:sub(1, -header_link:len() - 1)
+  end
+
+  res.location = location
+
+  self:resolve_note_async(location, function(note)
+    if note ~= nil then
+      res.path = note.path
+      res.note = note
+      return callback(res)
+    end
+
+    local path = Path:new(location)
+    if path:exists() then
+      res.path = path
+      return callback(res)
+    end
+
+    return callback(res)
   end)
 end
 

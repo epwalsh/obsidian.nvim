@@ -39,7 +39,7 @@ return function(client, data)
   local cur_note_path
   local cur_note
   local dirname
-  local cur_note_id = util.cursor_link()
+  local cur_note_id = util.parse_cursor_link()
   if cur_note_id == nil then
     is_current_buf = true
     cur_note_bufnr = assert(vim.fn.bufnr())
