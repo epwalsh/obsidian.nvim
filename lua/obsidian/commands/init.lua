@@ -16,6 +16,7 @@ local command_lookups = {
   ObsidianQuickSwitch = "obsidian.commands.quick_switch",
   ObsidianLinkNew = "obsidian.commands.link_new",
   ObsidianLink = "obsidian.commands.link",
+  ObsidianLinks = "obsidian.commands.links",
   ObsidianFollowLink = "obsidian.commands.follow_link",
   ObsidianWorkspace = "obsidian.commands.workspace",
   ObsidianRename = "obsidian.commands.rename",
@@ -168,6 +169,8 @@ M.register("ObsidianLink", {
   opts = { nargs = "?", range = true, desc = "Link selected text to an existing note" },
   complete = M.complete_args_search,
 })
+
+M.register("ObsidianLinks", { opts = { nargs = 0, desc = "Collect all links within the current buffer" } })
 
 M.register("ObsidianFollowLink", { opts = { nargs = "?", desc = "Follow reference or link under cursor" } })
 
