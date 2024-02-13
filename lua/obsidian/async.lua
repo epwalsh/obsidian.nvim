@@ -69,6 +69,7 @@ Executor.map = function(self, fn, task_args, callback)
     for i, args in ipairs(task_args) do
       self:submit(fn, get_task_done_fn(i), unpack(args))
     end
+    all_submitted = true
   elseif type(task_args) == "table" then
     local i = 0
     for k, v in pairs(task_args) do
@@ -76,6 +77,7 @@ Executor.map = function(self, fn, task_args, callback)
       num_tasks = num_tasks + 1
       self:submit(fn, get_task_done_fn(i), k, v)
     end
+    all_submitted = true
   elseif type(task_args) == "function" then
     local i = 0
     local args = { task_args() }
