@@ -830,8 +830,6 @@ util.get_visual_selection = function()
   -- swap vars if needed
   if cerow < csrow then
     csrow, cerow = cerow, csrow
-  end
-  if cecol < cscol then
     cscol, cecol = cecol, cscol
   end
 
@@ -845,8 +843,14 @@ util.get_visual_selection = function()
     selection = ""
   elseif n == 1 then
     selection = string.sub(lines[1], cscol, cecol)
+  elseif n == 2 then
+    selection = string.sub(lines[1], cscol) .. "\n" .. string.sub(lines[n], 1, cecol)
   else
-    selection = string.sub(lines[1], cscol) .. table.concat(lines, "\n", 2, n - 1) .. string.sub(lines[n], 1, cecol)
+    selection = string.sub(lines[1], cscol)
+      .. "\n"
+      .. table.concat(lines, "\n", 2, n - 1)
+      .. "\n"
+      .. string.sub(lines[n], 1, cecol)
   end
 
   return {

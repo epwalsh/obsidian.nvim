@@ -12,18 +12,21 @@ return function(client, data)
     return
   end
 
-  local content
+  local content = vim.split(viz.selection, "\n", { plain = true })
+
+  ---@type string|?
+  local title
   if data.args ~= nil and string.len(data.args) > 0 then
-    content = { data.args }
+    title = util.strip_whitespace(data.args)
   else
-    content = viz.lines
+    title = util.strip_whitespace(vim.fn.input { prompt = "Enter title (optional): " })
   end
 
-  -- new note with title from user
-  local title = vim.fn.input { prompt = "Enter title (optional): " }
   if string.len(title) == 0 then
     title = nil
   end
+
+  -- create the new note.
   local note = client:new_note(title)
 
   -- replace selection with link to new note
