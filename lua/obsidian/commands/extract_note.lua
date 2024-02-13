@@ -8,15 +8,12 @@ local util = require "obsidian.util"
 return function(client, data)
   local viz = util.get_visual_selection()
   if viz.lines == nil or #viz.lines == 0 then
-    log.err "ObsidianExtractLink must be called with visual selection"
-    return
-  elseif #viz.lines ~= 1 then
-    log.err "Only in-line visual selections allowed"
+    log.err "ObsidianExtractNote must be called with visual selection"
     return
   end
 
   local content
-  if string.len(data.args) > 0 then
+  if data.args ~= nil and string.len(data.args) > 0 then
     content = { data.args }
   else
     content = viz.lines
@@ -27,10 +24,10 @@ return function(client, data)
   if string.len(title) == 0 then
     title = nil
   end
-  local note = client:new_note(title, nil, client.buf_dir)
+  local note = client:new_note(title)
 
   -- replace selection with link to new note
-  local link = client:format_link(note, {})
+  local link = client:format_link(note)
   vim.api.nvim_buf_set_lines(0, viz.csrow - 1, viz.cerow + 1, false, { link })
 
   -- add the selected text to the end of the new note
