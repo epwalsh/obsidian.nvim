@@ -98,6 +98,8 @@ COMMANDS                                                   *obsidian-commands*
     note. If not given, the selected text will be used as the title.
 - `:ObsidianLinks` to collect all links within the current buffer into a picker
     window.
+- `:ObsidianExtractNote` to extract the visually selected text into a new note
+    and link to it.
 - `:ObsidianWorkspace [NAME]` to switch to another workspace.
 - `:ObsidianPasteImg [IMGNAME]` to paste an image from the clipboard into the
     note at the cursor position by saving it to the vault and adding a markdown
