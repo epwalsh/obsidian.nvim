@@ -256,6 +256,36 @@ Return ~
 obsidian.Note| `(optional)`
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.ResolveLinkResult}
+
+Fields ~
+{location} `(string)`
+{name} `(string)`
+{link_type} obsidian.search.RefTypes
+{path} Path|?
+{note} obsidian.Note|?
+{url} `(string|?)`
+
+------------------------------------------------------------------------------
+                                          *obsidian.Client.resolve_link_async()*
+            `Client.resolve_link_async`({self}, {link}, {callback})
+Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
+
+Parameters ~
+{link} `(string|?)`
+{callback} `(fun(res: obsidian.ResolveLinkResult|?))`
+
+------------------------------------------------------------------------------
+                                           *obsidian.Client.follow_link_async()*
+               `Client.follow_link_async`({self}, {link}, {opts})
+Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
+
+Parameters ~
+{link} `(string|?)`
+{opts} { open_strategy: obsidian.config.OpenStrategy|? }|?
+
+------------------------------------------------------------------------------
                                                 *obsidian.Client.current_note()*
                          `Client.current_note`({self})
 Get the current note.
