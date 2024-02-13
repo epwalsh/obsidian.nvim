@@ -75,6 +75,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianLinks` to collect all links within the current buffer into a picker window.
 
+- `:ObsidianExtractNote` to extract the visually selected text into a new note and link to it.
+
 - `:ObsidianWorkspace [NAME]` to switch to another workspace.
 
 - `:ObsidianPasteImg [IMGNAME]` to paste an image from the clipboard into the note at the cursor position by saving it to the vault and adding a markdown image link. You can configure the default folder to save images to with the `attachments.img_folder` option.
