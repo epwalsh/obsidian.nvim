@@ -76,7 +76,7 @@ obsidian.info = function()
   end
 
   for cmd in iter { "rg" } do
-    local cmd_info = obsidian.util.get_external_depency_info(cmd)
+    local cmd_info = obsidian.util.get_external_dependency_info(cmd)
     if cmd_info ~= nil then
       print(cmd_info)
     end

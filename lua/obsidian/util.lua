@@ -720,7 +720,7 @@ end
 
 ---@param cmd string
 ---@return string|?
-util.get_external_depency_info = function(cmd)
+util.get_external_dependency_info = function(cmd)
   local Job = require "plenary.job"
   local output, exit_code = Job:new({ ---@diagnostic disable-line: missing-fields
     command = cmd,
