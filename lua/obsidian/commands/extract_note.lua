@@ -28,7 +28,7 @@ return function(client, data)
 
   -- replace selection with link to new note
   local link = client:format_link(note)
-  vim.api.nvim_buf_set_lines(0, viz.csrow - 1, viz.cerow + 1, false, { link })
+  vim.api.nvim_buf_set_text(0, viz.csrow - 1, viz.cscol - 1, viz.cerow - 1, viz.cecol, { link })
 
   -- add the selected text to the end of the new note
   local open_in = util.get_open_strategy(client.opts.open_notes_in)
