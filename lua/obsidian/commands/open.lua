@@ -19,7 +19,7 @@ return function(client, data)
       return
     end
   else
-    local cursor_link, _, ref_type = util.cursor_link()
+    local cursor_link, _, ref_type = util.parse_cursor_link()
     if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl then
       local note = client:resolve_note(cursor_link)
       if note ~= nil then

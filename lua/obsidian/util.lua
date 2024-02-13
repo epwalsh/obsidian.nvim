@@ -572,23 +572,59 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls)
   return nil
 end
 
----Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
+--- Deprecated, use `parse_cursor_link()` instead.
 ---
 ---@param line string|?
 ---@param col integer|?
 ---@param include_naked_urls boolean|?
+---
 ---@return string|?, string|?, obsidian.search.RefTypes|?
 util.cursor_link = function(line, col, include_naked_urls)
-  local search = require "obsidian.search"
+  return util.parse_cursor_link { line = line, col = col, include_naked_urls = include_naked_urls }
+end
 
-  local current_line = line and line or vim.api.nvim_get_current_line()
+--- Get the link location and name of the link under the cursor, if there is one.
+---
+---@param opts { line: string|?, col: integer|?, include_naked_urls: boolean|? }|?
+---
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.parse_cursor_link = function(opts)
+  opts = opts and opts or {}
 
-  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
+  local current_line = opts.line and opts.line or vim.api.nvim_get_current_line()
+  local open, close, link_type = util.cursor_on_markdown_link(current_line, opts.col, opts.include_naked_urls)
   if open == nil or close == nil then
     return
   end
 
   local link = current_line:sub(open, close)
+  return util.parse_link(link, { link_type = link_type, include_naked_urls = opts.include_naked_urls })
+end
+
+---@param link string
+---@param opts { include_naked_urls: boolean|?, link_type: obsidian.search.RefTypes|? }|?
+---
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.parse_link = function(link, opts)
+  local search = require "obsidian.search"
+
+  opts = opts and opts or {}
+
+  local link_type = opts.link_type
+  if link_type == nil then
+    for match in iter(search.find_refs(link, { include_naked_urls = opts.include_naked_urls })) do
+      local _, _, m_type = unpack(match)
+      if m_type then
+        link_type = m_type
+        break
+      end
+    end
+  end
+
+  if link_type == nil then
+    return nil
+  end
+
   local link_location, link_name
   if link_type == search.RefTypes.Markdown then
     link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")
@@ -763,6 +799,64 @@ util.buf_get_full_text = function(bufnr)
     text = text .. "\n"
   end
   return text
+end
+
+--- Get the current visual selection of text and exit visual mode.
+---
+---@return { lines: string[], selection: string, csrow: integer, cscol: integer, cerow: integer, cecol: integer }
+util.get_visual_selection = function()
+  -- Adapted from fzf-lua:
+  -- https://github.com/ibhagwan/fzf-lua/blob/6ee73fdf2a79bbd74ec56d980262e29993b46f2b/lua/fzf-lua/utils.lua#L434-L466
+  -- this will exit visual mode
+  -- use 'gv' to reselect the text
+  local _, csrow, cscol, cerow, cecol
+  local mode = vim.fn.mode()
+  if mode == "v" or mode == "V" or mode == "" then
+    -- if we are in visual mode use the live position
+    _, csrow, cscol, _ = unpack(vim.fn.getpos ".")
+    _, cerow, cecol, _ = unpack(vim.fn.getpos "v")
+    if mode == "V" then
+      -- visual line doesn't provide columns
+      cscol, cecol = 0, 999
+    end
+    -- exit visual mode
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+  else
+    -- otherwise, use the last known visual position
+    _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
+    _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
+  end
+
+  -- swap vars if needed
+  if cerow < csrow then
+    csrow, cerow = cerow, csrow
+  end
+  if cecol < cscol then
+    cscol, cecol = cecol, cscol
+  end
+
+  local lines = vim.fn.getline(csrow, cerow)
+  assert(type(lines) == "table")
+
+  ---@type string
+  local selection
+  local n = #lines
+  if n <= 0 then
+    selection = ""
+  elseif n == 1 then
+    selection = string.sub(lines[1], cscol, cecol)
+  else
+    selection = string.sub(lines[1], cscol) .. table.concat(lines, "\n", 2, n - 1) .. string.sub(lines[n], 1, cecol)
+  end
+
+  return {
+    lines = lines,
+    selection = selection,
+    csrow = csrow,
+    cscol = cscol,
+    cerow = cerow,
+    cecol = cecol,
+  }
 end
 
 return util

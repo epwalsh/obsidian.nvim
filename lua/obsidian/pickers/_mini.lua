@@ -72,16 +72,26 @@ MiniPicker.grep = function(self, opts)
   end
 end
 
----@param values string[]
+---@param values string[]|{ value: string, display: string, ordinal: string, filename: string|?, valid: boolean|? }[]
 ---@param opts { prompt_title: string|?, callback: fun(value: string)|? }|?
 ---@diagnostic disable-next-line: unused-local
 MiniPicker.pick = function(self, values, opts)
   opts = opts and opts or {}
 
+  ---@type string[]
+  local entries = {}
+  for _, value in ipairs(values) do
+    if type(value) == "string" then
+      entries[#entries + 1] = value
+    elseif value.valid ~= false then
+      entries[#entries + 1] = value.value
+    end
+  end
+
   local entry = mini_pick.start {
     source = {
       name = opts.prompt_title,
-      items = values,
+      items = entries,
       choose = function() end,
     },
   }

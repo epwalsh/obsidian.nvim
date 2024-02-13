@@ -578,7 +578,7 @@ Client.resolve_note_async = function(self, query, callback)
   end
 
   for _, path in pairs(paths_to_check) do
-    if path:is_file() and vim.endswith(tostring(path), ".md") then
+    if path:is_file() then
       return async.run(function()
         return Note.from_file_async(path)
       end, callback)
@@ -608,6 +608,130 @@ Client.resolve_note_async = function(self, query, callback)
     else
       return callback(nil)
     end
+  end)
+end
+
+---@class obsidian.ResolveLinkResult
+---
+---@field location string
+---@field name string
+---@field link_type obsidian.search.RefTypes
+---@field path Path|?
+---@field note obsidian.Note|?
+---@field url string|?
+
+--- Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
+---
+---@param link string|?
+---@param callback fun(res: obsidian.ResolveLinkResult|?)
+Client.resolve_link_async = function(self, link, callback)
+  local location, name, link_type
+  if link then
+    location, name, link_type = util.parse_link(link, { include_naked_urls = true })
+  else
+    location, name, link_type = util.parse_cursor_link { include_naked_urls = true }
+  end
+
+  if location == nil or name == nil or link_type == nil then
+    return callback(nil)
+  end
+
+  ---@type obsidian.ResolveLinkResult
+  local res = { location = location, name = name, link_type = link_type }
+
+  if util.is_url(location) then
+    res.url = location
+    return callback(res)
+  end
+
+  -- The Obsidian app will follow links with spaces encoded as "%20" (as they are in URLs),
+  -- so we should too.
+  location = util.string_replace(location, "%20", " ")
+
+  -- Remove links from the end if there are any.
+  local header_link = location:match "#[%a%d%s-_^]+$"
+  if header_link ~= nil then
+    location = location:sub(1, -header_link:len() - 1)
+  end
+
+  res.location = location
+
+  self:resolve_note_async(location, function(note)
+    if note ~= nil then
+      res.path = note.path
+      res.note = note
+      return callback(res)
+    end
+
+    local path = Path:new(location)
+    if path:exists() then
+      res.path = path
+      return callback(res)
+    end
+
+    return callback(res)
+  end)
+end
+
+--- Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
+---
+---@param link string|?
+---@param opts { open_strategy: obsidian.config.OpenStrategy|? }|?
+Client.follow_link_async = function(self, link, opts)
+  opts = opts and opts or {}
+  self:resolve_link_async(link, function(res)
+    if res == nil then
+      return
+    end
+
+    if res.url ~= nil then
+      if self.opts.follow_url_func ~= nil then
+        self.opts.follow_url_func(res.url)
+      else
+        log.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+      end
+      return
+    end
+
+    local open_cmd = "e "
+    if opts.open_strategy ~= nil then
+      open_cmd = util.get_open_strategy(opts.open_strategy)
+    end
+
+    if res.note ~= nil then
+      -- Go to resolved note.
+      local path = assert(res.path)
+      return vim.schedule(function()
+        vim.api.nvim_command(open_cmd .. tostring(path))
+      end)
+    end
+
+    if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
+      -- Prompt to create a new note.
+      return vim.schedule(function()
+        local confirmation = string.lower(vim.fn.input {
+          prompt = "Create new note '" .. res.location .. "'? [Y/n] ",
+        })
+        if confirmation == "" or confirmation == "y" or confirmation == "yes" then
+          -- Create a new note.
+          ---@type string|?, string[]
+          local id, aliases
+          if res.name == res.location then
+            aliases = {}
+          else
+            aliases = { res.name }
+            id = res.location
+          end
+
+          local note = self:new_note(res.name, id, nil, aliases)
+          vim.api.nvim_command(open_cmd .. tostring(note.path))
+        else
+          log.warn "Aborting"
+        end
+      end)
+    end
+
+    return log.err("Failed to resolve file '" .. res.location .. "'")
   end)
 end
 

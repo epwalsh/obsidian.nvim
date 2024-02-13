@@ -55,7 +55,7 @@ end
 
 --- Picker from a list of values.
 ---
----@param values string[]
+---@param values string[]|{ value: string, display: string, ordinal: string, filename: string|?, valid: boolean|? }[]
 ---@param opts { prompt_title: string|?, callback: fun(value: string)|? }|?
 ---@diagnostic disable-next-line: unused-local
 Picker.pick = function(self, values, opts)

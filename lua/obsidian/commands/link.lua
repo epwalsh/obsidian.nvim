@@ -1,42 +1,34 @@
 local Note = require "obsidian.note"
+local util = require "obsidian.util"
 local log = require "obsidian.log"
 
 ---@param client obsidian.Client
 return function(client, data)
-  local _, csrow, cscol, _ = unpack(assert(vim.fn.getpos "'<"))
-  local _, cerow, cecol, _ = unpack(assert(vim.fn.getpos "'>"))
-
-  if data.line1 ~= csrow or data.line2 ~= cerow then
+  local viz = util.get_visual_selection()
+  if viz.lines == nil or #viz.lines == 0 then
     log.err "ObsidianLink must be called with visual selection"
     return
-  end
-
-  local lines = vim.fn.getline(csrow, cerow)
-  if #lines ~= 1 then
+  elseif #viz.lines ~= 1 then
     log.err "Only in-line visual selections allowed"
     return
   end
 
-  local line = assert(lines[1])
-
-  ---@param note obsidian.Note
-  local function insert_ref(note)
-    line = string.sub(line, 1, cscol - 1)
-      .. "[["
-      .. tostring(note.id)
-      .. "|"
-      .. string.sub(line, cscol, cecol)
-      .. "]]"
-      .. string.sub(line, cecol + 1)
-    vim.api.nvim_buf_set_lines(0, csrow - 1, csrow, false, { line })
-  end
+  local line = assert(viz.lines[1])
 
   ---@type string
   local search_term
   if string.len(data.args) > 0 then
     search_term = data.args
   else
-    search_term = string.sub(line, cscol, cecol)
+    search_term = viz.selection
+  end
+
+  ---@param note obsidian.Note
+  local function insert_ref(note)
+    local new_line = string.sub(line, 1, viz.cscol - 1)
+      .. client:format_link(note, { label = viz.selection })
+      .. string.sub(line, viz.cecol + 1)
+    vim.api.nvim_buf_set_lines(0, viz.csrow - 1, viz.csrow, false, { new_line })
   end
 
   -- Try to resolve the search term to a single note.

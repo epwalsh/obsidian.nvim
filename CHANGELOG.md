@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `:ObsidianLinks` command.
+
+### Fixed
+
+- Improved how we get visual selection for certain commands.
+
 ## [v3.1.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.1.0) - 2024-02-12
 
 ### Added

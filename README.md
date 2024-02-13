@@ -73,6 +73,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 - `:ObsidianLinkNew [TITLE]` to create a new note and link it to an inline visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
 
+- `:ObsidianLinks` to collect all links within the current buffer into a picker window.
+
 - `:ObsidianWorkspace [NAME]` to switch to another workspace.
 
 - `:ObsidianPasteImg [IMGNAME]` to paste an image from the clipboard into the note at the cursor position by saving it to the vault and adding a markdown image link. You can configure the default folder to save images to with the `attachments.img_folder` option.
