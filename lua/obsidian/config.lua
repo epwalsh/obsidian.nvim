@@ -319,7 +319,6 @@ end
 ---@class obsidian.config.UIOpts
 ---
 ---@field enable boolean
----@field tick integer
 ---@field update_debounce integer
 ---@field checkboxes table{string, obsidian.config.UICharSpec}
 ---@field bullets obsidian.config.UICharSpec|?
