@@ -831,6 +831,8 @@ util.get_visual_selection = function()
   if cerow < csrow then
     csrow, cerow = cerow, csrow
     cscol, cecol = cecol, cscol
+  elseif cerow == csrow and cecol < cscol then
+    cscol, cecol = cecol, cscol
   end
 
   local lines = vim.fn.getline(csrow, cerow)

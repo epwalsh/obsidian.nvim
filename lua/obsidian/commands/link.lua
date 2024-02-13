@@ -17,7 +17,7 @@ return function(client, data)
 
   ---@type string
   local search_term
-  if string.len(data.args) > 0 then
+  if data.args ~= nil and string.len(data.args) > 0 then
     search_term = data.args
   else
     search_term = viz.selection
