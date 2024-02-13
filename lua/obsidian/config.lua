@@ -206,7 +206,7 @@ config.LinkStyle = {
 ---@field prepend_note_id boolean
 ---@field prepend_note_path boolean
 ---@field use_path_only boolean
----@field perferred_link_style obsidian.config.LinkStyle
+---@field preferred_link_style obsidian.config.LinkStyle
 config.CompletionOpts = {}
 
 --- Get defaults.

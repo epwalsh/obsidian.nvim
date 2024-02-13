@@ -608,7 +608,7 @@ Major internal refactoring to bring performance improvements through async execu
 
 ### Changed
 
-- `plenary.nvim` is no longer required to be installed seperately. It's now bundled as a submodule.
+- `plenary.nvim` is no longer required to be installed separately. It's now bundled as a submodule.
 
 ## [v1.2.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.2.1) - 2022-09-23
 
