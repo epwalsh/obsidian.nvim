@@ -161,8 +161,10 @@ end
 util.is_url = function(s)
   local search = require "obsidian.search"
 
-  if string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$") or
-     string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$") then
+  if
+    string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$")
+    or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$")
+  then
     return true
   else
     return false
@@ -593,7 +595,11 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls, include_f
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
   cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
-  for match in iter(search.find_refs(current_line, { include_naked_urls = include_naked_urls, include_file_urls = include_file_urls })) do
+  for match in
+    iter(
+      search.find_refs(current_line, { include_naked_urls = include_naked_urls, include_file_urls = include_file_urls })
+    )
+  do
     local open, close, m_type = unpack(match)
     if open <= cur_col and cur_col <= close then
       return open, close, m_type
@@ -612,7 +618,12 @@ end
 ---
 ---@return string|?, string|?, obsidian.search.RefTypes|?
 util.cursor_link = function(line, col, include_naked_urls, include_file_urls)
-  return util.parse_cursor_link { line = line, col = col, include_naked_urls = include_naked_urls, include_file_urls = include_file_urls }
+  return util.parse_cursor_link {
+    line = line,
+    col = col,
+    include_naked_urls = include_naked_urls,
+    include_file_urls = include_file_urls,
+  }
 end
 
 --- Get the link location and name of the link under the cursor, if there is one.
@@ -624,7 +635,8 @@ util.parse_cursor_link = function(opts)
   opts = opts and opts or {}
 
   local current_line = opts.line and opts.line or vim.api.nvim_get_current_line()
-  local open, close, link_type = util.cursor_on_markdown_link(current_line, opts.col, opts.include_naked_urls, opts.include_file_urls)
+  local open, close, link_type =
+    util.cursor_on_markdown_link(current_line, opts.col, opts.include_naked_urls, opts.include_file_urls)
   if open == nil or close == nil then
     return
   end
@@ -644,7 +656,14 @@ util.parse_link = function(link, opts)
 
   local link_type = opts.link_type
   if link_type == nil then
-    for match in iter(search.find_refs(link, { include_naked_urls = opts.include_naked_urls, include_file_urls = opts.include_file_urls })) do
+    for match in
+      iter(
+        search.find_refs(
+          link,
+          { include_naked_urls = opts.include_naked_urls, include_file_urls = opts.include_file_urls }
+        )
+      )
+    do
       local _, _, m_type = unpack(match)
       if m_type then
         link_type = m_type
