@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Support for `file:/` and `file:///` Urls.
+
+### Fixed
+
+- Urls ending in `/` were not detected
+
 ## [v3.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.2.0) - 2024-02-13
 
 ### Added
