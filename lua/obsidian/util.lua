@@ -68,6 +68,15 @@ util.tbl_unique = function(table)
   return out
 end
 
+--- Clear all values from a table.
+---
+---@param t table
+util.tbl_clear = function(t)
+  for k, _ in pairs(t) do
+    t[k] = nil
+  end
+end
+
 --------------------
 -- String methods --
 --------------------

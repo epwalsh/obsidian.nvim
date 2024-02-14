@@ -22,6 +22,7 @@ local command_lookups = {
   ObsidianRename = "obsidian.commands.rename",
   ObsidianPasteImg = "obsidian.commands.paste_img",
   ObsidianExtractNote = "obsidian.commands.extract_note",
+  ObsidianDebug = "obsidian.commands.debug",
 }
 
 local M = setmetatable({
@@ -191,5 +192,7 @@ M.register(
   "ObsidianExtractNote",
   { opts = { nargs = "?", range = true, desc = "Extract selected text to a new note and link to it" } }
 )
+
+M.register("ObsidianDebug", { opts = { nargs = 0, desc = "Log some information for debugging" } })
 
 return M
