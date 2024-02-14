@@ -50,10 +50,10 @@ local Workspace = abc.new_class {
 ---
 ---@param base_dir string|Path
 ---
----@return Path|?
+---@return string|?
 local function find_vault_root(base_dir)
   local vault_indicator_folder = ".obsidian"
-  local dirs = Path:new(base_dir):parents()
+  local dirs = util.parent_directories(base_dir)
   table.insert(dirs, 1, base_dir)
 
   for _, dir in ipairs(dirs) do
@@ -85,7 +85,7 @@ Workspace.new = function(path, opts)
   else
     local vault_root = find_vault_root(self.path)
     if vault_root then
-      self.root = vim.fs.normalize(tostring(vault_root))
+      self.root = vim.fs.normalize(vault_root)
     else
       self.root = self.path
     end
@@ -156,8 +156,8 @@ end
 ---
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
-  cur_dir = Path:new(vim.fn.resolve(vim.fs.normalize(tostring(cur_dir))))
-  local dirs = cur_dir:parents()
+  cur_dir = vim.fn.resolve(vim.fs.normalize(tostring(cur_dir)))
+  local dirs = util.parent_directories(cur_dir)
   table.insert(dirs, 1, tostring(cur_dir))
 
   for _, spec in ipairs(workspaces) do
