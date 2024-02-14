@@ -758,7 +758,7 @@ Parameters ~
 {base_dir} `(string|Path)`
 
 Return ~
-Path| `(optional)`
+`(string|)` `(optional)`
 
 ------------------------------------------------------------------------------
                                                       *obsidian.Workspace.new()*
