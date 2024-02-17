@@ -627,9 +627,9 @@ end
 Client.resolve_link_async = function(self, link, callback)
   local location, name, link_type
   if link then
-    location, name, link_type = util.parse_link(link, { include_naked_urls = true })
+    location, name, link_type = util.parse_link(link, { include_naked_urls = true, include_file_urls = true })
   else
-    location, name, link_type = util.parse_cursor_link { include_naked_urls = true }
+    location, name, link_type = util.parse_cursor_link { include_naked_urls = true, include_file_urls = true }
   end
 
   if location == nil or name == nil or link_type == nil then
