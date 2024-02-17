@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Urls ending in `/` were not detected
+- Urls ending in `/` were not detected.
+- Fixed small bug with toggle checkbox mapping where lines that started with a wiki link or md link were misclassified.
 
 ## [v3.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.2.0) - 2024-02-13
 
