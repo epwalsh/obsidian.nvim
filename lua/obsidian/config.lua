@@ -148,7 +148,8 @@ config.ClientOpts.normalize = function(opts, defaults)
   then
     log.warn_once(
       "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
-        .. "are deprecated. Please use 'wiki_link_func' instead."
+        .. "are deprecated. Please use 'wiki_link_func' instead.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
     )
   end
 

@@ -922,19 +922,17 @@ end
 ---@param opts {path: string, label: string, id: string|?}
 ---@return string
 util.wiki_link_path_only = function(opts)
-  return "[[" .. opts.path .. "]]"
+  return string.format("[[%s]]", opts.path)
 end
 
 ---@param opts {path: string, label: string, id: string|?}
 ---@return string
 util.wiki_link_path_prefix = function(opts)
-  local link = "[[" .. opts.path
   if opts.label ~= opts.path then
-    link = link .. "|" .. opts.label .. "]]"
+    return string.format("[[%s|%s]]", opts.path, opts.label)
   else
-    link = link .. "]]"
+    return string.format("[[%s]]", opts.path)
   end
-  return link
 end
 
 ---@param opts {path: string, label: string, id: string|?}
