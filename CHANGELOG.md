@@ -10,11 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for `file:/` and `file:///` Urls.
+- Added configuration options `wiki_link_func` and `markdown_link_func` for customizing how links are formatted.
 
 ### Fixed
 
 - Urls ending in `/` were not detected.
 - Fixed small bug with toggle checkbox mapping where lines that started with a wiki link or md link were misclassified.
+
+### Changed
+
+- Config options `completion.prepend_note_id`, `completion.prepend_note_path`, and `completion.use_path_only` are now deprecated. Please use `wiki_link_func` and `markdown_link_func` instead.
 
 ## [v3.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.2.0) - 2024-02-13
 

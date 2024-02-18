@@ -1328,40 +1328,15 @@ Client.format_link = function(self, note, opts)
     note_id = tostring(note.id)
   end
 
-  if vim.endswith(rel_path, ".md") then
-    rel_path = string.sub(rel_path, 1, -4)
-  end
+  local new_opts = { path = rel_path, label = label, id = note_id }
 
-  ---@type string
-  local link
   if opts.link_style == config.LinkStyle.markdown then
-    link = "[" .. label .. "](" .. rel_path .. ".md)"
+    return self.opts.markdown_link_func(new_opts)
   elseif opts.link_style == config.LinkStyle.wiki or opts.link_style == nil then
-    if self.opts.completion.use_path_only then
-      link = "[[" .. rel_path .. "]]"
-    elseif self.opts.completion.prepend_note_path then
-      link = "[[" .. rel_path
-      if label ~= note_id then
-        link = link .. "|" .. label .. "]]"
-      else
-        link = link .. "]]"
-      end
-    elseif self.opts.completion.prepend_note_id then
-      assert(note_id, "missing 'id' field in 'format_link()' options")
-      link = "[[" .. note_id
-      if label ~= note_id then
-        link = link .. "|" .. label .. "]]"
-      else
-        link = link .. "]]"
-      end
-    else
-      link = "[[" .. label .. "]]"
-    end
+    return self.opts.wiki_link_func(new_opts)
   else
     error(string.format("Invalid link style '%s'", opts.link_style))
   end
-
-  return link
 end
 
 --- Get the default Picker.
