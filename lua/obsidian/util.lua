@@ -919,4 +919,38 @@ util.get_visual_selection = function()
   }
 end
 
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.wiki_link_path_only = function(opts)
+  return string.format("[[%s]]", opts.path)
+end
+
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.wiki_link_path_prefix = function(opts)
+  if opts.label ~= opts.path then
+    return string.format("[[%s|%s]]", opts.path, opts.label)
+  else
+    return string.format("[[%s]]", opts.path)
+  end
+end
+
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.wiki_link_id_prefix = function(opts)
+  if opts.id == nil then
+    return string.format("[[%s]]", opts.label)
+  elseif opts.label ~= opts.id then
+    return string.format("[[%s|%s]]", opts.id, opts.label)
+  else
+    return string.format("[[%s]]", opts.id)
+  end
+end
+
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.markdown_link = function(opts)
+  return string.format("[%s](%s)", opts.label, opts.path)
+end
+
 return util

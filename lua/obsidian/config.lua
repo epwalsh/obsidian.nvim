@@ -10,6 +10,8 @@ local config = {}
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
 ---@field note_id_func (fun(title: string|?): string)|?
+---@field wiki_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
+---@field markdown_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
 ---@field follow_url_func fun(url: string)|?
 ---@field image_name_func (fun(): string)|?
 ---@field note_frontmatter_func fun(note: obsidian.Note)|?
@@ -41,6 +43,8 @@ config.ClientOpts.default = function()
     notes_subdir = nil,
     templates = config.TemplateOpts.default(),
     note_id_func = nil,
+    wiki_link_func = util.wiki_link_id_prefix,
+    markdown_link_func = util.markdown_link,
     follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
@@ -99,6 +103,16 @@ config.ClientOpts.normalize = function(opts, defaults)
     end
   end
 
+  if opts.wiki_link_func == nil and opts.completion ~= nil then
+    if opts.completion.prepend_note_id then
+      opts.wiki_link_func = util.wiki_link_id_prefix
+    elseif opts.completion.prepend_note_path then
+      opts.wiki_link_func = util.wiki_link_path_prefix
+    elseif opts.completion.use_path_only then
+      opts.wiki_link_func = util.wiki_link_path_only
+    end
+  end
+
   ---@type obsidian.config.ClientOpts
   opts = tbl_override(defaults, opts)
 
@@ -116,23 +130,27 @@ config.ClientOpts.normalize = function(opts, defaults)
     error("Invalid 'sort_by' option '" .. opts.sort_by .. "' in obsidian.nvim config.")
   end
 
-  if
-    not opts.completion.prepend_note_id
-    and not opts.completion.prepend_note_path
-    and not opts.completion.use_path_only
-  then
-    error(
-      "Invalid 'completion' options in obsidian.nvim config.\n"
-        .. "One of 'prepend_note_id', 'prepend_note_path', or 'use_path_only' should be set to 'true'."
-    )
-  end
-
   -- Warn about deprecated fields.
   ---@diagnostic disable-next-line undefined-field
   if opts.overwrite_mappings ~= nil then
     log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
     ---@diagnostic disable-next-line
     opts.overwrite_mappings = nil
+  end
+
+  if
+    ---@diagnostic disable-next-line undefined-field
+    opts.completion.prepend_note_id ~= nil
+    ---@diagnostic disable-next-line undefined-field
+    or opts.completion.prepend_note_path ~= nil
+    ---@diagnostic disable-next-line undefined-field
+    or opts.completion.use_path_only ~= nil
+  then
+    log.warn_once(
+      "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
+        .. "are deprecated. Please use 'wiki_link_func' instead.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
+    )
   end
 
   ---@diagnostic disable-next-line undefined-field
@@ -203,9 +221,6 @@ config.LinkStyle = {
 ---@field nvim_cmp boolean
 ---@field min_chars integer
 ---@field new_notes_location obsidian.config.CompletionNewNotesLocation
----@field prepend_note_id boolean
----@field prepend_note_path boolean
----@field use_path_only boolean
 ---@field preferred_link_style obsidian.config.LinkStyle
 config.CompletionOpts = {}
 
@@ -218,9 +233,6 @@ config.CompletionOpts.default = function()
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
     new_notes_location = config.CompletionNewNotesLocation.current_dir,
-    prepend_note_id = true,
-    prepend_note_path = false,
-    use_path_only = false,
     preferred_link_style = config.LinkStyle.wiki,
   }
 end

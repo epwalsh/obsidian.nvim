@@ -268,21 +268,6 @@ This is a complete list of all of the options that can be passed to `require("ob
 
     -- Either 'wiki' or 'markdown'.
     preferred_link_style = "wiki",
-
-    -- Control how wiki links are completed with these (mutually exclusive) options:
-    --
-    -- 1. Whether to add the note ID during completion.
-    -- E.g. "[[Foo" completes to "[[foo|Foo]]" assuming "foo" is the ID of the note.
-    -- Mutually exclusive with 'prepend_note_path' and 'use_path_only'.
-    prepend_note_id = true,
-    -- 2. Whether to add the note path during completion.
-    -- E.g. "[[Foo" completes to "[[notes/foo|Foo]]" assuming "notes/foo.md" is the path of the note.
-    -- Mutually exclusive with 'prepend_note_id' and 'use_path_only'.
-    prepend_note_path = false,
-    -- 3. Whether to only use paths during completion.
-    -- E.g. "[[Foo" completes to "[[notes/foo]]" assuming "notes/foo.md" is the path of the note.
-    -- Mutually exclusive with 'prepend_note_id' and 'prepend_note_path'.
-    use_path_only = false,
   },
 
   -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
@@ -322,7 +307,28 @@ This is a complete list of all of the options that can be passed to `require("ob
     return tostring(os.time()) .. "-" .. suffix
   end,
 
+  -- Optional, customize how wiki links are formatted.
+  ---@param opts {path: string, label: string, id: string|?}
+  ---@return string
+  wiki_link_func = function(opts)
+    if opts.id == nil then
+      return string.format("[[%s]]", opts.label)
+    elseif opts.label ~= opts.id then
+      return string.format("[[%s|%s]]", opts.id, opts.label)
+    else
+      return string.format("[[%s]]", opts.id)
+    end
+  end,
+
+  -- Optional, customize how markdown links are formatted.
+  ---@param opts {path: string, label: string, id: string|?}
+  ---@return string
+  markdown_link_func = function(opts)
+    return string.format("[%s](%s)", opts.label, opts.path)
+  end,
+
   -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
+  ---@return string
   image_name_func = function()
     -- Prefix image names with timestamp.
     return string.format("%s-", os.time())
@@ -333,6 +339,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   disable_frontmatter = false,
 
   -- Optional, alternatively you can customize the frontmatter data.
+  ---@return table
   note_frontmatter_func = function(note)
     -- Add the title of the note as an alias.
     if note.title then
@@ -379,6 +386,7 @@ This is a complete list of all of the options that can be passed to `require("ob
 
   -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
   -- URL it will be ignored but you can customize this behavior here.
+  ---@param url string
   follow_url_func = function(url)
     -- Open the URL in the default web browser.
     vim.fn.jobstart({"open", url})  -- Mac OS
