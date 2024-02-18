@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Config options `completion.prepend_note_id`, `completion.prepend_note_path`, and `completion.use_path_only` are now deprecated. Please use `wiki_link_func` and `markdown_link_func` instead.
 - Moved configuration option `completion.preferred_link_style` to top-level `preferred_link_style`.
+- Moved configuration option `completion.new_notes_location` to top-level `new_notes_location`.
 
 ## [v3.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.2.0) - 2024-02-13
 

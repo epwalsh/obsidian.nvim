@@ -1124,17 +1124,17 @@ Client.parse_title_id_path = function(self, title, id, dir)
   if parent then
     base_dir = self.dir / parent
   else
-    local new_notes_location = self.opts.completion.new_notes_location
+    local new_notes_location = self.opts.new_notes_location
     if not dir and new_notes_location then
-      if new_notes_location == config.CompletionNewNotesLocation.notes_subdir then
+      if new_notes_location == config.NewNotesLocation.notes_subdir then
         base_dir = self.dir
         if self.opts.notes_subdir then
           base_dir = base_dir / self.opts.notes_subdir
         end
-      elseif new_notes_location == config.CompletionNewNotesLocation.current_dir then
+      elseif new_notes_location == config.NewNotesLocation.current_dir then
         base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
       else
-        error "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
+        error "Bad option value for 'new_notes_location'. Skipping creating new note."
       end
     else
       base_dir = Path:new(dir)

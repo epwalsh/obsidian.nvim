@@ -9,6 +9,7 @@ local config = {}
 ---@field log_level integer
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
+---@field new_notes_location obsidian.config.NewNotesLocation
 ---@field note_id_func (fun(title: string|?): string)|?
 ---@field wiki_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
 ---@field markdown_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
@@ -42,6 +43,7 @@ config.ClientOpts.default = function()
     workspaces = {},
     log_level = vim.log.levels.INFO,
     notes_subdir = nil,
+    new_notes_location = config.NewNotesLocation.current_dir,
     templates = config.TemplateOpts.default(),
     note_id_func = nil,
     wiki_link_func = util.wiki_link_id_prefix,
@@ -119,6 +121,10 @@ config.ClientOpts.normalize = function(opts, defaults)
     opts.preferred_link_style = opts.completion.preferred_link_style
   end
 
+  if opts.completion ~= nil and opts.completion.new_notes_location ~= nil then
+    opts.new_notes_location = opts.completion.new_notes_location
+  end
+
   ---@type obsidian.config.ClientOpts
   opts = tbl_override(defaults, opts)
 
@@ -164,6 +170,14 @@ config.ClientOpts.normalize = function(opts, defaults)
     log.warn_once(
       "The config option 'completion.preferred_link_style' is deprecated, please use the top-level "
         .. "'preferred_link_style' instead."
+    )
+  end
+
+  ---@diagnostic disable-next-line undefined-field
+  if opts.completion.new_notes_location ~= nil then
+    log.warn_once(
+      "The config option 'completion.new_notes_location' is deprecated, please use the top-level "
+        .. "'new_notes_location' instead."
     )
   end
 
@@ -218,8 +232,8 @@ config.LocationListOpts.default = function()
   }
 end
 
----@enum obsidian.config.CompletionNewNotesLocation
-config.CompletionNewNotesLocation = {
+---@enum obsidian.config.NewNotesLocation
+config.NewNotesLocation = {
   current_dir = "current_dir",
   notes_subdir = "notes_subdir",
 }
@@ -234,7 +248,6 @@ config.LinkStyle = {
 ---
 ---@field nvim_cmp boolean
 ---@field min_chars integer
----@field new_notes_location obsidian.config.CompletionNewNotesLocation
 config.CompletionOpts = {}
 
 --- Get defaults.
@@ -245,7 +258,6 @@ config.CompletionOpts.default = function()
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
-    new_notes_location = config.CompletionNewNotesLocation.current_dir,
   }
 end
 
