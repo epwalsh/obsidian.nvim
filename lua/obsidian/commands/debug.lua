@@ -3,7 +3,10 @@ local log = require "obsidian.log"
 
 ---@param client obsidian.Client
 return function(client)
-  log.lazy_info("Current buffer directory: '%s'", client.buf_dir)
+  log.lazy_info "Status:"
+  log.lazy_info("  Buffer directory: '%s'", client.buf_dir)
+  log.lazy_info("  Working directory: '%s'", vim.fn.getcwd())
+
   log.lazy_info "Workspaces:"
   local cur_workspace = Workspace.get_workspace_for_dir(client.buf_dir, client.opts.workspaces)
   if cur_workspace ~= nil then
