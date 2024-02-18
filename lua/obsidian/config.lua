@@ -12,6 +12,7 @@ local config = {}
 ---@field note_id_func (fun(title: string|?): string)|?
 ---@field wiki_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
 ---@field markdown_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
+---@field preferred_link_style obsidian.config.LinkStyle
 ---@field follow_url_func fun(url: string)|?
 ---@field image_name_func (fun(): string)|?
 ---@field note_frontmatter_func fun(note: obsidian.Note)|?
@@ -45,6 +46,7 @@ config.ClientOpts.default = function()
     note_id_func = nil,
     wiki_link_func = util.wiki_link_id_prefix,
     markdown_link_func = util.markdown_link,
+    preferred_link_style = config.LinkStyle.wiki,
     follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
@@ -113,6 +115,10 @@ config.ClientOpts.normalize = function(opts, defaults)
     end
   end
 
+  if opts.completion ~= nil and opts.completion.preferred_link_style ~= nil then
+    opts.preferred_link_style = opts.completion.preferred_link_style
+  end
+
   ---@type obsidian.config.ClientOpts
   opts = tbl_override(defaults, opts)
 
@@ -150,6 +156,14 @@ config.ClientOpts.normalize = function(opts, defaults)
       "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
         .. "are deprecated. Please use 'wiki_link_func' instead.\n"
         .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
+    )
+  end
+
+  ---@diagnostic disable-next-line undefined-field
+  if opts.completion.preferred_link_style ~= nil then
+    log.warn_once(
+      "The config option 'completion.preferred_link_style' is deprecated, please use the top-level "
+        .. "'preferred_link_style' instead."
     )
   end
 
@@ -221,7 +235,6 @@ config.LinkStyle = {
 ---@field nvim_cmp boolean
 ---@field min_chars integer
 ---@field new_notes_location obsidian.config.CompletionNewNotesLocation
----@field preferred_link_style obsidian.config.LinkStyle
 config.CompletionOpts = {}
 
 --- Get defaults.
@@ -233,7 +246,6 @@ config.CompletionOpts.default = function()
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
     new_notes_location = config.CompletionNewNotesLocation.current_dir,
-    preferred_link_style = config.LinkStyle.wiki,
   }
 end
 

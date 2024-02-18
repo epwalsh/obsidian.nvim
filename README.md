@@ -265,9 +265,6 @@ This is a complete list of all of the options that can be passed to `require("ob
     --  * "current_dir" - put new notes in same directory as the current buffer.
     --  * "notes_subdir" - put new notes in the default notes subdirectory.
     new_notes_location = "notes_subdir",
-
-    -- Either 'wiki' or 'markdown'.
-    preferred_link_style = "wiki",
   },
 
   -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
@@ -326,6 +323,9 @@ This is a complete list of all of the options that can be passed to `require("ob
   markdown_link_func = function(opts)
     return string.format("[%s](%s)", opts.label, opts.path)
   end,
+
+  -- Either 'wiki' or 'markdown'.
+  preferred_link_style = "wiki",
 
   -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
   ---@return string

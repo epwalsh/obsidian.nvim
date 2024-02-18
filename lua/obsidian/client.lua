@@ -1328,14 +1328,19 @@ Client.format_link = function(self, note, opts)
     note_id = tostring(note.id)
   end
 
+  local link_style = opts.link_style
+  if link_style == nil then
+    link_style = self.opts.preferred_link_style
+  end
+
   local new_opts = { path = rel_path, label = label, id = note_id }
 
-  if opts.link_style == config.LinkStyle.markdown then
+  if link_style == config.LinkStyle.markdown then
     return self.opts.markdown_link_func(new_opts)
-  elseif opts.link_style == config.LinkStyle.wiki or opts.link_style == nil then
+  elseif link_style == config.LinkStyle.wiki or link_style == nil then
     return self.opts.wiki_link_func(new_opts)
   else
-    error(string.format("Invalid link style '%s'", opts.link_style))
+    error(string.format("Invalid link style '%s'", link_style))
   end
 end
 
