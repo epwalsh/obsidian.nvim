@@ -23,7 +23,7 @@ body:
       error("Oh no!")
       ```
 
-      Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in ```` ```triple quotes``` ````.
+      Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in a ```` ```triple quotes code block``` ````.
     placeholder: |
       A clear and concise description of what the bug is.
   validations:
@@ -32,16 +32,16 @@ body:
   attributes:
     label: Config
     description: |
-      Please paste your obsidian.nvim config below, wrapped in ```` ```triple quotes``` ````.
+      Please paste your obsidian.nvim config below, wrapped in a ```` ```triple quotes code block``` ````.
     placeholder: |
-      Your config wrapped in a triple quotes block...
+      Your config wrapped in a triple quotes code block  ``` ... ```
   validations:
     required: true
 - type: textarea
   attributes:
     label: Environment
     description: |
-      Please run the following and paste the output below, wrapped in ```` ```triple quotes``` ````.
+      Please run the following and paste the output below, wrapped in a ```` ```triple quotes code block``` ````.
       
       ```sh
       nvim --version
@@ -50,7 +50,7 @@ body:
 
       Note that you'll have to ensure obsidian.nvim loads up front for that command to be able to gather all of the information it needs, which means ensuring your plugin manager does not load obsidian.nvim lazily.
     placeholder: |
-      Output wrapped in a triple quotes block...
+      Output wrapped in a triple quotes code block ``` ... ```
   validations:
     required: true
 - type: markdown
