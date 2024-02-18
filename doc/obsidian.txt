@@ -313,14 +313,8 @@ carefully and customize it to your needs:
       completion = {
         -- Set to false to disable completion.
         nvim_cmp = true,
-    
         -- Trigger completion at 2 chars.
         min_chars = 2,
-    
-        -- Where to put new notes. Valid options are
-        --  * "current_dir" - put new notes in same directory as the current buffer.
-        --  * "notes_subdir" - put new notes in the default notes subdirectory.
-        new_notes_location = "notes_subdir",
       },
     
       -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
@@ -341,6 +335,11 @@ carefully and customize it to your needs:
           opts = { buffer = true },
         },
       },
+    
+      -- Where to put new notes. Valid options are
+      --  * "current_dir" - put new notes in same directory as the current buffer.
+      --  * "notes_subdir" - put new notes in the default notes subdirectory.
+      new_notes_location = "notes_subdir",
     
       -- Optional, customize how names/IDs for new notes are created.
       note_id_func = function(title)
