@@ -1,4 +1,4 @@
---- *obidian-api*
+--- *obsidian-api*
 ---
 --- The Obsidian.nvim Lua API.
 ---
