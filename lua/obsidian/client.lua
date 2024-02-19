@@ -223,7 +223,10 @@ end
 ---
 ---@return string|?
 Client.vault_relative_path = function(self, path)
-  local normalized_path = util.resolve_path(path)
+  -- NOTE: we don't use `util.resolve_path()` here because that would make the path absolute,
+  -- which may result in the wrong relative path if the current working directory is not within
+  -- the vault.
+  local normalized_path = vim.fs.normalize(tostring(path))
   local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
   if relative_path == normalized_path then
     -- Either `normalized_path` was already relative or `:make_relative()` failed.
