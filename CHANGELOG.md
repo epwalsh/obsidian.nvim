@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed inserting templates when the templates directory structure is nested.
+
 ## [v3.3.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.0) - 2024-02-17
 
 ### Added

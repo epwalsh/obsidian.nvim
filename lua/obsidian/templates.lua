@@ -85,7 +85,7 @@ end
 
 ---Insert a template at the given location.
 ---
----@param name string name of a template in the configured templates folder
+---@param name string name or path of a template in the configured templates folder
 ---@param client obsidian.Client
 ---@param location table a tuple with {bufnr, winnr, row, col}
 M.insert_template = function(name, client, location)
@@ -95,8 +95,28 @@ M.insert_template = function(name, client, location)
     return
   end
   local buf, win, row, col = unpack(location)
-  local template_path = templates_dir / name
   local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
+
+  ---@type Path
+  local template_path
+  local paths_to_check = { templates_dir / name, Path:new(name) }
+  for _, path in ipairs(paths_to_check) do
+    if path:is_file() then
+      template_path = path
+      break
+    elseif not vim.endswith(tostring(path), ".md") then
+      local path_with_suffix = Path:new(tostring(path) .. ".md")
+      if path_with_suffix:is_file() then
+        template_path = path_with_suffix
+        break
+      end
+    end
+  end
+
+  if template_path == nil then
+    log.err("Template '%s' not found", name)
+    return
+  end
 
   local insert_lines = {}
   local template_file = io.open(tostring(template_path), "r")
