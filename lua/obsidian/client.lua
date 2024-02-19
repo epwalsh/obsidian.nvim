@@ -1490,11 +1490,13 @@ Client.format_link = function(self, note, opts)
   end
 end
 
---- Get the default Picker.
+--- Get the Picker.
+---
+---@param picker_name obsidian.config.Picker|?
 ---
 ---@return obsidian.Picker|?
-Client.picker = function(self)
-  return require("obsidian.pickers").get(self)
+Client.picker = function(self, picker_name)
+  return require("obsidian.pickers").get(self, picker_name)
 end
 
 return Client
