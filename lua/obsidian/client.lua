@@ -702,7 +702,7 @@ Client.follow_link_async = function(self, link, opts)
       -- Go to resolved note.
       local path = assert(res.path)
       return vim.schedule(function()
-        vim.api.nvim_command(open_cmd .. tostring(path))
+        util.open_buffer(path, { cmd = open_cmd })
       end)
     end
 
@@ -724,7 +724,7 @@ Client.follow_link_async = function(self, link, opts)
           end
 
           local note = self:new_note(res.name, id, nil, aliases)
-          vim.api.nvim_command(open_cmd .. tostring(note.path))
+          util.open_buffer(note.path, { cmd = open_cmd })
         else
           log.warn "Aborting"
         end

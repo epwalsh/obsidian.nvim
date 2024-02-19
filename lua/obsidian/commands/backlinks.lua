@@ -45,8 +45,7 @@ return function(client, _)
       picker:pick(entries, {
         prompt_title = "Backlinks",
         callback = function(value)
-          vim.cmd(string.format("e %s", value.path))
-          vim.api.nvim_win_set_cursor(0, { tonumber(value.line), 0 })
+          util.open_buffer(value.path, { line = value.line })
         end,
       })
     end)

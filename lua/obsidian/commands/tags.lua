@@ -36,8 +36,7 @@ local function gather_tag_picker_list(client, picker, tags)
       picker:pick(entries, {
         prompt_title = "Tag Locations",
         callback = function(value)
-          vim.cmd(string.format("e %s", value.path))
-          vim.api.nvim_win_set_cursor(0, { tonumber(value.line), value.col })
+          util.open_buffer(value.path, { line = value.line, col = value.col })
         end,
       })
     end)

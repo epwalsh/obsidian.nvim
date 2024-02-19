@@ -953,4 +953,17 @@ util.markdown_link = function(opts)
   return string.format("[%s](%s)", opts.label, opts.path)
 end
 
+--- Open a buffer for the corresponding path.
+---
+---@param path string|Path
+---@param opts { line: integer|?, col: integer|?, cmd: string|? }|?
+util.open_buffer = function(path, opts)
+  opts = opts and opts or {}
+  -- TODO: check for existing buffer and go there.
+  vim.cmd(string.format("%s %s", util.strip_whitespace(opts.cmd and opts.cmd or "e"), path))
+  if opts.line then
+    vim.api.nvim_win_set_cursor(0, { tonumber(opts.line), opts.col and opts.col or 0 })
+  end
+end
+
 return util
