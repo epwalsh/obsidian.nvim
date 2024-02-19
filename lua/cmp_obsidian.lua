@@ -26,12 +26,7 @@ source.complete = function(_, request, callback)
       for note in iter(results) do
         local labels_seen = {}
 
-        local aliases
-        if client.opts.completion.use_path_only then
-          aliases = { note.id }
-        else
-          aliases = util.tbl_unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
-        end
+        local aliases = util.tbl_unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
 
         for alias in iter(aliases) do
           local options = {}

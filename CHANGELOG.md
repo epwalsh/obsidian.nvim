@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added client methods `Client:find_backlinks()` and `Client:find_backlinks_async()`.
+
 ## [v3.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.1) - 2024-02-18
 
 ### Fixed

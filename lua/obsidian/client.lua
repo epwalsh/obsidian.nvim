@@ -758,8 +758,8 @@ end
 
 --- Find all tags starting with the given search term(s).
 ---
----@param term string|string[] The search term
----@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param term string|string[] The search term.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
 ---@param timeout integer|? Timeout in milliseconds.
 ---
 ---@return obsidian.TagLocation[]
@@ -771,8 +771,8 @@ end
 
 --- An async version of 'find_tags()'.
 ---
----@param term string|string[] The search term
----@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param term string|string[] The search term.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
 ---@param callback fun(tags: obsidian.TagLocation[])
 Client.find_tags_async = function(self, term, opts, callback)
   ---@type string[]
@@ -954,6 +954,149 @@ Client.find_tags_async = function(self, term, opts, callback)
     end
 
     return tags_list
+  end, callback)
+end
+
+---@class obsidian.BacklinkMatches
+---
+---@field note obsidian.Note The note instance where the backlinks were found.
+---@field path string|Path The path to the note where the backlinks were found.
+---@field matches obsidian.BacklinkMatch[] The backlinks within the note.
+
+---@class obsidian.BacklinkMatch
+---
+---@field line integer The line number (1-indexed) where the backlink was found.
+---@field text string The text of the line where the backlink was found.
+
+--- Find all backlinks to a note.
+---
+---@param note obsidian.Note The note to find backlinks for.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
+---@param timeout integer|? Timeout in milliseconds.
+---
+---@return obsidian.BacklinkMatches[]
+Client.find_backlinks = function(self, note, opts, timeout)
+  return block_on(function(cb)
+    return self:find_backlinks_async(note, opts, cb)
+  end, timeout)
+end
+
+--- An async version of 'find_backlinks()'.
+---
+---@param note obsidian.Note The note to find backlinks for.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
+---@param callback fun(backlinks: obsidian.BacklinkMatches[])
+Client.find_backlinks_async = function(self, note, opts, callback)
+  -- Maps paths (string) to note object and a list of matches.
+  ---@type table<string, obsidian.BacklinkMatch[]>
+  local backlink_matches = {}
+  ---@type table<string, obsidian.Note>
+  local path_to_note = {}
+  -- Keeps track of the order of the paths.
+  ---@type table<string, integer>
+  local path_order = {}
+  local num_paths = 0
+  local err_count = 0
+  local first_err = nil
+  local first_err_path = nil
+
+  local executor = AsyncExecutor.new()
+
+  -- Prepare search terms.
+  local search_terms = {}
+  for ref in iter { tostring(note.id), note:fname() } do
+    if ref ~= nil then
+      search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
+      search_terms[#search_terms + 1] = string.format("[[%s|", ref)
+      search_terms[#search_terms + 1] = string.format("(%s)", ref)
+    end
+  end
+  for alias in iter(note.aliases) do
+    search_terms[#search_terms + 1] = string.format("[[%s]]", alias)
+  end
+
+  local function on_match(match)
+    local path = vim.fs.normalize(match.path.text)
+
+    if path_order[path] == nil then
+      num_paths = num_paths + 1
+      path_order[path] = num_paths
+    end
+
+    executor:submit(function()
+      -- Load note.
+      local n = path_to_note[path]
+      if not n then
+        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        if ok then
+          n = res
+          path_to_note[path] = n
+        else
+          err_count = err_count + 1
+          if first_err == nil then
+            first_err = res
+            first_err_path = path
+          end
+          return
+        end
+      end
+
+      ---@type obsidian.BacklinkMatch[]
+      local line_matches = backlink_matches[path]
+      if line_matches == nil then
+        line_matches = {}
+        backlink_matches[path] = line_matches
+      end
+
+      line_matches[#line_matches + 1] = {
+        line = match.line_number,
+        text = util.rstrip_whitespace(match.lines.text),
+      }
+    end)
+  end
+
+  local tx, rx = channel.oneshot()
+
+  -- Execute search.
+  search.search_async(
+    self.dir,
+    util.tbl_unique(search_terms),
+    self:_prepare_search_opts(opts, { fixed_strings = true }),
+    on_match,
+    function()
+      tx()
+    end
+  )
+
+  async.run(function()
+    rx()
+    executor:join_async()
+
+    ---@type obsidian.BacklinkMatches[]
+    local results = {}
+
+    -- Order by path.
+    local paths = {}
+    for path, idx in pairs(path_order) do
+      paths[idx] = path
+    end
+
+    -- Gather results.
+    for i, path in ipairs(paths) do
+      results[i] = { note = path_to_note[path], path = path, matches = backlink_matches[path] }
+    end
+
+    -- Log any errors.
+    if first_err ~= nil and first_err_path ~= nil then
+      log.err(
+        "%d error(s) occurred during search. First error from note at '%s':\n%s",
+        err_count,
+        first_err_path,
+        first_err
+      )
+    end
+
+    return results
   end, callback)
 end
 

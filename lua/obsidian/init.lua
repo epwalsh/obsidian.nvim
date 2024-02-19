@@ -3,7 +3,6 @@ local log = require "obsidian.log"
 local module_lookups = {
   abc = "obsidian.abc",
   async = "obsidian.async",
-  backlinks = "obsidian.backlinks",
   Client = "obsidian.client",
   collections = "obsidian.collections",
   commands = "obsidian.commands",
