@@ -312,8 +312,8 @@ Fields ~
 Find all tags starting with the given search term(s).
 
 Parameters ~
-{term} `(string|string[])` The search term
-{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
+{term} `(string|string[])` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 Return ~
@@ -325,9 +325,49 @@ obsidian.TagLocation[]
 An async version of 'find_tags()'.
 
 Parameters ~
-{term} `(string|string[])` The search term
-{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
+{term} `(string|string[])` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
 {callback} `(fun(tags: obsidian.TagLocation[]))`
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.BacklinkMatches}
+
+Fields ~
+{note} obsidian.Note The note instance where the backlinks were found.
+{path} `(string|Path)` The path to the note where the backlinks were found.
+{matches} obsidian.BacklinkMatch[] The backlinks within the note.
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.BacklinkMatch}
+
+Fields ~
+{line} `(integer)` The line number (1-indexed) where the backlink was found.
+{text} `(string)` The text of the line where the backlink was found.
+
+------------------------------------------------------------------------------
+                                              *obsidian.Client.find_backlinks()*
+           `Client.find_backlinks`({self}, {note}, {opts}, {timeout})
+Find all backlinks to a note.
+
+Parameters ~
+{note} obsidian.Note The note to find backlinks for.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{timeout} `(integer|?)` Timeout in milliseconds.
+
+Return ~
+obsidian.BacklinkMatches[]
+
+------------------------------------------------------------------------------
+                                        *obsidian.Client.find_backlinks_async()*
+       `Client.find_backlinks_async`({self}, {note}, {opts}, {callback})
+An async version of 'find_backlinks()'.
+
+Parameters ~
+{note} obsidian.Note The note to find backlinks for.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{callback} `(fun(backlinks: obsidian.BacklinkMatches[]))`
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Client.list_tags()*
