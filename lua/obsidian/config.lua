@@ -18,8 +18,6 @@ local config = {}
 ---@field image_name_func (fun(): string)|?
 ---@field note_frontmatter_func fun(note: obsidian.Note)|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
----@field backlinks obsidian.config.LocationListOpts
----@field tags obsidian.config.LocationListOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
 ---@field picker obsidian.config.PickerOpts
@@ -52,8 +50,6 @@ config.ClientOpts.default = function()
     follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
-    backlinks = config.LocationListOpts.default(),
-    tags = config.LocationListOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
     picker = config.PickerOpts.default(),
@@ -128,7 +124,6 @@ config.ClientOpts.normalize = function(opts, defaults)
   ---@type obsidian.config.ClientOpts
   opts = tbl_override(defaults, opts)
 
-  opts.backlinks = tbl_override(defaults.backlinks, opts.backlinks)
   opts.completion = tbl_override(defaults.completion, opts.completion)
   opts.mappings = opts.mappings and opts.mappings or defaults.mappings
   opts.picker = tbl_override(defaults.picker, opts.picker)
@@ -216,21 +211,6 @@ config.SortBy = {
   accessed = "accessed",
   created = "created",
 }
-
----@class obsidian.config.LocationListOpts
----
----@field height integer
----@field wrap boolean
-config.LocationListOpts = {}
-
----Get defaults.
----@return obsidian.config.LocationListOpts
-config.LocationListOpts.default = function()
-  return {
-    height = 10,
-    wrap = true,
-  }
-end
 
 ---@enum obsidian.config.NewNotesLocation
 config.NewNotesLocation = {
