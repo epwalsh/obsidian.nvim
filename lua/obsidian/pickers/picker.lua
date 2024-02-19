@@ -53,10 +53,20 @@ Picker.grep = function(self, opts)
   error "not implemented"
 end
 
+---@class obsidian.PickerEntry
+---
+---@field value any
+---@field display string
+---@field ordinal string
+---@field filename string|?
+---@field valid boolean|?
+---@field lnum integer|?
+---@field col integer|?
+
 --- Picker from a list of values.
 ---
----@param values string[]|{ value: string, display: string, ordinal: string, filename: string|?, valid: boolean|? }[]
----@param opts { prompt_title: string|?, callback: fun(value: string)|? }|?
+---@param values string[]|obsidian.PickerEntry[]
+---@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
 ---@diagnostic disable-next-line: unused-local
 Picker.pick = function(self, values, opts)
   error "not implemented"

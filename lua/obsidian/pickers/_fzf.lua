@@ -105,19 +105,24 @@ FzfPicker.grep = function(self, opts)
   end
 end
 
----@param values string[]|{ value: string, display: string, ordinal: string, filename: string|?, valid: boolean|? }[]
----@param opts { prompt_title: string|?, callback: fun(value: string)|? }|?
+---@param values string[]|obsidian.PickerEntry[]
+---@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
 ---@diagnostic disable-next-line: unused-local
 FzfPicker.pick = function(self, values, opts)
   opts = opts and opts or {}
+
+  ---@type table<string, any>
+  local display_to_value_map = {}
 
   ---@type string[]
   local entries = {}
   for _, value in ipairs(values) do
     if type(value) == "string" then
+      display_to_value_map[value] = value
       entries[#entries + 1] = value
     elseif value.valid ~= false then
-      entries[#entries + 1] = value.value
+      display_to_value_map[value.display] = value.value
+      entries[#entries + 1] = value.display
     end
   end
 
@@ -126,7 +131,7 @@ FzfPicker.pick = function(self, values, opts)
     actions = {
       default = function(selected)
         if opts.callback then
-          opts.callback(selected[1])
+          opts.callback(display_to_value_map[selected[1]])
         end
       end,
     },

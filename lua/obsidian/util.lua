@@ -628,7 +628,7 @@ end
 
 --- Get the link location and name of the link under the cursor, if there is one.
 ---
----@param opts { line: string|?, col: integer|?, include_naked_urls: boolean|? }|?
+---@param opts { line: string|?, col: integer|?, include_naked_urls: boolean|?, include_file_urls: boolean|? }|?
 ---
 ---@return string|?, string|?, obsidian.search.RefTypes|?
 util.parse_cursor_link = function(opts)

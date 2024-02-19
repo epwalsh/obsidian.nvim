@@ -127,8 +127,8 @@ TelescopePicker.grep = function(self, opts)
   end
 end
 
----@param values string[]|{ value: string, display: string, ordinal: string, filename: string|?, valid: boolean|? }[]
----@param opts { prompt_title: string|?, callback: fun(value: string)|? }|?
+---@param values string[]|obsidian.PickerEntry[]
+---@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
 TelescopePicker.pick = function(self, values, opts)
   local pickers = require "telescope.pickers"
   local finders = require "telescope.finders"
