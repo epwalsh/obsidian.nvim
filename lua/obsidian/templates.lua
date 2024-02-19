@@ -94,7 +94,7 @@ M.insert_template = function(name, client, location)
     log.err "Templates folder is not defined or does not exist"
     return
   end
-  local buf, win, row, col = unpack(location)
+  local buf, win, row, _ = unpack(location)
   local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
 
   ---@type Path
@@ -140,13 +140,12 @@ M.insert_template = function(name, client, location)
       end
     end
     template_file:close()
-    table.insert(insert_lines, "")
   else
     log.err("Template file '%s' not found", template_path)
     return
   end
 
-  vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, insert_lines)
+  vim.api.nvim_buf_set_lines(buf, row, row, false, insert_lines)
   local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
   vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
 
