@@ -18,10 +18,11 @@ local function gather_tag_picker_list(client, picker, tags)
     for _, tag_loc in ipairs(tag_locations) do
       for _, tag in ipairs(tags) do
         if tag_loc.tag == tag then
+          local display = string.format("%s [%s] %s", tag_loc.note:display_name(), tag_loc.line, tag_loc.text)
           entries[#entries + 1] = {
             value = { path = tag_loc.path, line = tag_loc.line, col = tag_loc.tag_start },
-            display = string.format("%s [%s] %s", tag_loc.note:display_name(), tag_loc.line, tag_loc.text),
-            ordinal = tag_loc.text,
+            display = display,
+            ordinal = display,
             filename = tostring(tag_loc.path),
             lnum = tag_loc.line,
             col = tag_loc.tag_start,

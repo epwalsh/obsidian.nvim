@@ -30,10 +30,11 @@ return function(client, _)
     local entries = {}
     for _, matches in ipairs(backlinks) do
       for _, match in ipairs(matches.matches) do
+        local display = string.format("%s [%s] %s", matches.note:display_name(), match.line, match.text)
         entries[#entries + 1] = {
           value = { path = matches.path, line = match.line },
-          display = string.format("%s [%s] %s", matches.note:display_name(), match.line, match.text),
-          ordinal = match.text,
+          display = display,
+          ordinal = display,
           filename = matches.path,
           lnum = match.line,
         }
