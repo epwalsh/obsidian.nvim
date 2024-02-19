@@ -144,9 +144,9 @@ M.register("ObsidianCheck", { opts = { nargs = 0, desc = "Check for issues in yo
 
 M.register("ObsidianToday", { opts = { nargs = "?", desc = "Open today's daily note" } })
 
-M.register("ObsidianYesterday", { opts = { nargs = 0, desc = "Open yesterday's daily note" } })
+M.register("ObsidianYesterday", { opts = { nargs = 0, desc = "Open the daily note for the previous working day" } })
 
-M.register("ObsidianTomorrow", { opts = { nargs = 0, desc = "Open tomorrow's daily note" } })
+M.register("ObsidianTomorrow", { opts = { nargs = 0, desc = "Open the daily note for the next working day" } })
 
 M.register("ObsidianNew", { opts = { nargs = "?", desc = "Create a new note" } })
 
