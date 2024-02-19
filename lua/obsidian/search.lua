@@ -316,7 +316,7 @@ M.build_search_cmd = function(dir, term, opts)
     end
   end
 
-  local path = vim.fs.normalize(tostring(dir))
+  local path = util.resolve_path(dir)
   if opts.escape_path then
     path = assert(vim.fn.fnameescape(path))
   end
@@ -500,7 +500,7 @@ end
 ---@param on_match fun(path: string)
 ---@param on_exit fun(exit_code: integer)|?
 M.find_async = function(dir, term, opts, on_match, on_exit)
-  local norm_dir = vim.fs.normalize(tostring(dir))
+  local norm_dir = util.resolve_path(dir)
   local cmd = M.build_find_cmd(norm_dir, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     on_match(line)
@@ -522,7 +522,7 @@ M.find_notes_async = function(dir, note_file_name, callback)
   end
 
   local notes = {}
-  local root_dir = vim.fs.normalize(tostring(dir))
+  local root_dir = util.resolve_path(dir)
 
   local visit_dir = function(entry)
     ---@type Path

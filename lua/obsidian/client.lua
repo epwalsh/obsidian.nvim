@@ -178,7 +178,7 @@ end
 ---
 ---@return boolean
 Client.path_is_note = function(self, path, workspace)
-  path = vim.fs.normalize(tostring(path))
+  path = util.resolve_path(path)
 
   -- Notes have to be markdown file.
   if not vim.endswith(path, ".md") then
@@ -223,7 +223,7 @@ end
 ---
 ---@return string|?
 Client.vault_relative_path = function(self, path)
-  local normalized_path = vim.fs.normalize(tostring(path))
+  local normalized_path = util.resolve_path(path)
   local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
   if relative_path == normalized_path then
     -- Either `normalized_path` was already relative or `:make_relative()` failed.
@@ -378,7 +378,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param content_match MatchData
   local function on_search_match(content_match)
-    local path = vim.fs.normalize(content_match.path.text)
+    local path = util.resolve_path(content_match.path.text)
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -387,7 +387,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param path_match string
   local function on_find_match(path_match)
-    local path = vim.fs.normalize(path_match)
+    local path = util.resolve_path(path_match)
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -508,7 +508,7 @@ Client.find_files_async = function(self, term, opts, callback)
   local matches = {}
   local tx, rx = channel.oneshot()
   local on_find_match = function(path_match)
-    matches[#matches + 1] = Path:new(vim.fs.normalize(path_match))
+    matches[#matches + 1] = Path:new(util.resolve_path(path_match))
   end
 
   local on_exit = function(_)
@@ -829,7 +829,7 @@ Client.find_tags_async = function(self, term, opts, callback)
 
   ---@param match_data MatchData
   local on_match = function(match_data)
-    local path = vim.fs.normalize(match_data.path.text)
+    local path = util.resolve_path(match_data.path.text)
 
     if path_order[path] == nil then
       num_paths = num_paths + 1
@@ -1016,7 +1016,7 @@ Client.find_backlinks_async = function(self, note, opts, callback)
   end
 
   local function on_match(match)
-    local path = vim.fs.normalize(match.path.text)
+    local path = util.resolve_path(match.path.text)
 
     if path_order[path] == nil then
       num_paths = num_paths + 1
@@ -1160,7 +1160,7 @@ Client.apply_async_raw = function(self, on_path, on_done, timeout)
 
   local executor = AsyncExecutor.new()
 
-  scan.scan_dir(vim.fs.normalize(tostring(self.dir)), {
+  scan.scan_dir(util.resolve_path(self.dir), {
     hidden = false,
     add_dirs = false,
     respect_gitignore = true,

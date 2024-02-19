@@ -388,6 +388,15 @@ end
 -- Path helpers --
 ------------------
 
+--- Normalize and resolve a path. The result is an absolute path.
+---
+---@param path string|Path
+---
+---@return string
+util.resolve_path = function(path)
+  return vim.fn.resolve(Path:new(vim.fs.normalize(tostring(path))):absolute())
+end
+
 --- Get the parent directory of a path.
 ---
 ---@param path string|Path
@@ -804,7 +813,7 @@ util.get_named_buffers = function()
     if bufnr > max_bufnr then
       return nil
     else
-      return bufnr, vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
+      return bufnr, util.resolve_path(vim.api.nvim_buf_get_name(bufnr))
     end
   end
 end
@@ -958,7 +967,7 @@ end
 ---@param path string|Path
 ---@param opts { line: integer|?, col: integer|?, cmd: string|? }|?
 util.open_buffer = function(path, opts)
-  path = vim.fn.resolve(vim.fs.normalize(Path:new(path):absolute()))
+  path = util.resolve_path(path)
   opts = opts and opts or {}
   local cmd = util.strip_whitespace(opts.cmd and opts.cmd or "e")
 

@@ -76,7 +76,7 @@ Workspace.new = function(path, opts)
   opts = opts and opts or {}
 
   local self = Workspace.init()
-  self.path = vim.fn.resolve(vim.fs.normalize(tostring(path)))
+  self.path = util.resolve_path(path)
   self.name = opts.name and opts.name or assert(vim.fs.basename(self.path))
   self.overrides = opts.overrides
 
@@ -85,7 +85,7 @@ Workspace.new = function(path, opts)
   else
     local vault_root = find_vault_root(self.path)
     if vault_root then
-      self.root = vim.fs.normalize(vault_root)
+      self.root = util.resolve_path(vault_root)
     else
       self.root = self.path
     end
@@ -156,7 +156,7 @@ end
 ---
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
-  cur_dir = vim.fn.resolve(vim.fs.normalize(tostring(cur_dir)))
+  cur_dir = util.resolve_path(cur_dir)
   local dirs = util.parent_directories(cur_dir)
   table.insert(dirs, 1, tostring(cur_dir))
 
