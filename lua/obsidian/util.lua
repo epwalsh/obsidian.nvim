@@ -958,9 +958,19 @@ end
 ---@param path string|Path
 ---@param opts { line: integer|?, col: integer|?, cmd: string|? }|?
 util.open_buffer = function(path, opts)
+  path = vim.fn.resolve(vim.fs.normalize(Path:new(path):absolute()))
   opts = opts and opts or {}
-  -- TODO: check for existing buffer and go there.
-  vim.cmd(string.format("%s %s", util.strip_whitespace(opts.cmd and opts.cmd or "e"), path))
+  local cmd = util.strip_whitespace(opts.cmd and opts.cmd or "e")
+
+  -- Check for existing buffer and use 'drop' command if one is found.
+  for _, bufname in util.get_named_buffers() do
+    if bufname == path then
+      cmd = "drop"
+      break
+    end
+  end
+
+  vim.cmd(string.format("%s %s", cmd, vim.fn.fnameescape(path)))
   if opts.line then
     vim.api.nvim_win_set_cursor(0, { tonumber(opts.line), opts.col and opts.col or 0 })
   end
