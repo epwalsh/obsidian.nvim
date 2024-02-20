@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `:ObsidianBacklinks` and `:ObsidianTags` now open your preferred picker instead of a separate buffer.
 
+### Fixed
+
+- Fixed `:ObsidianExtractNote` when usual visual line selection ("V").
+
 ## [v3.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.1) - 2024-02-18
 
 ### Fixed

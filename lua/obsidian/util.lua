@@ -890,7 +890,7 @@ util.get_visual_selection = function()
     _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
   end
 
-  -- swap vars if needed
+  -- Swap vars if needed
   if cerow < csrow then
     csrow, cerow = cerow, csrow
     cscol, cecol = cecol, cscol
@@ -900,6 +900,16 @@ util.get_visual_selection = function()
 
   local lines = vim.fn.getline(csrow, cerow)
   assert(type(lines) == "table")
+
+  -- When the whole line is selected via visual line mode ("V"), cscol / cecol will be equal to "v:maxcol"
+  -- for some odd reason. So change that to what they should be here. See ':h getpos' for more info.
+  local maxcol = vim.api.nvim_get_vvar "maxcol"
+  if cscol == maxcol then
+    cscol = string.len(lines[1])
+  end
+  if cecol == maxcol then
+    cecol = string.len(lines[#lines])
+  end
 
   ---@type string
   local selection
