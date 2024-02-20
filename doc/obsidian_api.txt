@@ -562,8 +562,12 @@ obsidian.Note
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Note.display_info()*
-                          `Note.display_info`({self})
+                      `Note.display_info`({self}, {opts})
 Get markdown display info about the note.
+
+Parameters ~
+{opts} { label: `(string|?)` }|?
+
 Return ~
 `(string)`
 
