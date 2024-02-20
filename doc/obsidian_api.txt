@@ -1,4 +1,4 @@
-*obidian-api*
+*obsidian-api*
 
 The Obsidian.nvim Lua API.
 
@@ -517,8 +517,11 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                       *obsidian.Client.picker()*
-                            `Client.picker`({self})
-Get the default Picker.
+                     `Client.picker`({self}, {picker_name})
+Get the Picker.
+
+Parameters ~
+{picker_name} obsidian.config.Picker|?
 
 Return ~
 obsidian.Picker| `(optional)`
