@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added client methods `Client:find_backlinks()` and `Client:find_backlinks_async()`.
 
+### Fixed
+
+- Fixed `:ObsidianExtractNote` when usual visual line selection ("V").
+
 ## [v3.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.1) - 2024-02-18
 
 ### Fixed
