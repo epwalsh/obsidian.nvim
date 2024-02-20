@@ -97,7 +97,9 @@ Picker._make_display = function(self, entry)
 
     if icon ~= nil then
       display = display .. icon .. " "
-      highlights[#highlights + 1] = { { 0, strings.strdisplaywidth(icon) }, icon_hl }
+      if icon_hl ~= nil then
+        highlights[#highlights + 1] = { { 0, strings.strdisplaywidth(icon) }, icon_hl }
+      end
     end
 
     display = display .. tostring(self.client:vault_relative_path(entry.filename))

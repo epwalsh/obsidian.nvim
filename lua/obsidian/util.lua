@@ -1013,6 +1013,8 @@ util.get_icon = function(path)
     if ok and type(res) == "table" then
       local icon, hlgroup = unpack(res)
       return icon, hlgroup
+    elseif vim.endswith(path, ".md") then
+      return ""
     end
   end
   return nil
