@@ -67,7 +67,7 @@ source.complete = function(_, request, callback)
               end
 
               table.insert(items, {
-                documentation = { kind = "markdown", value = note:display_info() },
+                documentation = { kind = "markdown", value = note:display_info { label = option } },
                 sortText = sort_text,
                 label = label,
                 kind = 18, -- "Reference"

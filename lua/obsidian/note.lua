@@ -53,13 +53,23 @@ Note.new = function(id, aliases, tags, path)
 end
 
 --- Get markdown display info about the note.
+---
+---@param opts { label: string|? }|?
+---
 ---@return string
-Note.display_info = function(self)
+Note.display_info = function(self, opts)
+  opts = opts and opts or {}
+
   ---@type string[]
   local info = {}
 
+  if opts.label ~= nil and string.len(opts.label) > 0 then
+    info[#info + 1] = ("%s"):format(opts.label)
+    info[#info + 1] = "--------"
+  end
+
   if self.path ~= nil then
-    info[#info + 1] = ("**path:** %s"):format(self.path)
+    info[#info + 1] = ("**path:** `%s`"):format(self.path)
   end
 
   if #self.aliases > 0 then
@@ -67,7 +77,7 @@ Note.display_info = function(self)
   end
 
   if #self.tags > 0 then
-    info[#info + 1] = ("**tags:** '%s'"):format(table.concat(self.tags, "', '"))
+    info[#info + 1] = ("**tags:** `#%s`"):format(table.concat(self.tags, "`, `#"))
   end
 
   return table.concat(info, "\n")

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `:ObsidianBacklinks` and `:ObsidianTags` now open your preferred picker instead of a separate buffer.
+- Improved `cmp_obsidian` doc/preview text.
 
 ### Fixed
 
