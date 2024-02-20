@@ -43,7 +43,7 @@ return function(client, data)
   if cur_note_id == nil then
     is_current_buf = true
     cur_note_bufnr = assert(vim.fn.bufnr())
-    cur_note_path = vim.fs.normalize(vim.api.nvim_buf_get_name(cur_note_bufnr))
+    cur_note_path = util.resolve_path(vim.api.nvim_buf_get_name(cur_note_bufnr))
     cur_note = Note.from_file(cur_note_path)
     cur_note_id = tostring(cur_note.id)
     dirname = vim.fs.dirname(cur_note_path)
@@ -55,7 +55,7 @@ return function(client, data)
       return
     end
     cur_note_id = tostring(cur_note.id)
-    cur_note_path = vim.fs.normalize(tostring(cur_note.path:absolute()))
+    cur_note_path = util.resolve_path(cur_note.path)
     dirname = vim.fs.dirname(cur_note_path)
     for bufnr, bufpath in util.get_named_buffers() do
       if bufpath == cur_note_path then
@@ -252,7 +252,7 @@ return function(client, data)
   end
 
   local function on_search_match(match)
-    local path = vim.fs.normalize(match.path.text)
+    local path = util.resolve_path(match.path.text)
     file_count = file_count + 1
     executor:submit(replace_refs, function(count)
       replacement_count = replacement_count + count

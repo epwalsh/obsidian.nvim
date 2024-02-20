@@ -1,4 +1,4 @@
---- *obidian-api*
+--- *obsidian-api*
 ---
 --- The Obsidian.nvim Lua API.
 ---
@@ -178,7 +178,7 @@ end
 ---
 ---@return boolean
 Client.path_is_note = function(self, path, workspace)
-  path = vim.fs.normalize(tostring(path))
+  path = util.resolve_path(path)
 
   -- Notes have to be markdown file.
   if not vim.endswith(path, ".md") then
@@ -223,6 +223,9 @@ end
 ---
 ---@return string|?
 Client.vault_relative_path = function(self, path)
+  -- NOTE: we don't use `util.resolve_path()` here because that would make the path absolute,
+  -- which may result in the wrong relative path if the current working directory is not within
+  -- the vault.
   local normalized_path = vim.fs.normalize(tostring(path))
   local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
   if relative_path == normalized_path then
@@ -378,7 +381,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param content_match MatchData
   local function on_search_match(content_match)
-    local path = vim.fs.normalize(content_match.path.text)
+    local path = util.resolve_path(content_match.path.text)
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -387,7 +390,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param path_match string
   local function on_find_match(path_match)
-    local path = vim.fs.normalize(path_match)
+    local path = util.resolve_path(path_match)
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -508,7 +511,7 @@ Client.find_files_async = function(self, term, opts, callback)
   local matches = {}
   local tx, rx = channel.oneshot()
   local on_find_match = function(path_match)
-    matches[#matches + 1] = Path:new(vim.fs.normalize(path_match))
+    matches[#matches + 1] = Path:new(util.resolve_path(path_match))
   end
 
   local on_exit = function(_)
@@ -702,7 +705,7 @@ Client.follow_link_async = function(self, link, opts)
       -- Go to resolved note.
       local path = assert(res.path)
       return vim.schedule(function()
-        vim.api.nvim_command(open_cmd .. tostring(path))
+        util.open_buffer(path, { cmd = open_cmd })
       end)
     end
 
@@ -724,7 +727,7 @@ Client.follow_link_async = function(self, link, opts)
           end
 
           local note = self:new_note(res.name, id, nil, aliases)
-          vim.api.nvim_command(open_cmd .. tostring(note.path))
+          util.open_buffer(note.path, { cmd = open_cmd })
         else
           log.warn "Aborting"
         end
@@ -829,7 +832,7 @@ Client.find_tags_async = function(self, term, opts, callback)
 
   ---@param match_data MatchData
   local on_match = function(match_data)
-    local path = vim.fs.normalize(match_data.path.text)
+    local path = util.resolve_path(match_data.path.text)
 
     if path_order[path] == nil then
       num_paths = num_paths + 1
@@ -1016,7 +1019,7 @@ Client.find_backlinks_async = function(self, note, opts, callback)
   end
 
   local function on_match(match)
-    local path = vim.fs.normalize(match.path.text)
+    local path = util.resolve_path(match.path.text)
 
     if path_order[path] == nil then
       num_paths = num_paths + 1
@@ -1160,7 +1163,7 @@ Client.apply_async_raw = function(self, on_path, on_done, timeout)
 
   local executor = AsyncExecutor.new()
 
-  scan.scan_dir(vim.fs.normalize(tostring(self.dir)), {
+  scan.scan_dir(util.resolve_path(self.dir), {
     hidden = false,
     add_dirs = false,
     respect_gitignore = true,
@@ -1487,11 +1490,13 @@ Client.format_link = function(self, note, opts)
   end
 end
 
---- Get the default Picker.
+--- Get the Picker.
+---
+---@param picker_name obsidian.config.Picker|?
 ---
 ---@return obsidian.Picker|?
-Client.picker = function(self)
-  return require("obsidian.pickers").get(self)
+Client.picker = function(self, picker_name)
+  return require("obsidian.pickers").get(self, picker_name)
 end
 
 return Client

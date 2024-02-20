@@ -388,6 +388,15 @@ end
 -- Path helpers --
 ------------------
 
+--- Normalize and resolve a path. The result is an absolute path.
+---
+---@param path string|Path
+---
+---@return string
+util.resolve_path = function(path)
+  return vim.fn.resolve(Path:new(vim.fs.normalize(tostring(path))):absolute())
+end
+
 --- Get the parent directory of a path.
 ---
 ---@param path string|Path
@@ -804,7 +813,7 @@ util.get_named_buffers = function()
     if bufnr > max_bufnr then
       return nil
     else
-      return bufnr, vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
+      return bufnr, util.resolve_path(vim.api.nvim_buf_get_name(bufnr))
     end
   end
 end
@@ -961,6 +970,54 @@ end
 ---@return string
 util.markdown_link = function(opts)
   return string.format("[%s](%s)", opts.label, opts.path)
+end
+
+--- Open a buffer for the corresponding path.
+---
+---@param path string|Path
+---@param opts { line: integer|?, col: integer|?, cmd: string|? }|?
+util.open_buffer = function(path, opts)
+  path = util.resolve_path(path)
+  opts = opts and opts or {}
+  local cmd = util.strip_whitespace(opts.cmd and opts.cmd or "e")
+
+  -- Check for existing buffer and use 'drop' command if one is found.
+  for _, bufname in util.get_named_buffers() do
+    if bufname == path then
+      cmd = "drop"
+      break
+    end
+  end
+
+  vim.cmd(string.format("%s %s", cmd, vim.fn.fnameescape(path)))
+  if opts.line then
+    vim.api.nvim_win_set_cursor(0, { tonumber(opts.line), opts.col and opts.col or 0 })
+  end
+end
+
+--- Get a nice icon for a file or URL, if possible.
+---
+---@param path string
+---
+---@return string|?, string|? (icon, hl_group) The icon and highlight group.
+util.get_icon = function(path)
+  if util.is_url(path) then
+    local icon = ""
+    local _, hl_group = util.get_icon "blah.html"
+    return icon, hl_group
+  else
+    local ok, res = pcall(function()
+      local icon, hl_group = require("nvim-web-devicons").get_icon(path, nil, { default = true })
+      return { icon, hl_group }
+    end)
+    if ok and type(res) == "table" then
+      local icon, hlgroup = unpack(res)
+      return icon, hlgroup
+    elseif vim.endswith(path, ".md") then
+      return ""
+    end
+  end
+  return nil
 end
 
 return util

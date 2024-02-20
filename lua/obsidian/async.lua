@@ -67,17 +67,21 @@ Executor.map = function(self, fn, task_args, callback)
   if type(task_args) == "table" and util.tbl_is_array(task_args) then
     num_tasks = #task_args
     for i, args in ipairs(task_args) do
+      if i == #task_args then
+        all_submitted = true
+      end
       self:submit(fn, get_task_done_fn(i), unpack(args))
     end
-    all_submitted = true
   elseif type(task_args) == "table" then
+    num_tasks = vim.tbl_count(task_args)
     local i = 0
     for k, v in pairs(task_args) do
       i = i + 1
-      num_tasks = num_tasks + 1
+      if i == #task_args then
+        all_submitted = true
+      end
       self:submit(fn, get_task_done_fn(i), k, v)
     end
-    all_submitted = true
   elseif type(task_args) == "function" then
     local i = 0
     local args = { task_args() }

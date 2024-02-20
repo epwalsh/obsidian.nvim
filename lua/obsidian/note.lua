@@ -177,7 +177,7 @@ Note.from_file = function(path, root)
     error "note path cannot be nil"
   end
   local n
-  with(open(vim.fs.normalize(tostring(path))), function(reader)
+  with(open(util.resolve_path(path)), function(reader)
     n = Note.from_lines(function()
       return reader:lines()
     end, path, root)
@@ -196,7 +196,7 @@ Note.from_file_async = function(path, root)
   if path == nil then
     error "note path cannot be nil"
   end
-  local f = File.open(vim.fs.normalize(tostring(path)))
+  local f = File.open(util.resolve_path(path))
   local ok, res = pcall(Note.from_lines, function()
     return f:lines(false)
   end, path, root)
@@ -535,7 +535,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   end
 
   --Write new lines.
-  local save_path = vim.fs.normalize(tostring(path and path or self.path))
+  local save_path = util.resolve_path(assert(path and path or self.path))
   assert(save_path ~= nil)
   util.parent_directory(save_path):mkdir { parents = true, exists_ok = true }
   local save_f = io.open(save_path, "w")

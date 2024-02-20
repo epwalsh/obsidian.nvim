@@ -117,7 +117,7 @@ M.paste_img = function(fname, default_dir, default_name)
     else
       path = Path:new(default_dir) / fname
     end
-    path = Path:new(path:absolute())
+    path = Path:new(util.resolve_path(path))
 
     -- Get confirmation from user.
     local confirmation = string.lower(vim.fn.input {

@@ -1,5 +1,7 @@
 local abc = require "obsidian.abc"
 local log = require "obsidian.log"
+local util = require "obsidian.util"
+local strings = require "plenary.strings"
 
 ---@class obsidian.Picker : obsidian.ABC
 ---
@@ -56,12 +58,14 @@ end
 ---@class obsidian.PickerEntry
 ---
 ---@field value any
----@field display string
----@field ordinal string
+---@field ordinal string|?
+---@field display string|?
 ---@field filename string|?
 ---@field valid boolean|?
 ---@field lnum integer|?
 ---@field col integer|?
+---@field icon string|?
+---@field icon_hl string|?
 
 --- Picker from a list of values.
 ---
@@ -70,6 +74,60 @@ end
 ---@diagnostic disable-next-line: unused-local
 Picker.pick = function(self, values, opts)
   error "not implemented"
+end
+
+---@param entry obsidian.PickerEntry
+---
+---@return string, { [1]: { [1]: integer, [2]: integer }, [2]: string }[]
+---@diagnostic disable-next-line: unused-local
+Picker._make_display = function(self, entry)
+  ---@type string
+  local display = ""
+  ---@type { [1]: { [1]: integer, [2]: integer }, [2]: string }[]
+  local highlights = {}
+
+  if entry.filename ~= nil then
+    local icon, icon_hl
+    if entry.icon then
+      icon = entry.icon
+      icon_hl = entry.icon_hl
+    else
+      icon, icon_hl = util.get_icon(entry.filename)
+    end
+
+    if icon ~= nil then
+      display = display .. icon .. " "
+      if icon_hl ~= nil then
+        highlights[#highlights + 1] = { { 0, strings.strdisplaywidth(icon) }, icon_hl }
+      end
+    end
+
+    display = display .. tostring(self.client:vault_relative_path(entry.filename))
+
+    if entry.lnum ~= nil then
+      display = display .. ":" .. entry.lnum
+
+      if entry.col ~= nil then
+        display = display .. ":" .. entry.col
+      end
+    end
+
+    if entry.display ~= nil then
+      display = display .. ":" .. entry.display
+    end
+  elseif entry.display ~= nil then
+    if entry.icon ~= nil then
+      display = entry.icon .. " "
+    end
+    display = display .. entry.display
+  else
+    if entry.icon ~= nil then
+      display = entry.icon .. " "
+    end
+    display = display .. tostring(entry.value)
+  end
+
+  return assert(display), highlights
 end
 
 ---@return string[]

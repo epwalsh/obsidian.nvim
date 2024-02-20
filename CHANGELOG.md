@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added client methods `Client:find_backlinks()` and `Client:find_backlinks_async()`.
 
+### Changed
+
+- `:ObsidianBacklinks` and `:ObsidianTags` now open your preferred picker instead of a separate buffer.
+
 ### Fixed
 
 - Fixed `:ObsidianExtractNote` when usual visual line selection ("V").

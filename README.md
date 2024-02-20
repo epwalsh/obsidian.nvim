@@ -53,9 +53,9 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the cursor, optionally opening it in a vertical or horizontal split.
 
-- `:ObsidianBacklinks` for getting a location list of references to the current buffer.
+- `:ObsidianBacklinks` for getting a picker list of references to the current buffer.
 
-- `:ObsidianTags [TAG ...]` for getting a location list of all occurrences of the given tags.
+- `:ObsidianTags [TAG ...]` for getting a picker list of all occurrences of the given tags.
 
 - `:ObsidianToday [OFFSET]` to open/create a new daily note. This command also takes an optional offset in days, e.g. use `:ObsidianToday -1` to go to yesterday's note. Unlike `:ObsidianYesterday` and `:ObsidianTomorrow` this command does not differentiate between weekdays and weekends.
 
@@ -365,22 +365,6 @@ This is a complete list of all of the options that can be passed to `require("ob
     time_format = "%H:%M",
     -- A map for custom variables, the key should be the variable and the value a function
     substitutions = {},
-  },
-
-  -- Optional, customize the backlinks interface.
-  backlinks = {
-    -- The default height of the backlinks location list.
-    height = 10,
-    -- Whether or not to wrap lines.
-    wrap = true,
-  },
-
-  -- Optional, customize the tags interface.
-  tags = {
-    -- The default height of the tags location list.
-    height = 10,
-    -- Whether or not to wrap lines.
-    wrap = true,
   },
 
   -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external

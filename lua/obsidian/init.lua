@@ -8,7 +8,6 @@ local module_lookups = {
   commands = "obsidian.commands",
   completion = "obsidian.completion",
   config = "obsidian.config",
-  LocationList = "obsidian.location_list",
   log = "obsidian.log",
   img_paste = "obsidian.img_paste",
   itertools = "obsidian.itertools",
