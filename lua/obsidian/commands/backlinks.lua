@@ -27,14 +27,16 @@ return function(client, _)
   assert(note)
 
   client:find_backlinks_async(note, true, function(backlinks)
+    if vim.tbl_isempty(backlinks) then
+      log.info "No backlinks found"
+      return
+    end
+
     local entries = {}
     for _, matches in ipairs(backlinks) do
       for _, match in ipairs(matches.matches) do
-        local display = string.format("%s [%s] %s", matches.note:display_name(), match.line, match.text)
         entries[#entries + 1] = {
           value = { path = matches.path, line = match.line },
-          display = display,
-          ordinal = display,
           filename = matches.path,
           lnum = match.line,
         }

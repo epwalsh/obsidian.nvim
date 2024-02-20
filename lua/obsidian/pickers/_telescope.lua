@@ -153,6 +153,10 @@ TelescopePicker.pick = function(self, values, opts)
 
   local make_entry_from_string = make_entry.gen_from_string(picker_opts)
 
+  local displayer = function(entry)
+    return self:_make_display(entry.raw)
+  end
+
   pickers
     .new(picker_opts, {
       prompt_title = self:prompt_title { prompt_title = opts.prompt_title, no_default_mappings = true },
@@ -162,7 +166,27 @@ TelescopePicker.pick = function(self, values, opts)
           if type(v) == "string" then
             return make_entry_from_string(v)
           else
-            return v
+            local ordinal = v.ordinal
+            if ordinal == nil then
+              ordinal = ""
+              if type(v.display) == "string" then
+                ordinal = ordinal .. v.display
+              end
+              if v.filename ~= nil then
+                ordinal = ordinal .. " " .. v.filename
+              end
+            end
+
+            return {
+              value = v.value,
+              display = displayer,
+              ordinal = ordinal,
+              filename = v.filename,
+              valid = v.valid,
+              lnum = v.lnum,
+              col = v.col,
+              raw = v,
+            }
           end
         end,
       },

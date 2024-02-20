@@ -121,8 +121,9 @@ FzfPicker.pick = function(self, values, opts)
       display_to_value_map[value] = value
       entries[#entries + 1] = value
     elseif value.valid ~= false then
-      display_to_value_map[value.display] = value.value
-      entries[#entries + 1] = value.display
+      local display = self:_make_display(value)
+      display_to_value_map[display] = value.value
+      entries[#entries + 1] = display
     end
   end
 

@@ -985,4 +985,27 @@ util.open_buffer = function(path, opts)
   end
 end
 
+--- Get a nice icon for a file or URL, if possible.
+---
+---@param path string
+---
+---@return string|?, string|? (icon, hl_group) The icon and highlight group.
+util.get_icon = function(path)
+  if util.is_url(path) then
+    local icon = ""
+    local _, hl_group = util.get_icon "blah.html"
+    return icon, hl_group
+  else
+    local ok, res = pcall(function()
+      local icon, hl_group = require("nvim-web-devicons").get_icon(path, nil, { default = true })
+      return { icon, hl_group }
+    end)
+    if ok and type(res) == "table" then
+      local icon, hlgroup = unpack(res)
+      return icon, hlgroup
+    end
+  end
+  return nil
+end
+
 return util

@@ -2,6 +2,7 @@ local AsyncExecutor = require("obsidian.async").AsyncExecutor
 local log = require "obsidian.log"
 local search = require "obsidian.search"
 local iter = require("obsidian.itertools").iter
+local util = require "obsidian.util"
 local channel = require("plenary.async.control").channel
 
 ---@param client obsidian.Client
@@ -15,7 +16,7 @@ return function(client)
   ---@type (string[])[]
   local links = {}
   for line in iter(vim.api.nvim_buf_get_lines(0, 0, -1, true)) do
-    for match in iter(search.find_refs(line, { include_naked_urls = true })) do
+    for match in iter(search.find_refs(line, { include_naked_urls = true, include_file_urls = true })) do
       local m_start, m_end = unpack(match)
       local link = string.sub(line, m_start, m_end)
       links[#links + 1] = { link }
@@ -30,12 +31,18 @@ return function(client)
       local entry
 
       client:resolve_link_async(link, function(res)
+        local icon, icon_hl
+        if res.url ~= nil then
+          icon, icon_hl = util.get_icon(res.url)
+        end
+
         if res ~= nil then
           entry = {
             value = link,
             display = res.name,
-            ordinal = res.name,
             filename = res.path and tostring(res.path) or nil,
+            icon = icon,
+            icon_hl = icon_hl,
           }
         else
           entry = {
