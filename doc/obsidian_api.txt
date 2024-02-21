@@ -286,6 +286,15 @@ Parameters ~
 {opts} { open_strategy: obsidian.config.OpenStrategy|? }|?
 
 ------------------------------------------------------------------------------
+                                                   *obsidian.Client.open_note()*
+               `Client.open_note`({self}, {note_or_path}, {opts})
+Open a note in a buffer.
+
+Parameters ~
+{note_or_path} `(string|Path|obsidian.Note)`
+{opts} { line: `(integer|?,)` col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
+
+------------------------------------------------------------------------------
                                                 *obsidian.Client.current_note()*
                          `Client.current_note`({self})
 Get the current note.
