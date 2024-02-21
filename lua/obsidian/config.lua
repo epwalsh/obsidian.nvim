@@ -86,7 +86,10 @@ config.ClientOpts.normalize = function(opts, defaults)
     defaults = config.ClientOpts.default()
   end
 
-  -- Rename old fields for backwards compatibility.
+  -------------------------------------------------------------------------------------
+  -- Rename old fields for backwards compatibility and warn about deprecated fields. --
+  -------------------------------------------------------------------------------------
+
   if opts.ui and opts.ui.tick then
     opts.ui.update_debounce = opts.ui.tick
     opts.ui.tick = nil
@@ -100,26 +103,80 @@ config.ClientOpts.normalize = function(opts, defaults)
     end
     if opts.finder_mappings then
       opts.picker.mappings = opts.finder_mappings
+      opts.finder_mappings = nil
     end
   end
 
   if opts.wiki_link_func == nil and opts.completion ~= nil then
+    local warn = false
+
     if opts.completion.prepend_note_id then
       opts.wiki_link_func = util.wiki_link_id_prefix
+      opts.completion.prepend_note_id = nil
+      warn = true
     elseif opts.completion.prepend_note_path then
       opts.wiki_link_func = util.wiki_link_path_prefix
+      opts.completion.prepend_note_path = nil
+      warn = true
     elseif opts.completion.use_path_only then
       opts.wiki_link_func = util.wiki_link_path_only
+      opts.completion.use_path_only = nil
+      warn = true
+    end
+
+    if warn then
+      log.warn_once(
+        "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
+          .. "are deprecated. Please use 'wiki_link_func' instead.\n"
+          .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
+      )
     end
   end
 
   if opts.completion ~= nil and opts.completion.preferred_link_style ~= nil then
     opts.preferred_link_style = opts.completion.preferred_link_style
+    opts.completion.preferred_link_style = nil
+    log.warn_once(
+      "The config option 'completion.preferred_link_style' is deprecated, please use the top-level "
+        .. "'preferred_link_style' instead."
+    )
   end
 
   if opts.completion ~= nil and opts.completion.new_notes_location ~= nil then
     opts.new_notes_location = opts.completion.new_notes_location
+    opts.completion.new_notes_location = nil
+    log.warn_once(
+      "The config option 'completion.new_notes_location' is deprecated, please use the top-level "
+        .. "'new_notes_location' instead."
+    )
   end
+
+  if opts.detect_cwd ~= nil then
+    opts.detect_cwd = nil
+    log.warn_once(
+      "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
+    )
+  end
+
+  if opts.overwrite_mappings ~= nil then
+    log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
+    opts.overwrite_mappings = nil
+  end
+
+  if opts.backlinks ~= nil then
+    log.warn_once "The 'backlinks' config option is deprecated and no longer has any affect."
+    opts.backlinks = nil
+  end
+
+  if opts.tags ~= nil then
+    log.warn_once "The 'tags' config option is deprecated and no longer has any affect."
+    opts.tags = nil
+  end
+
+  --------------------------
+  -- Merge with defaults. --
+  --------------------------
 
   ---@type obsidian.config.ClientOpts
   opts = tbl_override(defaults, opts)
@@ -132,59 +189,14 @@ config.ClientOpts.normalize = function(opts, defaults)
   opts.ui = tbl_override(defaults.ui, opts.ui)
   opts.attachments = tbl_override(defaults.attachments, opts.attachments)
 
-  -- Validate.
+  ---------------
+  -- Validate. --
+  ---------------
+
   if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
     error("Invalid 'sort_by' option '" .. opts.sort_by .. "' in obsidian.nvim config.")
   end
 
-  -- Warn about deprecated fields.
-  ---@diagnostic disable-next-line undefined-field
-  if opts.overwrite_mappings ~= nil then
-    log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
-    ---@diagnostic disable-next-line
-    opts.overwrite_mappings = nil
-  end
-
-  if
-    ---@diagnostic disable-next-line undefined-field
-    opts.completion.prepend_note_id ~= nil
-    ---@diagnostic disable-next-line undefined-field
-    or opts.completion.prepend_note_path ~= nil
-    ---@diagnostic disable-next-line undefined-field
-    or opts.completion.use_path_only ~= nil
-  then
-    log.warn_once(
-      "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
-        .. "are deprecated. Please use 'wiki_link_func' instead.\n"
-        .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
-    )
-  end
-
-  ---@diagnostic disable-next-line undefined-field
-  if opts.completion.preferred_link_style ~= nil then
-    log.warn_once(
-      "The config option 'completion.preferred_link_style' is deprecated, please use the top-level "
-        .. "'preferred_link_style' instead."
-    )
-  end
-
-  ---@diagnostic disable-next-line undefined-field
-  if opts.completion.new_notes_location ~= nil then
-    log.warn_once(
-      "The config option 'completion.new_notes_location' is deprecated, please use the top-level "
-        .. "'new_notes_location' instead."
-    )
-  end
-
-  ---@diagnostic disable-next-line undefined-field
-  if opts.detect_cwd ~= nil then
-    log.warn_once(
-      "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
-        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
-    )
-  end
-
-  -- Normalize workspaces.
   if not util.tbl_is_array(opts.workspaces) then
     error "Invalid obsidian.nvim config, the 'config.workspaces' should be an array/list."
   end
