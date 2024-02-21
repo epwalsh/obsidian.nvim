@@ -486,7 +486,7 @@ util.get_open_strategy = function(opt)
 
   if vim.startswith(OpenStrategy.hsplit, opt) then
     if cur_layout ~= "col" then
-      return "hsplit "
+      return "split "
     else
       return "e "
     end
