@@ -696,16 +696,10 @@ Client.follow_link_async = function(self, link, opts)
       return
     end
 
-    local open_cmd = "e "
-    if opts.open_strategy ~= nil then
-      open_cmd = util.get_open_strategy(opts.open_strategy)
-    end
-
     if res.note ~= nil then
       -- Go to resolved note.
-      local path = assert(res.path)
       return vim.schedule(function()
-        util.open_buffer(path, { cmd = open_cmd })
+        self:open_note(res.note, { open_strategy = opts.open_strategy })
       end)
     end
 
@@ -727,7 +721,7 @@ Client.follow_link_async = function(self, link, opts)
           end
 
           local note = self:new_note(res.name, id, nil, aliases)
-          util.open_buffer(note.path, { cmd = open_cmd })
+          self:open_note(note, { open_strategy = opts.open_strategy })
         else
           log.warn "Aborting"
         end
@@ -736,6 +730,34 @@ Client.follow_link_async = function(self, link, opts)
 
     return log.err("Failed to resolve file '" .. res.location .. "'")
   end)
+end
+
+--- Open a note in a buffer.
+---
+---@param note_or_path string|Path|obsidian.Note
+---@param opts { line: integer|?, col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
+Client.open_note = function(self, note_or_path, opts)
+  opts = opts and opts or {}
+
+  ---@type Path
+  local path
+  if type(note_or_path) == "string" then
+    path = Path:new(note_or_path)
+  elseif type(note_or_path) == "table" and note_or_path.path ~= nil then
+    -- this is a Note
+    ---@cast note_or_path obsidian.Note
+    path = note_or_path.path
+  elseif type(note_or_path) == "table" and note_or_path.filename ~= nil then
+    -- this is a Path
+    ---@cast note_or_path Path
+    path = note_or_path
+  else
+    error "invalid 'note_or_path' argument"
+  end
+
+  local open_cmd = util.get_open_strategy(opts.open_strategy and opts.open_strategy or self.opts.open_notes_in)
+  ---@cast path Path
+  util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
 end
 
 --- Get the current note.

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added client methods `Client:find_backlinks()` and `Client:find_backlinks_async()`.
+- Added client method `Client:open_note()` for open a note in a buffer.
 
 ### Changed
 

@@ -15,6 +15,5 @@ return function(client, data)
     end
   end
   local note = client:daily(offset_days)
-  local open_in = util.get_open_strategy(client.opts.open_notes_in)
-  vim.api.nvim_command(open_in .. tostring(note.path))
+  client:open_note(note)
 end
