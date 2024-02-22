@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Ensure old buffer is removed when renaming current note.
+
+## [v3.4.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.4.0) - 2024-02-21
+
+### Added
+
+- Added client methods `Client:find_backlinks()` and `Client:find_backlinks_async()`.
+- Added client method `Client:open_note()` for open a note in a buffer.
+
+### Changed
+
+- `:ObsidianBacklinks` and `:ObsidianTags` now open your preferred picker instead of a separate buffer.
+- Improved `cmp_obsidian` doc/preview text.
+
+### Fixed
+
+- Fixed `:ObsidianExtractNote` when usual visual line selection ("V").
+- Fixed "hsplit" open strategy.
+
+## [v3.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.1) - 2024-02-18
+
+### Fixed
+
+- Fixed inserting templates when the templates directory structure is nested.
+
+## [v3.3.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.0) - 2024-02-17
+
+### Added
+
+- Support for `file:/` and `file:///` Urls.
+- Added configuration options `wiki_link_func` and `markdown_link_func` for customizing how links are formatted.
+
+### Fixed
+
+- Urls ending in `/` were not detected.
+- Fixed small bug with toggle checkbox mapping where lines that started with a wiki link or md link were misclassified.
+
+### Changed
+
+- Config options `completion.prepend_note_id`, `completion.prepend_note_path`, and `completion.use_path_only` are now deprecated. Please use `wiki_link_func` and `markdown_link_func` instead.
+- Moved configuration option `completion.preferred_link_style` to top-level `preferred_link_style`.
+- Moved configuration option `completion.new_notes_location` to top-level `new_notes_location`.
+
+## [v3.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.2.0) - 2024-02-13
+
+### Added
+
+- Added `:ObsidianLinks` command.
+- Added `:ObsidianExtractNote` command.
+
+### Fixed
+
+- Improved how we get visual selection for certain commands.
+
+## [v3.1.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.1.0) - 2024-02-12
+
 ### Added
 
 - Added descriptions to all commands.
@@ -598,7 +656,7 @@ Major internal refactoring to bring performance improvements through async execu
 
 ### Changed
 
-- `plenary.nvim` is no longer required to be installed seperately. It's now bundled as a submodule.
+- `plenary.nvim` is no longer required to be installed separately. It's now bundled as a submodule.
 
 ## [v1.2.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.2.1) - 2022-09-23
 

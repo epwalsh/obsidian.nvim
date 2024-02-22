@@ -72,22 +72,41 @@ MiniPicker.grep = function(self, opts)
   end
 end
 
----@param values string[]
----@param opts { prompt_title: string|?, callback: fun(value: string)|? }|?
+---@param values string[]|obsidian.PickerEntry[]
+---@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
 ---@diagnostic disable-next-line: unused-local
 MiniPicker.pick = function(self, values, opts)
   opts = opts and opts or {}
 
+  local entries = {}
+  for _, value in ipairs(values) do
+    if type(value) == "string" then
+      entries[#entries + 1] = value
+    elseif value.valid ~= false then
+      entries[#entries + 1] = {
+        value = value.value,
+        text = self:_make_display(value),
+        path = value.filename,
+        lnum = value.lnum,
+        col = value.col,
+      }
+    end
+  end
+
   local entry = mini_pick.start {
     source = {
       name = opts.prompt_title,
-      items = values,
+      items = entries,
       choose = function() end,
     },
   }
 
   if entry and opts.callback then
-    opts.callback(entry)
+    if type(entry) == "string" then
+      opts.callback(entry)
+    else
+      opts.callback(entry.value)
+    end
   end
 end
 

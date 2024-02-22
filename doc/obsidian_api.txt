@@ -1,4 +1,4 @@
-*obidian-api*
+*obsidian-api*
 
 The Obsidian.nvim Lua API.
 
@@ -256,6 +256,45 @@ Return ~
 obsidian.Note| `(optional)`
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.ResolveLinkResult}
+
+Fields ~
+{location} `(string)`
+{name} `(string)`
+{link_type} obsidian.search.RefTypes
+{path} Path|?
+{note} obsidian.Note|?
+{url} `(string|?)`
+
+------------------------------------------------------------------------------
+                                          *obsidian.Client.resolve_link_async()*
+            `Client.resolve_link_async`({self}, {link}, {callback})
+Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
+
+Parameters ~
+{link} `(string|?)`
+{callback} `(fun(res: obsidian.ResolveLinkResult|?))`
+
+------------------------------------------------------------------------------
+                                           *obsidian.Client.follow_link_async()*
+               `Client.follow_link_async`({self}, {link}, {opts})
+Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
+
+Parameters ~
+{link} `(string|?)`
+{opts} { open_strategy: obsidian.config.OpenStrategy|? }|?
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Client.open_note()*
+               `Client.open_note`({self}, {note_or_path}, {opts})
+Open a note in a buffer.
+
+Parameters ~
+{note_or_path} `(string|Path|obsidian.Note)`
+{opts} { line: `(integer|?,)` col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
+
+------------------------------------------------------------------------------
                                                 *obsidian.Client.current_note()*
                          `Client.current_note`({self})
 Get the current note.
@@ -282,8 +321,8 @@ Fields ~
 Find all tags starting with the given search term(s).
 
 Parameters ~
-{term} `(string|string[])` The search term
-{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
+{term} `(string|string[])` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 Return ~
@@ -295,9 +334,49 @@ obsidian.TagLocation[]
 An async version of 'find_tags()'.
 
 Parameters ~
-{term} `(string|string[])` The search term
-{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
+{term} `(string|string[])` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
 {callback} `(fun(tags: obsidian.TagLocation[]))`
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.BacklinkMatches}
+
+Fields ~
+{note} obsidian.Note The note instance where the backlinks were found.
+{path} `(string|Path)` The path to the note where the backlinks were found.
+{matches} obsidian.BacklinkMatch[] The backlinks within the note.
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.BacklinkMatch}
+
+Fields ~
+{line} `(integer)` The line number (1-indexed) where the backlink was found.
+{text} `(string)` The text of the line where the backlink was found.
+
+------------------------------------------------------------------------------
+                                              *obsidian.Client.find_backlinks()*
+           `Client.find_backlinks`({self}, {note}, {opts}, {timeout})
+Find all backlinks to a note.
+
+Parameters ~
+{note} obsidian.Note The note to find backlinks for.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{timeout} `(integer|?)` Timeout in milliseconds.
+
+Return ~
+obsidian.BacklinkMatches[]
+
+------------------------------------------------------------------------------
+                                        *obsidian.Client.find_backlinks_async()*
+       `Client.find_backlinks_async`({self}, {note}, {opts}, {callback})
+An async version of 'find_backlinks()'.
+
+Parameters ~
+{note} obsidian.Note The note to find backlinks for.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{callback} `(fun(backlinks: obsidian.BacklinkMatches[]))`
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Client.list_tags()*
@@ -440,15 +519,18 @@ Create a formatted markdown / wiki link for a note.
 
 Parameters ~
 {note} `(obsidian.Note|string)` The note/path to link to.
-{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|? } Options.
+{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|? }|? Options.
 
 Return ~
 `(string)`
 
 ------------------------------------------------------------------------------
                                                       *obsidian.Client.picker()*
-                            `Client.picker`({self})
-Get the default Picker.
+                     `Client.picker`({self}, {picker_name})
+Get the Picker.
+
+Parameters ~
+{picker_name} obsidian.config.Picker|?
 
 Return ~
 obsidian.Picker| `(optional)`
@@ -489,8 +571,12 @@ obsidian.Note
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Note.display_info()*
-                          `Note.display_info`({self})
+                      `Note.display_info`({self}, {opts})
 Get markdown display info about the note.
+
+Parameters ~
+{opts} { label: `(string|?)` }|?
+
 Return ~
 `(string)`
 
@@ -728,7 +814,7 @@ Parameters ~
 {base_dir} `(string|Path)`
 
 Return ~
-Path| `(optional)`
+`(string|)` `(optional)`
 
 ------------------------------------------------------------------------------
                                                       *obsidian.Workspace.new()*

@@ -18,6 +18,7 @@ M.RefTypes = {
   Wiki = "Wiki",
   Markdown = "Markdown",
   NakedUrl = "NakedUrl",
+  FileUrl = "FileUrl",
   Tag = "Tag",
 }
 
@@ -35,7 +36,8 @@ M.Patterns = {
   WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
   Wiki = "%[%[[^][%|]+%]%]", -- [[xxx]]
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
-  NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:%%-]+[a-zA-Z0-9]", -- https://xyz.com
+  NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:%%-]+[a-zA-Z0-9/]", -- https://xyz.com
+  FileUrl = "file:/[/{2}]?.*", -- file:///
 }
 
 --- Find all matches of a pattern
@@ -120,6 +122,7 @@ end
 ---
 ---@field include_naked_urls boolean|?
 ---@field include_tags boolean|?
+---@field include_file_urls boolean|?
 
 --- Find refs and URLs.
 ---@param s string the string to search
@@ -135,6 +138,9 @@ M.find_refs = function(s, opts)
   end
   if opts.include_tags then
     pattern_names[#pattern_names + 1] = M.RefTypes.Tag
+  end
+  if opts.include_file_urls then
+    pattern_names[#pattern_names + 1] = M.RefTypes.FileUrl
   end
 
   return M.find_matches(s, pattern_names)
@@ -310,7 +316,7 @@ M.build_search_cmd = function(dir, term, opts)
     end
   end
 
-  local path = vim.fs.normalize(tostring(dir))
+  local path = util.resolve_path(dir)
   if opts.escape_path then
     path = assert(vim.fn.fnameescape(path))
   end
@@ -494,7 +500,7 @@ end
 ---@param on_match fun(path: string)
 ---@param on_exit fun(exit_code: integer)|?
 M.find_async = function(dir, term, opts, on_match, on_exit)
-  local norm_dir = vim.fs.normalize(tostring(dir))
+  local norm_dir = util.resolve_path(dir)
   local cmd = M.build_find_cmd(norm_dir, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     on_match(line)
@@ -516,7 +522,7 @@ M.find_notes_async = function(dir, note_file_name, callback)
   end
 
   local notes = {}
-  local root_dir = vim.fs.normalize(tostring(dir))
+  local root_dir = util.resolve_path(dir)
 
   local visit_dir = function(entry)
     ---@type Path

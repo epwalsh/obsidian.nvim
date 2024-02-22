@@ -1,4 +1,4 @@
---- *obidian-api*
+--- *obsidian-api*
 ---
 --- The Obsidian.nvim Lua API.
 ---
@@ -178,7 +178,7 @@ end
 ---
 ---@return boolean
 Client.path_is_note = function(self, path, workspace)
-  path = vim.fs.normalize(tostring(path))
+  path = util.resolve_path(path)
 
   -- Notes have to be markdown file.
   if not vim.endswith(path, ".md") then
@@ -223,6 +223,9 @@ end
 ---
 ---@return string|?
 Client.vault_relative_path = function(self, path)
+  -- NOTE: we don't use `util.resolve_path()` here because that would make the path absolute,
+  -- which may result in the wrong relative path if the current working directory is not within
+  -- the vault.
   local normalized_path = vim.fs.normalize(tostring(path))
   local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
   if relative_path == normalized_path then
@@ -378,7 +381,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param content_match MatchData
   local function on_search_match(content_match)
-    local path = vim.fs.normalize(content_match.path.text)
+    local path = util.resolve_path(content_match.path.text)
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -387,7 +390,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param path_match string
   local function on_find_match(path_match)
-    local path = vim.fs.normalize(path_match)
+    local path = util.resolve_path(path_match)
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -508,7 +511,7 @@ Client.find_files_async = function(self, term, opts, callback)
   local matches = {}
   local tx, rx = channel.oneshot()
   local on_find_match = function(path_match)
-    matches[#matches + 1] = Path:new(vim.fs.normalize(path_match))
+    matches[#matches + 1] = Path:new(util.resolve_path(path_match))
   end
 
   local on_exit = function(_)
@@ -578,7 +581,7 @@ Client.resolve_note_async = function(self, query, callback)
   end
 
   for _, path in pairs(paths_to_check) do
-    if path:is_file() and vim.endswith(tostring(path), ".md") then
+    if path:is_file() then
       return async.run(function()
         return Note.from_file_async(path)
       end, callback)
@@ -611,6 +614,152 @@ Client.resolve_note_async = function(self, query, callback)
   end)
 end
 
+---@class obsidian.ResolveLinkResult
+---
+---@field location string
+---@field name string
+---@field link_type obsidian.search.RefTypes
+---@field path Path|?
+---@field note obsidian.Note|?
+---@field url string|?
+
+--- Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
+---
+---@param link string|?
+---@param callback fun(res: obsidian.ResolveLinkResult|?)
+Client.resolve_link_async = function(self, link, callback)
+  local location, name, link_type
+  if link then
+    location, name, link_type = util.parse_link(link, { include_naked_urls = true, include_file_urls = true })
+  else
+    location, name, link_type = util.parse_cursor_link { include_naked_urls = true, include_file_urls = true }
+  end
+
+  if location == nil or name == nil or link_type == nil then
+    return callback(nil)
+  end
+
+  ---@type obsidian.ResolveLinkResult
+  local res = { location = location, name = name, link_type = link_type }
+
+  if util.is_url(location) then
+    res.url = location
+    return callback(res)
+  end
+
+  -- The Obsidian app will follow links with spaces encoded as "%20" (as they are in URLs),
+  -- so we should too.
+  location = util.string_replace(location, "%20", " ")
+
+  -- Remove links from the end if there are any.
+  local header_link = location:match "#[%a%d%s-_^]+$"
+  if header_link ~= nil then
+    location = location:sub(1, -header_link:len() - 1)
+  end
+
+  res.location = location
+
+  self:resolve_note_async(location, function(note)
+    if note ~= nil then
+      res.path = note.path
+      res.note = note
+      return callback(res)
+    end
+
+    local path = Path:new(location)
+    if path:exists() then
+      res.path = path
+      return callback(res)
+    end
+
+    return callback(res)
+  end)
+end
+
+--- Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
+---
+---@param link string|?
+---@param opts { open_strategy: obsidian.config.OpenStrategy|? }|?
+Client.follow_link_async = function(self, link, opts)
+  opts = opts and opts or {}
+  self:resolve_link_async(link, function(res)
+    if res == nil then
+      return
+    end
+
+    if res.url ~= nil then
+      if self.opts.follow_url_func ~= nil then
+        self.opts.follow_url_func(res.url)
+      else
+        log.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+      end
+      return
+    end
+
+    if res.note ~= nil then
+      -- Go to resolved note.
+      return vim.schedule(function()
+        self:open_note(res.note, { open_strategy = opts.open_strategy })
+      end)
+    end
+
+    if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
+      -- Prompt to create a new note.
+      return vim.schedule(function()
+        local confirmation = string.lower(vim.fn.input {
+          prompt = "Create new note '" .. res.location .. "'? [Y/n] ",
+        })
+        if confirmation == "" or confirmation == "y" or confirmation == "yes" then
+          -- Create a new note.
+          ---@type string|?, string[]
+          local id, aliases
+          if res.name == res.location then
+            aliases = {}
+          else
+            aliases = { res.name }
+            id = res.location
+          end
+
+          local note = self:new_note(res.name, id, nil, aliases)
+          self:open_note(note, { open_strategy = opts.open_strategy })
+        else
+          log.warn "Aborting"
+        end
+      end)
+    end
+
+    return log.err("Failed to resolve file '" .. res.location .. "'")
+  end)
+end
+
+--- Open a note in a buffer.
+---
+---@param note_or_path string|Path|obsidian.Note
+---@param opts { line: integer|?, col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
+Client.open_note = function(self, note_or_path, opts)
+  opts = opts and opts or {}
+
+  ---@type Path
+  local path
+  if type(note_or_path) == "string" then
+    path = Path:new(note_or_path)
+  elseif type(note_or_path) == "table" and note_or_path.path ~= nil then
+    -- this is a Note
+    ---@cast note_or_path obsidian.Note
+    path = note_or_path.path
+  elseif type(note_or_path) == "table" and note_or_path.filename ~= nil then
+    -- this is a Path
+    ---@cast note_or_path Path
+    path = note_or_path
+  else
+    error "invalid 'note_or_path' argument"
+  end
+
+  local open_cmd = util.get_open_strategy(opts.open_strategy and opts.open_strategy or self.opts.open_notes_in)
+  ---@cast path Path
+  util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
+end
+
 --- Get the current note.
 ---
 ---@return obsidian.Note|?
@@ -634,8 +783,8 @@ end
 
 --- Find all tags starting with the given search term(s).
 ---
----@param term string|string[] The search term
----@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param term string|string[] The search term.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
 ---@param timeout integer|? Timeout in milliseconds.
 ---
 ---@return obsidian.TagLocation[]
@@ -647,8 +796,8 @@ end
 
 --- An async version of 'find_tags()'.
 ---
----@param term string|string[] The search term
----@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
+---@param term string|string[] The search term.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
 ---@param callback fun(tags: obsidian.TagLocation[])
 Client.find_tags_async = function(self, term, opts, callback)
   ---@type string[]
@@ -705,7 +854,7 @@ Client.find_tags_async = function(self, term, opts, callback)
 
   ---@param match_data MatchData
   local on_match = function(match_data)
-    local path = vim.fs.normalize(match_data.path.text)
+    local path = util.resolve_path(match_data.path.text)
 
     if path_order[path] == nil then
       num_paths = num_paths + 1
@@ -833,6 +982,149 @@ Client.find_tags_async = function(self, term, opts, callback)
   end, callback)
 end
 
+---@class obsidian.BacklinkMatches
+---
+---@field note obsidian.Note The note instance where the backlinks were found.
+---@field path string|Path The path to the note where the backlinks were found.
+---@field matches obsidian.BacklinkMatch[] The backlinks within the note.
+
+---@class obsidian.BacklinkMatch
+---
+---@field line integer The line number (1-indexed) where the backlink was found.
+---@field text string The text of the line where the backlink was found.
+
+--- Find all backlinks to a note.
+---
+---@param note obsidian.Note The note to find backlinks for.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
+---@param timeout integer|? Timeout in milliseconds.
+---
+---@return obsidian.BacklinkMatches[]
+Client.find_backlinks = function(self, note, opts, timeout)
+  return block_on(function(cb)
+    return self:find_backlinks_async(note, opts, cb)
+  end, timeout)
+end
+
+--- An async version of 'find_backlinks()'.
+---
+---@param note obsidian.Note The note to find backlinks for.
+---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
+---@param callback fun(backlinks: obsidian.BacklinkMatches[])
+Client.find_backlinks_async = function(self, note, opts, callback)
+  -- Maps paths (string) to note object and a list of matches.
+  ---@type table<string, obsidian.BacklinkMatch[]>
+  local backlink_matches = {}
+  ---@type table<string, obsidian.Note>
+  local path_to_note = {}
+  -- Keeps track of the order of the paths.
+  ---@type table<string, integer>
+  local path_order = {}
+  local num_paths = 0
+  local err_count = 0
+  local first_err = nil
+  local first_err_path = nil
+
+  local executor = AsyncExecutor.new()
+
+  -- Prepare search terms.
+  local search_terms = {}
+  for ref in iter { tostring(note.id), note:fname() } do
+    if ref ~= nil then
+      search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
+      search_terms[#search_terms + 1] = string.format("[[%s|", ref)
+      search_terms[#search_terms + 1] = string.format("(%s)", ref)
+    end
+  end
+  for alias in iter(note.aliases) do
+    search_terms[#search_terms + 1] = string.format("[[%s]]", alias)
+  end
+
+  local function on_match(match)
+    local path = util.resolve_path(match.path.text)
+
+    if path_order[path] == nil then
+      num_paths = num_paths + 1
+      path_order[path] = num_paths
+    end
+
+    executor:submit(function()
+      -- Load note.
+      local n = path_to_note[path]
+      if not n then
+        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        if ok then
+          n = res
+          path_to_note[path] = n
+        else
+          err_count = err_count + 1
+          if first_err == nil then
+            first_err = res
+            first_err_path = path
+          end
+          return
+        end
+      end
+
+      ---@type obsidian.BacklinkMatch[]
+      local line_matches = backlink_matches[path]
+      if line_matches == nil then
+        line_matches = {}
+        backlink_matches[path] = line_matches
+      end
+
+      line_matches[#line_matches + 1] = {
+        line = match.line_number,
+        text = util.rstrip_whitespace(match.lines.text),
+      }
+    end)
+  end
+
+  local tx, rx = channel.oneshot()
+
+  -- Execute search.
+  search.search_async(
+    self.dir,
+    util.tbl_unique(search_terms),
+    self:_prepare_search_opts(opts, { fixed_strings = true }),
+    on_match,
+    function()
+      tx()
+    end
+  )
+
+  async.run(function()
+    rx()
+    executor:join_async()
+
+    ---@type obsidian.BacklinkMatches[]
+    local results = {}
+
+    -- Order by path.
+    local paths = {}
+    for path, idx in pairs(path_order) do
+      paths[idx] = path
+    end
+
+    -- Gather results.
+    for i, path in ipairs(paths) do
+      results[i] = { note = path_to_note[path], path = path, matches = backlink_matches[path] }
+    end
+
+    -- Log any errors.
+    if first_err ~= nil and first_err_path ~= nil then
+      log.err(
+        "%d error(s) occurred during search. First error from note at '%s':\n%s",
+        err_count,
+        first_err_path,
+        first_err
+      )
+    end
+
+    return results
+  end, callback)
+end
+
 --- Gather a list of all tags in the vault. If 'term' is provided, only tags that partially match the search
 --- term will be included.
 ---
@@ -893,7 +1185,7 @@ Client.apply_async_raw = function(self, on_path, on_done, timeout)
 
   local executor = AsyncExecutor.new()
 
-  scan.scan_dir(vim.fs.normalize(tostring(self.dir)), {
+  scan.scan_dir(util.resolve_path(self.dir), {
     hidden = false,
     add_dirs = false,
     respect_gitignore = true,
@@ -1000,17 +1292,17 @@ Client.parse_title_id_path = function(self, title, id, dir)
   if parent then
     base_dir = self.dir / parent
   else
-    local new_notes_location = self.opts.completion.new_notes_location
+    local new_notes_location = self.opts.new_notes_location
     if not dir and new_notes_location then
-      if new_notes_location == config.CompletionNewNotesLocation.notes_subdir then
+      if new_notes_location == config.NewNotesLocation.notes_subdir then
         base_dir = self.dir
         if self.opts.notes_subdir then
           base_dir = base_dir / self.opts.notes_subdir
         end
-      elseif new_notes_location == config.CompletionNewNotesLocation.current_dir then
+      elseif new_notes_location == config.NewNotesLocation.current_dir then
         base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
       else
-        error "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
+        error "Bad option value for 'new_notes_location'. Skipping creating new note."
       end
     else
       base_dir = Path:new(dir)
@@ -1186,7 +1478,7 @@ end
 --- Create a formatted markdown / wiki link for a note.
 ---
 ---@param note obsidian.Note|string The note/path to link to.
----@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|? } Options.
+---@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|? }|? Options.
 ---
 ---@return string
 Client.format_link = function(self, note, opts)
@@ -1204,47 +1496,29 @@ Client.format_link = function(self, note, opts)
     note_id = tostring(note.id)
   end
 
-  if vim.endswith(rel_path, ".md") then
-    rel_path = string.sub(rel_path, 1, -4)
+  local link_style = opts.link_style
+  if link_style == nil then
+    link_style = self.opts.preferred_link_style
   end
 
-  ---@type string
-  local link
-  if opts.link_style == config.LinkStyle.markdown then
-    link = "[" .. label .. "](" .. rel_path .. ".md)"
-  elseif opts.link_style == config.LinkStyle.wiki or opts.link_style == nil then
-    if self.opts.completion.use_path_only then
-      link = "[[" .. rel_path .. "]]"
-    elseif self.opts.completion.prepend_note_path then
-      link = "[[" .. rel_path
-      if label ~= note_id then
-        link = link .. "|" .. label .. "]]"
-      else
-        link = link .. "]]"
-      end
-    elseif self.opts.completion.prepend_note_id then
-      assert(note_id, "missing 'id' field in 'format_link()' options")
-      link = "[[" .. note_id
-      if label ~= note_id then
-        link = link .. "|" .. label .. "]]"
-      else
-        link = link .. "]]"
-      end
-    else
-      link = "[[" .. label .. "]]"
-    end
+  local new_opts = { path = rel_path, label = label, id = note_id }
+
+  if link_style == config.LinkStyle.markdown then
+    return self.opts.markdown_link_func(new_opts)
+  elseif link_style == config.LinkStyle.wiki or link_style == nil then
+    return self.opts.wiki_link_func(new_opts)
   else
-    error(string.format("Invalid link style '%s'", opts.link_style))
+    error(string.format("Invalid link style '%s'", link_style))
   end
-
-  return link
 end
 
---- Get the default Picker.
+--- Get the Picker.
+---
+---@param picker_name obsidian.config.Picker|?
 ---
 ---@return obsidian.Picker|?
-Client.picker = function(self)
-  return require("obsidian.pickers").get(self)
+Client.picker = function(self, picker_name)
+  return require("obsidian.pickers").get(self, picker_name)
 end
 
 return Client

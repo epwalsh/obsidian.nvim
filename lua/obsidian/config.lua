@@ -9,13 +9,15 @@ local config = {}
 ---@field log_level integer
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
+---@field new_notes_location obsidian.config.NewNotesLocation
 ---@field note_id_func (fun(title: string|?): string)|?
+---@field wiki_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
+---@field markdown_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
+---@field preferred_link_style obsidian.config.LinkStyle
 ---@field follow_url_func fun(url: string)|?
 ---@field image_name_func (fun(): string)|?
 ---@field note_frontmatter_func fun(note: obsidian.Note)|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
----@field backlinks obsidian.config.LocationListOpts
----@field tags obsidian.config.LocationListOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
 ---@field picker obsidian.config.PickerOpts
@@ -39,13 +41,15 @@ config.ClientOpts.default = function()
     workspaces = {},
     log_level = vim.log.levels.INFO,
     notes_subdir = nil,
+    new_notes_location = config.NewNotesLocation.current_dir,
     templates = config.TemplateOpts.default(),
     note_id_func = nil,
+    wiki_link_func = util.wiki_link_id_prefix,
+    markdown_link_func = util.markdown_link,
+    preferred_link_style = config.LinkStyle.wiki,
     follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
-    backlinks = config.LocationListOpts.default(),
-    tags = config.LocationListOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
     picker = config.PickerOpts.default(),
@@ -82,7 +86,10 @@ config.ClientOpts.normalize = function(opts, defaults)
     defaults = config.ClientOpts.default()
   end
 
-  -- Rename old fields for backwards compatibility.
+  -------------------------------------------------------------------------------------
+  -- Rename old fields for backwards compatibility and warn about deprecated fields. --
+  -------------------------------------------------------------------------------------
+
   if opts.ui and opts.ui.tick then
     opts.ui.update_debounce = opts.ui.tick
     opts.ui.tick = nil
@@ -96,13 +103,84 @@ config.ClientOpts.normalize = function(opts, defaults)
     end
     if opts.finder_mappings then
       opts.picker.mappings = opts.finder_mappings
+      opts.finder_mappings = nil
     end
   end
+
+  if opts.wiki_link_func == nil and opts.completion ~= nil then
+    local warn = false
+
+    if opts.completion.prepend_note_id then
+      opts.wiki_link_func = util.wiki_link_id_prefix
+      opts.completion.prepend_note_id = nil
+      warn = true
+    elseif opts.completion.prepend_note_path then
+      opts.wiki_link_func = util.wiki_link_path_prefix
+      opts.completion.prepend_note_path = nil
+      warn = true
+    elseif opts.completion.use_path_only then
+      opts.wiki_link_func = util.wiki_link_path_only
+      opts.completion.use_path_only = nil
+      warn = true
+    end
+
+    if warn then
+      log.warn_once(
+        "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
+          .. "are deprecated. Please use 'wiki_link_func' instead.\n"
+          .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
+      )
+    end
+  end
+
+  if opts.completion ~= nil and opts.completion.preferred_link_style ~= nil then
+    opts.preferred_link_style = opts.completion.preferred_link_style
+    opts.completion.preferred_link_style = nil
+    log.warn_once(
+      "The config option 'completion.preferred_link_style' is deprecated, please use the top-level "
+        .. "'preferred_link_style' instead."
+    )
+  end
+
+  if opts.completion ~= nil and opts.completion.new_notes_location ~= nil then
+    opts.new_notes_location = opts.completion.new_notes_location
+    opts.completion.new_notes_location = nil
+    log.warn_once(
+      "The config option 'completion.new_notes_location' is deprecated, please use the top-level "
+        .. "'new_notes_location' instead."
+    )
+  end
+
+  if opts.detect_cwd ~= nil then
+    opts.detect_cwd = nil
+    log.warn_once(
+      "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
+    )
+  end
+
+  if opts.overwrite_mappings ~= nil then
+    log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
+    opts.overwrite_mappings = nil
+  end
+
+  if opts.backlinks ~= nil then
+    log.warn_once "The 'backlinks' config option is deprecated and no longer has any affect."
+    opts.backlinks = nil
+  end
+
+  if opts.tags ~= nil then
+    log.warn_once "The 'tags' config option is deprecated and no longer has any affect."
+    opts.tags = nil
+  end
+
+  --------------------------
+  -- Merge with defaults. --
+  --------------------------
 
   ---@type obsidian.config.ClientOpts
   opts = tbl_override(defaults, opts)
 
-  opts.backlinks = tbl_override(defaults.backlinks, opts.backlinks)
   opts.completion = tbl_override(defaults.completion, opts.completion)
   opts.mappings = opts.mappings and opts.mappings or defaults.mappings
   opts.picker = tbl_override(defaults.picker, opts.picker)
@@ -111,39 +189,14 @@ config.ClientOpts.normalize = function(opts, defaults)
   opts.ui = tbl_override(defaults.ui, opts.ui)
   opts.attachments = tbl_override(defaults.attachments, opts.attachments)
 
-  -- Validate.
+  ---------------
+  -- Validate. --
+  ---------------
+
   if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
     error("Invalid 'sort_by' option '" .. opts.sort_by .. "' in obsidian.nvim config.")
   end
 
-  if
-    not opts.completion.prepend_note_id
-    and not opts.completion.prepend_note_path
-    and not opts.completion.use_path_only
-  then
-    error(
-      "Invalid 'completion' options in obsidian.nvim config.\n"
-        .. "One of 'prepend_note_id', 'prepend_note_path', or 'use_path_only' should be set to 'true'."
-    )
-  end
-
-  -- Warn about deprecated fields.
-  ---@diagnostic disable-next-line undefined-field
-  if opts.overwrite_mappings ~= nil then
-    log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
-    ---@diagnostic disable-next-line
-    opts.overwrite_mappings = nil
-  end
-
-  ---@diagnostic disable-next-line undefined-field
-  if opts.detect_cwd ~= nil then
-    log.warn_once(
-      "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
-        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
-    )
-  end
-
-  -- Normalize workspaces.
   if not util.tbl_is_array(opts.workspaces) then
     error "Invalid obsidian.nvim config, the 'config.workspaces' should be an array/list."
   end
@@ -171,23 +224,8 @@ config.SortBy = {
   created = "created",
 }
 
----@class obsidian.config.LocationListOpts
----
----@field height integer
----@field wrap boolean
-config.LocationListOpts = {}
-
----Get defaults.
----@return obsidian.config.LocationListOpts
-config.LocationListOpts.default = function()
-  return {
-    height = 10,
-    wrap = true,
-  }
-end
-
----@enum obsidian.config.CompletionNewNotesLocation
-config.CompletionNewNotesLocation = {
+---@enum obsidian.config.NewNotesLocation
+config.NewNotesLocation = {
   current_dir = "current_dir",
   notes_subdir = "notes_subdir",
 }
@@ -202,11 +240,6 @@ config.LinkStyle = {
 ---
 ---@field nvim_cmp boolean
 ---@field min_chars integer
----@field new_notes_location obsidian.config.CompletionNewNotesLocation
----@field prepend_note_id boolean
----@field prepend_note_path boolean
----@field use_path_only boolean
----@field perferred_link_style obsidian.config.LinkStyle
 config.CompletionOpts = {}
 
 --- Get defaults.
@@ -217,11 +250,6 @@ config.CompletionOpts.default = function()
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
-    new_notes_location = config.CompletionNewNotesLocation.current_dir,
-    prepend_note_id = true,
-    prepend_note_path = false,
-    use_path_only = false,
-    preferred_link_style = config.LinkStyle.wiki,
   }
 end
 
@@ -319,7 +347,6 @@ end
 ---@class obsidian.config.UIOpts
 ---
 ---@field enable boolean
----@field tick integer
 ---@field update_debounce integer
 ---@field checkboxes table{string, obsidian.config.UICharSpec}
 ---@field bullets obsidian.config.UICharSpec|?

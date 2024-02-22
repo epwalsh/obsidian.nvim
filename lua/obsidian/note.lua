@@ -53,13 +53,23 @@ Note.new = function(id, aliases, tags, path)
 end
 
 --- Get markdown display info about the note.
+---
+---@param opts { label: string|? }|?
+---
 ---@return string
-Note.display_info = function(self)
+Note.display_info = function(self, opts)
+  opts = opts and opts or {}
+
   ---@type string[]
   local info = {}
 
+  if opts.label ~= nil and string.len(opts.label) > 0 then
+    info[#info + 1] = ("%s"):format(opts.label)
+    info[#info + 1] = "--------"
+  end
+
   if self.path ~= nil then
-    info[#info + 1] = ("**path:** %s"):format(self.path)
+    info[#info + 1] = ("**path:** `%s`"):format(self.path)
   end
 
   if #self.aliases > 0 then
@@ -67,7 +77,7 @@ Note.display_info = function(self)
   end
 
   if #self.tags > 0 then
-    info[#info + 1] = ("**tags:** '%s'"):format(table.concat(self.tags, "', '"))
+    info[#info + 1] = ("**tags:** `#%s`"):format(table.concat(self.tags, "`, `#"))
   end
 
   return table.concat(info, "\n")
@@ -177,7 +187,7 @@ Note.from_file = function(path, root)
     error "note path cannot be nil"
   end
   local n
-  with(open(vim.fs.normalize(tostring(path))), function(reader)
+  with(open(util.resolve_path(path)), function(reader)
     n = Note.from_lines(function()
       return reader:lines()
     end, path, root)
@@ -196,7 +206,7 @@ Note.from_file_async = function(path, root)
   if path == nil then
     error "note path cannot be nil"
   end
-  local f = File.open(vim.fs.normalize(tostring(path)))
+  local f = File.open(util.resolve_path(path))
   local ok, res = pcall(Note.from_lines, function()
     return f:lines(false)
   end, path, root)
@@ -535,7 +545,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   end
 
   --Write new lines.
-  local save_path = vim.fs.normalize(tostring(path and path or self.path))
+  local save_path = util.resolve_path(assert(path and path or self.path))
   assert(save_path ~= nil)
   util.parent_directory(save_path):mkdir { parents = true, exists_ok = true }
   local save_f = io.open(save_path, "w")

@@ -23,18 +23,25 @@ body:
       error("Oh no!")
       ```
 
-      If the code is too long (hopefully, it isn't), feel free to put it in a public gist and link it in the issue: https://gist.github.com.
-
-      Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in ```` ```triple quotes blocks``` ````.
+      Please also paste or describe the results you observe instead of the expected results. If you observe an error (check `:messages` and/or `:Noice`), please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in a ```` ```triple quotes code block``` ````.
     placeholder: |
       A clear and concise description of what the bug is.
   validations:
     required: true
 - type: textarea
   attributes:
-    label: Versions
+    label: Config
     description: |
-      Please run the following and paste the output below.
+      Please paste your obsidian.nvim config below, wrapped in a ```` ```triple quotes code block``` ````.
+    placeholder: |
+      Your config wrapped in a triple quotes code block  ``` ... ```
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Environment
+    description: |
+      Please run the following and paste the output below, wrapped in a ```` ```triple quotes code block``` ````.
       
       ```sh
       nvim --version
@@ -42,7 +49,8 @@ body:
       ```
 
       Note that you'll have to ensure obsidian.nvim loads up front for that command to be able to gather all of the information it needs, which means ensuring your plugin manager does not load obsidian.nvim lazily.
-      Alternatively, if you use [lazy.nvim](https://github.com/folke/lazy.nvim) as your plugin manager you can simply include your `lazy-lock.json` file.
+    placeholder: |
+      Output wrapped in a triple quotes code block ``` ... ```
   validations:
     required: true
 - type: markdown

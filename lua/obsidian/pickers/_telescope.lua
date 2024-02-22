@@ -127,12 +127,13 @@ TelescopePicker.grep = function(self, opts)
   end
 end
 
----@param values string[]
----@param opts { prompt_title: string|?, callback: fun(value: string)|? }|?
+---@param values string[]|obsidian.PickerEntry[]
+---@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
 TelescopePicker.pick = function(self, values, opts)
   local pickers = require "telescope.pickers"
   local finders = require "telescope.finders"
   local conf = require("telescope.config").values
+  local make_entry = require "telescope.make_entry"
 
   opts = opts and opts or {}
 
@@ -140,9 +141,9 @@ TelescopePicker.pick = function(self, values, opts)
     attach_mappings = function(_, map)
       if opts.callback then
         map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-          local entry = require("telescope.actions.state").get_selected_entry()[1]
+          local entry = require("telescope.actions.state").get_selected_entry()
           require("telescope.actions").close(prompt_bufnr)
-          opts.callback(entry)
+          opts.callback(entry.value)
         end)
       end
 
@@ -150,13 +151,47 @@ TelescopePicker.pick = function(self, values, opts)
     end,
   }
 
+  local make_entry_from_string = make_entry.gen_from_string(picker_opts)
+
+  local displayer = function(entry)
+    return self:_make_display(entry.raw)
+  end
+
   pickers
     .new(picker_opts, {
       prompt_title = self:prompt_title { prompt_title = opts.prompt_title, no_default_mappings = true },
       finder = finders.new_table {
         results = values,
+        entry_maker = function(v)
+          if type(v) == "string" then
+            return make_entry_from_string(v)
+          else
+            local ordinal = v.ordinal
+            if ordinal == nil then
+              ordinal = ""
+              if type(v.display) == "string" then
+                ordinal = ordinal .. v.display
+              end
+              if v.filename ~= nil then
+                ordinal = ordinal .. " " .. v.filename
+              end
+            end
+
+            return {
+              value = v.value,
+              display = displayer,
+              ordinal = ordinal,
+              filename = v.filename,
+              valid = v.valid,
+              lnum = v.lnum,
+              col = v.col,
+              raw = v,
+            }
+          end
+        end,
       },
       sorter = conf.generic_sorter(picker_opts),
+      previewer = conf.grep_previewer(picker_opts),
     })
     :find()
 end

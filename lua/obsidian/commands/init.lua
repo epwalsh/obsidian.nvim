@@ -16,10 +16,13 @@ local command_lookups = {
   ObsidianQuickSwitch = "obsidian.commands.quick_switch",
   ObsidianLinkNew = "obsidian.commands.link_new",
   ObsidianLink = "obsidian.commands.link",
+  ObsidianLinks = "obsidian.commands.links",
   ObsidianFollowLink = "obsidian.commands.follow_link",
   ObsidianWorkspace = "obsidian.commands.workspace",
   ObsidianRename = "obsidian.commands.rename",
   ObsidianPasteImg = "obsidian.commands.paste_img",
+  ObsidianExtractNote = "obsidian.commands.extract_note",
+  ObsidianDebug = "obsidian.commands.debug",
 }
 
 local M = setmetatable({
@@ -127,7 +130,7 @@ M.complete_args_id = function(_, _, cmd_line, _)
   if string.len(cmd_arg) > 0 then
     return {}
   else
-    local note_id = util.cursor_link()
+    local note_id = util.parse_cursor_link()
     if note_id == nil then
       local bufpath = vim.api.nvim_buf_get_name(assert(vim.fn.bufnr()))
       local note = Note.from_file(bufpath)
@@ -141,9 +144,9 @@ M.register("ObsidianCheck", { opts = { nargs = 0, desc = "Check for issues in yo
 
 M.register("ObsidianToday", { opts = { nargs = "?", desc = "Open today's daily note" } })
 
-M.register("ObsidianYesterday", { opts = { nargs = 0, desc = "Open yesterday's daily note" } })
+M.register("ObsidianYesterday", { opts = { nargs = 0, desc = "Open the daily note for the previous working day" } })
 
-M.register("ObsidianTomorrow", { opts = { nargs = 0, desc = "Open tomorrow's daily note" } })
+M.register("ObsidianTomorrow", { opts = { nargs = 0, desc = "Open the daily note for the next working day" } })
 
 M.register("ObsidianNew", { opts = { nargs = "?", desc = "Create a new note" } })
 
@@ -169,6 +172,8 @@ M.register("ObsidianLink", {
   complete = M.complete_args_search,
 })
 
+M.register("ObsidianLinks", { opts = { nargs = 0, desc = "Collect all links within the current buffer" } })
+
 M.register("ObsidianFollowLink", { opts = { nargs = "?", desc = "Follow reference or link under cursor" } })
 
 M.register("ObsidianWorkspace", { opts = { nargs = "?", desc = "Check or switch workspace" } })
@@ -182,5 +187,12 @@ M.register(
   "ObsidianPasteImg",
   { opts = { nargs = "?", complete = "file", desc = "Paste and image from the clipboard" } }
 )
+
+M.register(
+  "ObsidianExtractNote",
+  { opts = { nargs = "?", range = true, desc = "Extract selected text to a new note and link to it" } }
+)
+
+M.register("ObsidianDebug", { opts = { nargs = 0, desc = "Log some information for debugging" } })
 
 return M

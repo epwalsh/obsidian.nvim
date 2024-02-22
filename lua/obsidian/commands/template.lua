@@ -17,13 +17,8 @@ return function(client, data)
   end
 
   if string.len(data.args) > 0 then
-    local template_name = data.args
-    local path = client:templates_dir() / template_name
-    if path:is_file() then
-      insert_template(data.args)
-    else
-      log.err "Not a valid template file"
-    end
+    local template_name = util.strip_whitespace(data.args)
+    insert_template(template_name)
     return
   end
 
@@ -35,7 +30,7 @@ return function(client, data)
 
   picker:find_templates {
     callback = function(path)
-      insert_template(vim.fs.basename(path))
+      insert_template(path)
     end,
   }
 end

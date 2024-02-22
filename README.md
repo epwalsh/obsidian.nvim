@@ -53,9 +53,9 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianFollowLink [vsplit|hsplit]` to follow a note reference under the cursor, optionally opening it in a vertical or horizontal split.
 
-- `:ObsidianBacklinks` for getting a location list of references to the current buffer.
+- `:ObsidianBacklinks` for getting a picker list of references to the current buffer.
 
-- `:ObsidianTags [TAG ...]` for getting a location list of all occurrences of the given tags.
+- `:ObsidianTags [TAG ...]` for getting a picker list of all occurrences of the given tags.
 
 - `:ObsidianToday [OFFSET]` to open/create a new daily note. This command also takes an optional offset in days, e.g. use `:ObsidianToday -1` to go to yesterday's note. Unlike `:ObsidianYesterday` and `:ObsidianTomorrow` this command does not differentiate between weekdays and weekends.
 
@@ -72,6 +72,10 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianLinkNew [TITLE]` to create a new note and link it to an inline visual selection of text.
   This command has one optional argument: the title of the new note. If not given, the selected text will be used as the title.
+
+- `:ObsidianLinks` to collect all links within the current buffer into a picker window.
+
+- `:ObsidianExtractNote [TITLE]` to extract the visually selected text into a new note and link to it.
 
 - `:ObsidianWorkspace [NAME]` to switch to another workspace.
 
@@ -253,32 +257,8 @@ This is a complete list of all of the options that can be passed to `require("ob
   completion = {
     -- Set to false to disable completion.
     nvim_cmp = true,
-
     -- Trigger completion at 2 chars.
     min_chars = 2,
-
-    -- Where to put new notes created from completion. Valid options are
-    --  * "current_dir" - put new notes in same directory as the current buffer.
-    --  * "notes_subdir" - put new notes in the default notes subdirectory.
-    new_notes_location = "current_dir",
-
-    -- Either 'wiki' or 'markdown'.
-    preferred_link_style = "wiki",
-
-    -- Control how wiki links are completed with these (mutually exclusive) options:
-    --
-    -- 1. Whether to add the note ID during completion.
-    -- E.g. "[[Foo" completes to "[[foo|Foo]]" assuming "foo" is the ID of the note.
-    -- Mutually exclusive with 'prepend_note_path' and 'use_path_only'.
-    prepend_note_id = true,
-    -- 2. Whether to add the note path during completion.
-    -- E.g. "[[Foo" completes to "[[notes/foo|Foo]]" assuming "notes/foo.md" is the path of the note.
-    -- Mutually exclusive with 'prepend_note_id' and 'use_path_only'.
-    prepend_note_path = false,
-    -- 3. Whether to only use paths during completion.
-    -- E.g. "[[Foo" completes to "[[notes/foo]]" assuming "notes/foo.md" is the path of the note.
-    -- Mutually exclusive with 'prepend_note_id' and 'prepend_note_path'.
-    use_path_only = false,
   },
 
   -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
@@ -300,6 +280,11 @@ This is a complete list of all of the options that can be passed to `require("ob
     },
   },
 
+  -- Where to put new notes. Valid options are
+  --  * "current_dir" - put new notes in same directory as the current buffer.
+  --  * "notes_subdir" - put new notes in the default notes subdirectory.
+  new_notes_location = "notes_subdir",
+
   -- Optional, customize how names/IDs for new notes are created.
   note_id_func = function(title)
     -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
@@ -318,7 +303,31 @@ This is a complete list of all of the options that can be passed to `require("ob
     return tostring(os.time()) .. "-" .. suffix
   end,
 
+  -- Optional, customize how wiki links are formatted.
+  ---@param opts {path: string, label: string, id: string|?}
+  ---@return string
+  wiki_link_func = function(opts)
+    if opts.id == nil then
+      return string.format("[[%s]]", opts.label)
+    elseif opts.label ~= opts.id then
+      return string.format("[[%s|%s]]", opts.id, opts.label)
+    else
+      return string.format("[[%s]]", opts.id)
+    end
+  end,
+
+  -- Optional, customize how markdown links are formatted.
+  ---@param opts {path: string, label: string, id: string|?}
+  ---@return string
+  markdown_link_func = function(opts)
+    return string.format("[%s](%s)", opts.label, opts.path)
+  end,
+
+  -- Either 'wiki' or 'markdown'.
+  preferred_link_style = "wiki",
+
   -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
+  ---@return string
   image_name_func = function()
     -- Prefix image names with timestamp.
     return string.format("%s-", os.time())
@@ -329,6 +338,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   disable_frontmatter = false,
 
   -- Optional, alternatively you can customize the frontmatter data.
+  ---@return table
   note_frontmatter_func = function(note)
     -- Add the title of the note as an alias.
     if note.title then
@@ -357,24 +367,9 @@ This is a complete list of all of the options that can be passed to `require("ob
     substitutions = {},
   },
 
-  -- Optional, customize the backlinks interface.
-  backlinks = {
-    -- The default height of the backlinks location list.
-    height = 10,
-    -- Whether or not to wrap lines.
-    wrap = true,
-  },
-
-  -- Optional, customize the tags interface.
-  tags = {
-    -- The default height of the tags location list.
-    height = 10,
-    -- Whether or not to wrap lines.
-    wrap = true,
-  },
-
   -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
   -- URL it will be ignored but you can customize this behavior here.
+  ---@param url string
   follow_url_func = function(url)
     -- Open the URL in the default web browser.
     vim.fn.jobstart({"open", url})  -- Mac OS
@@ -693,9 +688,7 @@ For example, to extend the configuration above this way:
 +      end,
 +      overrides = {
 +        notes_subdir = vim.NIL,  -- have to use 'vim.NIL' instead of 'nil'
-+        completion = {
-+          new_notes_location = "current_dir",
-+        },
++        new_notes_location = "current_dir",
 +        templates = {
 +          subdir = vim.NIL,
 +        },
