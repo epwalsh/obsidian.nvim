@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.4.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.4.1) - 2024-02-22
+
 ### Fixed
 
 - Ensure old buffer is removed when renaming current note.

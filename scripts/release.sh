@@ -2,7 +2,7 @@
 
 set -e
 
-git pull --rebase
+git pull
 
 export TAG=$(make version)
 
