@@ -33,7 +33,6 @@ own as well. You don’t necessarily need to use it alongside the Obsidian app.
     - |obsidian-notes-on-configuration|
     - |obsidian-using-templates|
     - |obsidian-usage-outside-of-a-workspace-or-vault|
-- 🐞 |obsidian-known-issues|
 - ➕ |obsidian-contributing|
 
 
@@ -819,24 +818,7 @@ option to `nil` you’ll have to use `vim.NIL` there instead of the builtin Lua
 
 
 ==============================================================================
-4. Known Issues                                        *obsidian-known-issues*
-
-
-CONFIGURING VAULT DIRECTORY BEHIND A LINK*obsidian-configuring-vault-directory-behind-a-link*
-
-If you are having issues with commands like `ObsidianOpen`, ensure that your
-vault is configured to use an absolute path rather than a link. If you must use
-a link in your configuration, make sure that the name of the vault is present
-in the file path of the link. For example:
-
->
-    Vault: ~/path/to/vault/parent/obsidian/
-    Link: ~/obsidian OR ~/parent
-<
-
-
-==============================================================================
-5. Contributing                                        *obsidian-contributing*
+4. Contributing                                        *obsidian-contributing*
 
 Please read the CONTRIBUTING
 <https://github.com/epwalsh/obsidian.nvim/blob/main/.github/CONTRIBUTING.md>
@@ -848,7 +830,7 @@ funds! ❤️
 <https://www.buymeacoffee.com/epwalsh>
 
 ==============================================================================
-6. Links                                                      *obsidian-links*
+5. Links                                                      *obsidian-links*
 
 1. *See this screenshot*: https://github.com/epwalsh/obsidian.nvim/assets/8812459/90d5f218-06cd-4ebb-b00b-b59c2f5c3cc1
 2. *See this screenshot*: https://github.com/epwalsh/obsidian.nvim/assets/8812459/e74f5267-21b5-49bc-a3bb-3b9db5fa6687
