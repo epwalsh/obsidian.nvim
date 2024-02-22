@@ -18,26 +18,33 @@ M.RefTypes = {
   Wiki = "Wiki",
   Markdown = "Markdown",
   NakedUrl = "NakedUrl",
+  FileUrl = "FileUrl",
   Tag = "Tag",
 }
 
 ---@enum obsidian.search.Patterns
 M.Patterns = {
+  -- Tags
+  TagCharsOptional = "[A-Za-z0-9_/-]*",
+  TagCharsRequired = "[A-Za-z]+[A-Za-z0-9_/-]*[A-Za-z0-9]+", -- assumes tag is at least 2 chars
+  Tag = "#[A-Za-z]+[A-Za-z0-9_/-]*[A-Za-z0-9]+",
+
   -- Miscellaneous
-  TagChars = "[A-Za-z0-9_/-]*",
   Highlight = "==[^=]+==", -- ==text==
 
   -- References
   WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
   Wiki = "%[%[[^][%|]+%]%]", -- [[xxx]]
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
-  NakedUrl = "https?://[a-zA-Z0-9._#/=&?%%-]+[a-zA-Z0-9]", -- https://xyz.com
-  Tag = "#[a-zA-Z0-9_/-]+", -- #tag
+  NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:%%-]+[a-zA-Z0-9/]", -- https://xyz.com
+  FileUrl = "file:/[/{2}]?.*", -- file:///
 }
 
----Find all matches of a pattern
+--- Find all matches of a pattern
+---
 ---@param s string
 ---@param pattern_names table
+---
 ---@return table<integer, integer, string>[]
 M.find_matches = function(s, pattern_names)
   -- First find all inline code blocks so we can skip reference matches inside of those.
@@ -93,8 +100,10 @@ M.find_matches = function(s, pattern_names)
   return matches
 end
 
----Find inline highlights
+--- Find inline highlights
+---
 ---@param s string
+---
 ---@return table<integer, integer, string>[]
 M.find_highlight = function(s)
   local matches = {}
@@ -110,12 +119,15 @@ M.find_highlight = function(s)
 end
 
 ---@class obsidian.search.FindRefsOpts
+---
 ---@field include_naked_urls boolean|?
 ---@field include_tags boolean|?
+---@field include_file_urls boolean|?
 
----Find refs and URLs.
+--- Find refs and URLs.
 ---@param s string the string to search
 ---@param opts obsidian.search.FindRefsOpts|?
+---
 ---@return table<integer, integer, string>[]
 M.find_refs = function(s, opts)
   opts = opts and opts or {}
@@ -127,12 +139,16 @@ M.find_refs = function(s, opts)
   if opts.include_tags then
     pattern_names[#pattern_names + 1] = M.RefTypes.Tag
   end
+  if opts.include_file_urls then
+    pattern_names[#pattern_names + 1] = M.RefTypes.FileUrl
+  end
 
   return M.find_matches(s, pattern_names)
 end
 
----Find all tags in a string.
+--- Find all tags in a string.
 ---@param s string the string to search
+---
 ---@return table<integer, integer, string>[]
 M.find_tags = function(s)
   local matches = {}
@@ -147,9 +163,10 @@ M.find_tags = function(s)
   return matches
 end
 
----Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
+--- Replace references of the form '[[xxx|xxx]]', '[[xxx]]', or '[xxx](xxx)' with their title.
 ---
 ---@param s string
+---
 ---@return string
 M.replace_refs = function(s)
   local out, _ = string.gsub(s, "%[%[[^%|%]]+%|([^%]]+)%]%]", "%1")
@@ -158,7 +175,7 @@ M.replace_refs = function(s)
   return out
 end
 
----Find all refs in a string and replace with their titles.
+--- Find all refs in a string and replace with their titles.
 ---
 ---@param s string
 --
@@ -198,10 +215,12 @@ M.find_and_replace_refs = function(s)
 end
 
 ---@class obsidian.search.SearchOpts : obsidian.ABC
+---
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
 ---@field fixed_strings boolean|?
 ---@field ignore_case boolean|?
+---@field smart_case boolean|?
 ---@field exclude string[]|? paths to exclude
 ---@field max_count_per_file integer|?
 ---@field escape_path boolean|?
@@ -260,6 +279,10 @@ SearchOpts.to_ripgrep_opts = function(self)
     opts[#opts + 1] = "--ignore-case"
   end
 
+  if self.smart_case then
+    opts[#opts + 1] = "--smart-case"
+  end
+
   if self.exclude ~= nil then
     assert(type(self.exclude) == "table")
     for path in iter(self.exclude) do
@@ -277,6 +300,7 @@ end
 ---@param dir string|Path
 ---@param term string|string[]
 ---@param opts obsidian.search.SearchOpts|?
+---
 ---@return string[]
 M.build_search_cmd = function(dir, term, opts)
   opts = SearchOpts.from_tbl(opts and opts or {})
@@ -292,7 +316,7 @@ M.build_search_cmd = function(dir, term, opts)
     end
   end
 
-  local path = vim.fs.normalize(tostring(dir))
+  local path = util.resolve_path(dir)
   if opts.escape_path then
     path = assert(vim.fn.fnameescape(path))
   end
@@ -305,11 +329,12 @@ M.build_search_cmd = function(dir, term, opts)
   }
 end
 
----Build the 'rg' command for finding files.
+--- Build the 'rg' command for finding files.
 ---
 ---@param path string|?
 ---@param term string|?
 ---@param opts obsidian.search.SearchOpts|?
+---
 ---@return string[]
 M.build_find_cmd = function(path, term, opts)
   opts = SearchOpts.from_tbl(opts and opts or {})
@@ -336,30 +361,54 @@ M.build_find_cmd = function(path, term, opts)
   return vim.tbl_flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }
 end
 
+--- Build the 'rg' grep command for pickers.
+---
+---@param opts obsidian.search.SearchOpts|?
+---
+---@return string[]
+M.build_grep_cmd = function(opts)
+  opts = SearchOpts.from_tbl(opts and opts or {})
+
+  return vim.tbl_flatten {
+    M._BASE_CMD,
+    opts:to_ripgrep_opts(),
+    "--column",
+    "--line-number",
+    "--no-heading",
+    "--with-filename",
+    "--color=never",
+  }
+end
+
 ---@class MatchPath
+---
 ---@field text string
 
 ---@class MatchText
+---
 ---@field text string
 
 ---@class SubMatch
+---
 ---@field match MatchText
 ---@field start integer
 ---@field end integer
 
 ---@class MatchData
+---
 ---@field path MatchPath
 ---@field lines MatchText
 ---@field line_number integer
 ---@field absolute_offset integer
 ---@field submatches SubMatch[]
 
----Search markdown files in a directory for a given term. Return an iterator
----over `MatchData`.
+--- Search markdown files in a directory for a given term. Return an iterator
+--- over `MatchData`.
 ---
 ---@param dir string|Path
 ---@param term string
 ---@param opts obsidian.search.SearchOpts|?
+---
 ---@return function
 M.search = function(dir, term, opts)
   local matches = Deque.new()
@@ -367,7 +416,7 @@ M.search = function(dir, term, opts)
 
   M.search_async(dir, term, opts, function(match_data)
     matches:pushright(match_data)
-  end, function(_, _, _)
+  end, function(_)
     done = true
   end)
 
@@ -387,13 +436,13 @@ M.search = function(dir, term, opts)
   end
 end
 
----An async version of `.search()`. Each match is passed to the `on_match` callback.
+--- An async version of `.search()`. Each match is passed to the `on_match` callback.
 ---
 ---@param dir string|Path
 ---@param term string|string[]
 ---@param opts obsidian.search.SearchOpts|?
----@param on_match function (match: MatchData) -> nil
----@param on_exit function|? (exit_code: integer) -> nil
+---@param on_match fun(match: MatchData)
+---@param on_exit fun(exit_code: integer)|?
 M.search_async = function(dir, term, opts, on_match, on_exit)
   local cmd = M.build_search_cmd(dir, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
@@ -409,12 +458,13 @@ M.search_async = function(dir, term, opts, on_match, on_exit)
   end)
 end
 
----Find markdown files in a directory matching a given term. Return an iterator
----over file names.
+--- Find markdown files in a directory matching a given term. Return an iterator
+--- over file names.
 ---
 ---@param dir string|Path
 ---@param term string
 ---@param opts obsidian.search.SearchOpts|?
+---
 ---@return function
 M.find = function(dir, term, opts)
   local paths = Deque.new()
@@ -422,11 +472,11 @@ M.find = function(dir, term, opts)
 
   M.find_async(dir, term, opts, function(path)
     paths:pushright(path)
-  end, function(_, _, _)
+  end, function(_)
     done = true
   end)
 
-  ---Iterator over matches.
+  --- Iterator over matches.
   ---
   ---@return MatchData|?
   return function()
@@ -442,15 +492,15 @@ M.find = function(dir, term, opts)
   end
 end
 
----An async version of `.find()`. Each matching path is passed to the `on_match` callback.
+--- An async version of `.find()`. Each matching path is passed to the `on_match` callback.
 ---
 ---@param dir string|Path
 ---@param term string
 ---@param opts obsidian.search.SearchOpts|?
----@param on_match function (string) -> nil
----@param on_exit function|? (integer) -> nil
+---@param on_match fun(path: string)
+---@param on_exit fun(exit_code: integer)|?
 M.find_async = function(dir, term, opts, on_match, on_exit)
-  local norm_dir = vim.fs.normalize(tostring(dir))
+  local norm_dir = util.resolve_path(dir)
   local cmd = M.build_find_cmd(norm_dir, term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     on_match(line)
@@ -461,18 +511,18 @@ M.find_async = function(dir, term, opts, on_match, on_exit)
   end)
 end
 
----Find all notes with the given file_name recursively in a directory.
+--- Find all notes with the given file_name recursively in a directory.
 ---
 ---@param dir string|Path
 ---@param note_file_name string
----@param callback function(Path[])
+---@param callback fun(paths: Path[])
 M.find_notes_async = function(dir, note_file_name, callback)
   if not vim.endswith(note_file_name, ".md") then
     note_file_name = note_file_name .. ".md"
   end
 
   local notes = {}
-  local root_dir = vim.fs.normalize(tostring(dir))
+  local root_dir = util.resolve_path(dir)
 
   local visit_dir = function(entry)
     ---@type Path

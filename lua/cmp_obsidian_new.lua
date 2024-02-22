@@ -1,7 +1,7 @@
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
-local log = require "obsidian.log"
+local LinkStyle = require("obsidian.config").LinkStyle
 
 ---@class cmp_obsidian_new.Source : obsidian.ABC
 local source = abc.new_class()
@@ -18,64 +18,29 @@ source.complete = function(_, request, callback)
   local client = assert(obsidian.get_client())
   local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
-  ---@type string|Path|?
-  local dir
-  if client.opts.completion.new_notes_location == nil then
-    dir = nil -- let the client decide
-  elseif client.opts.completion.new_notes_location == "notes_subdir" then
-    dir = client.dir
-    if client.opts.notes_subdir ~= nil then
-      dir = dir / client.opts.notes_subdir
-    end
-  elseif client.opts.completion.new_notes_location == "current_dir" then
-    dir = vim.fn.expand "%:p:h"
-  else
-    log.err "Bad option value for 'completion.new_notes_location'. Skipping creating new note."
-    return
-  end
-
   if can_complete and search ~= nil and #search >= client.opts.completion.min_chars then
-    local new_title, new_id, path, rel_path
+    local new_title, new_id, path
     new_id = client:new_note_id(search)
-    new_title, new_id, path = client:parse_title_id_path(search, new_id, dir)
+    new_title, new_id, path = client:parse_title_id_path(search, new_id)
 
     if not new_title or string.len(new_title) == 0 then
       return
     end
 
-    rel_path = client:vault_relative_path(path)
-    if rel_path == nil then
-      log.err("Failed to resolve path '%s' relative to vault root '%s'", path, client:vault_root())
-      return
-    end
-
-    if vim.endswith(rel_path, ".md") then
-      rel_path = string.sub(rel_path, 1, -4)
-    end
-
-    ---@type string, string
-    local sort_text, label, new_text
+    ---@type obsidian.config.LinkStyle, string, string
+    local link_style, sort_text
     if ref_type == completion.RefType.Wiki then
-      if client.opts.completion.use_path_only then
-        new_title = rel_path
-      elseif client.opts.completion.prepend_note_path then
-        new_title = rel_path .. "|" .. new_title
-      elseif client.opts.completion.prepend_note_id then
-        new_title = new_id .. "|" .. new_title
-      else
-        log.err "Invalid completion options"
-        return
-      end
+      link_style = LinkStyle.wiki
       sort_text = "[[" .. search
-      label = "Create: [[" .. new_title .. "]]"
-      new_text = "[[" .. new_title .. "]]"
     elseif ref_type == completion.RefType.Markdown then
+      link_style = LinkStyle.markdown
       sort_text = "[" .. search
-      label = "Create: [" .. new_title .. "](" .. rel_path .. ".md)"
-      new_text = "[" .. new_title .. "](" .. rel_path .. ".md)"
     else
       error "not implemented"
     end
+
+    local new_text = client:format_link(tostring(path), { label = new_title, link_style = link_style, id = new_id })
+    local label = "Create: " .. new_text
 
     local items = {
       {
@@ -98,7 +63,6 @@ source.complete = function(_, request, callback)
         data = {
           id = new_id,
           title = search,
-          dir = dir,
         },
       },
     }
@@ -115,7 +79,7 @@ end
 source.execute = function(_, item, callback)
   local client = assert(obsidian.get_client())
   local data = item.data
-  client:new_note(data.title, data.id, data.dir)
+  client:new_note(data.title, data.id)
   return callback {}
 end
 

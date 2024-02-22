@@ -39,11 +39,11 @@ return function(client, data)
   local cur_note_path
   local cur_note
   local dirname
-  local cur_note_id = util.cursor_link()
+  local cur_note_id = util.parse_cursor_link()
   if cur_note_id == nil then
     is_current_buf = true
     cur_note_bufnr = assert(vim.fn.bufnr())
-    cur_note_path = vim.fs.normalize(vim.api.nvim_buf_get_name(cur_note_bufnr))
+    cur_note_path = util.resolve_path(vim.api.nvim_buf_get_name(cur_note_bufnr))
     cur_note = Note.from_file(cur_note_path)
     cur_note_id = tostring(cur_note.id)
     dirname = vim.fs.dirname(cur_note_path)
@@ -55,7 +55,7 @@ return function(client, data)
       return
     end
     cur_note_id = tostring(cur_note.id)
-    cur_note_path = vim.fs.normalize(tostring(cur_note.path:absolute()))
+    cur_note_path = util.resolve_path(cur_note.path)
     dirname = vim.fs.dirname(cur_note_path)
     for bufnr, bufpath in util.get_named_buffers() do
       if bufpath == cur_note_path then
@@ -138,6 +138,11 @@ return function(client, data)
       -- If we're renaming the note of a current buffer, save as the new path.
       if not dry_run then
         quietly(vim.cmd.saveas, new_note_path)
+        for bufnr, bufname in util.get_named_buffers() do
+          if bufname == cur_note_path then
+            quietly(vim.cmd.bdelete, bufnr)
+          end
+        end
         vim.fn.delete(cur_note_path)
       else
         log.info("Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file")
@@ -252,7 +257,7 @@ return function(client, data)
   end
 
   local function on_search_match(match)
-    local path = vim.fs.normalize(match.path.text)
+    local path = util.resolve_path(match.path.text)
     file_count = file_count + 1
     executor:submit(replace_refs, function(count)
       replacement_count = replacement_count + count

@@ -1,7 +1,6 @@
 local util = require "obsidian.util"
 local log = require "obsidian.log"
 local RefTypes = require("obsidian.search").RefTypes
-local run_job = require("obsidian.async").run_job
 
 ---@param client obsidian.Client
 return function(client, data)
@@ -20,8 +19,8 @@ return function(client, data)
       return
     end
   else
-    local cursor_link, _, ref_type = util.cursor_link()
-    if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl then
+    local cursor_link, _, ref_type = util.parse_cursor_link()
+    if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl and ref_type ~= RefTypes.FileUrl then
       local note = client:resolve_note(cursor_link)
       if note ~= nil then
         path = assert(client:vault_relative_path(note.path))
@@ -56,6 +55,8 @@ return function(client, data)
     uri = ("obsidian://open?vault=%s&file=%s"):format(encoded_vault, encoded_path)
   end
 
+  uri = vim.fn.shellescape(uri)
+
   ---@type string, string[]
   local cmd, args
   if this_os == util.OSType.Linux then
@@ -81,5 +82,14 @@ return function(client, data)
 
   assert(cmd)
   assert(args)
-  run_job(cmd, args)
+
+  local cmd_with_args = cmd .. " " .. table.concat(args, " ")
+  vim.fn.jobstart(cmd_with_args, {
+    detach = true,
+    on_exit = function(_, exit_code)
+      if exit_code ~= 0 then
+        log.err("open command failed with exit code '%s': %s", exit_code, cmd_with_args)
+      end
+    end,
+  })
 end

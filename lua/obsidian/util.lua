@@ -1,3 +1,4 @@
+local Path = require "plenary.path"
 local iter = require("obsidian.itertools").iter
 local log = require "obsidian.log"
 
@@ -65,6 +66,15 @@ util.tbl_unique = function(table)
     end
   end
   return out
+end
+
+--- Clear all values from a table.
+---
+---@param t table
+util.tbl_clear = function(t)
+  for k, _ in pairs(t) do
+    t[k] = nil
+  end
 end
 
 --------------------
@@ -151,7 +161,10 @@ end
 util.is_url = function(s)
   local search = require "obsidian.search"
 
-  if string.match(util.strip_whitespace(s), search.Patterns[search.RefTypes.NakedUrl]) then
+  if
+    string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$")
+    or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$")
+  then
     return true
   else
     return false
@@ -309,10 +322,8 @@ end
 ---@param str string
 ---@return boolean
 util.has_enclosing_chars = function(str)
-  local c_start = string.sub(str, 1, 1)
-  local c_end = string.sub(str, #str, #str)
   for _, enclosing_char in ipairs(util.string_enclosing_chars) do
-    if c_start == enclosing_char and c_end == enclosing_char then
+    if vim.startswith(str, enclosing_char) and vim.endswith(str, enclosing_char) then
       return true
     end
   end
@@ -373,6 +384,56 @@ util.string_replace = function(s, what, with, n)
   return s, count
 end
 
+------------------
+-- Path helpers --
+------------------
+
+--- Normalize and resolve a path. The result is an absolute path.
+---
+---@param path string|Path
+---
+---@return string
+util.resolve_path = function(path)
+  return vim.fn.resolve(Path:new(vim.fs.normalize(tostring(path))):absolute())
+end
+
+--- Get the parent directory of a path.
+---
+---@param path string|Path
+---
+---@return Path
+util.parent_directory = function(path)
+  -- 'Path:parent()' has bugs on Windows, so we try 'vim.fs.dirname' first instead.
+  if vim.fs and vim.fs.dirname then
+    local dirname = vim.fs.dirname(tostring(path))
+    if dirname ~= nil then
+      return Path:new(dirname)
+    end
+  end
+
+  return Path:new(path):parent()
+end
+
+--- Get all parent directories of a path. Returns strings to be consistent with `Path:parents()`.
+---
+---@param path string|Path
+---
+---@return string[]
+util.parent_directories = function(path)
+  -- 'Path:parents()' has bugs on Windows, so we do this our own way.
+  ---@type string[]
+  local parents = {}
+  local current = tostring(path)
+  ---@type string
+  local parent = tostring(util.parent_directory(current))
+  while parent ~= current do
+    parents[#parents + 1] = parent
+    current = parent
+    parent = tostring(util.parent_directory(current))
+  end
+  return parents
+end
+
 ------------------------------------
 -- Miscellaneous helper functions --
 ------------------------------------
@@ -425,7 +486,7 @@ util.get_open_strategy = function(opt)
 
   if vim.startswith(OpenStrategy.hsplit, opt) then
     if cur_layout ~= "col" then
-      return "hsplit "
+      return "split "
     else
       return "e "
     end
@@ -458,7 +519,18 @@ end
 util.toggle_checkbox = function()
   local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
   local line = vim.api.nvim_get_current_line()
-  if string.match(line, "^%s*- %[ %].*") then
+
+  local checkbox_pattern = "^%s*- %[.] "
+
+  if not string.match(line, checkbox_pattern) then
+    local unordered_list_pattern = "^(%s*)[-*+] (.*)"
+
+    if string.match(line, unordered_list_pattern) then
+      line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")
+    else
+      line = string.gsub(line, "^(%s*)", "%1- [ ] ")
+    end
+  elseif string.match(line, "^%s*- %[ %].*") then
     line = util.string_replace(line, "- [ ]", "- [x]", 1)
   else
     for check_char in iter { "x", "~", ">", "-" } do
@@ -523,15 +595,20 @@ end
 ---@param line string|nil - line to check or current line if nil
 ---@param col  integer|nil - column to check or current column if nil (1-indexed)
 ---@param include_naked_urls boolean|?
+---@param include_file_urls boolean|?
 ---@return integer|nil, integer|nil, obsidian.search.RefTypes|? - start and end column of link (1-indexed)
-util.cursor_on_markdown_link = function(line, col, include_naked_urls)
+util.cursor_on_markdown_link = function(line, col, include_naked_urls, include_file_urls)
   local search = require "obsidian.search"
 
   local current_line = line and line or vim.api.nvim_get_current_line()
   local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
   cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
-  for match in iter(search.find_refs(current_line, { include_naked_urls = include_naked_urls })) do
+  for match in
+    iter(
+      search.find_refs(current_line, { include_naked_urls = include_naked_urls, include_file_urls = include_file_urls })
+    )
+  do
     local open, close, m_type = unpack(match)
     if open <= cur_col and cur_col <= close then
       return open, close, m_type
@@ -541,28 +618,81 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls)
   return nil
 end
 
----Get the link location (path, ID, URL) and name of the link under the cursor, if there is one.
+--- Deprecated, use `parse_cursor_link()` instead.
 ---
 ---@param line string|?
 ---@param col integer|?
 ---@param include_naked_urls boolean|?
+---@param include_file_urls boolean|?
+---
 ---@return string|?, string|?, obsidian.search.RefTypes|?
-util.cursor_link = function(line, col, include_naked_urls)
-  local search = require "obsidian.search"
+util.cursor_link = function(line, col, include_naked_urls, include_file_urls)
+  return util.parse_cursor_link {
+    line = line,
+    col = col,
+    include_naked_urls = include_naked_urls,
+    include_file_urls = include_file_urls,
+  }
+end
 
-  local current_line = line and line or vim.api.nvim_get_current_line()
+--- Get the link location and name of the link under the cursor, if there is one.
+---
+---@param opts { line: string|?, col: integer|?, include_naked_urls: boolean|?, include_file_urls: boolean|? }|?
+---
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.parse_cursor_link = function(opts)
+  opts = opts and opts or {}
 
-  local open, close, link_type = util.cursor_on_markdown_link(current_line, col, include_naked_urls)
+  local current_line = opts.line and opts.line or vim.api.nvim_get_current_line()
+  local open, close, link_type =
+    util.cursor_on_markdown_link(current_line, opts.col, opts.include_naked_urls, opts.include_file_urls)
   if open == nil or close == nil then
     return
   end
 
   local link = current_line:sub(open, close)
+  return util.parse_link(link, { link_type = link_type, include_naked_urls = opts.include_naked_urls })
+end
+
+---@param link string
+---@param opts { include_naked_urls: boolean|?, include_file_urls: boolean|?, link_type: obsidian.search.RefTypes|? }|?
+---
+---@return string|?, string|?, obsidian.search.RefTypes|?
+util.parse_link = function(link, opts)
+  local search = require "obsidian.search"
+
+  opts = opts and opts or {}
+
+  local link_type = opts.link_type
+  if link_type == nil then
+    for match in
+      iter(
+        search.find_refs(
+          link,
+          { include_naked_urls = opts.include_naked_urls, include_file_urls = opts.include_file_urls }
+        )
+      )
+    do
+      local _, _, m_type = unpack(match)
+      if m_type then
+        link_type = m_type
+        break
+      end
+    end
+  end
+
+  if link_type == nil then
+    return nil
+  end
+
   local link_location, link_name
   if link_type == search.RefTypes.Markdown then
     link_location = link:gsub("^%[(.-)%]%((.*)%)$", "%2")
     link_name = link:gsub("^%[(.-)%]%((.*)%)$", "%1")
   elseif link_type == search.RefTypes.NakedUrl then
+    link_location = link
+    link_name = link
+  elseif link_type == search.RefTypes.FileUrl then
     link_location = link
     link_name = link
   elseif link_type == search.RefTypes.WikiWithAlias then
@@ -583,6 +713,29 @@ util.cursor_link = function(line, col, include_naked_urls)
   end
 
   return link_location, link_name, link_type
+end
+
+--- Get the tag under the cursor, if there is one.
+---
+---@param line string|?
+---@param col integer|?
+---
+---@return string|?
+util.cursor_tag = function(line, col)
+  local search = require "obsidian.search"
+
+  local current_line = line and line or vim.api.nvim_get_current_line()
+  local _, cur_col = unpack(vim.api.nvim_win_get_cursor(0))
+  cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
+
+  for match in iter(search.find_tags(current_line)) do
+    local open, close, _ = unpack(match)
+    if open <= cur_col and cur_col <= close then
+      return string.sub(current_line, open + 1, close)
+    end
+  end
+
+  return nil
 end
 
 util.gf_passthrough = function()
@@ -630,7 +783,7 @@ end
 
 ---@param cmd string
 ---@return string|?
-util.get_external_depency_info = function(cmd)
+util.get_external_dependency_info = function(cmd)
   local Job = require "plenary.job"
   local output, exit_code = Job:new({ ---@diagnostic disable-line: missing-fields
     command = cmd,
@@ -660,7 +813,7 @@ util.get_named_buffers = function()
     if bufnr > max_bufnr then
       return nil
     else
-      return bufnr, vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
+      return bufnr, util.resolve_path(vim.api.nvim_buf_get_name(bufnr))
     end
   end
 end
@@ -709,6 +862,162 @@ util.buf_get_full_text = function(bufnr)
     text = text .. "\n"
   end
   return text
+end
+
+--- Get the current visual selection of text and exit visual mode.
+---
+---@return { lines: string[], selection: string, csrow: integer, cscol: integer, cerow: integer, cecol: integer }
+util.get_visual_selection = function()
+  -- Adapted from fzf-lua:
+  -- https://github.com/ibhagwan/fzf-lua/blob/6ee73fdf2a79bbd74ec56d980262e29993b46f2b/lua/fzf-lua/utils.lua#L434-L466
+  -- this will exit visual mode
+  -- use 'gv' to reselect the text
+  local _, csrow, cscol, cerow, cecol
+  local mode = vim.fn.mode()
+  if mode == "v" or mode == "V" or mode == "" then
+    -- if we are in visual mode use the live position
+    _, csrow, cscol, _ = unpack(vim.fn.getpos ".")
+    _, cerow, cecol, _ = unpack(vim.fn.getpos "v")
+    if mode == "V" then
+      -- visual line doesn't provide columns
+      cscol, cecol = 0, 999
+    end
+    -- exit visual mode
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+  else
+    -- otherwise, use the last known visual position
+    _, csrow, cscol, _ = unpack(vim.fn.getpos "'<")
+    _, cerow, cecol, _ = unpack(vim.fn.getpos "'>")
+  end
+
+  -- Swap vars if needed
+  if cerow < csrow then
+    csrow, cerow = cerow, csrow
+    cscol, cecol = cecol, cscol
+  elseif cerow == csrow and cecol < cscol then
+    cscol, cecol = cecol, cscol
+  end
+
+  local lines = vim.fn.getline(csrow, cerow)
+  assert(type(lines) == "table")
+
+  -- When the whole line is selected via visual line mode ("V"), cscol / cecol will be equal to "v:maxcol"
+  -- for some odd reason. So change that to what they should be here. See ':h getpos' for more info.
+  local maxcol = vim.api.nvim_get_vvar "maxcol"
+  if cscol == maxcol then
+    cscol = string.len(lines[1])
+  end
+  if cecol == maxcol then
+    cecol = string.len(lines[#lines])
+  end
+
+  ---@type string
+  local selection
+  local n = #lines
+  if n <= 0 then
+    selection = ""
+  elseif n == 1 then
+    selection = string.sub(lines[1], cscol, cecol)
+  elseif n == 2 then
+    selection = string.sub(lines[1], cscol) .. "\n" .. string.sub(lines[n], 1, cecol)
+  else
+    selection = string.sub(lines[1], cscol)
+      .. "\n"
+      .. table.concat(lines, "\n", 2, n - 1)
+      .. "\n"
+      .. string.sub(lines[n], 1, cecol)
+  end
+
+  return {
+    lines = lines,
+    selection = selection,
+    csrow = csrow,
+    cscol = cscol,
+    cerow = cerow,
+    cecol = cecol,
+  }
+end
+
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.wiki_link_path_only = function(opts)
+  return string.format("[[%s]]", opts.path)
+end
+
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.wiki_link_path_prefix = function(opts)
+  if opts.label ~= opts.path then
+    return string.format("[[%s|%s]]", opts.path, opts.label)
+  else
+    return string.format("[[%s]]", opts.path)
+  end
+end
+
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.wiki_link_id_prefix = function(opts)
+  if opts.id == nil then
+    return string.format("[[%s]]", opts.label)
+  elseif opts.label ~= opts.id then
+    return string.format("[[%s|%s]]", opts.id, opts.label)
+  else
+    return string.format("[[%s]]", opts.id)
+  end
+end
+
+---@param opts {path: string, label: string, id: string|?}
+---@return string
+util.markdown_link = function(opts)
+  return string.format("[%s](%s)", opts.label, opts.path)
+end
+
+--- Open a buffer for the corresponding path.
+---
+---@param path string|Path
+---@param opts { line: integer|?, col: integer|?, cmd: string|? }|?
+util.open_buffer = function(path, opts)
+  path = util.resolve_path(path)
+  opts = opts and opts or {}
+  local cmd = util.strip_whitespace(opts.cmd and opts.cmd or "e")
+
+  -- Check for existing buffer and use 'drop' command if one is found.
+  for _, bufname in util.get_named_buffers() do
+    if bufname == path then
+      cmd = "drop"
+      break
+    end
+  end
+
+  vim.cmd(string.format("%s %s", cmd, vim.fn.fnameescape(path)))
+  if opts.line then
+    vim.api.nvim_win_set_cursor(0, { tonumber(opts.line), opts.col and opts.col or 0 })
+  end
+end
+
+--- Get a nice icon for a file or URL, if possible.
+---
+---@param path string
+---
+---@return string|?, string|? (icon, hl_group) The icon and highlight group.
+util.get_icon = function(path)
+  if util.is_url(path) then
+    local icon = ""
+    local _, hl_group = util.get_icon "blah.html"
+    return icon, hl_group
+  else
+    local ok, res = pcall(function()
+      local icon, hl_group = require("nvim-web-devicons").get_icon(path, nil, { default = true })
+      return { icon, hl_group }
+    end)
+    if ok and type(res) == "table" then
+      local icon, hlgroup = unpack(res)
+      return icon, hlgroup
+    elseif vim.endswith(path, ".md") then
+      return ""
+    end
+  end
+  return nil
 end
 
 return util

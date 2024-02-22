@@ -1,28 +1,29 @@
 local log = require "obsidian.log"
 local util = require "obsidian.util"
-local Workspace = require "obsidian.workspace"
 
 local config = {}
 
 ---@class obsidian.config.ClientOpts
 ---@field dir string|?
----@field workspaces obsidian.Workspace[]|?
----@field detect_cwd boolean
+---@field workspaces obsidian.workspace.WorkspaceSpec[]|?
 ---@field log_level integer
 ---@field notes_subdir string|?
 ---@field templates obsidian.config.TemplateOpts
----@field note_id_func function|?
----@field follow_url_func function|?
----@field note_frontmatter_func function|?
+---@field new_notes_location obsidian.config.NewNotesLocation
+---@field note_id_func (fun(title: string|?): string)|?
+---@field wiki_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
+---@field markdown_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
+---@field preferred_link_style obsidian.config.LinkStyle
+---@field follow_url_func fun(url: string)|?
+---@field image_name_func (fun(): string)|?
+---@field note_frontmatter_func fun(note: obsidian.Note)|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
----@field backlinks obsidian.config.BacklinksOpts
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
----@field finder_mappings obsidian.config.FinderMappingOpts
+---@field picker obsidian.config.PickerOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
 ---@field open_app_foreground boolean|?
----@field finder string|?
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
 ---@field open_notes_in obsidian.config.OpenStrategy
@@ -31,35 +32,30 @@ local config = {}
 ---@field yaml_parser string|?
 config.ClientOpts = {}
 
----@enum obsidian.config.OpenStrategy
-config.OpenStrategy = {
-  current = "current",
-  vsplit = "vsplit",
-  hsplit = "hsplit",
-}
-
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.ClientOpts
 config.ClientOpts.default = function()
   return {
     dir = nil,
     workspaces = {},
-    detect_cwd = false,
     log_level = vim.log.levels.INFO,
     notes_subdir = nil,
+    new_notes_location = config.NewNotesLocation.current_dir,
     templates = config.TemplateOpts.default(),
     note_id_func = nil,
+    wiki_link_func = util.wiki_link_id_prefix,
+    markdown_link_func = util.markdown_link,
+    preferred_link_style = config.LinkStyle.wiki,
     follow_url_func = nil,
     note_frontmatter_func = nil,
     disable_frontmatter = false,
-    backlinks = config.BacklinksOpts.default(),
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),
-    finder_mappings = config.FinderMappingOpts.default(),
+    picker = config.PickerOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
     open_app_foreground = false,
-    finder = nil,
     sort_by = "modified",
     sort_reversed = true,
     open_notes_in = "current",
@@ -69,6 +65,157 @@ config.ClientOpts.default = function()
   }
 end
 
+local tbl_override = function(defaults, overrides)
+  local out = vim.tbl_extend("force", defaults, overrides)
+  for k, v in pairs(out) do
+    if v == vim.NIL then
+      out[k] = nil
+    end
+  end
+  return out
+end
+
+--- Normalize options.
+---
+---@param opts table<string, any>
+---@param defaults obsidian.config.ClientOpts|?
+---
+---@return obsidian.config.ClientOpts
+config.ClientOpts.normalize = function(opts, defaults)
+  if not defaults then
+    defaults = config.ClientOpts.default()
+  end
+
+  -------------------------------------------------------------------------------------
+  -- Rename old fields for backwards compatibility and warn about deprecated fields. --
+  -------------------------------------------------------------------------------------
+
+  if opts.ui and opts.ui.tick then
+    opts.ui.update_debounce = opts.ui.tick
+    opts.ui.tick = nil
+  end
+
+  if not opts.picker then
+    opts.picker = {}
+    if opts.finder then
+      opts.picker.name = opts.finder
+      opts.finder = nil
+    end
+    if opts.finder_mappings then
+      opts.picker.mappings = opts.finder_mappings
+      opts.finder_mappings = nil
+    end
+  end
+
+  if opts.wiki_link_func == nil and opts.completion ~= nil then
+    local warn = false
+
+    if opts.completion.prepend_note_id then
+      opts.wiki_link_func = util.wiki_link_id_prefix
+      opts.completion.prepend_note_id = nil
+      warn = true
+    elseif opts.completion.prepend_note_path then
+      opts.wiki_link_func = util.wiki_link_path_prefix
+      opts.completion.prepend_note_path = nil
+      warn = true
+    elseif opts.completion.use_path_only then
+      opts.wiki_link_func = util.wiki_link_path_only
+      opts.completion.use_path_only = nil
+      warn = true
+    end
+
+    if warn then
+      log.warn_once(
+        "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
+          .. "are deprecated. Please use 'wiki_link_func' instead.\n"
+          .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
+      )
+    end
+  end
+
+  if opts.completion ~= nil and opts.completion.preferred_link_style ~= nil then
+    opts.preferred_link_style = opts.completion.preferred_link_style
+    opts.completion.preferred_link_style = nil
+    log.warn_once(
+      "The config option 'completion.preferred_link_style' is deprecated, please use the top-level "
+        .. "'preferred_link_style' instead."
+    )
+  end
+
+  if opts.completion ~= nil and opts.completion.new_notes_location ~= nil then
+    opts.new_notes_location = opts.completion.new_notes_location
+    opts.completion.new_notes_location = nil
+    log.warn_once(
+      "The config option 'completion.new_notes_location' is deprecated, please use the top-level "
+        .. "'new_notes_location' instead."
+    )
+  end
+
+  if opts.detect_cwd ~= nil then
+    opts.detect_cwd = nil
+    log.warn_once(
+      "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
+    )
+  end
+
+  if opts.overwrite_mappings ~= nil then
+    log.warn_once "The 'overwrite_mappings' config option is deprecated and no longer has any affect."
+    opts.overwrite_mappings = nil
+  end
+
+  if opts.backlinks ~= nil then
+    log.warn_once "The 'backlinks' config option is deprecated and no longer has any affect."
+    opts.backlinks = nil
+  end
+
+  if opts.tags ~= nil then
+    log.warn_once "The 'tags' config option is deprecated and no longer has any affect."
+    opts.tags = nil
+  end
+
+  --------------------------
+  -- Merge with defaults. --
+  --------------------------
+
+  ---@type obsidian.config.ClientOpts
+  opts = tbl_override(defaults, opts)
+
+  opts.completion = tbl_override(defaults.completion, opts.completion)
+  opts.mappings = opts.mappings and opts.mappings or defaults.mappings
+  opts.picker = tbl_override(defaults.picker, opts.picker)
+  opts.daily_notes = tbl_override(defaults.daily_notes, opts.daily_notes)
+  opts.templates = tbl_override(defaults.templates, opts.templates)
+  opts.ui = tbl_override(defaults.ui, opts.ui)
+  opts.attachments = tbl_override(defaults.attachments, opts.attachments)
+
+  ---------------
+  -- Validate. --
+  ---------------
+
+  if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
+    error("Invalid 'sort_by' option '" .. opts.sort_by .. "' in obsidian.nvim config.")
+  end
+
+  if not util.tbl_is_array(opts.workspaces) then
+    error "Invalid obsidian.nvim config, the 'config.workspaces' should be an array/list."
+  end
+
+  -- Convert dir to workspace format.
+  if opts.dir ~= nil then
+    table.insert(opts.workspaces, 1, { path = opts.dir })
+  end
+
+  return opts
+end
+
+---@enum obsidian.config.OpenStrategy
+config.OpenStrategy = {
+  current = "current",
+  vsplit = "vsplit",
+  hsplit = "hsplit",
+}
+
 ---@enum obsidian.config.SortBy
 config.SortBy = {
   path = "path",
@@ -77,108 +224,32 @@ config.SortBy = {
   created = "created",
 }
 
----Normalize options.
----
----@param opts table<string, any>
----@param overrides table|obsidian.config.ClientOpts|?
----@return obsidian.config.ClientOpts
-config.ClientOpts.normalize = function(opts, overrides)
-  local defaults = config.ClientOpts.default()
-  if overrides ~= nil then
-    defaults = config.ClientOpts.normalize(overrides)
-  end
+---@enum obsidian.config.NewNotesLocation
+config.NewNotesLocation = {
+  current_dir = "current_dir",
+  notes_subdir = "notes_subdir",
+}
 
-  ---@type obsidian.config.ClientOpts
-  opts = vim.tbl_extend("force", defaults, opts)
-
-  opts.backlinks = vim.tbl_extend("force", defaults.backlinks, opts.backlinks)
-  opts.completion = vim.tbl_extend("force", defaults.completion, opts.completion)
-  opts.mappings = opts.mappings and opts.mappings or defaults.mappings
-  opts.finder_mappings = opts.finder_mappings and opts.finder_mappings or defaults.finder_mappings
-  opts.daily_notes = vim.tbl_extend("force", defaults.daily_notes, opts.daily_notes)
-  opts.templates = vim.tbl_extend("force", defaults.templates, opts.templates)
-  opts.ui = vim.tbl_extend("force", defaults.ui, opts.ui)
-  opts.attachments = vim.tbl_extend("force", defaults.attachments, opts.attachments)
-
-  -- Rename old fields for backwards compatibility.
-  if opts.ui.tick ~= nil then
-    opts.ui.update_debounce = opts.ui.tick
-    opts.ui.tick = nil
-  end
-
-  -- Validate.
-  if opts.sort_by ~= nil and not vim.tbl_contains(vim.tbl_values(config.SortBy), opts.sort_by) then
-    error("invalid 'sort_by' option '" .. opts.sort_by .. "'")
-  end
-
-  if
-    not opts.completion.prepend_note_id
-    and not opts.completion.prepend_note_path
-    and not opts.completion.use_path_only
-  then
-    error "invalid 'completion' options"
-  end
-
-  -- Warn about deprecated fields.
-  ---@diagnostic disable-next-line undefined-field
-  if opts.overwrite_mappings ~= nil then
-    log.warn_once "the 'overwrite_mappings' config option is deprecated and no longer has any affect"
-    ---@diagnostic disable-next-line
-    opts.overwrite_mappings = nil
-  end
-
-  -- Normalize workspaces.
-  if not util.tbl_is_array(opts.workspaces) then
-    error "'config.workspaces' should be an array/list"
-  else
-    for i, ws in ipairs(opts.workspaces) do
-      opts.workspaces[i] = Workspace.new(ws.name, ws.path, ws.overrides)
-    end
-  end
-
-  -- Convert dir to workspace format.
-  if opts.dir ~= nil then
-    -- NOTE: path will be normalized in workspace.new() fn
-    table.insert(opts.workspaces, 1, Workspace.new_from_dir(opts.dir))
-  end
-
-  return opts
-end
-
----@class obsidian.config.BacklinksOpts
----@field height integer
----@field wrap boolean
-config.BacklinksOpts = {}
-
----Get defaults.
----@return obsidian.config.BacklinksOpts
-config.BacklinksOpts.default = function()
-  return {
-    height = 10,
-    wrap = true,
-  }
-end
+---@enum obsidian.config.LinkStyle
+config.LinkStyle = {
+  wiki = "wiki",
+  markdown = "markdown",
+}
 
 ---@class obsidian.config.CompletionOpts
+---
 ---@field nvim_cmp boolean
 ---@field min_chars integer
----@field new_notes_location "current_dir"|"notes_subdir"
----@field prepend_note_id boolean
----@field prepend_note_path boolean
----@field use_path_only boolean
 config.CompletionOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.CompletionOpts
 config.CompletionOpts.default = function()
   local has_nvim_cmp, _ = pcall(require, "cmp")
   return {
     nvim_cmp = has_nvim_cmp,
     min_chars = 2,
-    new_notes_location = "current_dir",
-    prepend_note_id = true,
-    prepend_note_path = false,
-    use_path_only = false,
   }
 end
 
@@ -196,26 +267,54 @@ config.MappingOpts.default = function()
   }
 end
 
----@class obsidian.config.FinderMappingOpts
+---@class obsidian.config.PickerMappingOpts
+---
 ---@field new string|?
-config.FinderMappingOpts = {}
+---@field insert_link string|?
+config.PickerMappingOpts = {}
 
 ---Get defaults.
----@return obsidian.config.FinderMappingOpts
-config.FinderMappingOpts.default = function()
+---@return obsidian.config.PickerMappingOpts
+config.PickerMappingOpts.default = function()
   return {
     new = "<C-x>",
+    insert_link = "<C-l>",
+  }
+end
+
+---@enum obsidian.config.Picker
+config.Picker = {
+  telescope = "telescope.nvim",
+  fzf_lua = "fzf-lua",
+  mini = "mini.pick",
+}
+
+---@class obsidian.config.PickerOpts
+---
+---@field name obsidian.config.Picker|?
+---@field mappings obsidian.config.PickerMappingOpts
+config.PickerOpts = {}
+
+--- Get the defaults.
+---
+---@return obsidian.config.PickerOpts
+config.PickerOpts.default = function()
+  return {
+    name = nil,
+    mappings = config.PickerMappingOpts.default(),
   }
 end
 
 ---@class obsidian.config.DailyNotesOpts
+---
 ---@field folder string|?
 ---@field date_format string|?
 ---@field alias_format string|?
 ---@field template string|?
 config.DailyNotesOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.DailyNotesOpts
 config.DailyNotesOpts.default = function()
   return {
@@ -226,13 +325,15 @@ config.DailyNotesOpts.default = function()
 end
 
 ---@class obsidian.config.TemplateOpts
+---
 ---@field subdir string
 ---@field date_format string|?
 ---@field time_format string|?
 ---@field substitutions table<string, function|string>|?
 config.TemplateOpts = {}
 
----Get defaults.
+--- Get defaults.
+---
 ---@return obsidian.config.TemplateOpts
 config.TemplateOpts.default = function()
   return {
@@ -244,8 +345,8 @@ config.TemplateOpts.default = function()
 end
 
 ---@class obsidian.config.UIOpts
+---
 ---@field enable boolean
----@field tick integer
 ---@field update_debounce integer
 ---@field checkboxes table{string, obsidian.config.UICharSpec}
 ---@field bullets obsidian.config.UICharSpec|?
@@ -257,10 +358,12 @@ end
 config.UIOpts = {}
 
 ---@class obsidian.config.UICharSpec
+---
 ---@field char string
 ---@field hl_group string
 
 ---@class obsidian.config.UIStyleSpec
+---
 ---@field hl_group string
 
 ---@return obsidian.config.UIOpts
@@ -294,6 +397,7 @@ config.UIOpts.default = function()
 end
 
 ---@class obsidian.config.AttachmentsOpts
+---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
 ---@field img_text_func function (obsidian.Client, Path,) -> string
 config.AttachmentsOpts = {}

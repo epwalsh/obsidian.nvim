@@ -3,7 +3,6 @@ local log = require "obsidian.log"
 local module_lookups = {
   abc = "obsidian.abc",
   async = "obsidian.async",
-  backlinks = "obsidian.backlinks",
   Client = "obsidian.client",
   collections = "obsidian.collections",
   commands = "obsidian.commands",
@@ -14,12 +13,13 @@ local module_lookups = {
   itertools = "obsidian.itertools",
   mappings = "obsidian.mappings",
   Note = "obsidian.note",
+  pickers = "obsidian.pickers",
   search = "obsidian.search",
   templates = "obsidian.templates",
   ui = "obsidian.ui",
   util = "obsidian.util",
   VERSION = "obsidian.version",
-  workspace = "obsidian.workspace",
+  Workspace = "obsidian.workspace",
   yaml = "obsidian.yaml",
 }
 
@@ -56,7 +56,8 @@ obsidian.info = function()
 
   local info = obsidian.util.get_plugin_info()
   if info ~= nil then
-    print("[obsidian.nvim (v" .. obsidian.VERSION .. ")] " .. info)
+    print "Plugins:"
+    print("  [obsidian.nvim (v" .. obsidian.VERSION .. ")] " .. info)
   else
     print(
       "ERROR: could not find path to obsidian.nvim installation.\n"
@@ -66,19 +67,25 @@ obsidian.info = function()
     return
   end
 
-  for plugin in iter { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "fzf.vim", "mini.pick", "vim-markdown" } do
+  for plugin in iter { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "mini.pick" } do
     local plugin_info = obsidian.util.get_plugin_info(plugin)
     if plugin_info ~= nil then
-      print("[" .. plugin .. "] " .. plugin_info)
+      print("  [" .. plugin .. "] " .. plugin_info)
     end
   end
 
+  print "Tools:"
   for cmd in iter { "rg" } do
-    local cmd_info = obsidian.util.get_external_depency_info(cmd)
+    local cmd_info = obsidian.util.get_external_dependency_info(cmd)
     if cmd_info ~= nil then
-      print(cmd_info)
+      print("  [" .. cmd .. "] " .. cmd_info)
+    else
+      print("  [" .. cmd .. "] " .. "not found")
     end
   end
+
+  print "Environment:"
+  print("  [OS] " .. obsidian.util.get_os())
 end
 
 ---Create a new Obsidian client without additional setup.
@@ -95,13 +102,14 @@ end
 ---@return obsidian.Client
 obsidian.new_from_dir = function(dir)
   local opts = obsidian.config.ClientOpts.default()
-  opts.workspaces = vim.tbl_extend("force", { obsidian.workspace.new_from_dir(dir) }, opts.workspaces)
+  opts.workspaces = { { path = dir } }
   return obsidian.new(opts)
 end
 
----Setup a new Obsidian client.
+--- Setup a new Obsidian client. This should only be called once from an Nvim session.
 ---
 ---@param opts obsidian.config.ClientOpts
+---
 ---@return obsidian.Client
 obsidian.setup = function(opts)
   local Path = require "plenary.path"
@@ -109,38 +117,6 @@ obsidian.setup = function(opts)
   opts = obsidian.config.ClientOpts.normalize(opts)
   local client = obsidian.new(opts)
   log.set_level(client.opts.log_level)
-
-  -- Ensure directories exist.
-  client.dir:mkdir { parents = true, exists_ok = true }
-  vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(client.dir)))
-
-  if client.opts.notes_subdir ~= nil then
-    local notes_subdir = client.dir / client.opts.notes_subdir
-    notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(notes_subdir)))
-  end
-
-  if client.opts.daily_notes.folder ~= nil then
-    local daily_notes_subdir = client.dir / client.opts.daily_notes.folder
-    daily_notes_subdir:mkdir { parents = true, exists_ok = true }
-    vim.cmd("set path+=" .. vim.fn.fnameescape(tostring(daily_notes_subdir)))
-  end
-
-  --- @type fun(match: string): boolean
-  local is_template
-  local templates_dir = client:templates_dir()
-  if templates_dir ~= nil then
-    local templates_pattern = tostring(templates_dir)
-    templates_pattern = obsidian.util.escape_magic_characters(templates_pattern)
-    templates_pattern = "^" .. templates_pattern .. ".*"
-    is_template = function(match)
-      return string.find(match, templates_pattern) ~= nil
-    end
-  else
-    is_template = function(_)
-      return false
-    end
-  end
 
   -- Install commands.
   -- These will be available across all buffers, not just note buffers in the vault.
@@ -160,89 +136,90 @@ obsidian.setup = function(opts)
     obsidian.ui.setup(client.opts.ui)
   end
 
-  -- Register autocommands.
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
 
-  -- Only register commands, mappings, cmp source, etc when we enter a note buffer.
-  for _, workspace in ipairs(client.opts.workspaces) do
-    -- NOTE: workspace.path has already been normalized
-    local pattern = tostring(Path:new(workspace.path) / "**.md")
+  -- Complete setup and update workspace (if needed) when entering a markdown buffer.
+  vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    group = group,
+    pattern = "*.md",
+    callback = function(ev)
+      -- Set the current directory of the buffer.
+      local buf_dir = vim.fs.dirname(ev.match)
+      if buf_dir then
+        client.buf_dir = Path:new(buf_dir)
+      end
 
-    vim.api.nvim_create_autocmd({ "BufEnter" }, {
-      group = group,
-      pattern = pattern,
-      callback = function()
-        -- Set the current directory of the buffer.
-        local buf_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(0))
-        if buf_dir then
-          client.buf_dir = Path:new(buf_dir)
-        end
+      -- Check if we're in *any* workspace.
+      local workspace = obsidian.Workspace.get_workspace_for_dir(buf_dir, client.opts.workspaces)
+      if not workspace then
+        return
+      end
 
-        -- Register mappings.
-        for mapping_keys, mapping_config in pairs(opts.mappings) do
-          vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
-        end
+      -- Switch to the workspace and complete the workspace setup.
+      if not client.current_workspace.locked and workspace ~= client.current_workspace then
+        log.debug("Switching to workspace '%s' @ '%s'", workspace.name, workspace.path)
+        client:set_workspace(workspace)
+      end
 
-        vim.cmd [[ setlocal suffixesadd+=.md ]]
+      -- Register mappings.
+      for mapping_keys, mapping_config in pairs(opts.mappings) do
+        vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
+      end
 
-        if opts.completion.nvim_cmp then
-          -- Inject Obsidian as a cmp source when reading a buffer in the vault.
-          local cmp = require "cmp"
+      -- Inject Obsidian as a cmp source.
+      if opts.completion.nvim_cmp then
+        local cmp = require "cmp"
 
-          local sources = {
-            { name = "obsidian" },
-            { name = "obsidian_new" },
-            { name = "obsidian_tags" },
-          }
-          for _, source in pairs(cmp.get_config().sources) do
-            if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
-              table.insert(sources, source)
-            end
+        local sources = {
+          { name = "obsidian" },
+          { name = "obsidian_new" },
+          { name = "obsidian_tags" },
+        }
+        for _, source in pairs(cmp.get_config().sources) do
+          if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
+            table.insert(sources, source)
           end
-          ---@diagnostic disable-next-line: missing-fields
-          cmp.setup.buffer { sources = sources }
         end
-      end,
-    })
+        ---@diagnostic disable-next-line: missing-fields
+        cmp.setup.buffer { sources = sources }
+      end
+    end,
+  })
 
-    -- Add/update frontmatter on BufWritePre
-    vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-      group = group,
-      pattern = pattern,
-      callback = function(ev)
-        if is_template(ev.match) then
-          return
-        end
+  -- Add/update frontmatter for notes before writing.
+  vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+    group = group,
+    pattern = "*.md",
+    callback = function(ev)
+      local buf_dir = vim.fs.dirname(ev.match)
 
-        local bufnr = ev.buf
-        local note = obsidian.Note.from_buffer(bufnr, client.dir)
-        if not client:should_save_frontmatter(note) then
-          return
-        end
+      -- Check if we're in a workspace.
+      local workspace = obsidian.Workspace.get_workspace_for_dir(buf_dir, client.opts.workspaces)
+      if not workspace then
+        return
+      end
 
-        local frontmatter = nil
-        if client.opts.note_frontmatter_func ~= nil then
-          frontmatter = client.opts.note_frontmatter_func(note)
-        end
-        local new_lines = note:frontmatter_lines(nil, frontmatter)
-        local cur_lines
-        if note.frontmatter_end_line ~= nil then
-          cur_lines = vim.api.nvim_buf_get_lines(0, 0, note.frontmatter_end_line, false)
-        end
+      if not client:path_is_note(ev.match, workspace) then
+        return
+      end
 
-        vim.api.nvim_buf_set_lines(
-          bufnr,
-          0,
-          note.frontmatter_end_line and note.frontmatter_end_line or 0,
-          false,
-          new_lines
-        )
-        if not client._quiet and not vim.deep_equal(cur_lines, new_lines) then
-          log.info "Updated frontmatter"
-        end
-      end,
-    })
-  end
+      local bufnr = ev.buf
+      local note = obsidian.Note.from_buffer(bufnr, client.dir)
+      if not client:should_save_frontmatter(note) then
+        return
+      end
+
+      local frontmatter = nil
+      if client.opts.note_frontmatter_func ~= nil then
+        frontmatter = client.opts.note_frontmatter_func(note)
+      end
+
+      local updated = note:save_to_buffer(bufnr, frontmatter)
+      if not client._quiet and updated then
+        log.info "Updated frontmatter"
+      end
+    end,
+  })
 
   -- Set global client.
   obsidian._client = client

@@ -1,43 +1,55 @@
 local util = require "obsidian.util"
 local log = require "obsidian.log"
 local RefTypes = require("obsidian.search").RefTypes
+local Note = require "obsidian.note"
 
 ---@param client obsidian.Client
 return function(client, _)
+  local picker = assert(client:picker())
+  if not picker then
+    log.err "No picker configured"
+    return
+  end
+
   ---@type obsidian.Note|?
   local note
-  local cursor_link, _, ref_type = util.cursor_link()
-  if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl then
+  local cursor_link, _, ref_type = util.parse_cursor_link()
+  if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl and ref_type ~= RefTypes.FileUrl then
     note = client:resolve_note(cursor_link)
     if note == nil then
       log.err "Could not resolve link under cursor to a note ID, path, or alias"
       return
     end
-  end
-
-  local ok, backlinks = pcall(function()
-    return require("obsidian.backlinks").new(client, nil, nil, note)
-  end)
-
-  if ok then
-    backlinks:view(function(matches)
-      if not vim.tbl_isempty(matches) then
-        log.info(
-          "Showing backlinks to '%s'.\n\n"
-            .. "TIPS:\n\n"
-            .. "- Hit ENTER on a match to follow the backlink\n"
-            .. "- Hit ENTER on a group header to toggle the fold, or use normal fold mappings",
-          backlinks.note.id
-        )
-      else
-        if note ~= nil then
-          log.warn("No backlinks to '%s'", note.id)
-        else
-          log.warn "No backlinks to current note"
-        end
-      end
-    end)
   else
-    log.err "Backlinks command can only be used from a valid note"
+    note = Note.from_file(vim.api.nvim_buf_get_name(0))
   end
+
+  assert(note)
+
+  client:find_backlinks_async(note, true, function(backlinks)
+    if vim.tbl_isempty(backlinks) then
+      log.info "No backlinks found"
+      return
+    end
+
+    local entries = {}
+    for _, matches in ipairs(backlinks) do
+      for _, match in ipairs(matches.matches) do
+        entries[#entries + 1] = {
+          value = { path = matches.path, line = match.line },
+          filename = matches.path,
+          lnum = match.line,
+        }
+      end
+    end
+
+    vim.schedule(function()
+      picker:pick(entries, {
+        prompt_title = "Backlinks",
+        callback = function(value)
+          util.open_buffer(value.path, { line = value.line })
+        end,
+      })
+    end)
+  end)
 end

@@ -7,6 +7,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Ensure old buffer is removed when renaming current note.
+
+## [v3.4.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.4.0) - 2024-02-21
+
+### Added
+
+- Added client methods `Client:find_backlinks()` and `Client:find_backlinks_async()`.
+- Added client method `Client:open_note()` for open a note in a buffer.
+
+### Changed
+
+- `:ObsidianBacklinks` and `:ObsidianTags` now open your preferred picker instead of a separate buffer.
+- Improved `cmp_obsidian` doc/preview text.
+
+### Fixed
+
+- Fixed `:ObsidianExtractNote` when usual visual line selection ("V").
+- Fixed "hsplit" open strategy.
+
+## [v3.3.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.1) - 2024-02-18
+
+### Fixed
+
+- Fixed inserting templates when the templates directory structure is nested.
+
+## [v3.3.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.3.0) - 2024-02-17
+
+### Added
+
+- Support for `file:/` and `file:///` Urls.
+- Added configuration options `wiki_link_func` and `markdown_link_func` for customizing how links are formatted.
+
+### Fixed
+
+- Urls ending in `/` were not detected.
+- Fixed small bug with toggle checkbox mapping where lines that started with a wiki link or md link were misclassified.
+
+### Changed
+
+- Config options `completion.prepend_note_id`, `completion.prepend_note_path`, and `completion.use_path_only` are now deprecated. Please use `wiki_link_func` and `markdown_link_func` instead.
+- Moved configuration option `completion.preferred_link_style` to top-level `preferred_link_style`.
+- Moved configuration option `completion.new_notes_location` to top-level `new_notes_location`.
+
+## [v3.2.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.2.0) - 2024-02-13
+
+### Added
+
+- Added `:ObsidianLinks` command.
+- Added `:ObsidianExtractNote` command.
+
+### Fixed
+
+- Improved how we get visual selection for certain commands.
+
+## [v3.1.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.1.0) - 2024-02-12
+
+### Added
+
+- Added descriptions to all commands.
+
+### Changed
+
+- Major internal refactoring / improvements for how we integrate with pickers.
+- Configuration option `finder` and `finder_mappings` have been consolidated into `picker = { name: string, mappings: { ... } }`.
+- When `:ObsidianWorkspace` is called without any arguments, obsidian.nvim will open your picker to select a workspace to switch to.
+
+### Fixed
+
+- Resolve workspace path when behind symlinks.
+
+### Removed
+
+- Removed support for `fzf.vim` as a picker (`fzf-lua` is still supported).
+
+## [v3.0.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.0.0) - 2024-02-09
+
+⚠️ POTENTIALLY BREAKING CHANGES! PLEASE READ BELOW ⚠️
+
+### Added
+
+- Added support for "dynamic" workspaces where the workspace `path` field is a function instead of a `string` / `Path`. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+
+### Changed
+
+- Changed behavior of workspace detection. When you have multiple workspaces configured, obsidian.nvim will now automatically switch workspaces when you open a buffer in a different workspace. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+- Various changes to the `Workspace` Lua API. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+- Changed the behavior of the default frontmatter function so it no longer automatically adds the title of the note as an alias. See the `note_frontmatter_func` example in the README if you want the old behavior.
+
+### Removed
+
+- Removed configuration option `detect_cwd`. This wasn't well-defined before and is no longer relevant with the new workspace detection behavior. See [PR #366](https://github.com/epwalsh/obsidian.nvim/pull/366).
+
+### Fixed
+
+- Fixed two bugs with creating new notes through `:ObsidianFollowLink` (and `gf`) where it wouldn't respect the `completion.new_notes_location` settings, and wouldn't respect paths in certain formats.
+
+## [v2.10.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.10.0) - 2024-02-05
+
+### Added
+
+- Added note field `Note.title` to provide more useful info for `note_frontmatter_func`.
+- Added client method `Client:format_link()` for creating markdown / wiki links.
+- Added telescope action to insert a note link in certain finder scenarios.
+
+### Fixed
+
+- Fixed parsing header with trailing whitespace (https://github.com/epwalsh/obsidian.nvim/issues/341#issuecomment-1925445271).
+
+## [v2.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.9.0) - 2024-01-31
+
+### Added
+
+- Added configuration option `image_name_func: (fun(): string)|?` for customizing the default image name/prefix when pasting images via `:ObsidianPasteImg`.
+- Added client method `Client:current_note()` to get the note corresponding to the current buffer.
+- Added client method `Client:list_tags()` for listing all tags in the vault, along with async version `Client:list_tags_async(callback: fun(tags: string[]))`.
+- Added note method `Note.add_field(key: string, value: any)` to add/update an additional field in the frontmatter.
+- Added note method `Note.get_field(key: string)`.
+- Added note method `Note.save_to_buffer(bufnr: integer|?, frontmatter: table|?)` for saving the frontmatter to a buffer.
+
+### Changed
+
+- `:ObsidianTags` command can take a visual selection or look for a tag under the cursor instead of explicitly provided arguments.
+
+## [v2.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.8.0) - 2024-01-26
+
+### Added
+
+- Added `:ObsidianTags` command.
+
+### Changed
+
+- Changed API of client methods `Client:find_tags()` and `Client:find_tags_async()`. The return value (or value passed to the callback) is now a list of objects representing the location of tags found. These objects have the following fields: `tag: string`, `path: string|Path`, `line: integer`.
+
+### Fixed
+
+- Fixed a YAML parsing issue with unquoted URLs in an array item.
+- Fixed an issue on Windows when cloning a template into a new note. The root cause was this bug in plenary: https://github.com/nvim-lua/plenary.nvim/issues/489. We've added a work-around.
+
+## [v2.7.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.7.1) - 2024-01-23
+
+### Fixed
+
+- Fixed powershell command for `:ObsidianPasteImg` in wsl
+- Fixed bug with YAML parser that led to incorrectly parsing double-quoted strings with escaped quotes inside.
+
 ## [v2.7.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v2.7.0) - 2024-01-19
 
 ### Fixed
@@ -509,7 +656,7 @@ Major internal refactoring to bring performance improvements through async execu
 
 ### Changed
 
-- `plenary.nvim` is no longer required to be installed seperately. It's now bundled as a submodule.
+- `plenary.nvim` is no longer required to be installed separately. It's now bundled as a submodule.
 
 ## [v1.2.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v1.2.1) - 2022-09-23
 

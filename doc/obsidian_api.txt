@@ -75,17 +75,42 @@ obsidian.Client
 
 ------------------------------------------------------------------------------
                                                *obsidian.Client.set_workspace()*
-                  `Client.set_workspace`({self}, {workspace})
+              `Client.set_workspace`({self}, {workspace}, {opts})
 Parameters ~
 {workspace} obsidian.Workspace
+{opts} { lock: `(boolean|?)` }|?
+
+------------------------------------------------------------------------------
+                                          *obsidian.Client.opts_for_workspace()*
+                `Client.opts_for_workspace`({self}, {workspace})
+Get the normalize opts for a given workspace.
+
+Parameters ~
+{workspace} obsidian.Workspace|?
+
+Return ~
+obsidian.config.ClientOpts
 
 ------------------------------------------------------------------------------
                                             *obsidian.Client.switch_workspace()*
-                 `Client.switch_workspace`({self}, {workspace})
+             `Client.switch_workspace`({self}, {workspace}, {opts})
 Switch to a different workspace.
 
 Parameters ~
 {workspace} `(obsidian.Workspace|string)` The workspace object or the name of an existing workspace.
+{opts} { lock: `(boolean|?)` }|?
+
+------------------------------------------------------------------------------
+                                                *obsidian.Client.path_is_note()*
+               `Client.path_is_note`({self}, {path}, {workspace})
+Check if a path represents a note in the workspace.
+
+Parameters ~
+{path} `(string|Path)`
+{workspace} obsidian.Workspace|?
+
+Return ~
+`(boolean)`
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Client.vault_root()*
@@ -120,8 +145,11 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                *obsidian.Client.templates_dir()*
-                         `Client.templates_dir`({self})
+                  `Client.templates_dir`({self}, {workspace})
 Get the templates folder.
+
+Parameters ~
+{workspace} obsidian.Workspace|?
 
 Return ~
 Path| `(optional)`
@@ -178,7 +206,7 @@ An async version of `find_notes()` that runs the callback with an array of all m
 Parameters ~
 {term} `(string)` The term to search for
 {opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
-{callback} `(function)` (obsidian.Note[]) -> nil
+{callback} `(fun(notes: obsidian.Note[]))`
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Client.find_files()*
@@ -201,7 +229,7 @@ An async version of `find_files`.
 Parameters ~
 {term} `(string)` The search term.
 {opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
-{callback} `(function)` (Path[]) -> nil
+{callback} `(fun(paths: Path[]))`
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.resolve_note()*
@@ -222,23 +250,83 @@ An async version of `resolve_note()`.
 
 Parameters ~
 {query} `(string)`
-{callback} `(function(obsidian.Note|?))`
+{callback} `(fun(note: obsidian.Note|?))`
 
 Return ~
 obsidian.Note| `(optional)`
 
 ------------------------------------------------------------------------------
-                                                   *obsidian.Client.find_tags()*
-             `Client.find_tags`({self}, {term}, {opts}, {timeout})
-Find all tags starting with the given term.
+Class ~
+{obsidian.ResolveLinkResult}
+
+Fields ~
+{location} `(string)`
+{name} `(string)`
+{link_type} obsidian.search.RefTypes
+{path} Path|?
+{note} obsidian.Note|?
+{url} `(string|?)`
+
+------------------------------------------------------------------------------
+                                          *obsidian.Client.resolve_link_async()*
+            `Client.resolve_link_async`({self}, {link}, {callback})
+Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
 
 Parameters ~
-{term} `(string)`
-{opts} `(obsidian.SearchOpts|table|boolean|?)` search options or a boolean indicating if sorting should be used
-{timeout} `(integer|?)`
+{link} `(string|?)`
+{callback} `(fun(res: obsidian.ResolveLinkResult|?))`
+
+------------------------------------------------------------------------------
+                                           *obsidian.Client.follow_link_async()*
+               `Client.follow_link_async`({self}, {link}, {opts})
+Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
+
+Parameters ~
+{link} `(string|?)`
+{opts} { open_strategy: obsidian.config.OpenStrategy|? }|?
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Client.open_note()*
+               `Client.open_note`({self}, {note_or_path}, {opts})
+Open a note in a buffer.
+
+Parameters ~
+{note_or_path} `(string|Path|obsidian.Note)`
+{opts} { line: `(integer|?,)` col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
+
+------------------------------------------------------------------------------
+                                                *obsidian.Client.current_note()*
+                         `Client.current_note`({self})
+Get the current note.
 
 Return ~
-`(string[])`
+obsidian.Note| `(optional)`
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.TagLocation}
+
+Fields ~
+{tag} `(string)` The tag found.
+{note} obsidian.Note The note instance where the tag was found.
+{path} `(string|Path)` The path to the note where the tag was found.
+{line} `(integer)` The line number (1-indexed) where the tag was found.
+{text} `(string)` The text (with whitespace stripped) of the line where the tag was found.
+{tag_start} `(integer|?)` The index within 'text' where the tag starts.
+{tag_end} `(integer|?)` The index within 'text' where the tag ends.
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Client.find_tags()*
+             `Client.find_tags`({self}, {term}, {opts}, {timeout})
+Find all tags starting with the given search term(s).
+
+Parameters ~
+{term} `(string|string[])` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{timeout} `(integer|?)` Timeout in milliseconds.
+
+Return ~
+obsidian.TagLocation[]
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.find_tags_async()*
@@ -246,9 +334,71 @@ Return ~
 An async version of 'find_tags()'.
 
 Parameters ~
-{term} `(string)`
-{opts} `(obsidian.SearchOpts|table|boolean|?)` search options or a boolean indicating if sorting should be used
-{callback} `(function(string[]))` -> nil
+{term} `(string|string[])` The search term.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{callback} `(fun(tags: obsidian.TagLocation[]))`
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.BacklinkMatches}
+
+Fields ~
+{note} obsidian.Note The note instance where the backlinks were found.
+{path} `(string|Path)` The path to the note where the backlinks were found.
+{matches} obsidian.BacklinkMatch[] The backlinks within the note.
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.BacklinkMatch}
+
+Fields ~
+{line} `(integer)` The line number (1-indexed) where the backlink was found.
+{text} `(string)` The text of the line where the backlink was found.
+
+------------------------------------------------------------------------------
+                                              *obsidian.Client.find_backlinks()*
+           `Client.find_backlinks`({self}, {note}, {opts}, {timeout})
+Find all backlinks to a note.
+
+Parameters ~
+{note} obsidian.Note The note to find backlinks for.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{timeout} `(integer|?)` Timeout in milliseconds.
+
+Return ~
+obsidian.BacklinkMatches[]
+
+------------------------------------------------------------------------------
+                                        *obsidian.Client.find_backlinks_async()*
+       `Client.find_backlinks_async`({self}, {note}, {opts}, {callback})
+An async version of 'find_backlinks()'.
+
+Parameters ~
+{note} obsidian.Note The note to find backlinks for.
+{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
+{callback} `(fun(backlinks: obsidian.BacklinkMatches[]))`
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Client.list_tags()*
+                 `Client.list_tags`({self}, {term}, {timeout})
+Gather a list of all tags in the vault. If 'term' is provided, only tags that partially match the search
+term will be included.
+
+Parameters ~
+{term} `(string|?)` An optional search term to match tags
+{timeout} `(integer|?)` Timeout in milliseconds
+
+Return ~
+`(string[])`
+
+------------------------------------------------------------------------------
+                                             *obsidian.Client.list_tags_async()*
+              `Client.list_tags_async`({self}, {callback}, {term})
+An async version of 'list_tags()'.
+
+Parameters ~
+{callback} `(fun(tags: string[]))`
+{term} `(string|?)`
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.apply_async()*
@@ -256,8 +406,8 @@ Parameters ~
 Apply a function over all notes in the current vault.
 
 Parameters ~
-{on_note} `(function)` (obsidian.Note,) -> nil
-{on_done} `(function)` () -> nil
+{on_note} `(fun(note: obsidian.Note))`
+{on_done} `(fun()|?)`
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 ------------------------------------------------------------------------------
@@ -266,8 +416,8 @@ Parameters ~
 Like apply, but the callback takes a path instead of a note instance.
 
 Parameters ~
-{on_path} `(function)` (string,) -> nil
-{on_done} `(function)` () -> nil
+{on_path} `(fun(path: string))`
+{on_done} `(fun()|?)`
 {timeout} `(integer|?)` Timeout in milliseconds.
 
 ------------------------------------------------------------------------------
@@ -363,6 +513,29 @@ Parameters ~
 {bufnr} `(integer|?)`
 
 ------------------------------------------------------------------------------
+                                                 *obsidian.Client.format_link()*
+                  `Client.format_link`({self}, {note}, {opts})
+Create a formatted markdown / wiki link for a note.
+
+Parameters ~
+{note} `(obsidian.Note|string)` The note/path to link to.
+{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|? }|? Options.
+
+Return ~
+`(string)`
+
+------------------------------------------------------------------------------
+                                                      *obsidian.Client.picker()*
+                     `Client.picker`({self}, {picker_name})
+Get the Picker.
+
+Parameters ~
+{picker_name} obsidian.config.Picker|?
+
+Return ~
+obsidian.Picker| `(optional)`
+
+------------------------------------------------------------------------------
                                                                  *obsidian.Note*
                                      `Note`
 A class that represents a note within a vault.
@@ -373,6 +546,7 @@ Class ~
 Fields ~
 {id} `(string|integer)`
 {aliases} `(string[])`
+{title} `(string|?)`
 {tags} `(string[])`
 {path} Path|?
 {metadata} `(table|?)`
@@ -397,8 +571,12 @@ obsidian.Note
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Note.display_info()*
-                          `Note.display_info`({self})
+                      `Note.display_info`({self}, {opts})
 Get markdown display info about the note.
+
+Parameters ~
+{opts} { label: `(string|?)` }|?
+
 Return ~
 `(string)`
 
@@ -455,6 +633,26 @@ Add a tag to the note.
 
 Parameters ~
 {tag} `(string)`
+
+------------------------------------------------------------------------------
+                                                     *obsidian.Note.add_field()*
+                    `Note.add_field`({self}, {key}, {value})
+Add or update a field in the frontmatter.
+
+Parameters ~
+{key} `(string)`
+{value} `(any)`
+
+------------------------------------------------------------------------------
+                                                     *obsidian.Note.get_field()*
+                        `Note.get_field`({self}, {key})
+Get a field in the frontmatter.
+
+Parameters ~
+{key} `(string)`
+
+Return ~
+`(any)` result
 
 ------------------------------------------------------------------------------
                                                      *obsidian.Note.from_file()*
@@ -547,7 +745,7 @@ Return ~
 ------------------------------------------------------------------------------
                                                           *obsidian.Note.save()*
         `Note.save`({self}, {path}, {insert_frontmatter}, {frontmatter})
-Save note to file.
+Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
 
 Parameters ~
 {path} `(string|Path|?)`
@@ -555,54 +753,146 @@ Parameters ~
 {frontmatter} `(table|?)`
 
 ------------------------------------------------------------------------------
+                                                *obsidian.Note.save_to_buffer()*
+             `Note.save_to_buffer`({self}, {bufnr}, {frontmatter})
+Save frontmatter to the given buffer.
+
+Parameters ~
+{bufnr} `(integer|?)`
+{frontmatter} `(table|?)`
+
+Return ~
+`(boolean)` updated True if the buffer lines were updated, false otherwise.
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.workspace.WorkspaceSpec}
+
+Fields ~
+{path} `(string|Path|(fun():)` string|Path)
+{name} `(string|?)`
+{strict} `(boolean|?)` If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
+{overrides} `(table|obsidian.config.ClientOpts|?)`
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.workspace.WorkspaceOpts}
+
+Fields ~
+{name} `(string|?)`
+{strict} `(boolean|?)` If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
+{overrides} `(table|obsidian.config.ClientOpts|?)`
+
+------------------------------------------------------------------------------
                                                             *obsidian.Workspace*
                                   `Workspace`
-Each workspace represents a vault and a set of configuration options specific to that vault.
+Each workspace represents a working directory (usually an Obsidian vault) along with
+a set of configuration options specific to the workspace.
+
+Workspaces are a little more general than Obsidian vaults as you can have a workspace
+outside of a vault or as a subdirectory of a vault.
 
 Class ~
 {obsidian.Workspace} : obsidian.ABC
 
 Fields ~
-{name} `(string)`
-{path} `(string)`
+{name} `(string)` An arbitrary name for the workspace.
+{path} `(string)` The normalized path to the workspace.
+{root} `(string)` The normalized path to the vault root of the workspace. This usually matches 'path'.
 {overrides} `(table|obsidian.config.ClientOpts|?)`
+{locked} `(boolean|?)`
+
+------------------------------------------------------------------------------
+                                                    *obsidian.find_vault_root()*
+                         `find_vault_root`({base_dir})
+Find the vault root from a given directory.
+
+This will traverse the directory tree upwards until a '.obsidian/' folder is found to
+indicate the root of a vault, otherwise the given directory is used as-is.
+
+Parameters ~
+{base_dir} `(string|Path)`
+
+Return ~
+`(string|)` `(optional)`
 
 ------------------------------------------------------------------------------
                                                       *obsidian.Workspace.new()*
-                  `Workspace.new`({name}, {path}, {overrides})
-Create a new workspace object. This assumes the workspace already exists on the filesystem.
+                        `Workspace.new`({path}, {opts})
+Create a new 'Workspace' object. This assumes the workspace already exists on the filesystem.
 
 Parameters ~
-{name} `(string)` Workspace name
-{path} `(string|Path)` Workspace path (will be normalized)
-{overrides} `(table|obsidian.config.ClientOpts|?)`
+{path} `(string|Path)` Workspace path.
+{opts} obsidian.workspace.WorkspaceOpts|?
+
+Return ~
+obsidian.Workspace
+
+------------------------------------------------------------------------------
+                                            *obsidian.Workspace.new_from_spec()*
+                       `Workspace.new_from_spec`({spec})
+Initialize a new 'Workspace' object from a workspace spec.
+
+Parameters ~
+{spec} obsidian.workspace.WorkspaceSpec
 
 Return ~
 obsidian.Workspace
 
 ------------------------------------------------------------------------------
                                              *obsidian.Workspace.new_from_cwd()*
-                           `Workspace.new_from_cwd`()
-Return ~
-obsidian.Workspace
+                        `Workspace.new_from_cwd`({opts})
+Initialize a 'Workspace' object from the current working directory.
 
-------------------------------------------------------------------------------
-                                             *obsidian.Workspace.new_from_dir()*
-                        `Workspace.new_from_dir`({dir})
 Parameters ~
-{dir} `(string|Path)`
+{opts} obsidian.workspace.WorkspaceOpts|?
 
 Return ~
 obsidian.Workspace
 
 ------------------------------------------------------------------------------
-                                   *obsidian.Workspace.get_workspace_from_cwd()*
-                `Workspace.get_workspace_from_cwd`({workspaces})
+                                             *obsidian.Workspace.new_from_buf()*
+                   `Workspace.new_from_buf`({bufnr}, {opts})
+Initialize a 'Workspace' object from the parent directory of the current buffer.
+
+Parameters ~
+{bufnr} `(integer|?)`
+{opts} obsidian.workspace.WorkspaceOpts|?
+
+Return ~
+obsidian.Workspace
+
+------------------------------------------------------------------------------
+                                                     *obsidian.Workspace.lock()*
+                            `Workspace.lock`({self})
+Lock the workspace.
+
+------------------------------------------------------------------------------
+                                                  *obsidian.Workspace._unlock()*
+                          `Workspace._unlock`({self})
+Unlock the workspace.
+
+------------------------------------------------------------------------------
+                                    *obsidian.Workspace.get_workspace_for_dir()*
+           `Workspace.get_workspace_for_dir`({cur_dir}, {workspaces})
+Get the workspace corresponding to the directory (or a parent of), if there
+is one.
+
+Parameters ~
+{cur_dir} `(string|Path)`
+{workspaces} obsidian.workspace.WorkspaceSpec[]
+
+Return ~
+obsidian.Workspace| `(optional)`
+
+------------------------------------------------------------------------------
+                                    *obsidian.Workspace.get_workspace_for_cwd()*
+                `Workspace.get_workspace_for_cwd`({workspaces})
 Get the workspace corresponding to the current working directory (or a parent of), if there
 is one.
 
 Parameters ~
-{workspaces} obsidian.Workspace[]
+{workspaces} obsidian.workspace.WorkspaceSpec[]
 
 Return ~
 obsidian.Workspace| `(optional)`
@@ -613,7 +903,7 @@ obsidian.Workspace| `(optional)`
 Returns the default workspace.
 
 Parameters ~
-{workspaces} `(table<obsidian.Workspace>)`
+{workspaces} obsidian.workspace.WorkspaceSpec[]
 
 Return ~
 `(obsidian.Workspace|nil)`
@@ -627,6 +917,6 @@ Parameters ~
 {opts} obsidian.config.ClientOpts
 
 Return ~
-obsidian.Workspace
+obsidian.Workspace| `(optional)`
 
  vim:tw=78:ts=8:noet:ft=help:norl:

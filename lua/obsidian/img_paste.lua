@@ -28,7 +28,8 @@ local function get_clip_check_command()
   return check_cmd
 end
 
----Check if clipboard contains image data.
+--- Check if clipboard contains image data.
+---
 ---@return boolean
 local function clipboard_is_img()
   local content = {}
@@ -49,8 +50,9 @@ local function clipboard_is_img()
   end
 end
 
----Save image from clipboard to `path`.
+--- Save image from clipboard to `path`.
 ---@param path string
+---
 ---@return boolean|integer|? result
 local function save_clipboard_image(path)
   local this_os = util.get_os()
@@ -71,11 +73,8 @@ local function save_clipboard_image(path)
       return result
     end
   elseif this_os == util.OSType.Windows or this_os == util.OSType.Wsl then
-    local cmd = 'powershell.exe "'
-      .. string.format(
-        "$content = Get-Clipboard -Format Image;$content.Save('%s', 'png')",
-        string.gsub(path, "/", "\\")
-      )
+    local cmd = 'powershell.exe -c "'
+      .. string.format("(get-clipboard -format image).save('%s', 'png')", string.gsub(path, "/", "\\"))
       .. '"'
     return os.execute(cmd)
   elseif this_os == util.OSType.Darwin then
@@ -87,15 +86,17 @@ end
 
 ---@param fname string|?
 ---@param default_dir Path|string
+---@param default_name string|?
+---
 ---@return Path|? image_path the absolute path to the image file
-M.paste_img = function(fname, default_dir)
+M.paste_img = function(fname, default_dir, default_name)
   if not clipboard_is_img() then
     log.err "There is no image data in the clipboard"
     return
   else
     -- Get filename to save to.
     if fname == "" then
-      fname = vim.fn.input { prompt = "Enter file name: " }
+      fname = vim.fn.input { prompt = "Enter file name: ", default = default_name }
     end
 
     if fname == "" then
@@ -116,7 +117,7 @@ M.paste_img = function(fname, default_dir)
     else
       path = Path:new(default_dir) / fname
     end
-    path = Path:new(path:absolute())
+    path = Path:new(util.resolve_path(path))
 
     -- Get confirmation from user.
     local confirmation = string.lower(vim.fn.input {
@@ -128,7 +129,7 @@ M.paste_img = function(fname, default_dir)
     end
 
     -- Ensure parent directory exists.
-    path:parent():mkdir { exists_ok = true, parents = true }
+    util.parent_directory(path):mkdir { exists_ok = true, parents = true }
 
     -- Paste image.
     local result = save_clipboard_image(tostring(path))

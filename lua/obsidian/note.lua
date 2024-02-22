@@ -18,6 +18,7 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 ---
 ---@field id string|integer
 ---@field aliases string[]
+---@field title string|?
 ---@field tags string[]
 ---@field path Path|?
 ---@field metadata table|?
@@ -52,13 +53,23 @@ Note.new = function(id, aliases, tags, path)
 end
 
 --- Get markdown display info about the note.
+---
+---@param opts { label: string|? }|?
+---
 ---@return string
-Note.display_info = function(self)
+Note.display_info = function(self, opts)
+  opts = opts and opts or {}
+
   ---@type string[]
   local info = {}
 
+  if opts.label ~= nil and string.len(opts.label) > 0 then
+    info[#info + 1] = ("%s"):format(opts.label)
+    info[#info + 1] = "--------"
+  end
+
   if self.path ~= nil then
-    info[#info + 1] = ("**path:** %s"):format(self.path)
+    info[#info + 1] = ("**path:** `%s`"):format(self.path)
   end
 
   if #self.aliases > 0 then
@@ -66,7 +77,7 @@ Note.display_info = function(self)
   end
 
   if #self.tags > 0 then
-    info[#info + 1] = ("**tags:** '%s'"):format(table.concat(self.tags, "', '"))
+    info[#info + 1] = ("**tags:** `#%s`"):format(table.concat(self.tags, "`, `#"))
   end
 
   return table.concat(info, "\n")
@@ -132,6 +143,39 @@ Note.add_tag = function(self, tag)
   end
 end
 
+--- Add or update a field in the frontmatter.
+---
+---@param key string
+---@param value any
+Note.add_field = function(self, key, value)
+  if key == "id" or key == "aliases" or key == "tags" then
+    error "Updating field '%s' this way is not allowed. Please update the corresponding attribute directly instead"
+  end
+
+  if not self.metadata then
+    self.metadata = {}
+  end
+
+  self.metadata[key] = value
+end
+
+--- Get a field in the frontmatter.
+---
+---@param key string
+---
+---@return any result
+Note.get_field = function(self, key)
+  if key == "id" or key == "aliases" or key == "tags" then
+    error "Getting field '%s' this way is not allowed. Please use the corresponding attribute directly instead"
+  end
+
+  if not self.metadata then
+    return nil
+  end
+
+  return self.metadata[key]
+end
+
 --- Initialize a note from a file.
 ---
 ---@param path string|Path
@@ -143,7 +187,7 @@ Note.from_file = function(path, root)
     error "note path cannot be nil"
   end
   local n
-  with(open(vim.fs.normalize(tostring(path))), function(reader)
+  with(open(util.resolve_path(path)), function(reader)
     n = Note.from_lines(function()
       return reader:lines()
     end, path, root)
@@ -162,7 +206,7 @@ Note.from_file_async = function(path, root)
   if path == nil then
     error "note path cannot be nil"
   end
-  local f = File.open(vim.fs.normalize(tostring(path)))
+  local f = File.open(util.resolve_path(path))
   local ok, res = pcall(Note.from_lines, function()
     return f:lines(false)
   end, path, root)
@@ -270,7 +314,7 @@ Note.from_lines = function(lines, path, root)
   if #frontmatter_lines > 0 then
     local frontmatter = table.concat(frontmatter_lines, "\n")
     local ok, data = pcall(yaml.loads, frontmatter)
-    if type(data) == "string" then
+    if type(data) ~= "table" then
       data = {}
     end
     if ok then
@@ -332,11 +376,6 @@ Note.from_lines = function(lines, path, root)
     end
   end
 
-  -- Use title as an alias.
-  if title ~= nil and not util.tbl_contains(aliases, title) then
-    table.insert(aliases, title)
-  end
-
   -- The ID should match the filename with or without the extension.
   local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
   local relative_path_no_ext = relative_path
@@ -357,6 +396,7 @@ Note.from_lines = function(lines, path, root)
   assert(id)
 
   local n = Note.new(id, aliases, tags, path)
+  n.title = title
   n.metadata = metadata
   n.has_frontmatter = has_frontmatter
   n.frontmatter_end_line = frontmatter_end_line
@@ -380,7 +420,12 @@ end
 ---
 ---@return string|?
 Note._parse_header = function(line)
-  return line:match "^#+ (.+)$"
+  local header = line:match "^#+ (.+)$"
+  if header then
+    return util.strip_whitespace(header)
+  else
+    return nil
+  end
 end
 
 --- Get the frontmatter table to save.
@@ -447,7 +492,7 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
   end
 end
 
---- Save note to file.
+--- Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
 ---
 ---@param path string|Path|?
 ---@param insert_frontmatter boolean|?
@@ -467,7 +512,8 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   if self_f ~= nil then
     local contents = self_f:read "*a"
     for idx, line in ipairs(vim.split(contents, "\n")) do
-      table.insert(lines, line .. "\n")
+      lines[#lines + 1] = line .. "\n"
+
       if idx == 1 then
         if Note._is_frontmatter_boundary(line) then
           has_frontmatter = true
@@ -480,6 +526,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
         end
       end
     end
+
     self_f:close()
   elseif #self.aliases > 0 then
     -- Add a header.
@@ -498,8 +545,9 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   end
 
   --Write new lines.
-  local save_path = vim.fs.normalize(tostring(path and path or self.path))
+  local save_path = util.resolve_path(assert(path and path or self.path))
   assert(save_path ~= nil)
+  util.parent_directory(save_path):mkdir { parents = true, exists_ok = true }
   local save_f = io.open(save_path, "w")
   if save_f == nil then
     error(string.format("failed to write file at " .. save_path))
@@ -510,6 +558,36 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   save_f:close()
 
   return lines
+end
+
+--- Save frontmatter to the given buffer.
+---
+---@param bufnr integer|?
+---@param frontmatter table|?
+---
+---@return boolean updated True if the buffer lines were updated, false otherwise.
+Note.save_to_buffer = function(self, bufnr, frontmatter)
+  bufnr = bufnr and bufnr or 0
+
+  local cur_buf_note = Note.from_buffer(bufnr)
+  local new_lines = self:frontmatter_lines(nil, frontmatter)
+  local cur_lines
+  if cur_buf_note.frontmatter_end_line ~= nil then
+    cur_lines = vim.api.nvim_buf_get_lines(bufnr, 0, cur_buf_note.frontmatter_end_line, false)
+  end
+
+  if not vim.deep_equal(cur_lines, new_lines) then
+    vim.api.nvim_buf_set_lines(
+      bufnr,
+      0,
+      cur_buf_note.frontmatter_end_line and cur_buf_note.frontmatter_end_line or 0,
+      false,
+      new_lines
+    )
+    return true
+  else
+    return false
+  end
 end
 
 return Note
