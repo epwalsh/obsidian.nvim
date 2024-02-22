@@ -23,7 +23,7 @@ body:
       error("Oh no!")
       ```
 
-      Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in a ```` ```triple quotes code block``` ````.
+      Please also paste or describe the results you observe instead of the expected results. If you observe an error (check `:messages` and/or `:Noice`), please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in a ```` ```triple quotes code block``` ````.
     placeholder: |
       A clear and concise description of what the bug is.
   validations:
