@@ -24,7 +24,6 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
   - [Notes on configuration](#notes-on-configuration)
   - [Using templates](#using-templates)
   - [Usage outside of a workspace or vault](#usage-outside-of-a-workspace-or-vault)
-- 🐞 [Known issues](#known-issues)
 - ➕ [Contributing](#contributing)
 
 ## Features
@@ -704,17 +703,6 @@ With this configuration, anytime you enter a markdown buffer outside of "~/vault
 
 Please note that in order to avoid unexpected behavior (like a new directory being created for `notes_subdir`) it's important to carefully set the workspace `overrides` options.
 And keep in mind that to reset a configuration option to `nil` you'll have to use `vim.NIL` there instead of the builtin Lua `nil` due to the way Lua tables work.
-
-## Known Issues
-
-### Configuring vault directory behind a link
-
-If you are having issues with commands like `ObsidianOpen`, ensure that your vault is configured to use an absolute path rather than a link. If you must use a link in your configuration, make sure that the name of the vault is present in the file path of the link. For example:
-
-```
-Vault: ~/path/to/vault/parent/obsidian/
-Link: ~/obsidian OR ~/parent
-```
 
 ## Contributing
 
