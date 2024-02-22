@@ -23,7 +23,11 @@ return function(client)
   end
 
   log.lazy_info "Config:"
-  log.lazy_info("  notes_subdir: '%s'", client.opts.notes_subdir)
+  if client.opts.notes_subdir then
+    log.lazy_info("  notes_subdir: '%s'", client.opts.notes_subdir)
+  else
+    log.lazy_info "  notes_subdir: nil"
+  end
 
   log.flush()
 end
