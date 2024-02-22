@@ -434,6 +434,25 @@ util.parent_directories = function(path)
   return parents
 end
 
+--- Check if `parent` is a parent directory of `path`.
+---
+---@param dir string|Path Directory path.
+---@param path string|Path File path.
+---
+---@return boolean
+util.is_parent_of = function(dir, path)
+  dir = util.resolve_path(dir)
+  local parents = util.parent_directories(util.resolve_path(path))
+
+  for _, d in ipairs(parents) do
+    if d == dir then
+      return true
+    end
+  end
+
+  return false
+end
+
 ------------------------------------
 -- Miscellaneous helper functions --
 ------------------------------------

@@ -1287,25 +1287,24 @@ Client.parse_title_id_path = function(self, title, id, dir)
     end
   end
 
+  -- Resolve base directory.
   ---@type Path
   local base_dir
   if parent then
     base_dir = self.dir / parent
+  elseif dir ~= nil then
+    base_dir = Path:new(dir)
   else
-    local new_notes_location = self.opts.new_notes_location
-    if not dir and new_notes_location then
-      if new_notes_location == config.NewNotesLocation.notes_subdir then
-        base_dir = self.dir
-        if self.opts.notes_subdir then
-          base_dir = base_dir / self.opts.notes_subdir
-        end
-      elseif new_notes_location == config.NewNotesLocation.current_dir then
-        base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
-      else
-        error "Bad option value for 'new_notes_location'. Skipping creating new note."
-      end
+    if
+      self.opts.new_notes_location == config.NewNotesLocation.current_dir
+      and util.is_parent_of(self.dir, vim.api.nvim_buf_get_name(0))
+    then
+      base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
     else
-      base_dir = Path:new(dir)
+      base_dir = self.dir
+      if self.opts.notes_subdir then
+        base_dir = base_dir / self.opts.notes_subdir
+      end
     end
   end
 

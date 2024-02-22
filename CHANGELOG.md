@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- If you have `new_notes_location="current_dir"` but you're not inside of a vault, the new note will be created in your vault instead of the current (buffer) directory.
+
 ## [v3.4.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.4.1) - 2024-02-22
 
 ### Fixed
