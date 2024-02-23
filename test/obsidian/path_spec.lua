@@ -85,6 +85,7 @@ end)
 describe("Path.relative_to()", function()
   it("should resolve the relative path", function()
     assert.equals("baz.md", Path:new("/foo/bar/baz.md"):relative_to("/foo/bar/").filename)
+    assert.equals("baz.md", Path:new("/baz.md"):relative_to("/").filename)
   end)
 
   it("should raise an error when the relative path can't be resolved", function()

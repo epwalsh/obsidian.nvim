@@ -217,8 +217,14 @@ Path.relative_to = function(self, other)
   end
 
   other = Path.new(other)
-  if vim.startswith(self.filename, other.filename .. "/") then
-    return Path.new(string.sub(self.filename, string.len(other.filename) + 2))
+
+  local other_fname = other.filename
+  if not vim.endswith(other_fname, "/") then
+    other_fname = other_fname .. "/"
+  end
+
+  if vim.startswith(self.filename, other_fname) then
+    return Path.new(string.sub(self.filename, string.len(other_fname) + 1))
   else
     error(string.format("'%s' is not in the subpath of '%s'", self.filename, other.filename))
   end
