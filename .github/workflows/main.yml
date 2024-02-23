@@ -29,7 +29,13 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: 0.15.1
           args: --check .
-
+  # test_windows:
+  #   name: Test (Windows)
+  #   runs-on: windows-latest
+  #   timeout-minutes: 20
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
   checks:
     name: ${{ matrix.task.name }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -58,6 +64,13 @@ jobs:
             nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
             packages: luarocks ripgrep
             manager: sudo apt-get
+
+          - os: windows-latest
+            nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-win64.zip
+            task:
+              name: Test
+              run: |
+                make test
 
     steps:
       - name: Checkout
