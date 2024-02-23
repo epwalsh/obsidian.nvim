@@ -60,6 +60,13 @@ describe("search.find_tags()", function()
     assert.are_same({ { 10, 17, RefTypes.Tag } }, search.find_tags(s))
   end)
 
+  it("should ignore escaped tags", function()
+    local s = "I have a #meeting at noon \\#not-a-tag"
+    assert.are_same({ { 10, 17, RefTypes.Tag } }, search.find_tags(s))
+    s = [[\#notatag]]
+    assert.are_same({}, search.find_tags(s))
+  end)
+
   it("should ignore anchor links that look like tags", function()
     local s = "[readme](README#installation)"
     assert.are_same({}, search.find_tags(s))

@@ -21,6 +21,7 @@ M.RefTypes = {
   NakedUrl = "NakedUrl",
   FileUrl = "FileUrl",
   Tag = "Tag",
+  Highlight = "Highlight",
 }
 
 ---@enum obsidian.search.Patterns
@@ -41,12 +42,17 @@ M.Patterns = {
   FileUrl = "file:/[/{2}]?.*", -- file:///
 }
 
+---@type table<obsidian.search.RefTypes, { ignore_if_escape_prefix: boolean|? }>
+M.PatternConfig = {
+  [M.RefTypes.Tag] = { ignore_if_escape_prefix = true },
+}
+
 --- Find all matches of a pattern
 ---
 ---@param s string
----@param pattern_names table
+---@param pattern_names obsidian.search.RefTypes[]
 ---
----@return table<integer, integer, string>[]
+---@return { [1]: integer, [2]: integer, [3]: obsidian.search.RefTypes }[]
 M.find_matches = function(s, pattern_names)
   -- First find all inline code blocks so we can skip reference matches inside of those.
   local inline_code_blocks = {}
@@ -57,6 +63,7 @@ M.find_matches = function(s, pattern_names)
   local matches = {}
   for pattern_name in iter(pattern_names) do
     local pattern = M.Patterns[pattern_name]
+    local pattern_cfg = M.PatternConfig[pattern_name]
     local search_start = 1
     while search_start < #s do
       local m_start, m_end = string.find(s, pattern, search_start)
@@ -81,7 +88,17 @@ M.find_matches = function(s, pattern_names)
             end
           end
 
-          if not overlap then
+          -- Check if we should skip to an escape sequence before the pattern.
+          local skip_due_to_escape = false
+          if
+            pattern_cfg ~= nil
+            and pattern_cfg.ignore_if_escape_prefix
+            and string.sub(s, m_start - 1, m_start - 1) == [[\]]
+          then
+            skip_due_to_escape = true
+          end
+
+          if not overlap and not skip_due_to_escape then
             matches[#matches + 1] = { m_start, m_end, pattern_name }
           end
         end
@@ -105,10 +122,10 @@ end
 ---
 ---@param s string
 ---
----@return table<integer, integer, string>[]
+---@return { [1]: integer, [2]: integer, [3]: obsidian.search.RefTypes }[]
 M.find_highlight = function(s)
   local matches = {}
-  for match in iter(M.find_matches(s, { "Highlight" })) do
+  for match in iter(M.find_matches(s, { M.RefTypes.Highlight })) do
     -- Remove highlights that begin/end with whitespace
     local match_start, match_end, _ = unpack(match)
     local text = string.sub(s, match_start + 2, match_end - 2)
@@ -129,7 +146,7 @@ end
 ---@param s string the string to search
 ---@param opts obsidian.search.FindRefsOpts|?
 ---
----@return table<integer, integer, string>[]
+---@return { [1]: integer, [2]: integer, [3]: obsidian.search.RefTypes }[]
 M.find_refs = function(s, opts)
   opts = opts and opts or {}
 
@@ -150,7 +167,7 @@ end
 --- Find all tags in a string.
 ---@param s string the string to search
 ---
----@return table<integer, integer, string>[]
+---@return {[1]: integer, [2]: integer, [3]: obsidian.search.RefTypes}[]
 M.find_tags = function(s)
   local matches = {}
   -- NOTE: we search over all reference types to make sure we're not including anchor links within
@@ -190,7 +207,8 @@ M.find_and_replace_refs = function(s)
   local matches = M.find_refs(s)
   local last_end = 1
   for _, match in pairs(matches) do
-    local m_start, m_end = unpack(match)
+    local m_start, m_end, _ = unpack(match)
+    assert(type(m_start) == "number")
     if last_end < m_start then
       table.insert(pieces, string.sub(s, last_end, m_start - 1))
       table.insert(is_ref, false)
