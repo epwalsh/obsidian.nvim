@@ -102,7 +102,7 @@ Picker._make_display = function(self, entry)
       end
     end
 
-    display = display .. tostring(self.client:vault_relative_path(entry.filename))
+    display = display .. tostring(self.client:vault_relative_path(entry.filename, { strict = true }))
 
     if entry.lnum ~= nil then
       display = display .. ":" .. entry.lnum

@@ -217,9 +217,11 @@ end
 --- Make a path relative to the vault root, if possible.
 ---
 ---@param path string|obsidian.Path
+---@param opts { strict: boolean|? }|?
 ---
 ---@return obsidian.Path|?
-Client.vault_relative_path = function(self, path)
+Client.vault_relative_path = function(self, path, opts)
+  opts = opts or {}
   -- NOTE: we don't try to resolve the `path` here because that would make the path absolute,
   -- which may result in the wrong relative path if the current working directory is not within
   -- the vault.
@@ -228,6 +230,8 @@ Client.vault_relative_path = function(self, path)
   end)
   if ok then
     return relative_path
+  elseif opts.strict then
+    error(string.format("failed to resolve '%s' relative to vault root '%s'", path, self:vault_root()))
   end
 end
 
@@ -271,7 +275,7 @@ Client.should_save_frontmatter = function(self, note)
     return not self.opts.disable_frontmatter
   end
   if type(self.opts.disable_frontmatter) == "function" then
-    return not self.opts.disable_frontmatter(tostring(self:vault_relative_path(note.path)))
+    return not self.opts.disable_frontmatter(tostring(self:vault_relative_path(note.path, { strict = true })))
   end
   return true
 end
@@ -1339,7 +1343,7 @@ Client.new_note = function(self, title, id, dir, aliases)
   end
   note:save(nil, self:should_save_frontmatter(note), frontmatter)
 
-  local rel_path = self:vault_relative_path(note.path)
+  local rel_path = self:vault_relative_path(note.path, { strict = true })
   log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
 
   return note
@@ -1417,7 +1421,7 @@ Client._daily = function(self, datetime)
       note:save(nil, self:should_save_frontmatter(note), frontmatter)
     end
 
-    local rel_path = self:vault_relative_path(note.path)
+    local rel_path = self:vault_relative_path(note.path, { strict = true })
     log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
   end
 
@@ -1473,11 +1477,11 @@ Client.format_link = function(self, note, opts)
   ---@type string, string, string|?
   local rel_path, label, note_id
   if type(note) == "string" then
-    rel_path = tostring(assert(self:vault_relative_path(note)))
+    rel_path = tostring(self:vault_relative_path(note, { strict = true }))
     label = opts.label and opts.label or note
     note_id = opts.id
   else
-    rel_path = tostring(assert(self:vault_relative_path(note.path)))
+    rel_path = tostring(self:vault_relative_path(note.path, { strict = true }))
     label = opts.label and opts.label or note:display_name()
     note_id = tostring(note.id)
   end
