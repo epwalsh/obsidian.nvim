@@ -13,6 +13,7 @@ local module_lookups = {
   itertools = "obsidian.itertools",
   mappings = "obsidian.mappings",
   Note = "obsidian.note",
+  Path = "obsidian.path",
   pickers = "obsidian.pickers",
   search = "obsidian.search",
   templates = "obsidian.templates",
@@ -112,8 +113,6 @@ end
 ---
 ---@return obsidian.Client
 obsidian.setup = function(opts)
-  local Path = require "plenary.path"
-
   opts = obsidian.config.ClientOpts.normalize(opts)
   local client = obsidian.new(opts)
   log.set_level(client.opts.log_level)
@@ -146,7 +145,7 @@ obsidian.setup = function(opts)
       -- Set the current directory of the buffer.
       local buf_dir = vim.fs.dirname(ev.match)
       if buf_dir then
-        client.buf_dir = Path:new(buf_dir)
+        client.buf_dir = obsidian.Path.new(buf_dir)
       end
 
       -- Check if we're in *any* workspace.

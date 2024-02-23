@@ -1,7 +1,8 @@
-local Path = require "plenary.path"
 local Deque = require("plenary.async.structs").Deque
-local abc = require "obsidian.abc"
 local scan = require "plenary.scandir"
+
+local Path = require "obsidian.path"
+local abc = require "obsidian.abc"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 local run_job_async = require("obsidian.async").run_job_async
@@ -297,7 +298,7 @@ SearchOpts.to_ripgrep_opts = function(self)
   return opts
 end
 
----@param dir string|Path
+---@param dir string|obsidian.Path
 ---@param term string|string[]
 ---@param opts obsidian.search.SearchOpts|?
 ---
@@ -316,7 +317,7 @@ M.build_search_cmd = function(dir, term, opts)
     end
   end
 
-  local path = util.resolve_path(dir)
+  local path = tostring(Path.new(dir):resolve { strict = true })
   if opts.escape_path then
     path = assert(vim.fn.fnameescape(path))
   end
@@ -405,7 +406,7 @@ end
 --- Search markdown files in a directory for a given term. Return an iterator
 --- over `MatchData`.
 ---
----@param dir string|Path
+---@param dir string|obsidian.Path
 ---@param term string
 ---@param opts obsidian.search.SearchOpts|?
 ---
@@ -438,7 +439,7 @@ end
 
 --- An async version of `.search()`. Each match is passed to the `on_match` callback.
 ---
----@param dir string|Path
+---@param dir string|obsidian.Path
 ---@param term string|string[]
 ---@param opts obsidian.search.SearchOpts|?
 ---@param on_match fun(match: MatchData)
@@ -461,7 +462,7 @@ end
 --- Find markdown files in a directory matching a given term. Return an iterator
 --- over file names.
 ---
----@param dir string|Path
+---@param dir string|obsidian.Path
 ---@param term string
 ---@param opts obsidian.search.SearchOpts|?
 ---
@@ -494,14 +495,14 @@ end
 
 --- An async version of `.find()`. Each matching path is passed to the `on_match` callback.
 ---
----@param dir string|Path
+---@param dir string|obsidian.Path
 ---@param term string
 ---@param opts obsidian.search.SearchOpts|?
 ---@param on_match fun(path: string)
 ---@param on_exit fun(exit_code: integer)|?
 M.find_async = function(dir, term, opts, on_match, on_exit)
-  local norm_dir = util.resolve_path(dir)
-  local cmd = M.build_find_cmd(norm_dir, term, opts)
+  local norm_dir = Path.new(dir):resolve { strict = true }
+  local cmd = M.build_find_cmd(tostring(norm_dir), term, opts)
   run_job_async(cmd[1], { unpack(cmd, 2) }, function(line)
     on_match(line)
   end, function(code)
@@ -513,19 +514,19 @@ end
 
 --- Find all notes with the given file_name recursively in a directory.
 ---
----@param dir string|Path
+---@param dir string|obsidian.Path
 ---@param note_file_name string
----@param callback fun(paths: Path[])
+---@param callback fun(paths: obsidian.Path[])
 M.find_notes_async = function(dir, note_file_name, callback)
   if not vim.endswith(note_file_name, ".md") then
     note_file_name = note_file_name .. ".md"
   end
 
   local notes = {}
-  local root_dir = util.resolve_path(dir)
+  local root_dir = Path.new(dir):resolve { strict = true }
 
   local visit_dir = function(entry)
-    ---@type Path
+    ---@type obsidian.Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     local note_path = Path:new(entry) / note_file_name
     if note_path:is_file() then

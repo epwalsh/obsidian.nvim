@@ -1,4 +1,4 @@
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local Note = require "obsidian.note"
 local AsyncExecutor = require("obsidian.async").AsyncExecutor
 local File = require("obsidian.async").File
@@ -43,7 +43,7 @@ return function(client, data)
   if cur_note_id == nil then
     is_current_buf = true
     cur_note_bufnr = assert(vim.fn.bufnr())
-    cur_note_path = util.resolve_path(vim.api.nvim_buf_get_name(cur_note_bufnr))
+    cur_note_path = vim.api.nvim_buf_get_name(cur_note_bufnr)
     cur_note = Note.from_file(cur_note_path)
     cur_note_id = tostring(cur_note.id)
     dirname = vim.fs.dirname(cur_note_path)
@@ -55,7 +55,7 @@ return function(client, data)
       return
     end
     cur_note_id = tostring(cur_note.id)
-    cur_note_path = util.resolve_path(cur_note.path)
+    cur_note_path = tostring(cur_note.path)
     dirname = vim.fs.dirname(cur_note_path)
     for bufnr, bufpath in util.get_named_buffers() do
       if bufpath == cur_note_path then
@@ -170,7 +170,7 @@ return function(client, data)
     -- When the note to rename is not the current buffer we need to update its frontmatter
     -- to account for the rename.
     cur_note.id = new_note_id
-    cur_note.path = Path:new(new_note_path)
+    cur_note.path = Path.new(new_note_path)
     if not dry_run then
       cur_note:save()
     else
@@ -178,8 +178,8 @@ return function(client, data)
     end
   end
 
-  local cur_note_rel_path = assert(client:vault_relative_path(cur_note_path))
-  local new_note_rel_path = assert(client:vault_relative_path(new_note_path))
+  local cur_note_rel_path = tostring(assert(client:vault_relative_path(cur_note_path)))
+  local new_note_rel_path = tostring(assert(client:vault_relative_path(new_note_path)))
 
   -- Search notes on disk for any references to `cur_note_id`.
   -- We look for the following forms of references:
@@ -214,13 +214,13 @@ return function(client, data)
   local replacement_count = 0
   local all_tasks_submitted = false
 
-  ---@param path string
+  ---@param path string|obsidian.Path
   ---@return integer
   local function replace_refs(path)
     --- Read lines, replacing refs as we go.
     local count = 0
     local lines = {}
-    local f = File.open(path, "r")
+    local f = File.open(tostring(path), "r")
     for line_num, line in enumerate(f:lines(true)) do
       for ref, replacement in zip(reference_forms, replace_with) do
         local n
@@ -228,7 +228,7 @@ return function(client, data)
         if dry_run and n > 0 then
           log.info(
             "Dry run: '"
-              .. path
+              .. tostring(path)
               .. "':"
               .. line_num
               .. " Replacing "
@@ -248,7 +248,7 @@ return function(client, data)
 
     --- Write the new lines back.
     if not dry_run and count > 0 then
-      f = File.open(path, "w")
+      f = File.open(tostring(path), "w")
       f:write_lines(lines)
       f:close()
     end
@@ -257,7 +257,7 @@ return function(client, data)
   end
 
   local function on_search_match(match)
-    local path = util.resolve_path(match.path.text)
+    local path = Path.new(match.path.text):resolve { strict = true }
     file_count = file_count + 1
     executor:submit(replace_refs, function(count)
       replacement_count = replacement_count + count

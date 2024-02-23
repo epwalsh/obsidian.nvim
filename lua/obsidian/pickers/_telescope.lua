@@ -1,12 +1,13 @@
 local telescope = require "telescope.builtin"
-local Path = require "plenary.path"
+
+local Path = require "obsidian.path"
 local abc = require "obsidian.abc"
 local Picker = require "obsidian.pickers.picker"
 
 ---@class obsidian.pickers.TelescopePicker : obsidian.Picker
 local TelescopePicker = abc.new_class({}, Picker)
 
----@param opts { prompt_title: string|?, no_default_mappings: boolean|?, dir: string|Path|? }
+---@param opts { prompt_title: string|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }
 ---
 ---@return string
 TelescopePicker.prompt_title = function(self, opts)
@@ -62,7 +63,7 @@ TelescopePicker.default_mappings = function(self, map, initial_query)
   return true
 end
 
----@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|Path|? }|?
+---@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }|?
 TelescopePicker.find_files = function(self, opts)
   opts = opts and opts or {}
   telescope.find_files {
@@ -87,7 +88,7 @@ TelescopePicker.find_files = function(self, opts)
   }
 end
 
----@param opts { prompt_title: string|?, dir: string|Path|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|?
+---@param opts { prompt_title: string|?, dir: string|obsidian.Path|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|?
 TelescopePicker.grep = function(self, opts)
   opts = opts and opts or {}
 

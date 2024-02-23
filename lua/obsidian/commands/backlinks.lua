@@ -37,7 +37,7 @@ return function(client, _)
       for _, match in ipairs(matches.matches) do
         entries[#entries + 1] = {
           value = { path = matches.path, line = match.line },
-          filename = matches.path,
+          filename = tostring(matches.path),
           lnum = match.line,
         }
       end

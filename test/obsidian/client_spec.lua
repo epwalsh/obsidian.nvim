@@ -1,4 +1,4 @@
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local Note = require "obsidian.note"
 local obsidian = require "obsidian"
 

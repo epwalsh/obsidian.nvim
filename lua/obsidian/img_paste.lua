@@ -1,4 +1,4 @@
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local util = require "obsidian.util"
 local log = require "obsidian.log"
 local run_job = require("obsidian.async").run_job
@@ -85,10 +85,10 @@ local function save_clipboard_image(path)
 end
 
 ---@param fname string|?
----@param default_dir Path|string
+---@param default_dir obsidian.Path|string
 ---@param default_name string|?
 ---
----@return Path|? image_path the absolute path to the image file
+---@return obsidian.Path|? image_path the absolute path to the image file
 M.paste_img = function(fname, default_dir, default_name)
   if not clipboard_is_img() then
     log.err "There is no image data in the clipboard"
@@ -110,14 +110,14 @@ M.paste_img = function(fname, default_dir, default_name)
     end
 
     -- Resolve path to paste image to.
+    ---@type obsidian.Path
     local path
     if vim.fs.basename(fname) ~= fname then
       -- fname is a full path
-      path = Path:new(fname)
+      path = Path.new(fname):resolve()
     else
-      path = Path:new(default_dir) / fname
+      path = (Path.new(default_dir) / fname):resolve()
     end
-    path = Path:new(util.resolve_path(path))
 
     -- Get confirmation from user.
     local confirmation = string.lower(vim.fn.input {
@@ -129,7 +129,7 @@ M.paste_img = function(fname, default_dir, default_name)
     end
 
     -- Ensure parent directory exists.
-    util.parent_directory(path):mkdir { exists_ok = true, parents = true }
+    path:mkdir { exist_ok = true, parents = true }
 
     -- Paste image.
     local result = save_clipboard_image(tostring(path))

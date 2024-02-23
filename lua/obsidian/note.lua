@@ -1,4 +1,4 @@
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local abc = require "obsidian.abc"
 local with = require("plenary.context_manager").with
 local open = require("plenary.context_manager").open
@@ -20,7 +20,7 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 ---@field aliases string[]
 ---@field title string|?
 ---@field tags string[]
----@field path Path|?
+---@field path obsidian.Path|?
 ---@field metadata table|?
 ---@field has_frontmatter boolean|?
 ---@field frontmatter_end_line integer|?
@@ -37,7 +37,7 @@ local Note = abc.new_class {
 ---@param id string|number
 ---@param aliases string[]
 ---@param tags string[]
----@param path string|Path|?
+---@param path string|obsidian.Path|?
 ---
 ---@return obsidian.Note
 Note.new = function(id, aliases, tags, path)
@@ -45,7 +45,7 @@ Note.new = function(id, aliases, tags, path)
   self.id = id
   self.aliases = aliases and aliases or {}
   self.tags = tags and tags or {}
-  self.path = path and Path:new(path) or nil
+  self.path = path and Path.new(path) or nil
   self.metadata = nil
   self.has_frontmatter = nil
   self.frontmatter_end_line = nil
@@ -178,8 +178,8 @@ end
 
 --- Initialize a note from a file.
 ---
----@param path string|Path
----@param root string|Path|?
+---@param path string|obsidian.Path
+---@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
 Note.from_file = function(path, root)
@@ -187,7 +187,7 @@ Note.from_file = function(path, root)
     error "note path cannot be nil"
   end
   local n
-  with(open(util.resolve_path(path)), function(reader)
+  with(open(Path.new(path):resolve { strict = true }), function(reader)
     n = Note.from_lines(function()
       return reader:lines()
     end, path, root)
@@ -197,8 +197,8 @@ end
 
 --- An async version of `.from_file()`.
 ---
----@param path string|Path
----@param root string|Path|?
+---@param path string|obsidian.Path
+---@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
 Note.from_file_async = function(path, root)
@@ -206,7 +206,7 @@ Note.from_file_async = function(path, root)
   if path == nil then
     error "note path cannot be nil"
   end
-  local f = File.open(util.resolve_path(path))
+  local f = File.open(tostring(Path.new(path):resolve { strict = true }))
   local ok, res = pcall(Note.from_lines, function()
     return f:lines(false)
   end, path, root)
@@ -221,7 +221,7 @@ end
 --- Initialize a note from a buffer.
 ---
 ---@param bufnr integer|?
----@param root string|Path|?
+---@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
 Note.from_buffer = function(bufnr, root)
@@ -258,12 +258,13 @@ end
 --- Initialize a note from an iterator of lines.
 ---
 ---@param lines function
----@param path string|Path
----@param root string|Path|?
+---@param path string|obsidian.Path
+---@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
 Note.from_lines = function(lines, path, root)
-  local cwd = tostring(root and root or "./")
+  path = Path.new(path):resolve()
+  local cwd = Path.new(root and root or "./"):resolve { strict = true }
 
   local id = nil
   local title = nil
@@ -364,7 +365,7 @@ Note.from_lines = function(lines, path, root)
           elseif type(v) == "string" then
             tags = vim.split(v, " ")
           else
-            log.warn("Invalid 'tags' in frontmatter for " .. tostring(path))
+            log.warn("Invalid 'tags' in frontmatter for '%s'", path)
           end
         else
           if metadata == nil then
@@ -377,7 +378,7 @@ Note.from_lines = function(lines, path, root)
   end
 
   -- The ID should match the filename with or without the extension.
-  local relative_path = tostring(Path:new(tostring(path)):make_relative(cwd))
+  local relative_path = tostring(path:relative_to(cwd))
   local relative_path_no_ext = relative_path
   if vim.endswith(relative_path_no_ext, ".md") then
     -- NOTE: alternatively we could use `vim.fn.fnamemodify`, but that will give us luv errors
@@ -494,7 +495,7 @@ end
 
 --- Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
 ---
----@param path string|Path|?
+---@param path string|obsidian.Path|?
 ---@param insert_frontmatter boolean|?
 ---@param frontmatter table|?
 Note.save = function(self, path, insert_frontmatter, frontmatter)
@@ -545,10 +546,9 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   end
 
   --Write new lines.
-  local save_path = util.resolve_path(assert(path and path or self.path))
-  assert(save_path ~= nil)
-  util.parent_directory(save_path):mkdir { parents = true, exists_ok = true }
-  local save_f = io.open(save_path, "w")
+  local save_path = Path.new(assert(path and path or self.path)):resolve()
+  assert(save_path:parent()):mkdir { parents = true, exist_ok = true }
+  local save_f = io.open(tostring(save_path), "w")
   if save_f == nil then
     error(string.format("failed to write file at " .. save_path))
   end
