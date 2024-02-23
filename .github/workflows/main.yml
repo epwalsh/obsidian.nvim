@@ -70,7 +70,7 @@ jobs:
             task:
               name: Test
               run: |
-                make test PLENARY=${{ env.plenary-path }}
+                make test PLENARY=$PLENARY
 
     steps:
       - name: Checkout
@@ -120,6 +120,7 @@ jobs:
         run: |
           export PATH="${PWD}/_neovim/bin:${PATH}"
           export VIM="${PWD}/_neovim/share/nvim/runtime"
+          export PLENARY=${{ env.plenary-path }}
 
           nvim --version
 
