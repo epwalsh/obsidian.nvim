@@ -39,11 +39,11 @@ jobs:
   checks:
     name: ${{ matrix.task.name }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 3
     env:
-      runtime: ~/.local/share/nvim/site/pack/vendor/start
+      runtime: _runtime
       plenary-git: https://github.com/nvim-lua/plenary.nvim
-      plenary-path: ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
+      plenary-path: _runtime/plenary.nvim
     strategy:
       fail-fast: false
       matrix:
@@ -97,10 +97,9 @@ jobs:
           curl -o nvim-win64.zip ${{ matrix.nvim_url }}
           Expand-Archive -F nvim-win64.zip .
           Move-Item -Path nvim-win64 -Destination _neovim
-          ls
-          ls _neovim
 
       - name: Install plugin dependencies
+        shell: bash
         run: |
           # Clone plenary.
           mkdir -p ${{ env.runtime }}
@@ -121,7 +120,10 @@ jobs:
         run: |
           export PATH="${PWD}/_neovim/bin:${PATH}"
           export VIM="${PWD}/_neovim/share/nvim/runtime"
+          export PLENARY=${{ env.plenary-path }}
+
           nvim --version
+
           ${{ matrix.task.run }}
 
   release:
