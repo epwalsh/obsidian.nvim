@@ -80,7 +80,7 @@ jobs:
         if: ${{ matrix.packages }}
         run: ${{ matrix.manager }} install ${{ matrix.packages }}
 
-      - name: Install neovim and dependencies (unix)
+      - name: Install neovim (nix)
         shell: bash
         if: matrix.os != 'windows-latest'
         run: |
@@ -88,23 +88,18 @@ jobs:
           mkdir -p _neovim
           curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
 
-          # Clone plenary.
-          mkdir -p ${{ env.runtime }}
-          git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
-
-      - name: Install neovim and dependencies (windows)
-        shell: bash
+      - name: Install neovim (windows)
+        shell: powershell
         if: matrix.os == 'windows-latest'
         run: |
           # Download neovim.
           # winget install neovim
           curl -o nvim-win64.zip ${{ matrix.nvim_url }}
-          ls -lh
-          tar -xf nvim-win64.zip
-          ls -lh
-          mv nvim-win64 _neovim
-          rm nvim-win64.zip
+          Expand-Archive -F nvim-win64.zip _neovim
+          ls
 
+      - name: Install plugin dependencies
+        run: |
           # Clone plenary.
           mkdir -p ${{ env.runtime }}
           git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
