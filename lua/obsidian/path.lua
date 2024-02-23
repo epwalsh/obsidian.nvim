@@ -99,6 +99,8 @@ end
 --- A Path class that provides a subset of the functionality of the Python pathlib library while
 --- staying true to its API. It improves on a number of bugs in plenary.path.
 ---
+---@toc_entry obsidian.Path
+---
 ---@class obsidian.Path : obsidian.ABC
 ---
 ---@field filename string The underlying filename as a string.
