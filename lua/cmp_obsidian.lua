@@ -27,6 +27,9 @@ source.complete = function(_, request, callback)
         local labels_seen = {}
 
         local aliases = util.tbl_unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
+        if note.title ~= nil and not util.tbl_contains(aliases, note.title) then
+          aliases[#aliases + 1] = note.title
+        end
 
         for alias in iter(aliases) do
           local options = {}
