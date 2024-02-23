@@ -76,7 +76,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - run: date +%F > todays-date
+      - name: Prepare env
+        shell: bash
+        run: |
+          date +%F > todays-date
 
       - name: Restore cache for today's nightly
         uses: actions/cache@v4
@@ -90,20 +93,24 @@ jobs:
         run: ${{ matrix.manager }} install ${{ matrix.packages }}
 
       - name: Install neovim and dependencies
+        shell: bash
         run: |
           mkdir -p ${{ env.runtime }}
           test -d _neovim || {
             mkdir -p _neovim
             curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
           }
+          ls -lh _neovim
           git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
           ln -s $(pwd) ${{ env.runtime }}
+          ls -lh ${{ env.runtime }}
 
       - name: Prepare
         if: ${{ matrix.task.prepare }}
         run: ${{ matrix.task.prepare }}
 
       - name: ${{ matrix.task.name }}
+        shell: bash
         run: |
           export PATH="${PWD}/_neovim/bin:${PATH}"
           export VIM="${PWD}/_neovim/share/nvim/runtime"
