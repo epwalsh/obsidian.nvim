@@ -34,29 +34,26 @@ return function(client, data)
   end
 
   -- Resolve the note to rename.
+  ---@type boolean
   local is_current_buf
+  ---@type integer|?
   local cur_note_bufnr
+  ---@type obsidian.Path
   local cur_note_path
+  ---@type obsidian.Note
   local cur_note
-  local dirname
   local cur_note_id = util.parse_cursor_link()
   if cur_note_id == nil then
     is_current_buf = true
     cur_note_bufnr = assert(vim.fn.bufnr())
-    cur_note_path = vim.api.nvim_buf_get_name(cur_note_bufnr)
+    cur_note_path = Path.buffer(cur_note_bufnr)
     cur_note = Note.from_file(cur_note_path)
     cur_note_id = tostring(cur_note.id)
-    dirname = vim.fs.dirname(cur_note_path)
   else
     is_current_buf = false
-    cur_note = client:resolve_note(cur_note_id)
-    if cur_note == nil then
-      log.err("Could not resolve note '" .. cur_note_id .. "'")
-      return
-    end
+    cur_note = assert(client:resolve_note(cur_note_id), string.format("failed to resolve note '%s'", cur_note_id))
     cur_note_id = tostring(cur_note.id)
-    cur_note_path = tostring(cur_note.path)
-    dirname = vim.fs.dirname(cur_note_path)
+    cur_note_path = cur_note.path
     for bufnr, bufpath in util.get_named_buffers() do
       if bufpath == cur_note_path then
         cur_note_bufnr = bufnr
@@ -64,6 +61,9 @@ return function(client, data)
       end
     end
   end
+
+  assert(cur_note_path)
+  local dirname = assert(cur_note_path:parent(), string.format("failed to resolve parent of '%s'", cur_note_path))
 
   -- Parse new note ID / path from args.
   local parts = vim.split(arg, "/", { plain = true })
@@ -75,12 +75,14 @@ return function(client, data)
     new_note_id = string.sub(new_note_id, 1, -4)
   end
 
+  ---@type obsidian.Path
   local new_note_path
   if #parts > 1 then
     parts[#parts] = nil
-    new_note_path = vim.fs.joinpath(unpack(vim.tbl_flatten { tostring(client.dir), parts, new_note_id .. ".md" }))
+    new_note_path =
+      client.dir.joinpath(unpack(vim.tbl_flatten { tostring(client.dir), parts, new_note_id })):with_suffix ".md"
   else
-    new_note_path = vim.fs.joinpath(dirname, new_note_id .. ".md")
+    new_note_path = (dirname / new_note_id):with_suffix ".md"
   end
 
   if new_note_id == cur_note_id then
@@ -137,13 +139,13 @@ return function(client, data)
     if is_current_buf then
       -- If we're renaming the note of a current buffer, save as the new path.
       if not dry_run then
-        quietly(vim.cmd.saveas, new_note_path)
+        quietly(vim.cmd.saveas, tostring(new_note_path))
         for bufnr, bufname in util.get_named_buffers() do
           if bufname == cur_note_path then
             quietly(vim.cmd.bdelete, bufnr)
           end
         end
-        vim.fn.delete(cur_note_path)
+        vim.fn.delete(tostring(cur_note_path))
       else
         log.info("Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file")
       end
@@ -152,7 +154,7 @@ return function(client, data)
       -- and then make a file-system call to rename the file.
       if not dry_run then
         quietly(vim.cmd.bdelete, cur_note_bufnr)
-        assert(vim.loop.fs_rename(cur_note_path, new_note_path)) ---@diagnostic disable-line: undefined-field
+        cur_note_path:rename(new_note_path)
       else
         log.info("Dry run: removing buffer '" .. cur_note_path .. "' and renaming file to '" .. new_note_path .. "'")
       end
@@ -160,7 +162,7 @@ return function(client, data)
   else
     -- When the note is not loaded into a buffer we just need to rename the file.
     if not dry_run then
-      assert(vim.loop.fs_rename(cur_note_path, new_note_path)) ---@diagnostic disable-line: undefined-field
+      cur_note_path:rename(new_note_path)
     else
       log.info("Dry run: renaming file '" .. cur_note_path .. "' to '" .. new_note_path .. "'")
     end

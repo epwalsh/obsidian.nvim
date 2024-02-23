@@ -5,6 +5,7 @@ local submodules = {
   "lua/obsidian/client.lua",
   "lua/obsidian/note.lua",
   "lua/obsidian/workspace.lua",
+  "lua/obsidian/path.lua",
 }
 
 local visual_text_width = function(text)

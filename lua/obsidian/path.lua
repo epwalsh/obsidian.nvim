@@ -141,7 +141,13 @@ Path.mt = {
   end,
 }
 
---- Create a new path.
+-------------------------------------------------------------------------------
+--- Constructors.
+-------------------------------------------------------------------------------
+
+--- Create a new path from a string.
+---
+---@param ... string|obsidian.Path
 ---
 ---@return obsidian.Path
 Path.new = function(...)
@@ -169,12 +175,54 @@ Path.new = function(...)
   return self
 end
 
----@return string|?
----@private
-Path.fs_realpath = function(self)
-  local path = vim.loop.fs_realpath(vim.fn.resolve(self.filename))
-  ---@cast path string|?
-  return path
+--- Get a temporary path with a unique name.
+---
+---@return obsidian.Path
+Path.temp = function()
+  -- os.tmpname gives us a temporary file, but we really want a temporary directory, so we
+  -- immediately delete that file.
+  local tmpname = os.tmpname()
+  os.remove(tmpname)
+  return Path.new(tmpname)
+end
+
+--- Get a path corresponding to the current working directory as given by `vim.loop.cwd()`.
+---
+---@return obsidian.Path
+Path.cwd = function()
+  return assert(Path.new(vim.loop.cwd()))
+end
+
+--- Get a path corresponding to a buffer.
+---
+---@param bufnr integer|? The buffer number or `0` / `nil` for the current buffer.
+---
+---@return obsidian.Path
+Path.buffer = function(bufnr)
+  return Path.new(vim.api.nvim_buf_get_name(bufnr or 0))
+end
+
+-------------------------------------------------------------------------------
+--- Pure path methods.
+-------------------------------------------------------------------------------
+
+--- Return a new path with the suffix changed.
+---
+---@param suffix string
+---
+---@return obsidian.Path
+Path.with_suffix = function(self, suffix)
+  if not vim.startswith(suffix, ".") and string.len(suffix) > 1 then
+    error(string.format("invalid suffix '%s'", suffix))
+  end
+
+  local new_name = self.stem .. suffix
+  local dirname = self:parent()
+  if dirname then
+    return dirname / new_name
+  else
+    return Path.new(new_name)
+  end
 end
 
 --- Returns true if the path is already in absolute form.
@@ -267,6 +315,18 @@ Path.is_parent_of = function(self, other)
     end
   end
   return false
+end
+
+-------------------------------------------------------------------------------
+--- Concrete path methods.
+-------------------------------------------------------------------------------
+
+---@return string|?
+---@private
+Path.fs_realpath = function(self)
+  local path = vim.loop.fs_realpath(vim.fn.resolve(self.filename))
+  ---@cast path string|?
+  return path
 end
 
 --- Make the path absolute, resolving any symlinks.
@@ -379,6 +439,7 @@ Path.mkdir = function(self, opts)
   self:mkdir { mode = mode }
 end
 
+--- Remove the corresponding directory.
 Path.rmdir = function(self)
   local resolved = self:resolve { strict = false }
 
@@ -392,16 +453,68 @@ Path.rmdir = function(self)
   end
 end
 
-Path.tmpdir = function()
-  -- os.tmpname gives us a temporary file, but we really want a temporary directory, so we
-  -- immediately delete that file.
-  local tmpname = os.tmpname()
-  os.remove(tmpname)
-  return Path.new(tmpname)
+--- Create a file at this given path.
+---
+---@param opts { mode: integer|?, exist_ok: boolean|? }|?
+Path.touch = function(self, opts)
+  opts = opts or {}
+  local mode = opts.mode or 420
+
+  local resolved = self:resolve { strict = false }
+  if resolved:exists() then
+    local new_time = os.time()
+    vim.loop.fs_utime(resolved.filename, new_time, new_time)
+    return
+  end
+
+  local parent = resolved:parent()
+  if parent and not parent:exists() then
+    error("FileNotFoundError: " .. parent.filename)
+  end
+
+  local fd, err_name, err_msg = vim.loop.fs_open(resolved.filename, "w", mode)
+  if not fd then
+    error(err_name .. ": " .. err_msg)
+  end
+  vim.loop.fs_close(fd)
 end
 
-Path.cwd = function()
-  return assert(Path.new(vim.loop.cwd()))
+--- Rename this file or directory to the given target.
+---
+---@param target obsidian.Path|string
+---
+---@return obsidian.Path
+Path.rename = function(self, target)
+  local resolved = self:resolve { strict = false }
+  target = Path.new(target)
+
+  local ok, err_name, err_msg = vim.loop.fs_rename(resolved.filename, target.filename)
+  if not ok then
+    error(err_name .. ": " .. err_msg)
+  end
+
+  return target
+end
+
+--- Remove the file.
+---
+---@param opts { missing_ok: boolean|? }|?
+Path.unlink = function(self, opts)
+  opts = opts or {}
+
+  local resolved = self:resolve { strict = false }
+
+  if not resolved:exists() then
+    if not opts.missing_ok then
+      error("FileNotFoundError: " .. resolved.filename)
+    end
+    return
+  end
+
+  local ok, err_name, err_msg = vim.loop.fs_unlink(resolved.filename)
+  if not ok then
+    error(err_name .. ": " .. err_msg)
+  end
 end
 
 return Path
