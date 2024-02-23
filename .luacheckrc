@@ -6,6 +6,7 @@ self = false
 
 exclude_files = {
   "_neovim/*",
+  "_runtime/*",
 }
 
 -- Glorious list of warnings: https://luacheck.readthedocs.io/en/stable/warnings.html

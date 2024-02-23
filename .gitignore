@@ -6,3 +6,4 @@ tmp.*
 doc/tags
 .luarc.json
 _neovim
+_runtime
