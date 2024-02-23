@@ -498,6 +498,7 @@ end
 ---@param insert_frontmatter boolean|?
 ---@param frontmatter table|?
 Note.save = function(self, path, insert_frontmatter, frontmatter)
+  log.info("Saving note to '%s'", self.path)
   if self.path == nil then
     error "note path cannot be nil"
   end
@@ -547,6 +548,8 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   --Write new lines.
   local save_path = util.resolve_path(assert(path and path or self.path))
   assert(save_path ~= nil)
+  log.info("save_path '%s' resolved to '%s'", save_path, util.resolve_path(self.path))
+  log.info("save_path parent: '%s'", util.parent_directory(save_path))
   util.parent_directory(save_path):mkdir { parents = true, exists_ok = true }
   local save_f = io.open(save_path, "w")
   if save_f == nil then

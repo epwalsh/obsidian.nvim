@@ -1300,11 +1300,13 @@ Client.parse_title_id_path = function(self, title, id, dir)
       and util.is_parent_of(self.dir, vim.api.nvim_buf_get_name(0))
     then
       base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
+      log.info("using current buffer directory of '%s' (from '%s')", base_dir, vim.api.nvim_buf_get_name(0))
     else
       base_dir = self.dir
       if self.opts.notes_subdir then
         base_dir = base_dir / self.opts.notes_subdir
       end
+      log.info("using notes directory of '%s'", base_dir)
     end
   end
 
