@@ -40,10 +40,6 @@ jobs:
     name: ${{ matrix.task.name }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 3
-    env:
-      runtime: _runtime
-      plenary-git: https://github.com/nvim-lua/plenary.nvim
-      plenary-path: _runtime/plenary.nvim
     strategy:
       fail-fast: false
       matrix:
@@ -70,7 +66,7 @@ jobs:
             task:
               name: Test
               run: |
-                make test PLENARY=$PLENARY
+                make test PLENARY=_runtime/plenary.nvim
 
     steps:
       - name: Checkout
@@ -102,14 +98,14 @@ jobs:
         shell: bash
         run: |
           # Clone plenary.
-          mkdir -p ${{ env.runtime }}
-          git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
+          mkdir -p _runtime
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim _runtime/plenary.nvim
 
       - name: Show environment
         shell: bash
         run: |
           ls -lh _neovim
-          ls -lh ${{ env.runtime }}
+          ls -lh _runtime
 
       - name: Prepare
         if: ${{ matrix.task.prepare }}
@@ -120,7 +116,6 @@ jobs:
         run: |
           export PATH="${PWD}/_neovim/bin:${PATH}"
           export VIM="${PWD}/_neovim/share/nvim/runtime"
-          export PLENARY=${{ env.plenary-path }}
 
           nvim --version
 
