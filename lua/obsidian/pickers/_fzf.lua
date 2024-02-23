@@ -55,7 +55,7 @@ FzfPicker.get_actions = function(self, opts)
   if keymap then
     actions[format_keymap(keymap)] = function(selected, fzf_opts)
       local path = entry_to_file(selected[1], fzf_opts).path
-      local note = require("obsidian").Note.from_file(path, self.client.dir)
+      local note = require("obsidian").Note.from_file(path)
       local link = self.client:format_link(note, {})
       vim.api.nvim_put({ link }, "", false, true)
     end

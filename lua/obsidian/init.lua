@@ -203,7 +203,7 @@ obsidian.setup = function(opts)
       end
 
       local bufnr = ev.buf
-      local note = obsidian.Note.from_buffer(bufnr, client.dir)
+      local note = obsidian.Note.from_buffer(bufnr)
       if not client:should_save_frontmatter(note) then
         return
       end

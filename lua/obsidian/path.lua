@@ -8,13 +8,136 @@ local is_path_obj = function(path)
   end
 end
 
+local function coerce(v)
+  if v == vim.NIL then
+    return nil
+  else
+    return v
+  end
+end
+
+---@param path table
+---@param k string
+---@param factory fun(obsidian.Path): any
+local function cached_get(path, k, factory)
+  local cache_key = "__" .. k
+  local v = rawget(path, cache_key)
+  if v == nil then
+    v = factory(path)
+    if v == nil then
+      v = vim.NIL
+    end
+    path[cache_key] = v
+  end
+  return coerce(v)
+end
+
+---@param path obsidian.Path
+---@return string|?
+---@private
+local function get_name(path)
+  local name = vim.fs.basename(path.filename)
+  if not name or string.len(name) == 0 then
+    return
+  else
+    return name
+  end
+end
+
+---@param path obsidian.Path
+---@return string[]
+---@private
+local function get_suffixes(path)
+  ---@type string[]
+  local suffixes = {}
+  local name = path.name
+  while name and string.len(name) > 0 do
+    local s, e, suffix = string.find(name, "(%.[^%.]+)$")
+    if s and e and suffix then
+      name = string.sub(name, 1, s - 1)
+      table.insert(suffixes, suffix)
+    else
+      break
+    end
+  end
+
+  -- reverse the list.
+  ---@type string[]
+  local out = {}
+  for i = #suffixes, 1, -1 do
+    table.insert(out, suffixes[i])
+  end
+  return out
+end
+
+---@param path obsidian.Path
+---@return string|?
+---@private
+local function get_suffix(path)
+  local suffixes = path.suffixes
+  if #suffixes > 0 then
+    return suffixes[#suffixes]
+  else
+    return nil
+  end
+end
+
+---@param path obsidian.Path
+---@return string|?
+---@private
+local function get_stem(path)
+  local name, suffix = path.name, path.suffix
+  if not name then
+    return
+  elseif not suffix then
+    return name
+  else
+    return string.sub(name, 1, string.len(name) - string.len(suffix))
+  end
+end
+
+--- A Path class that provides a subset of the functionality of the Python pathlib library while
+--- staying true to its API. It improves on a number of bugs in plenary.path.
+---
 ---@class obsidian.Path : obsidian.ABC
 ---
----@field filename string
----@field __is_obsidian_path boolean
-local Path = abc.new_class {
+---@field filename string The underlying filename as a string.
+---@field name string|? The final path component, if any.
+---@field suffix string|? The final extension of the path, if any.
+---@field suffixes string[] A list of all of the path's extensions.
+---@field stem string|? The final path component, without its suffix.
+local Path = abc.new_class()
+
+Path.mt = {
   __tostring = function(self)
     return self.filename
+  end,
+  __eq = function(a, b)
+    return a.filename == b.filename
+  end,
+  __div = function(self, other)
+    return self:joinpath(other)
+  end,
+  __index = function(self, k)
+    local raw = rawget(Path, k)
+    if raw then
+      return raw
+    end
+
+    local factory
+    if k == "name" then
+      factory = get_name
+    elseif k == "suffix" then
+      factory = get_suffix
+    elseif k == "suffixes" then
+      factory = get_suffixes
+    elseif k == "stem" then
+      factory = get_stem
+    end
+
+    if factory then
+      return cached_get(self, k, factory)
+    end
   end,
 }
 
@@ -46,42 +169,12 @@ Path.new = function(...)
   return self
 end
 
-Path.mt.__eq = function(a, b)
-  return a.filename == b.filename
-end
-
-Path.mt.__div = function(self, other)
-  other = Path.new(other)
-  return Path.new(vim.fs.joinpath(self.filename, other.filename))
-end
-
---- Get the final path component, if any.
----
 ---@return string|?
-Path.name = function(self)
-  return vim.fs.basename(self.filename)
-end
-
---- The final file extension, if any.
----
----@return string|?
-Path.suffix = function(self)
-  local _, _, ext = string.find(self.filename, "(%.[^%.]+)$")
-  return ext
-end
-
---- The final path component, without its suffix.
----
----@return string|?
-Path.stem = function(self)
-  local name, suffix = self:name(), self:suffix()
-  if not name then
-    return
-  elseif not suffix then
-    return name
-  else
-    return string.sub(name, 1, string.len(name) - string.len(suffix))
-  end
+---@private
+Path.fs_realpath = function(self)
+  local path = vim.loop.fs_realpath(vim.fn.resolve(self.filename))
+  ---@cast path string|?
+  return path
 end
 
 --- Returns true if the path is already in absolute form.
@@ -93,6 +186,16 @@ Path.is_absolute = function(self)
   else
     return false
   end
+end
+
+---@param ... obsidian.Path|string
+---@return obsidian.Path
+Path.joinpath = function(self, ...)
+  local args = { ... }
+  for i, v in ipairs(args) do
+    args[i] = tostring(v)
+  end
+  return Path.new(vim.fs.joinpath(self.filename, unpack(args)))
 end
 
 --- Try to resolve a version of the path relative to the other.
@@ -162,10 +265,10 @@ end
 Path.resolve = function(self, opts)
   opts = opts or {}
 
-  local path, err = vim.loop.fs_realpath(vim.fn.resolve(self.filename))
-  if path and not err then
-    return Path.new(path)
-  elseif err and opts.strict then
+  local realpath = self:fs_realpath()
+  if realpath then
+    return Path.new(realpath)
+  elseif opts.strict then
     error("FileNotFoundError: " .. self.filename)
   end
 
@@ -173,9 +276,9 @@ Path.resolve = function(self, opts)
   -- does exist, and then put the path back together from there.
   local parents = self:parents()
   for _, parent in ipairs(parents) do
-    path, err = vim.loop.fs_realpath(tostring(parent))
-    if path and not err then
-      return Path.new(path) / self:relative_to(parent)
+    local parent_realpath = parent:fs_realpath()
+    if parent_realpath then
+      return Path.new(parent_realpath) / self:relative_to(parent)
     end
   end
 
@@ -183,17 +286,14 @@ Path.resolve = function(self, opts)
 end
 
 --- Get OS stat results.
+---
 ---@return table|?
 Path.stat = function(self)
-  local ok, resolved = pcall(function()
-    return self:resolve { strict = true }
-  end)
-  if not ok then
-    return
+  local realpath = self:fs_realpath()
+  if realpath then
+    local stat, _ = vim.loop.fs_stat(realpath)
+    return stat
   end
-  assert(resolved)
-  local stat, _ = vim.loop.fs_stat(resolved.filename)
-  return stat
 end
 
 --- Check if the path points to an existing file or directory.
@@ -285,6 +385,10 @@ Path.tmpdir = function()
   local tmpname = os.tmpname()
   os.remove(tmpname)
   return Path.new(tmpname)
+end
+
+Path.cwd = function()
+  return assert(Path.new(vim.loop.cwd()))
 end
 
 return Path

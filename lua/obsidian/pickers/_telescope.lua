@@ -44,7 +44,7 @@ TelescopePicker.default_mappings = function(self, map, initial_query)
     obsidian_insert_link = function(prompt_bufnr)
       require("telescope.actions").close(prompt_bufnr)
       local path = require("telescope.actions.state").get_selected_entry().path
-      local note = require("obsidian").Note.from_file(path, self.client.dir)
+      local note = require("obsidian").Note.from_file(path)
       local link = self.client:format_link(note, {})
       vim.api.nvim_put({ link }, "", false, true)
     end,

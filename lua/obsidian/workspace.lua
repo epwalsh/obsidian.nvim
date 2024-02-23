@@ -1,6 +1,5 @@
 local Path = require "obsidian.path"
 local abc = require "obsidian.abc"
-local util = require "obsidian.util"
 
 ---@class obsidian.workspace.WorkspaceSpec
 ---
@@ -26,8 +25,8 @@ local util = require "obsidian.util"
 ---@class obsidian.Workspace : obsidian.ABC
 ---
 ---@field name string An arbitrary name for the workspace.
----@field path string The normalized path to the workspace.
----@field root string The normalized path to the vault root of the workspace. This usually matches 'path'.
+---@field path obsidian.Path The normalized path to the workspace.
+---@field root obsidian.Path The normalized path to the vault root of the workspace. This usually matches 'path'.
 ---@field overrides table|obsidian.config.ClientOpts|?
 ---@field locked boolean|?
 local Workspace = abc.new_class {
@@ -77,8 +76,8 @@ Workspace.new = function(path, opts)
   opts = opts and opts or {}
 
   local self = Workspace.init()
-  self.path = tostring(Path.new(path):resolve { strict = true })
-  self.name = opts.name and opts.name or assert(vim.fs.basename(self.path))
+  self.path = Path.new(path):resolve { strict = true }
+  self.name = assert(opts.name or self.path.name)
   self.overrides = opts.overrides
 
   if opts.strict then
@@ -86,7 +85,7 @@ Workspace.new = function(path, opts)
   else
     local vault_root = find_vault_root(self.path)
     if vault_root then
-      self.root = tostring(vault_root)
+      self.root = vault_root
     else
       self.root = self.path
     end
@@ -164,7 +163,7 @@ Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
   for _, spec in ipairs(workspaces) do
     local w = Workspace.new_from_spec(spec)
     for _, dir in ipairs(dirs) do
-      if w.path == tostring(dir) then
+      if w.path == dir then
         return w
       end
     end

@@ -1,7 +1,6 @@
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local search = require "obsidian.search"
-local util = require "obsidian.util"
 local Path = require "obsidian.path"
 
 local RefTypes = search.RefTypes

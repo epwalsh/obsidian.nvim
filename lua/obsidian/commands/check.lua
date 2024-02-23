@@ -13,7 +13,7 @@ return function(client, _)
 
   client:apply_async_raw(function(path)
     local relative_path = client:vault_relative_path(path) or path
-    local ok, res = pcall(Note.from_file_async, path, client.dir)
+    local ok, res = pcall(Note.from_file_async, path)
     if not ok then
       errors[#errors + 1] = "Failed to parse note '" .. relative_path .. "': " .. tostring(res)
     elseif res.has_frontmatter == false then

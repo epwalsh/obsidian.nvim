@@ -413,6 +413,7 @@ M.throttle = function(fn, timeout)
         timer = vim.loop.new_timer()
       end
       local args = { ... }
+      assert(timer)
       timer:start(
         ms_remaining,
         0,

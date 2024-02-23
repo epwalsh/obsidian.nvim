@@ -20,8 +20,13 @@ end)
 
 describe("Path.__eq", function()
   it("should compare with other paths correctly", function()
-    assert(Path:new "README.md" == Path:new "README.md")
-    assert(Path:new "/foo" == Path:new "/foo/")
+    assert.is_true(Path:new "README.md" == Path:new "README.md")
+    assert.is_true(Path:new "/foo" == Path:new "/foo/")
+
+    local path = Path:new "README.md"
+    local _ = path.name
+    assert.is_true(path == Path:new "README.md")
+    assert.is_true(path == Path.new(path))
   end)
 end)
 
@@ -31,25 +36,38 @@ describe("Path.__div", function()
   end)
 end)
 
-describe("Path.name()", function()
+describe("Path.name", function()
   it("should return final component", function()
-    assert.equals("bar.md", Path:new("/foo/bar.md"):name())
+    assert.equals("bar.md", Path:new("/foo/bar.md").name)
   end)
 end)
 
-describe("Path.suffix()", function()
+describe("Path.suffix", function()
   it("should return final suffix", function()
-    assert.equals(".md", Path:new("/foo/bar.md"):suffix())
+    assert.equals(".md", Path:new("/foo/bar.md").suffix)
+    assert.equals(".gz", Path:new("/foo/bar.tar.gz").suffix)
   end)
 
   it("should return nil when there is no suffix", function()
-    assert.equals(nil, Path:new("/foo/bar"):suffix())
+    assert.equals(nil, Path:new("/foo/bar").suffix)
   end)
 end)
 
-describe("Path.stem()", function()
+describe("Path.suffix", function()
+  it("should return all extensions", function()
+    assert.are_same({ ".md" }, Path:new("/foo/bar.md").suffixes)
+    assert.are_same({ ".tar", ".gz" }, Path:new("/foo/bar.tar.gz").suffixes)
+  end)
+
+  it("should return empty list when there is no suffix", function()
+    assert.are_same({}, Path:new("/foo/bar").suffixes)
+  end)
+end)
+
+describe("Path.stem", function()
   it("should return the final name without suffix", function()
-    assert.equals("bar", Path:new("/foo/bar.md"):stem())
+    assert.equals("bar", Path:new("/foo/bar.md").stem)
+    assert.equals(nil, Path:new("/").stem)
   end)
 end)
 
@@ -110,6 +128,7 @@ end)
 describe("Path.is_file()", function()
   it("should return true when the path is a file", function()
     assert.is_true(Path.new("README.md"):is_file())
+    assert.is_false(Path.new("README.md"):is_dir())
   end)
 
   it("should return false when the path is a directory", function()
@@ -120,6 +139,7 @@ end)
 describe("Path.is_dir()", function()
   it("should return true when the path is a directory", function()
     assert.is_true(Path.new("lua"):is_dir())
+    assert.is_false(Path.new("lua"):is_file())
   end)
 
   it("should return false when the path is a file", function()
@@ -138,6 +158,8 @@ describe("Path.mkdir()", function()
 
     dir:mkdir()
     assert.is_true(dir:exists())
+    assert.is_true(dir:is_dir())
+    assert.is_false(dir:is_file())
 
     dir:mkdir { exist_ok = true }
     assert.is_true(dir:exists())

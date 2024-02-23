@@ -179,10 +179,9 @@ end
 --- Initialize a note from a file.
 ---
 ---@param path string|obsidian.Path
----@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
-Note.from_file = function(path, root)
+Note.from_file = function(path)
   if path == nil then
     error "note path cannot be nil"
   end
@@ -190,7 +189,7 @@ Note.from_file = function(path, root)
   with(open(Path.new(path):resolve { strict = true }), function(reader)
     n = Note.from_lines(function()
       return reader:lines()
-    end, path, root)
+    end, path)
   end)
   return n
 end
@@ -198,10 +197,9 @@ end
 --- An async version of `.from_file()`.
 ---
 ---@param path string|obsidian.Path
----@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
-Note.from_file_async = function(path, root)
+Note.from_file_async = function(path)
   local File = require("obsidian.async").File
   if path == nil then
     error "note path cannot be nil"
@@ -209,7 +207,7 @@ Note.from_file_async = function(path, root)
   local f = File.open(tostring(Path.new(path):resolve { strict = true }))
   local ok, res = pcall(Note.from_lines, function()
     return f:lines(false)
-  end, path, root)
+  end, path)
   f:close()
   if ok then
     return res
@@ -221,10 +219,9 @@ end
 --- Initialize a note from a buffer.
 ---
 ---@param bufnr integer|?
----@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
-Note.from_buffer = function(bufnr, root)
+Note.from_buffer = function(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local path = vim.api.nvim_buf_get_name(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -242,7 +239,7 @@ Note.from_buffer = function(bufnr, root)
     end
   end
 
-  return Note.from_lines(lines_iter, path, root)
+  return Note.from_lines(lines_iter, path)
 end
 
 --- Get the display name for note.
@@ -259,12 +256,10 @@ end
 ---
 ---@param lines function
 ---@param path string|obsidian.Path
----@param root string|obsidian.Path|?
 ---
 ---@return obsidian.Note
-Note.from_lines = function(lines, path, root)
+Note.from_lines = function(lines, path)
   path = Path.new(path):resolve()
-  local cwd = Path.new(root and root or "./"):resolve { strict = true }
 
   local id = nil
   local title = nil
@@ -378,21 +373,8 @@ Note.from_lines = function(lines, path, root)
   end
 
   -- The ID should match the filename with or without the extension.
-  local relative_path = tostring(path:relative_to(cwd))
-  local relative_path_no_ext = relative_path
-  if vim.endswith(relative_path_no_ext, ".md") then
-    -- NOTE: alternatively we could use `vim.fn.fnamemodify`, but that will give us luv errors
-    -- when called from an async context on certain operating systems.
-    -- relative_path_no_ext = vim.fn.fnamemodify(relative_path, ":r")
-    relative_path_no_ext = relative_path_no_ext:sub(1, -4)
-  end
-  local fname = assert(vim.fs.basename(relative_path))
-  local fname_no_ext = fname
-  if vim.endswith(fname_no_ext, ".md") then
-    fname_no_ext = fname_no_ext:sub(1, -4)
-  end
-  if id ~= relative_path and id ~= relative_path_no_ext and id ~= fname and id ~= fname_no_ext then
-    id = fname_no_ext
+  if id ~= path.name and id ~= path.stem then
+    id = path.stem
   end
   assert(id)
 

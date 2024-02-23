@@ -50,7 +50,7 @@ return function(client, data)
     query = search_term,
     no_default_mappings = true,
     callback = function(path)
-      insert_ref(Note.from_file(path, client.dir))
+      insert_ref(Note.from_file(path))
       client:update_ui()
     end,
   }

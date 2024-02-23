@@ -95,7 +95,7 @@ M.insert_template = function(name, client, location)
     return
   end
   local buf, win, row, _ = unpack(location)
-  local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
+  local title = require("obsidian.note").from_buffer(buf):display_name()
 
   ---@type obsidian.Path
   local template_path

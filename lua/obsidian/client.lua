@@ -181,7 +181,7 @@ Client.path_is_note = function(self, path, workspace)
   path = Path.new(path):resolve()
 
   -- Notes have to be markdown file.
-  if path:suffix() ~= ".md" then
+  if path.suffix ~= ".md" then
     return false
   end
 
@@ -271,7 +271,7 @@ Client.should_save_frontmatter = function(self, note)
     return not self.opts.disable_frontmatter
   end
   if type(self.opts.disable_frontmatter) == "function" then
-    return not self.opts.disable_frontmatter(self:vault_relative_path(note.path))
+    return not self.opts.disable_frontmatter(tostring(self:vault_relative_path(note.path)))
   end
   return true
 end
@@ -430,13 +430,12 @@ Client.find_notes_async = function(self, term, opts, callback)
   local next_path = self:_search_iter_async(term, opts)
   local executor = AsyncExecutor.new()
 
-  local dir = tostring(self.dir)
   local err_count = 0
   local first_err
   local first_err_path
 
   local function task_fn(path)
-    local ok, res = pcall(Note.from_file_async, path, dir)
+    local ok, res = pcall(Note.from_file_async, path)
     if ok then
       return res
     else
@@ -542,7 +541,7 @@ Client.resolve_note_async = function(self, query, callback)
     ---@diagnostic disable-next-line: assign-type-mismatch
     local full_path = self.dir / note_path
     return async.run(function()
-      return Note.from_file_async(full_path, self.dir)
+      return Note.from_file_async(full_path)
     end, callback)
   end
 
@@ -749,12 +748,13 @@ end
 --- Get the current note.
 ---
 ---@return obsidian.Note|?
+---@diagnostic disable-next-line: unused-local
 Client.current_note = function(self)
   if vim.bo.filetype ~= "markdown" then
     return nil
   end
 
-  return Note.from_buffer(0, self.dir)
+  return Note.from_buffer(0)
 end
 
 ---@class obsidian.TagLocation
@@ -817,7 +817,7 @@ Client.find_tags_async = function(self, term, opts, callback)
   local executor = AsyncExecutor.new()
 
   ---@param tag string
-  ---@param path string
+  ---@param path string|obsidian.Path
   ---@param note obsidian.Note
   ---@param lnum integer
   ---@param text string
@@ -851,7 +851,7 @@ Client.find_tags_async = function(self, term, opts, callback)
       -- Load note.
       local note = path_to_note[path]
       if not note then
-        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        local ok, res = pcall(Note.from_file_async, path)
         if ok then
           note = res
           path_to_note[path] = note
@@ -1038,7 +1038,7 @@ Client.find_backlinks_async = function(self, note, opts, callback)
       -- Load note.
       local n = path_to_note[path]
       if not n then
-        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        local ok, res = pcall(Note.from_file_async, path)
         if ok then
           n = res
           path_to_note[path] = n
@@ -1147,7 +1147,7 @@ end
 ---@param timeout integer|? Timeout in milliseconds.
 Client.apply_async = function(self, on_note, on_done, timeout)
   self:apply_async_raw(function(path)
-    local ok, res = pcall(Note.from_file_async, path, self.dir)
+    local ok, res = pcall(Note.from_file_async, path)
     if not ok then
       log.warn("Failed to load note at '%s': %s", path, res)
     else
@@ -1237,8 +1237,6 @@ Client.parse_title_id_path = function(self, title, id, dir)
   ---@param strict_paths_only boolean
   ---@return string|?, boolean, string|?
   local parse_as_path = function(s, strict_paths_only)
-    s = vim.fs.normalize(s)
-
     local is_path = false
     ---@type string|?
     local parent
@@ -1355,15 +1353,15 @@ end
 Client.daily_note_path = function(self, datetime)
   datetime = datetime and datetime or os.time()
 
-  ---@type Path
+  ---@type obsidian.Path
   local path = Path:new(self.dir)
 
   if self.opts.daily_notes.folder ~= nil then
-    ---@type Path
+    ---@type obsidian.Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.daily_notes.folder
   elseif self.opts.notes_subdir ~= nil then
-    ---@type Path
+    ---@type obsidian.Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.notes_subdir
   end
@@ -1406,7 +1404,7 @@ Client._daily = function(self, datetime)
     local write_frontmatter = true
     if self.opts.daily_notes.template then
       templates.clone_template(self.opts.daily_notes.template, path, self, note:display_name())
-      note = Note.from_file(path, self.dir)
+      note = Note.from_file(path)
       if note.has_frontmatter then
         write_frontmatter = false
       end
