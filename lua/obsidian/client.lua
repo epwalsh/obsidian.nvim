@@ -1179,8 +1179,9 @@ Client.apply_async_raw = function(self, on_path, on_done, timeout)
   local scan = require "plenary.scandir"
 
   local skip_dirs = {}
-  if self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
-    skip_dirs[#skip_dirs + 1] = Path:new(self.opts.templates.subdir)
+  local templates_dir = self:templates_dir()
+  if templates_dir ~= nil then
+    skip_dirs[#skip_dirs + 1] = templates_dir
   end
 
   local executor = AsyncExecutor.new()
@@ -1191,9 +1192,9 @@ Client.apply_async_raw = function(self, on_path, on_done, timeout)
     respect_gitignore = true,
     search_pattern = ".*%.md",
     on_insert = function(entry)
-      local relative_path = self:vault_relative_path(entry)
+      entry = util.resolve_path(entry)
       for skip_dir in iter(skip_dirs) do
-        if relative_path and vim.startswith(relative_path, tostring(skip_dir) .. skip_dir._sep) then
+        if util.is_parent_of(skip_dir, entry) then
           return
         end
       end
