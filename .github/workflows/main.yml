@@ -99,7 +99,8 @@ jobs:
           # Download neovim.
           # winget install neovim
           curl -o nvim-win64.zip ${{ matrix.nvim_url }}
-          unzip nvim-win64.zip
+          tar -xf nvim-win64.zip
+          ls -lh
           mv nvim-win64 _neovim
           rm nvim-win64.zip
 
