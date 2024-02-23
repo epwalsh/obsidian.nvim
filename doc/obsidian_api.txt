@@ -12,6 +12,8 @@ Table of contents
   
   obsidian.Workspace......................................|obsidian.Workspace|
   
+  obsidian.Path................................................|obsidian.Path|
+  
 
 ------------------------------------------------------------------------------
                                                            *obsidian.SearchOpts*
