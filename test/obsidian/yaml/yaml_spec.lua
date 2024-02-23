@@ -1,4 +1,5 @@
 local yaml = require "obsidian.yaml"
+local util = require "obsidian.util"
 
 describe("obsidian.yaml.dumps", function()
   it("should dump numbers", function()
@@ -114,6 +115,10 @@ describe("obsidian.yaml.native", function()
 end)
 
 describe("obsidian.yaml.yq", function()
+  if util.get_os() == util.OSType.Windows or util.get_os() == util.OSType.Wsl then
+    return
+  end
+
   yaml.set_parser "yq"
   for key, data in pairs {
     ["numbers"] = 1,
