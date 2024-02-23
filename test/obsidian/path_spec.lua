@@ -1,4 +1,5 @@
 local Path = require "obsidian.path"
+local util = require "obsidian.util"
 
 describe("Path.new()", function()
   it("should initialize with both method syntax and regular dot access", function()
@@ -74,8 +75,10 @@ end)
 describe("Path.is_absolute()", function()
   it("should work for windows or unix paths", function()
     assert(Path:new("/foo/"):is_absolute())
-    assert(Path:new("C:/foo/"):is_absolute())
-    assert(Path:new("C:\\foo\\"):is_absolute())
+    if util.get_os() == util.OSType.Windows then
+      assert(Path:new("C:/foo/"):is_absolute())
+      assert(Path:new("C:\\foo\\"):is_absolute())
+    end
   end)
 end)
 
