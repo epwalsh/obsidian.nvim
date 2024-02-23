@@ -394,7 +394,14 @@ end
 ---
 ---@return string
 util.resolve_path = function(path)
-  return vim.fn.resolve(Path:new(vim.fs.normalize(tostring(path))):absolute())
+  local normalized = vim.fs.normalize(tostring(path))
+  if util.get_os() == util.OSType.Windows then
+    -- HACK: plenary.Path expects the "\\" separator on Windows even though neovim doesn't.
+    normalized = util.string_replace(normalized, "/", "\\")
+  end
+  local absolute = Path:new(normalized):absolute()
+  -- NOTE: we call `normalize()` again here to convert "//" back to "\" on windows.
+  return vim.fn.resolve(vim.fs.normalize(absolute))
 end
 
 --- Get the parent directory of a path.
