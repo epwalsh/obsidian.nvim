@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added CI testing for Windows.
+
 ### Changed
 
 - (internal) Replaced all uses of `plenary.path` with a custom `obsidian.path` class that stays more true to the Python pathlib API and should be more reliable across operating systems.
