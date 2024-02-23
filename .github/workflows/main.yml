@@ -95,8 +95,8 @@ jobs:
           # Download neovim.
           # winget install neovim
           curl -o nvim-win64.zip ${{ matrix.nvim_url }}
-          Expand-Archive -F nvim-win64.zip .
-          Move-Item -Path nvim-win64 -Destination _neovim
+          Expand-Archive -F nvim-win64.zip nvim-win64
+          mv nvim-win64/nvim-win64 _neovim
           ls
           ls _neovim
 
