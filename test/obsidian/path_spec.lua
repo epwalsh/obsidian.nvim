@@ -109,12 +109,18 @@ end)
 
 describe("Path.resolve()", function()
   it("should always resolve to the absolute path when it exists", function()
-    assert.equals(vim.loop.fs_realpath "README.md", Path.new("README.md"):resolve().filename)
+    assert.equals(vim.fs.normalize(assert(vim.loop.fs_realpath "README.md")), Path.new("README.md"):resolve().filename)
   end)
 
   it("should always resolve to the an absolute path if a parent exists", function()
-    assert.equals(vim.loop.fs_realpath "." .. "/tmp/dne.md", Path.new("tmp/dne.md"):resolve().filename)
-    assert.equals(vim.loop.fs_realpath "." .. "/dne.md", Path.new("dne.md"):resolve().filename)
+    assert.equals(
+      vim.fs.normalize(assert(vim.loop.fs_realpath ".")) .. "/tmp/dne.md",
+      Path.new("tmp/dne.md"):resolve().filename
+    )
+    assert.equals(
+      vim.fs.normalize(assert(vim.loop.fs_realpath ".")) .. "/dne.md",
+      Path.new("dne.md"):resolve().filename
+    )
   end)
 end)
 
