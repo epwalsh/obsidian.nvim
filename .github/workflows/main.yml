@@ -96,10 +96,12 @@ jobs:
         shell: bash
         if: matrix.os == 'windows-latest'
         run: |
-          # Download neovim nightly.
-          mkdir -p _neovim
-          curl -sL ${{ matrix.nvim_url }} -o nvim.zip
-          unzip nvim.zip -d "${PWD}/_neovim"
+          # Download neovim.
+          # winget install neovim
+          curl -sL ${{ matrix.nvim_url }}
+          unzip nvim-win64.zip
+          mv nvim-win64 _neovim
+          rm nvim-win64.zip
 
           # Clone plenary.
           mkdir -p ${{ env.runtime }}
