@@ -54,7 +54,7 @@ local Workspace = abc.new_class {
 local function find_vault_root(base_dir)
   local vault_indicator_folder = ".obsidian"
   local dirs = util.parent_directories(base_dir)
-  table.insert(dirs, 1, base_dir)
+  table.insert(dirs, 1, util.normalize_path_obj(base_dir))
 
   for _, dir in ipairs(dirs) do
     local maybe_vault = Path:new(dir) / vault_indicator_folder
@@ -156,14 +156,14 @@ end
 ---
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
-  cur_dir = util.resolve_path(cur_dir)
+  cur_dir = util.normalize_path_obj(util.resolve_path(cur_dir))
   local dirs = util.parent_directories(cur_dir)
-  table.insert(dirs, 1, tostring(cur_dir))
+  table.insert(dirs, 1, cur_dir)
 
   for _, spec in ipairs(workspaces) do
     local w = Workspace.new_from_spec(spec)
     for _, dir in ipairs(dirs) do
-      if w.path == dir then
+      if w.path == util.normalize_path_str(dir) then
         return w
       end
     end

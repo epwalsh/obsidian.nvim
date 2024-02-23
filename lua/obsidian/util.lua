@@ -388,20 +388,34 @@ end
 -- Path helpers --
 ------------------
 
+---@param path string|Path
+---
+---@return string
+util.normalize_path_str = function(path)
+  return vim.fs.normalize(tostring(path))
+end
+
+---@param path string|Path
+---
+---@return Path
+util.normalize_path_obj = function(path)
+  local normalized = util.normalize_path_str(path)
+  if util.get_os() == util.OSType.Windows then
+    -- HACK: plenary.Path expects the "\\" separator on Windows even though neovim doesn't.
+    -- TODO: this could break if a Windows path intentionally contains a "/".
+    normalized = util.string_replace(normalized, "/", "\\")
+  end
+  return Path:new(normalized)
+end
+
 --- Normalize and resolve a path. The result is an absolute path.
 ---
 ---@param path string|Path
 ---
 ---@return string
 util.resolve_path = function(path)
-  local normalized = vim.fs.normalize(tostring(path))
-  if util.get_os() == util.OSType.Windows then
-    -- HACK: plenary.Path expects the "\\" separator on Windows even though neovim doesn't.
-    normalized = util.string_replace(normalized, "/", "\\")
-  end
-  local absolute = Path:new(normalized):absolute()
-  -- NOTE: we call `normalize()` again here to convert "//" back to "\" on windows.
-  return vim.fn.resolve(vim.fs.normalize(absolute))
+  local absolute = util.normalize_path_obj(path):absolute()
+  return vim.fn.resolve(util.normalize_path_str(absolute))
 end
 
 --- Get the parent directory of a path.
@@ -412,13 +426,13 @@ end
 util.parent_directory = function(path)
   -- 'Path:parent()' has bugs on Windows, so we try 'vim.fs.dirname' first instead.
   if vim.fs and vim.fs.dirname then
-    local dirname = vim.fs.dirname(tostring(path))
+    local dirname = vim.fs.dirname(util.normalize_path_str(path))
     if dirname ~= nil then
-      return Path:new(dirname)
+      return util.normalize_path_obj(dirname)
     end
   end
 
-  return Path:new(path):parent()
+  return util.normalize_path_obj(path):parent()
 end
 
 --- Get all parent directories of a path. Returns strings to be consistent with `Path:parents()`.
@@ -428,15 +442,14 @@ end
 ---@return string[]
 util.parent_directories = function(path)
   -- 'Path:parents()' has bugs on Windows, so we do this our own way.
-  ---@type string[]
+  ---@type Path[]
   local parents = {}
-  local current = tostring(path)
-  ---@type string
-  local parent = tostring(util.parent_directory(current))
-  while parent ~= current do
+  local current = util.normalize_path_obj(path)
+  local parent = util.parent_directory(current)
+  while tostring(parent) ~= tostring(current) do
     parents[#parents + 1] = parent
     current = parent
-    parent = tostring(util.parent_directory(current))
+    parent = util.parent_directory(current)
   end
   return parents
 end
@@ -448,11 +461,11 @@ end
 ---
 ---@return boolean
 util.is_parent_of = function(dir, path)
-  dir = util.resolve_path(dir)
+  dir = util.normalize_path_obj(util.resolve_path(dir))
   local parents = util.parent_directories(util.resolve_path(path))
 
   for _, d in ipairs(parents) do
-    if d == dir then
+    if tostring(d) == tostring(dir) then
       return true
     end
   end
