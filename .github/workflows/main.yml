@@ -76,32 +76,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare env
-        shell: bash
-        run: |
-          date +%F > todays-date
-
-      - name: Restore cache for today's nightly
-        uses: actions/cache@v4
-        with:
-          path: |
-            _neovim
-          key: ${{ runner.os }}-${{ hashFiles('todays-date') }}
-
       - name: Install packages
         if: ${{ matrix.packages }}
         run: ${{ matrix.manager }} install ${{ matrix.packages }}
 
-      - name: Install neovim and dependencies
+      - name: Install neovim and dependencies (unix)
+        shell: bash
+        if: matrix.os != 'windows-latest'
         run: |
+          # Download neovim nightly.
+          mkdir -p _neovim
+          curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
+
+          # Clone plenary.
           mkdir -p ${{ env.runtime }}
-          test -d _neovim || {
-            mkdir -p _neovim
-            curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
-          }
-          ls -lh _neovim
           git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
-          ln -s $(pwd) ${{ env.runtime }}
+
+      - name: Install neovim and dependencies (windows)
+        shell: bash
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Download neovim nightly.
+          mkdir -p _neovim
+          curl -sL ${{ matrix.nvim_url }} -o nvim.zip
+          unzip nvim.zip -d "${PWD}/_neovim"
+
+          # Clone plenary.
+          mkdir -p ${{ env.runtime }}
+          git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
+
+      - name: Show environment
+        shell: bash
+        run: |
+          ls -lh _neovim
           ls -lh ${{ env.runtime }}
 
       - name: Prepare
