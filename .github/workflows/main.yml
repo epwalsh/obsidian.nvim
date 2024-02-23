@@ -47,7 +47,7 @@ jobs:
         task:
           - name: Test
             run: |
-              make test
+              make test PLENARY=_runtime/plenary.nvim
 
           - name: Lint
             prepare: |
