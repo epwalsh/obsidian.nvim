@@ -50,7 +50,7 @@ local Workspace = abc.new_class {
 ---
 ---@param base_dir string|Path
 ---
----@return string|?
+---@return Path|?
 local function find_vault_root(base_dir)
   local vault_indicator_folder = ".obsidian"
   local dirs = util.parent_directories(base_dir)

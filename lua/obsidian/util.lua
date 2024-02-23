@@ -439,7 +439,7 @@ end
 ---
 ---@param path string|Path
 ---
----@return string[]
+---@return Path[]
 util.parent_directories = function(path)
   -- 'Path:parents()' has bugs on Windows, so we do this our own way.
   ---@type Path[]
