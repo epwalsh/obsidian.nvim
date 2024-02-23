@@ -1,4 +1,4 @@
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 
@@ -52,7 +52,7 @@ end
 ---Clone Template
 ---
 ---@param template_name string  - name of a template in the configured templates folder
----@param note_path Path
+---@param note_path obsidian.Path
 ---@param client obsidian.Client
 ---@param title string
 M.clone_template = function(template_name, note_path, client, title)
@@ -62,7 +62,7 @@ M.clone_template = function(template_name, note_path, client, title)
     return
   end
 
-  util.parent_directory(note_path):mkdir { parents = true }
+  note_path:mkdir { parents = true, exist_ok = true }
 
   local template_path = Path:new(templates_dir) / template_name
   local template_file = io.open(tostring(template_path), "r")
@@ -95,9 +95,9 @@ M.insert_template = function(name, client, location)
     return
   end
   local buf, win, row, _ = unpack(location)
-  local title = require("obsidian.note").from_buffer(buf, client.dir):display_name()
+  local title = require("obsidian.note").from_buffer(buf):display_name()
 
-  ---@type Path
+  ---@type obsidian.Path
   local template_path
   local paths_to_check = { templates_dir / name, Path:new(name) }
   for _, path in ipairs(paths_to_check) do

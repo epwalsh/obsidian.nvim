@@ -1,4 +1,4 @@
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local Note = require "obsidian.note"
 local obsidian = require "obsidian"
 
@@ -113,7 +113,7 @@ describe("Client", function()
 
   it("should resolve relative paths", function()
     local client = tmp_client()
-    assert.are_same(client:vault_relative_path "foo.md", "foo.md")
-    assert.are_same(client:vault_relative_path(client.dir / "foo.md"), "foo.md")
+    assert.are_same(client:vault_relative_path "foo.md", Path.new "foo.md")
+    assert.are_same(client:vault_relative_path(client.dir / "foo.md"), Path.new "foo.md")
   end)
 end)

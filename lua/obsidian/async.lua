@@ -284,8 +284,8 @@ File.lines = function(self, include_new_line_char)
   local eof_reached = false
 
   local lines = function()
-    local idx = string.find(buffer, "[\r\n]")
-    while idx == nil and not eof_reached do
+    local idx_s, idx_e = string.find(buffer, "\r?\n")
+    while idx_s == nil and not eof_reached do
       ---@diagnostic disable-next-line: redefined-local
       local err, data
       err, data = async.uv.fs_read(self.fd, chunk_size, offset)
@@ -295,13 +295,14 @@ File.lines = function(self, include_new_line_char)
       else
         buffer = buffer .. data
         offset = offset + string.len(data)
-        idx = string.find(buffer, "[\r\n]")
+        idx_s, idx_e = string.find(buffer, "\r?\n")
       end
     end
 
-    if idx ~= nil then
-      local line = string.sub(buffer, 1, idx)
-      buffer = string.sub(buffer, idx + 1)
+    if idx_s ~= nil then
+      assert(idx_e)
+      local line = string.sub(buffer, 1, idx_s)
+      buffer = string.sub(buffer, idx_e + 1)
       if include_new_line_char then
         return line
       else
@@ -413,6 +414,7 @@ M.throttle = function(fn, timeout)
         timer = vim.loop.new_timer()
       end
       local args = { ... }
+      assert(timer)
       timer:start(
         ms_remaining,
         0,

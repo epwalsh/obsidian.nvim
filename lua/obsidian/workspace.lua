@@ -1,10 +1,9 @@
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local abc = require "obsidian.abc"
-local util = require "obsidian.util"
 
 ---@class obsidian.workspace.WorkspaceSpec
 ---
----@field path string|Path|(fun(): string|Path)
+---@field path string|obsidian.Path|(fun(): string|obsidian.Path)
 ---@field name string|?
 ---@field strict boolean|? If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
 ---@field overrides table|obsidian.config.ClientOpts|?
@@ -26,8 +25,8 @@ local util = require "obsidian.util"
 ---@class obsidian.Workspace : obsidian.ABC
 ---
 ---@field name string An arbitrary name for the workspace.
----@field path string The normalized path to the workspace.
----@field root string The normalized path to the vault root of the workspace. This usually matches 'path'.
+---@field path obsidian.Path The normalized path to the workspace.
+---@field root obsidian.Path The normalized path to the vault root of the workspace. This usually matches 'path'.
 ---@field overrides table|obsidian.config.ClientOpts|?
 ---@field locked boolean|?
 local Workspace = abc.new_class {
@@ -48,16 +47,17 @@ local Workspace = abc.new_class {
 --- This will traverse the directory tree upwards until a '.obsidian/' folder is found to
 --- indicate the root of a vault, otherwise the given directory is used as-is.
 ---
----@param base_dir string|Path
+---@param base_dir string|obsidian.Path
 ---
----@return string|?
+---@return obsidian.Path|?
 local function find_vault_root(base_dir)
   local vault_indicator_folder = ".obsidian"
-  local dirs = util.parent_directories(base_dir)
+  base_dir = Path.new(base_dir)
+  local dirs = Path.new(base_dir):parents()
   table.insert(dirs, 1, base_dir)
 
   for _, dir in ipairs(dirs) do
-    local maybe_vault = Path:new(dir) / vault_indicator_folder
+    local maybe_vault = dir / vault_indicator_folder
     if maybe_vault:is_dir() then
       return dir
     end
@@ -68,7 +68,7 @@ end
 
 --- Create a new 'Workspace' object. This assumes the workspace already exists on the filesystem.
 ---
----@param path string|Path Workspace path.
+---@param path string|obsidian.Path Workspace path.
 ---@param opts obsidian.workspace.WorkspaceOpts|?
 ---
 ---@return obsidian.Workspace
@@ -76,8 +76,8 @@ Workspace.new = function(path, opts)
   opts = opts and opts or {}
 
   local self = Workspace.init()
-  self.path = util.resolve_path(path)
-  self.name = opts.name and opts.name or assert(vim.fs.basename(self.path))
+  self.path = Path.new(path):resolve { strict = true }
+  self.name = assert(opts.name or self.path.name)
   self.overrides = opts.overrides
 
   if opts.strict then
@@ -85,7 +85,7 @@ Workspace.new = function(path, opts)
   else
     local vault_root = find_vault_root(self.path)
     if vault_root then
-      self.root = util.resolve_path(vault_root)
+      self.root = vault_root
     else
       self.root = self.path
     end
@@ -100,7 +100,7 @@ end
 ---
 ---@return obsidian.Workspace
 Workspace.new_from_spec = function(spec)
-  ---@type string|Path
+  ---@type string|obsidian.Path
   local path
   if type(spec.path) == "function" then
     path = spec.path()
@@ -134,7 +134,7 @@ end
 ---
 ---@return obsidian.Workspace
 Workspace.new_from_buf = function(bufnr, opts)
-  local bufdir = util.parent_directory(vim.api.nvim_buf_get_name(bufnr and bufnr or 0))
+  local bufdir = assert(Path.new(vim.api.nvim_buf_get_name(bufnr and bufnr or 0)):parent())
   return Workspace.new(bufdir, opts)
 end
 
@@ -151,14 +151,14 @@ end
 --- Get the workspace corresponding to the directory (or a parent of), if there
 --- is one.
 ---
----@param cur_dir string|Path
+---@param cur_dir string|obsidian.Path
 ---@param workspaces obsidian.workspace.WorkspaceSpec[]
 ---
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
-  cur_dir = util.resolve_path(cur_dir)
-  local dirs = util.parent_directories(cur_dir)
-  table.insert(dirs, 1, tostring(cur_dir))
+  cur_dir = Path.new(cur_dir):resolve { strict = true }
+  local dirs = cur_dir:parents()
+  table.insert(dirs, 1, cur_dir)
 
   for _, spec in ipairs(workspaces) do
     local w = Workspace.new_from_spec(spec)

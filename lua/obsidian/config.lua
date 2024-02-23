@@ -407,7 +407,7 @@ config.AttachmentsOpts.default = function()
   return {
     img_folder = "assets/imgs",
     ---@param client obsidian.Client
-    ---@param path Path the absolute path to the image file
+    ---@param path obsidian.Path the absolute path to the image file
     ---@return string
     img_text_func = function(client, path)
       ---@type string
@@ -415,7 +415,7 @@ config.AttachmentsOpts.default = function()
       local vault_relative_path = client:vault_relative_path(path)
       if vault_relative_path ~= nil then
         -- Use relative path if the image is saved in the vault dir.
-        link_path = vault_relative_path
+        link_path = tostring(vault_relative_path)
       else
         -- Otherwise use the absolute path.
         link_path = tostring(path)

@@ -1,5 +1,5 @@
-local Path = require "plenary.path"
 local obsidian = require "obsidian"
+local Path = require "obsidian.path"
 local templates = require "obsidian.templates"
 
 ---Get a client in a temporary directory.

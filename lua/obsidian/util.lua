@@ -1,4 +1,3 @@
-local Path = require "plenary.path"
 local iter = require("obsidian.itertools").iter
 local log = require "obsidian.log"
 
@@ -384,75 +383,6 @@ util.string_replace = function(s, what, with, n)
   return s, count
 end
 
-------------------
--- Path helpers --
-------------------
-
---- Normalize and resolve a path. The result is an absolute path.
----
----@param path string|Path
----
----@return string
-util.resolve_path = function(path)
-  return vim.fn.resolve(Path:new(vim.fs.normalize(tostring(path))):absolute())
-end
-
---- Get the parent directory of a path.
----
----@param path string|Path
----
----@return Path
-util.parent_directory = function(path)
-  -- 'Path:parent()' has bugs on Windows, so we try 'vim.fs.dirname' first instead.
-  if vim.fs and vim.fs.dirname then
-    local dirname = vim.fs.dirname(tostring(path))
-    if dirname ~= nil then
-      return Path:new(dirname)
-    end
-  end
-
-  return Path:new(path):parent()
-end
-
---- Get all parent directories of a path. Returns strings to be consistent with `Path:parents()`.
----
----@param path string|Path
----
----@return string[]
-util.parent_directories = function(path)
-  -- 'Path:parents()' has bugs on Windows, so we do this our own way.
-  ---@type string[]
-  local parents = {}
-  local current = tostring(path)
-  ---@type string
-  local parent = tostring(util.parent_directory(current))
-  while parent ~= current do
-    parents[#parents + 1] = parent
-    current = parent
-    parent = tostring(util.parent_directory(current))
-  end
-  return parents
-end
-
---- Check if `parent` is a parent directory of `path`.
----
----@param dir string|Path Directory path.
----@param path string|Path File path.
----
----@return boolean
-util.is_parent_of = function(dir, path)
-  dir = util.resolve_path(dir)
-  local parents = util.parent_directories(util.resolve_path(path))
-
-  for _, d in ipairs(parents) do
-    if d == dir then
-      return true
-    end
-  end
-
-  return false
-end
-
 ------------------------------------
 -- Miscellaneous helper functions --
 ------------------------------------
@@ -832,7 +762,7 @@ util.get_named_buffers = function()
     if bufnr > max_bufnr then
       return nil
     else
-      return bufnr, util.resolve_path(vim.api.nvim_buf_get_name(bufnr))
+      return bufnr, vim.api.nvim_buf_get_name(bufnr)
     end
   end
 end
@@ -993,10 +923,12 @@ end
 
 --- Open a buffer for the corresponding path.
 ---
----@param path string|Path
+---@param path string|obsidian.Path
 ---@param opts { line: integer|?, col: integer|?, cmd: string|? }|?
 util.open_buffer = function(path, opts)
-  path = util.resolve_path(path)
+  local Path = require "obsidian.path"
+
+  path = Path.new(path):resolve()
   opts = opts and opts or {}
   local cmd = util.strip_whitespace(opts.cmd and opts.cmd or "e")
 
@@ -1008,7 +940,7 @@ util.open_buffer = function(path, opts)
     end
   end
 
-  vim.cmd(string.format("%s %s", cmd, vim.fn.fnameescape(path)))
+  vim.cmd(string.format("%s %s", cmd, vim.fn.fnameescape(tostring(path))))
   if opts.line then
     vim.api.nvim_win_set_cursor(0, { tonumber(opts.line), opts.col and opts.col or 0 })
   end

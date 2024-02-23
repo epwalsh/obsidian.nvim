@@ -8,7 +8,7 @@
 ---
 ---@toc
 
-local Path = require "plenary.path"
+local Path = require "obsidian.path"
 local abc = require "obsidian.abc"
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
@@ -60,9 +60,9 @@ end
 ---@class obsidian.Client : obsidian.ABC
 ---
 ---@field current_workspace obsidian.Workspace The current workspace.
----@field dir Path The root of the vault for the current workspace.
+---@field dir obsidian.Path The root of the vault for the current workspace.
 ---@field opts obsidian.config.ClientOpts The client config.
----@field buf_dir Path|? The parent directory of the current buffer.
+---@field buf_dir obsidian.Path|? The parent directory of the current buffer.
 ---@field _default_opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
@@ -173,25 +173,22 @@ end
 
 --- Check if a path represents a note in the workspace.
 ---
----@param path string|Path
+---@param path string|obsidian.Path
 ---@param workspace obsidian.Workspace|?
 ---
 ---@return boolean
 Client.path_is_note = function(self, path, workspace)
-  path = util.resolve_path(path)
+  path = Path.new(path):resolve()
 
   -- Notes have to be markdown file.
-  if not vim.endswith(path, ".md") then
+  if path.suffix ~= ".md" then
     return false
   end
 
   -- Ignore markdown files in the templates directory.
   local templates_dir = self:templates_dir(workspace)
   if templates_dir ~= nil then
-    local templates_pattern = tostring(templates_dir)
-    templates_pattern = util.escape_magic_characters(templates_pattern)
-    templates_pattern = "^" .. templates_pattern .. ".*"
-    if string.find(path, templates_pattern) then
+    if templates_dir:is_parent_of(path) then
       return false
     end
   end
@@ -204,10 +201,10 @@ end
 ---
 ---@param workspace obsidian.Workspace|?
 ---
----@return Path
+---@return obsidian.Path
 Client.vault_root = function(self, workspace)
   workspace = workspace and workspace or self.current_workspace
-  return Path:new(workspace.root)
+  return Path.new(workspace.root)
 end
 
 --- Get the name of the current vault.
@@ -219,29 +216,22 @@ end
 
 --- Make a path relative to the vault root, if possible.
 ---
----@param path string|Path
+---@param path string|obsidian.Path
+---@param opts { strict: boolean|? }|?
 ---
----@return string|?
-Client.vault_relative_path = function(self, path)
-  -- NOTE: we don't use `util.resolve_path()` here because that would make the path absolute,
+---@return obsidian.Path|?
+Client.vault_relative_path = function(self, path, opts)
+  opts = opts or {}
+  -- NOTE: we don't try to resolve the `path` here because that would make the path absolute,
   -- which may result in the wrong relative path if the current working directory is not within
   -- the vault.
-  local normalized_path = vim.fs.normalize(tostring(path))
-  local relative_path = Path:new(normalized_path):make_relative(tostring(self:vault_root()))
-  if relative_path == normalized_path then
-    -- Either `normalized_path` was already relative or `:make_relative()` failed.
-    -- When `:make_relative()` fails it returns the absolute path, which can happen when the
-    -- vault path is configured to look behind a link but `path` is not behind the link.
-    -- In this case we look for the first occurrence of the vault name in
-    -- `path` and remove everything up to and including it.
-    local _, j = string.find(relative_path, self:vault_name())
-    if j ~= nil then
-      return string.sub(relative_path, j + 2)
-    else
-      return relative_path
-    end
-  else
+  local ok, relative_path = pcall(function()
+    return Path.new(path):relative_to(self:vault_root())
+  end)
+  if ok then
     return relative_path
+  elseif opts.strict then
+    error(string.format("failed to resolve '%s' relative to vault root '%s'", path, self:vault_root()))
   end
 end
 
@@ -249,7 +239,7 @@ end
 ---
 ---@param workspace obsidian.Workspace|?
 ---
----@return Path|?
+---@return obsidian.Path|?
 Client.templates_dir = function(self, workspace)
   local opts = self.opts
   if workspace and workspace ~= self.current_workspace then
@@ -285,7 +275,7 @@ Client.should_save_frontmatter = function(self, note)
     return not self.opts.disable_frontmatter
   end
   if type(self.opts.disable_frontmatter) == "function" then
-    return not self.opts.disable_frontmatter(self:vault_relative_path(note.path))
+    return not self.opts.disable_frontmatter(tostring(self:vault_relative_path(note.path, { strict = true })))
   end
   return true
 end
@@ -381,7 +371,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param content_match MatchData
   local function on_search_match(content_match)
-    local path = util.resolve_path(content_match.path.text)
+    local path = Path.new(content_match.path.text):resolve { strict = true }
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -390,7 +380,7 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
 
   ---@param path_match string
   local function on_find_match(path_match)
-    local path = util.resolve_path(path_match)
+    local path = Path.new(path_match):resolve { strict = true }
     if not found[path] then
       found[path] = true
       tx.send(path)
@@ -444,13 +434,12 @@ Client.find_notes_async = function(self, term, opts, callback)
   local next_path = self:_search_iter_async(term, opts)
   local executor = AsyncExecutor.new()
 
-  local dir = tostring(self.dir)
   local err_count = 0
   local first_err
   local first_err_path
 
   local function task_fn(path)
-    local ok, res = pcall(Note.from_file_async, path, dir)
+    local ok, res = pcall(Note.from_file_async, path)
     if ok then
       return res
     else
@@ -495,7 +484,7 @@ end
 ---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
 ---@param timeout integer|? Timeout to wait in milliseconds.
 ---
----@return Path[]
+---@return obsidian.Path[]
 Client.find_files = function(self, term, opts, timeout)
   return block_on(function(cb)
     return self:find_files_async(term, opts, cb)
@@ -506,12 +495,12 @@ end
 ---
 ---@param term string The search term.
 ---@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
----@param callback fun(paths: Path[])
+---@param callback fun(paths: obsidian.Path[])
 Client.find_files_async = function(self, term, opts, callback)
   local matches = {}
   local tx, rx = channel.oneshot()
   local on_find_match = function(path_match)
-    matches[#matches + 1] = Path:new(util.resolve_path(path_match))
+    matches[#matches + 1] = Path.new(path_match)
   end
 
   local on_exit = function(_)
@@ -552,11 +541,11 @@ Client.resolve_note_async = function(self, query, callback)
   -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
   if count > 0 then
-    ---@type Path
+    ---@type obsidian.Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     local full_path = self.dir / note_path
     return async.run(function()
-      return Note.from_file_async(full_path, self.dir)
+      return Note.from_file_async(full_path)
     end, callback)
   end
 
@@ -566,7 +555,7 @@ Client.resolve_note_async = function(self, query, callback)
     fname = fname .. ".md"
   end
 
-  local paths_to_check = { Path:new(fname), self.dir / fname }
+  local paths_to_check = { Path.new(fname), self.dir / fname }
 
   if self.opts.notes_subdir ~= nil then
     paths_to_check[#paths_to_check + 1] = self.dir / self.opts.notes_subdir / fname
@@ -619,7 +608,7 @@ end
 ---@field location string
 ---@field name string
 ---@field link_type obsidian.search.RefTypes
----@field path Path|?
+---@field path obsidian.Path|?
 ---@field note obsidian.Note|?
 ---@field url string|?
 
@@ -666,7 +655,7 @@ Client.resolve_link_async = function(self, link, callback)
       return callback(res)
     end
 
-    local path = Path:new(location)
+    local path = Path.new(location)
     if path:exists() then
       res.path = path
       return callback(res)
@@ -734,48 +723,49 @@ end
 
 --- Open a note in a buffer.
 ---
----@param note_or_path string|Path|obsidian.Note
+---@param note_or_path string|obsidian.Path|obsidian.Note
 ---@param opts { line: integer|?, col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
 Client.open_note = function(self, note_or_path, opts)
   opts = opts and opts or {}
 
-  ---@type Path
+  ---@type obsidian.Path
   local path
   if type(note_or_path) == "string" then
-    path = Path:new(note_or_path)
+    path = Path.new(note_or_path)
   elseif type(note_or_path) == "table" and note_or_path.path ~= nil then
     -- this is a Note
     ---@cast note_or_path obsidian.Note
     path = note_or_path.path
   elseif type(note_or_path) == "table" and note_or_path.filename ~= nil then
     -- this is a Path
-    ---@cast note_or_path Path
+    ---@cast note_or_path obsidian.Path
     path = note_or_path
   else
     error "invalid 'note_or_path' argument"
   end
 
   local open_cmd = util.get_open_strategy(opts.open_strategy and opts.open_strategy or self.opts.open_notes_in)
-  ---@cast path Path
+  ---@cast path obsidian.Path
   util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
 end
 
 --- Get the current note.
 ---
 ---@return obsidian.Note|?
+---@diagnostic disable-next-line: unused-local
 Client.current_note = function(self)
   if vim.bo.filetype ~= "markdown" then
     return nil
   end
 
-  return Note.from_buffer(0, self.dir)
+  return Note.from_buffer(0)
 end
 
 ---@class obsidian.TagLocation
 ---
 ---@field tag string The tag found.
 ---@field note obsidian.Note The note instance where the tag was found.
----@field path string|Path The path to the note where the tag was found.
+---@field path string|obsidian.Path The path to the note where the tag was found.
 ---@field line integer The line number (1-indexed) where the tag was found.
 ---@field text string The text (with whitespace stripped) of the line where the tag was found.
 ---@field tag_start integer|? The index within 'text' where the tag starts.
@@ -831,7 +821,7 @@ Client.find_tags_async = function(self, term, opts, callback)
   local executor = AsyncExecutor.new()
 
   ---@param tag string
-  ---@param path string
+  ---@param path string|obsidian.Path
   ---@param note obsidian.Note
   ---@param lnum integer
   ---@param text string
@@ -854,7 +844,7 @@ Client.find_tags_async = function(self, term, opts, callback)
 
   ---@param match_data MatchData
   local on_match = function(match_data)
-    local path = util.resolve_path(match_data.path.text)
+    local path = Path.new(match_data.path.text):resolve { strict = true }
 
     if path_order[path] == nil then
       num_paths = num_paths + 1
@@ -865,7 +855,7 @@ Client.find_tags_async = function(self, term, opts, callback)
       -- Load note.
       local note = path_to_note[path]
       if not note then
-        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        local ok, res = pcall(Note.from_file_async, path)
         if ok then
           note = res
           path_to_note[path] = note
@@ -985,7 +975,7 @@ end
 ---@class obsidian.BacklinkMatches
 ---
 ---@field note obsidian.Note The note instance where the backlinks were found.
----@field path string|Path The path to the note where the backlinks were found.
+---@field path string|obsidian.Path The path to the note where the backlinks were found.
 ---@field matches obsidian.BacklinkMatch[] The backlinks within the note.
 
 ---@class obsidian.BacklinkMatch
@@ -1041,7 +1031,7 @@ Client.find_backlinks_async = function(self, note, opts, callback)
   end
 
   local function on_match(match)
-    local path = util.resolve_path(match.path.text)
+    local path = Path.new(match.path.text):resolve { strict = true }
 
     if path_order[path] == nil then
       num_paths = num_paths + 1
@@ -1052,7 +1042,7 @@ Client.find_backlinks_async = function(self, note, opts, callback)
       -- Load note.
       local n = path_to_note[path]
       if not n then
-        local ok, res = pcall(Note.from_file_async, path, self.dir)
+        local ok, res = pcall(Note.from_file_async, path)
         if ok then
           n = res
           path_to_note[path] = n
@@ -1161,7 +1151,7 @@ end
 ---@param timeout integer|? Timeout in milliseconds.
 Client.apply_async = function(self, on_note, on_done, timeout)
   self:apply_async_raw(function(path)
-    local ok, res = pcall(Note.from_file_async, path, self.dir)
+    local ok, res = pcall(Note.from_file_async, path)
     if not ok then
       log.warn("Failed to load note at '%s': %s", path, res)
     else
@@ -1186,19 +1176,19 @@ Client.apply_async_raw = function(self, on_path, on_done, timeout)
 
   local executor = AsyncExecutor.new()
 
-  scan.scan_dir(util.resolve_path(self.dir), {
+  scan.scan_dir(tostring(self.dir), {
     hidden = false,
     add_dirs = false,
     respect_gitignore = true,
     search_pattern = ".*%.md",
     on_insert = function(entry)
-      entry = util.resolve_path(entry)
+      entry = Path.new(entry):resolve { strict = true }
       for skip_dir in iter(skip_dirs) do
-        if util.is_parent_of(skip_dir, entry) then
+        if skip_dir:is_parent_of(entry) then
           return
         end
       end
-      executor:submit(on_path, nil, entry)
+      executor:submit(on_path, nil, tostring(entry))
     end,
   })
 
@@ -1229,9 +1219,9 @@ end
 ---
 ---@param title string|?
 ---@param id string|?
----@param dir string|Path|?
+---@param dir string|obsidian.Path|?
 ---
----@return string|?,string,Path
+---@return string|?,string,obsidian.Path
 Client.parse_title_id_path = function(self, title, id, dir)
   if title then
     title = util.strip_whitespace(title)
@@ -1262,13 +1252,13 @@ Client.parse_title_id_path = function(self, title, id, dir)
     end
 
     -- Pull out any parent dirs from title.
-    local parts = vim.split(s, Path.path.sep)
+    local parts = vim.split(s, "/")
     if #parts > 1 then
       s = parts[#parts]
       if not strict_paths_only then
         is_path = true
       end
-      parent = table.concat(parts, Path.path.sep, 1, #parts - 1)
+      parent = table.concat(parts, "/", 1, #parts - 1)
     end
 
     if s == "" then
@@ -1289,16 +1279,16 @@ Client.parse_title_id_path = function(self, title, id, dir)
   end
 
   -- Resolve base directory.
-  ---@type Path
+  ---@type obsidian.Path
   local base_dir
   if parent then
     base_dir = self.dir / parent
   elseif dir ~= nil then
-    base_dir = Path:new(dir)
+    base_dir = Path.new(dir)
   else
     if
       self.opts.new_notes_location == config.NewNotesLocation.current_dir
-      and util.is_parent_of(self.dir, vim.api.nvim_buf_get_name(0))
+      and self.dir:is_parent_of(vim.api.nvim_buf_get_name(0))
     then
       base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
     else
@@ -1315,7 +1305,7 @@ Client.parse_title_id_path = function(self, title, id, dir)
   end
 
   -- Get path.
-  ---@type Path
+  ---@type obsidian.Path
   ---@diagnostic disable-next-line: assign-type-mismatch
   local path = base_dir / (id .. ".md")
 
@@ -1326,7 +1316,7 @@ end
 ---
 ---@param title string|?
 ---@param id string|?
----@param dir string|Path|?
+---@param dir string|obsidian.Path|?
 ---@param aliases string[]|?
 ---
 ---@return obsidian.Note
@@ -1353,7 +1343,7 @@ Client.new_note = function(self, title, id, dir, aliases)
   end
   note:save(nil, self:should_save_frontmatter(note), frontmatter)
 
-  local rel_path = self:vault_relative_path(note.path)
+  local rel_path = self:vault_relative_path(note.path, { strict = true })
   log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
 
   return note
@@ -1363,19 +1353,19 @@ end
 ---
 ---@param datetime integer|?
 ---
----@return Path, string
+---@return obsidian.Path, string
 Client.daily_note_path = function(self, datetime)
   datetime = datetime and datetime or os.time()
 
-  ---@type Path
+  ---@type obsidian.Path
   local path = Path:new(self.dir)
 
   if self.opts.daily_notes.folder ~= nil then
-    ---@type Path
+    ---@type obsidian.Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.daily_notes.folder
   elseif self.opts.notes_subdir ~= nil then
-    ---@type Path
+    ---@type obsidian.Path
     ---@diagnostic disable-next-line: assign-type-mismatch
     path = path / self.opts.notes_subdir
   end
@@ -1418,7 +1408,7 @@ Client._daily = function(self, datetime)
     local write_frontmatter = true
     if self.opts.daily_notes.template then
       templates.clone_template(self.opts.daily_notes.template, path, self, note:display_name())
-      note = Note.from_file(path, self.dir)
+      note = Note.from_file(path)
       if note.has_frontmatter then
         write_frontmatter = false
       end
@@ -1431,7 +1421,7 @@ Client._daily = function(self, datetime)
       note:save(nil, self:should_save_frontmatter(note), frontmatter)
     end
 
-    local rel_path = self:vault_relative_path(note.path)
+    local rel_path = self:vault_relative_path(note.path, { strict = true })
     log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
   end
 
@@ -1487,11 +1477,11 @@ Client.format_link = function(self, note, opts)
   ---@type string, string, string|?
   local rel_path, label, note_id
   if type(note) == "string" then
-    rel_path = assert(self:vault_relative_path(note))
+    rel_path = tostring(self:vault_relative_path(note, { strict = true }))
     label = opts.label and opts.label or note
     note_id = opts.id
   else
-    rel_path = assert(self:vault_relative_path(note.path))
+    rel_path = tostring(self:vault_relative_path(note.path, { strict = true }))
     label = opts.label and opts.label or note:display_name()
     note_id = tostring(note.id)
   end

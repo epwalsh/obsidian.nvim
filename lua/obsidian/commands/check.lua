@@ -12,8 +12,8 @@ return function(client, _)
   local start_time = vim.loop.hrtime()
 
   client:apply_async_raw(function(path)
-    local relative_path = client:vault_relative_path(path) or path
-    local ok, res = pcall(Note.from_file_async, path, client.dir)
+    local relative_path = client:vault_relative_path(path, { strict = true })
+    local ok, res = pcall(Note.from_file_async, path)
     if not ok then
       errors[#errors + 1] = "Failed to parse note '" .. relative_path .. "': " .. tostring(res)
     elseif res.has_frontmatter == false then

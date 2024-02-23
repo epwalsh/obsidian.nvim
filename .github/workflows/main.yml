@@ -14,11 +14,6 @@ on:
     tags:
       - 'v*.*.*'
 
-env:
-  runtime: ~/.local/share/nvim/site/pack/vendor/start
-  plenary-git: https://github.com/nvim-lua/plenary.nvim
-  plenary-path: ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
-
 jobs:
   style:
     name: Style
@@ -34,11 +29,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: 0.15.1
           args: --check .
-
+  # test_windows:
+  #   name: Test (Windows)
+  #   runs-on: windows-latest
+  #   timeout-minutes: 20
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
   checks:
     name: ${{ matrix.task.name }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 3
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +47,7 @@ jobs:
         task:
           - name: Test
             run: |
-              make test
+              make test PLENARY=_runtime/plenary.nvim
 
           - name: Lint
             prepare: |
@@ -60,42 +61,64 @@ jobs:
             packages: luarocks ripgrep
             manager: sudo apt-get
 
+          - os: windows-latest
+            nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-win64.zip
+            task:
+              name: Test
+              run: |
+                make test PLENARY=_runtime/plenary.nvim
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - run: date +%F > todays-date
-
-      - name: Restore cache for today's nightly
-        uses: actions/cache@v4
-        with:
-          path: |
-            _neovim
-          key: ${{ runner.os }}-${{ hashFiles('todays-date') }}
 
       - name: Install packages
         if: ${{ matrix.packages }}
         run: ${{ matrix.manager }} install ${{ matrix.packages }}
 
-      - name: Install neovim and dependencies
+      - name: Install neovim (nix)
+        shell: bash
+        if: matrix.os != 'windows-latest'
         run: |
-          mkdir -p ${{ env.runtime }}
-          test -d _neovim || {
-            mkdir -p _neovim
-            curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
-          }
-          git clone --depth 1 ${{ env.plenary-git }} ${{ env.plenary-path }}
-          ln -s $(pwd) ${{ env.runtime }}
+          # Download neovim nightly.
+          mkdir -p _neovim
+          curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
+
+      - name: Install neovim (windows)
+        shell: powershell
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Download neovim.
+          # winget install neovim
+          curl -o nvim-win64.zip ${{ matrix.nvim_url }}
+          Expand-Archive -F nvim-win64.zip .
+          Move-Item -Path nvim-win64 -Destination _neovim
+
+      - name: Install plugin dependencies
+        shell: bash
+        run: |
+          # Clone plenary.
+          mkdir -p _runtime
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim _runtime/plenary.nvim
+
+      - name: Show environment
+        shell: bash
+        run: |
+          ls -lh _neovim
+          ls -lh _runtime
 
       - name: Prepare
         if: ${{ matrix.task.prepare }}
         run: ${{ matrix.task.prepare }}
 
       - name: ${{ matrix.task.name }}
+        shell: bash
         run: |
           export PATH="${PWD}/_neovim/bin:${PATH}"
           export VIM="${PWD}/_neovim/share/nvim/runtime"
+
           nvim --version
+
           ${{ matrix.task.run }}
 
   release:

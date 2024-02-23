@@ -1,7 +1,7 @@
 local async = require "plenary.async"
 local channel = require("plenary.async.control").channel
 local search = require "obsidian.search"
-local util = require "obsidian.util"
+local Path = require "obsidian.path"
 
 local RefTypes = search.RefTypes
 local SearchOpts = search.SearchOpts
@@ -13,7 +13,10 @@ describe("search.find_notes_async()", function()
       local tx, rx = channel.oneshot()
       search.find_notes_async(".", "foo.md", function(matches)
         assert.equals(#matches, 1)
-        assert.equals(tostring(matches[1]), util.resolve_path "./test_fixtures/notes/foo.md")
+        assert.equals(
+          tostring(matches[1]),
+          tostring(Path.new("./test_fixtures/notes/foo.md"):resolve { strict = true })
+        )
         tx()
       end)
       rx()
@@ -24,7 +27,10 @@ describe("search.find_notes_async()", function()
       local tx, rx = channel.oneshot()
       search.find_notes_async(".", "notes/foo.md", function(matches)
         assert.equals(#matches, 1)
-        assert.equals(tostring(matches[1]), util.resolve_path "./test_fixtures/notes/foo.md")
+        assert.equals(
+          tostring(matches[1]),
+          tostring(Path.new("./test_fixtures/notes/foo.md"):resolve { strict = true })
+        )
         tx()
       end)
       rx()
