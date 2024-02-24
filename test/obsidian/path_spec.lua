@@ -99,6 +99,8 @@ end)
 describe("Path.joinpath()", function()
   it("can join multiple", function()
     assert.is_true(Path.new "foo/bar/baz.md" == Path.new("foo"):joinpath("bar", "baz.md"))
+    assert.is_true(Path.new "foo/bar/baz.md" == Path.new("foo/"):joinpath("bar/", "baz.md"))
+    assert.is_true(Path.new "foo/bar/baz.md" == Path.new("foo/"):joinpath("bar/", "/baz.md"))
   end)
 end)
 
