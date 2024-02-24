@@ -96,8 +96,8 @@ local function get_stem(path)
   end
 end
 
---- A Path class that provides a subset of the functionality of the Python pathlib library while
---- staying true to its API. It improves on a number of bugs in plenary.path.
+--- A `Path` class that provides a subset of the functionality of the Python `pathlib` library while
+--- staying true to its API. It improves on a number of bugs in `plenary.path`.
 ---
 ---@toc_entry obsidian.Path
 ---
@@ -179,12 +179,18 @@ end
 
 --- Get a temporary path with a unique name.
 ---
+---@param opts { suffix: string|? }|?
+---
 ---@return obsidian.Path
-Path.temp = function()
+Path.temp = function(opts)
+  opts = opts or {}
   -- os.tmpname gives us a temporary file, but we really want a temporary directory, so we
   -- immediately delete that file.
   local tmpname = os.tmpname()
   os.remove(tmpname)
+  if opts.suffix then
+    tmpname = tmpname .. opts.suffix
+  end
   return Path.new(tmpname)
 end
 
@@ -441,7 +447,7 @@ Path.mkdir = function(self, opts)
   self:mkdir { mode = mode }
 end
 
---- Remove the corresponding directory.
+--- Remove the corresponding directory. This directory must be empty.
 Path.rmdir = function(self)
   local resolved = self:resolve { strict = false }
 
@@ -453,6 +459,33 @@ Path.rmdir = function(self)
   if not ok then
     error(err_name .. ": " .. err_msg)
   end
+end
+
+--- Recursively remove an entire directory and its contents.
+Path.rmtree = function(self)
+  local scan = require "plenary.scandir"
+
+  local resolved = self:resolve { strict = true }
+  if not resolved:is_dir() then
+    error("NotADirectoryError: " .. resolved.filename)
+  end
+
+  -- First unlink all files.
+  scan.scan_dir(resolved.filename, {
+    hidden = true,
+    on_insert = function(file)
+      Path.new(file):unlink()
+    end,
+  })
+
+  -- Now iterate backwards to clean up remaining dirs.
+  local dirs = scan.scan_dir(resolved.filename, { add_dirs = true, hidden = true })
+  for i = #dirs, 1, -1 do
+    Path.new(dirs[i]):rmdir()
+  end
+
+  -- And finally remove the top level dir.
+  resolved:rmdir()
 end
 
 --- Create a file at this given path.

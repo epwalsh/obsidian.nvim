@@ -1,4 +1,4 @@
-local yaml = require "obsidian.yaml.native"
+local yaml = require "obsidian.yaml.parser"
 local util = require "obsidian.util"
 
 describe("Parser class", function()
