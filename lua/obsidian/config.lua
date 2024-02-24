@@ -29,7 +29,6 @@ local config = {}
 ---@field open_notes_in obsidian.config.OpenStrategy
 ---@field ui obsidian.config.UIOpts
 ---@field attachments obsidian.config.AttachmentsOpts
----@field yaml_parser string|?
 config.ClientOpts = {}
 
 --- Get defaults.
@@ -61,7 +60,6 @@ config.ClientOpts.default = function()
     open_notes_in = "current",
     ui = config.UIOpts.default(),
     attachments = config.AttachmentsOpts.default(),
-    yaml_parser = "native",
   }
 end
 

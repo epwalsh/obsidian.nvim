@@ -93,11 +93,6 @@ Client.new = function(opts)
 
   self:set_workspace(workspace)
 
-  if self.opts.yaml_parser ~= nil then
-    local yaml = require "obsidian.yaml"
-    yaml.set_parser(self.opts.yaml_parser)
-  end
-
   return self
 end
 

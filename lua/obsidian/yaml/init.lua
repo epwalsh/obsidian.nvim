@@ -1,34 +1,13 @@
 local util = require "obsidian.util"
+local parser = require "obsidian.yaml.parser"
 
 local yaml = {}
-
-yaml.parsers = {
-  ["native"] = require "obsidian.yaml.native",
-  ["yq"] = require "obsidian.yaml.yq",
-}
-
-yaml.parser = "native"
-
----Set the YAML parser to use.
----@param parser string
-yaml.set_parser = function(parser)
-  if yaml.parsers[parser] == nil then
-    error("Undefined parser " .. parser)
-  else
-    yaml.parser = parser
-  end
-end
-
----Reset to the default parser.
-yaml.reset_parser = function()
-  yaml.parser = "native"
-end
 
 ---Deserialize a YAML string.
 ---@param str string
 ---@return any
 yaml.loads = function(str)
-  return yaml.parsers[yaml.parser].loads(str)
+  return parser.loads(str)
 end
 
 ---@param s string

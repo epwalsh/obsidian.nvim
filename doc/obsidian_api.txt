@@ -12,6 +12,8 @@ Table of contents
   
   obsidian.Workspace......................................|obsidian.Workspace|
   
+  obsidian.Path................................................|obsidian.Path|
+  
 
 ------------------------------------------------------------------------------
                                                            *obsidian.SearchOpts*
@@ -52,9 +54,9 @@ Class ~
 
 Fields ~
 {current_workspace} obsidian.Workspace The current workspace.
-{dir} Path The root of the vault for the current workspace.
+{dir} obsidian.Path The root of the vault for the current workspace.
 {opts} obsidian.config.ClientOpts The client config.
-{buf_dir} Path|? The parent directory of the current buffer.
+{buf_dir} obsidian.Path|? The parent directory of the current buffer.
 {_default_opts} obsidian.config.ClientOpts
 {_quiet} `(boolean)`
 
@@ -106,7 +108,7 @@ Parameters ~
 Check if a path represents a note in the workspace.
 
 Parameters ~
-{path} `(string|Path)`
+{path} `(string|obsidian.Path)`
 {workspace} obsidian.Workspace|?
 
 Return ~
@@ -122,7 +124,7 @@ Parameters ~
 {workspace} obsidian.Workspace|?
 
 Return ~
-Path
+obsidian.Path
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Client.vault_name()*
@@ -134,14 +136,15 @@ Return ~
 
 ------------------------------------------------------------------------------
                                          *obsidian.Client.vault_relative_path()*
-                  `Client.vault_relative_path`({self}, {path})
+              `Client.vault_relative_path`({self}, {path}, {opts})
 Make a path relative to the vault root, if possible.
 
 Parameters ~
-{path} `(string|Path)`
+{path} `(string|obsidian.Path)`
+{opts} { strict: `(boolean|?)` }|?
 
 Return ~
-`(string|)` `(optional)`
+obsidian.Path| `(optional)`
 
 ------------------------------------------------------------------------------
                                                *obsidian.Client.templates_dir()*
@@ -152,7 +155,7 @@ Parameters ~
 {workspace} obsidian.Workspace|?
 
 Return ~
-Path| `(optional)`
+obsidian.Path| `(optional)`
 
 ------------------------------------------------------------------------------
                                      *obsidian.Client.should_save_frontmatter()*
@@ -219,7 +222,7 @@ Parameters ~
 {timeout} `(integer|?)` Timeout to wait in milliseconds.
 
 Return ~
-Path[]
+obsidian.Path[]
 
 ------------------------------------------------------------------------------
                                             *obsidian.Client.find_files_async()*
@@ -229,7 +232,7 @@ An async version of `find_files`.
 Parameters ~
 {term} `(string)` The search term.
 {opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
-{callback} `(fun(paths: Path[]))`
+{callback} `(fun(paths: obsidian.Path[]))`
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.resolve_note()*
@@ -263,7 +266,7 @@ Fields ~
 {location} `(string)`
 {name} `(string)`
 {link_type} obsidian.search.RefTypes
-{path} Path|?
+{path} obsidian.Path|?
 {note} obsidian.Note|?
 {url} `(string|?)`
 
@@ -291,7 +294,7 @@ Parameters ~
 Open a note in a buffer.
 
 Parameters ~
-{note_or_path} `(string|Path|obsidian.Note)`
+{note_or_path} `(string|obsidian.Path|obsidian.Note)`
 {opts} { line: `(integer|?,)` col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
 
 ------------------------------------------------------------------------------
@@ -309,7 +312,7 @@ Class ~
 Fields ~
 {tag} `(string)` The tag found.
 {note} obsidian.Note The note instance where the tag was found.
-{path} `(string|Path)` The path to the note where the tag was found.
+{path} `(string|obsidian.Path)` The path to the note where the tag was found.
 {line} `(integer)` The line number (1-indexed) where the tag was found.
 {text} `(string)` The text (with whitespace stripped) of the line where the tag was found.
 {tag_start} `(integer|?)` The index within 'text' where the tag starts.
@@ -344,7 +347,7 @@ Class ~
 
 Fields ~
 {note} obsidian.Note The note instance where the backlinks were found.
-{path} `(string|Path)` The path to the note where the backlinks were found.
+{path} `(string|obsidian.Path)` The path to the note where the backlinks were found.
 {matches} obsidian.BacklinkMatch[] The backlinks within the note.
 
 ------------------------------------------------------------------------------
@@ -439,10 +442,10 @@ Parse the title, ID, and path for a new note.
 Parameters ~
 {title} `(string|?)`
 {id} `(string|?)`
-{dir} `(string|Path|?)`
+{dir} `(string|obsidian.Path|?)`
 
 Return ~
-`(string|)` `(optional)`,string,Path
+`(string|)` `(optional)`,string,obsidian.Path
 
 ------------------------------------------------------------------------------
                                                     *obsidian.Client.new_note()*
@@ -452,7 +455,7 @@ Create and save a new note.
 Parameters ~
 {title} `(string|?)`
 {id} `(string|?)`
-{dir} `(string|Path|?)`
+{dir} `(string|obsidian.Path|?)`
 {aliases} `(string[]|?)`
 
 Return ~
@@ -467,7 +470,7 @@ Parameters ~
 {datetime} `(integer|?)`
 
 Return ~
-Path, `(string)`
+obsidian.Path, `(string)`
 
 ------------------------------------------------------------------------------
                                                        *obsidian.Client.today()*
@@ -548,7 +551,7 @@ Fields ~
 {aliases} `(string[])`
 {title} `(string|?)`
 {tags} `(string[])`
-{path} Path|?
+{path} obsidian.Path|?
 {metadata} `(table|?)`
 {has_frontmatter} `(boolean|?)`
 {frontmatter_end_line} `(integer|?)`
@@ -564,7 +567,7 @@ Parameters ~
 {id} `(string|number)`
 {aliases} `(string[])`
 {tags} `(string[])`
-{path} `(string|Path|?)`
+{path} `(string|obsidian.Path|?)`
 
 Return ~
 obsidian.Note
@@ -656,36 +659,33 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                      *obsidian.Note.from_file()*
-                        `Note.from_file`({path}, {root})
+                            `Note.from_file`({path})
 Initialize a note from a file.
 
 Parameters ~
-{path} `(string|Path)`
-{root} `(string|Path|?)`
+{path} `(string|obsidian.Path)`
 
 Return ~
 obsidian.Note
 
 ------------------------------------------------------------------------------
                                                *obsidian.Note.from_file_async()*
-                     `Note.from_file_async`({path}, {root})
+                         `Note.from_file_async`({path})
 An async version of `.from_file()`.
 
 Parameters ~
-{path} `(string|Path)`
-{root} `(string|Path|?)`
+{path} `(string|obsidian.Path)`
 
 Return ~
 obsidian.Note
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Note.from_buffer()*
-                      `Note.from_buffer`({bufnr}, {root})
+                          `Note.from_buffer`({bufnr})
 Initialize a note from a buffer.
 
 Parameters ~
 {bufnr} `(integer|?)`
-{root} `(string|Path|?)`
 
 Return ~
 obsidian.Note
@@ -700,13 +700,12 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                     *obsidian.Note.from_lines()*
-                   `Note.from_lines`({lines}, {path}, {root})
+                       `Note.from_lines`({lines}, {path})
 Initialize a note from an iterator of lines.
 
 Parameters ~
 {lines} `(function)`
-{path} `(string|Path)`
-{root} `(string|Path|?)`
+{path} `(string|obsidian.Path)`
 
 Return ~
 obsidian.Note
@@ -748,7 +747,7 @@ Return ~
 Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
 
 Parameters ~
-{path} `(string|Path|?)`
+{path} `(string|obsidian.Path|?)`
 {insert_frontmatter} `(boolean|?)`
 {frontmatter} `(table|?)`
 
@@ -769,7 +768,7 @@ Class ~
 {obsidian.workspace.WorkspaceSpec}
 
 Fields ~
-{path} `(string|Path|(fun():)` string|Path)
+{path} `(string|obsidian.Path|(fun():)` string|obsidian.Path)
 {name} `(string|?)`
 {strict} `(boolean|?)` If true, the workspace root will be fixed to 'path' instead of the vault root (if different).
 {overrides} `(table|obsidian.config.ClientOpts|?)`
@@ -797,8 +796,8 @@ Class ~
 
 Fields ~
 {name} `(string)` An arbitrary name for the workspace.
-{path} `(string)` The normalized path to the workspace.
-{root} `(string)` The normalized path to the vault root of the workspace. This usually matches 'path'.
+{path} obsidian.Path The normalized path to the workspace.
+{root} obsidian.Path The normalized path to the vault root of the workspace. This usually matches 'path'.
 {overrides} `(table|obsidian.config.ClientOpts|?)`
 {locked} `(boolean|?)`
 
@@ -811,10 +810,10 @@ This will traverse the directory tree upwards until a '.obsidian/' folder is fou
 indicate the root of a vault, otherwise the given directory is used as-is.
 
 Parameters ~
-{base_dir} `(string|Path)`
+{base_dir} `(string|obsidian.Path)`
 
 Return ~
-`(string|)` `(optional)`
+obsidian.Path| `(optional)`
 
 ------------------------------------------------------------------------------
                                                       *obsidian.Workspace.new()*
@@ -822,7 +821,7 @@ Return ~
 Create a new 'Workspace' object. This assumes the workspace already exists on the filesystem.
 
 Parameters ~
-{path} `(string|Path)` Workspace path.
+{path} `(string|obsidian.Path)` Workspace path.
 {opts} obsidian.workspace.WorkspaceOpts|?
 
 Return ~
@@ -879,7 +878,7 @@ Get the workspace corresponding to the directory (or a parent of), if there
 is one.
 
 Parameters ~
-{cur_dir} `(string|Path)`
+{cur_dir} `(string|obsidian.Path)`
 {workspaces} obsidian.workspace.WorkspaceSpec[]
 
 Return ~
@@ -918,5 +917,240 @@ Parameters ~
 
 Return ~
 obsidian.Workspace| `(optional)`
+
+------------------------------------------------------------------------------
+                                                         *obsidian.cached_get()*
+                      `cached_get`({path}, {k}, {factory})
+Parameters ~
+{path} `(table)`
+{k} `(string)`
+{factory} `(fun(obsidian.Path): any)`
+
+------------------------------------------------------------------------------
+                                                                 *obsidian.Path*
+                                     `Path`
+A `Path` class that provides a subset of the functionality of the Python `pathlib` library while
+staying true to its API. It improves on a number of bugs in `plenary.path`.
+
+Class ~
+{obsidian.Path} : obsidian.ABC
+
+Fields ~
+{filename} `(string)` The underlying filename as a string.
+{name} `(string|?)` The final path component, if any.
+{suffix} `(string|?)` The final extension of the path, if any.
+{suffixes} `(string[])` A list of all of the path's extensions.
+{stem} `(string|?)` The final path component, without its suffix.
+
+------------------------------------------------------------------------------
+
+Constructors.
+
+
+------------------------------------------------------------------------------
+                                                           *obsidian.Path.new()*
+                               `Path.new`({...})
+Create a new path from a string.
+
+Parameters ~
+{...} `(string|obsidian.Path)`
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                          *obsidian.Path.temp()*
+                              `Path.temp`({opts})
+Get a temporary path with a unique name.
+
+Parameters ~
+{opts} { suffix: `(string|?)` }|?
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                           *obsidian.Path.cwd()*
+                                  `Path.cwd`()
+Get a path corresponding to the current working directory as given by `vim.loop.cwd()`.
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.buffer()*
+                             `Path.buffer`({bufnr})
+Get a path corresponding to a buffer.
+
+Parameters ~
+{bufnr} `(integer|?)` The buffer number or `0` / `nil` for the current buffer.
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+
+Pure path methods.
+
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Path.with_suffix()*
+                      `Path.with_suffix`({self}, {suffix})
+Return a new path with the suffix changed.
+
+Parameters ~
+{suffix} `(string)`
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Path.is_absolute()*
+                           `Path.is_absolute`({self})
+Returns true if the path is already in absolute form.
+
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+                                                      *obsidian.Path.joinpath()*
+                         `Path.joinpath`({self}, {...})
+Parameters ~
+{...} `(obsidian.Path|string)`
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Path.relative_to()*
+                      `Path.relative_to`({self}, {other})
+Try to resolve a version of the path relative to the other.
+An error is raised when it's not possible.
+
+Parameters ~
+{other} `(obsidian.Path|string)`
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.parent()*
+                             `Path.parent`({self})
+The logical parent of the path.
+
+Return ~
+obsidian.Path| `(optional)`
+
+------------------------------------------------------------------------------
+                                                       *obsidian.Path.parents()*
+                             `Path.parents`({self})
+Get a list of the parent directories.
+
+Return ~
+obsidian.Path[]
+
+------------------------------------------------------------------------------
+                                                  *obsidian.Path.is_parent_of()*
+                      `Path.is_parent_of`({self}, {other})
+Check if the path is a parent of other.
+
+Parameters ~
+{other} `(obsidian.Path|string)`
+
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+
+Concrete path methods.
+
+
+------------------------------------------------------------------------------
+                                                       *obsidian.Path.resolve()*
+                         `Path.resolve`({self}, {opts})
+Make the path absolute, resolving any symlinks.
+If `strict` is true and the path doesn't exist, an error is raised.
+
+Parameters ~
+{opts} { strict: `(boolean)` }|?
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                          *obsidian.Path.stat()*
+                              `Path.stat`({self})
+Get OS stat results.
+
+Return ~
+`(table|)` `(optional)`
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.exists()*
+                             `Path.exists`({self})
+Check if the path points to an existing file or directory.
+
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+                                                       *obsidian.Path.is_file()*
+                             `Path.is_file`({self})
+Check if the path points to an existing file.
+
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.is_dir()*
+                             `Path.is_dir`({self})
+Check if the path points to an existing directory.
+
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+                                                         *obsidian.Path.mkdir()*
+                          `Path.mkdir`({self}, {opts})
+Create a new directory at the given path.
+
+Parameters ~
+{opts} { mode: `(integer|?,)` parents: boolean|?, exist_ok: boolean|? }|?
+
+------------------------------------------------------------------------------
+                                                         *obsidian.Path.rmdir()*
+                              `Path.rmdir`({self})
+Remove the corresponding directory. This directory must be empty.
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.rmtree()*
+                             `Path.rmtree`({self})
+Recursively remove an entire directory and its contents.
+
+------------------------------------------------------------------------------
+                                                         *obsidian.Path.touch()*
+                          `Path.touch`({self}, {opts})
+Create a file at this given path.
+
+Parameters ~
+{opts} { mode: `(integer|?,)` exist_ok: boolean|? }|?
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.rename()*
+                        `Path.rename`({self}, {target})
+Rename this file or directory to the given target.
+
+Parameters ~
+{target} `(obsidian.Path|string)`
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.unlink()*
+                         `Path.unlink`({self}, {opts})
+Remove the file.
+
+Parameters ~
+{opts} { missing_ok: `(boolean|?)` }|?
 
  vim:tw=78:ts=8:noet:ft=help:norl:

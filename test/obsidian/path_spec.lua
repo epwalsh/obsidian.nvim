@@ -17,6 +17,12 @@ describe("Path.new()", function()
     local path = Path.new "README.md"
     assert.equal(path, Path.new(path))
   end)
+
+  it("should init from a plenary path", function()
+    local PlenaryPath = require "plenary.path"
+    local path = Path.new "README.md"
+    assert.is_true(path == Path.new(PlenaryPath:new "README.md"))
+  end)
 end)
 
 describe("Path.__eq", function()
@@ -72,6 +78,14 @@ describe("Path.stem", function()
   end)
 end)
 
+describe("Path.with_suffix()", function()
+  it("should create a new path with the new suffix", function()
+    assert.is_true(Path:new("/foo/bar.md"):with_suffix ".tar.gz" == Path.new "/foo/bar.tar.gz")
+    assert.is_true(Path:new("/foo/bar.tar.gz"):with_suffix ".bz2" == Path.new "/foo/bar.tar.bz2")
+    assert.is_true(Path:new("/foo/bar"):with_suffix ".md" == Path.new "/foo/bar.md")
+  end)
+end)
+
 describe("Path.is_absolute()", function()
   it("should work for windows or unix paths", function()
     assert(Path:new("/foo/"):is_absolute())
@@ -79,6 +93,14 @@ describe("Path.is_absolute()", function()
       assert(Path:new("C:/foo/"):is_absolute())
       assert(Path:new("C:\\foo\\"):is_absolute())
     end
+  end)
+end)
+
+describe("Path.joinpath()", function()
+  it("can join multiple", function()
+    assert.is_true(Path.new "foo/bar/baz.md" == Path.new("foo"):joinpath("bar", "baz.md"))
+    assert.is_true(Path.new "foo/bar/baz.md" == Path.new("foo/"):joinpath("bar/", "baz.md"))
+    assert.is_true(Path.new "foo/bar/baz.md" == Path.new("foo/"):joinpath("bar/", "/baz.md"))
   end)
 end)
 
@@ -163,7 +185,7 @@ end)
 
 describe("Path.mkdir()", function()
   it("should make a directory", function()
-    local dir = Path.tmpdir()
+    local dir = Path.temp()
     assert.is_false(dir:exists())
 
     dir:mkdir()
@@ -183,7 +205,7 @@ describe("Path.mkdir()", function()
   end)
 
   it("should make a directory and its parents", function()
-    local base_dir = Path.tmpdir()
+    local base_dir = Path.temp()
     local dir = base_dir / "foo"
     assert.is_false(base_dir:exists())
     assert.is_false(dir:exists())
@@ -197,5 +219,37 @@ describe("Path.mkdir()", function()
 
     base_dir:rmdir()
     assert.is_false(base_dir:exists())
+  end)
+
+  it("should rename a file", function()
+    local temp_file = Path.temp()
+    temp_file:touch()
+    assert.is_true(temp_file:is_file())
+
+    local target = Path.temp()
+    assert.is_false(target:exists())
+
+    temp_file:rename(target)
+    assert.is_true(target:is_file())
+    assert.is_false(temp_file:is_file())
+
+    target:unlink()
+    assert.is_false(target:is_file())
+  end)
+
+  it("should rename a directory", function()
+    local temp_file = Path.temp()
+    temp_file:mkdir()
+    assert.is_true(temp_file:is_dir())
+
+    local target = Path.temp()
+    assert.is_false(target:exists())
+
+    temp_file:rename(target)
+    assert.is_true(target:is_dir())
+    assert.is_false(temp_file:is_dir())
+
+    target:rmdir()
+    assert.is_false(target:exists())
   end)
 end)

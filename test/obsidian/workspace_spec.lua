@@ -3,7 +3,7 @@ local workspace = require "obsidian.workspace"
 
 describe("Workspace", function()
   it("should be able to initialize a workspace", function()
-    local tmpdir = Path.tmpdir()
+    local tmpdir = Path.temp()
     tmpdir:mkdir()
     local ws = workspace.new(tmpdir, { name = "test_workspace" })
     assert.equals("test_workspace", ws.name)

@@ -454,10 +454,10 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- You can always override this per image by passing a full path to the command instead of just a filename.
     img_folder = "assets/imgs",  -- This is the default
     -- A function that determines the text to insert in the note when pasting an image.
-    -- It takes two arguments, the `obsidian.Client` and a plenary `Path` to the image file.
+    -- It takes two arguments, the `obsidian.Client` and an `obsidian.Path` to the image file.
     -- This is the default implementation.
     ---@param client obsidian.Client
-    ---@param path Path the absolute path to the image file
+    ---@param path obsidian.Path the absolute path to the image file
     ---@return string
     img_text_func = function(client, path)
       local link_path
@@ -473,14 +473,6 @@ This is a complete list of all of the options that can be passed to `require("ob
       return string.format("![%s](%s)", display_name, link_path)
     end,
   },
-
-  -- Optional, set the YAML parser to use. The valid options are:
-  --  * "native" - uses a pure Lua parser that's fast but potentially misses some edge cases.
-  --  * "yq" - uses the command-line tool yq (https://github.com/mikefarah/yq), which is more robust
-  --    but much slower and needs to be installed separately.
-  -- In general you should be using the native parser unless you run into a bug with it, in which
-  -- case you can temporarily switch to the "yq" parser until the bug is fixed.
-  yaml_parser = "native",
 }
 ```
 
