@@ -134,7 +134,7 @@ end
 ---
 ---@return obsidian.Workspace
 Workspace.new_from_buf = function(bufnr, opts)
-  local bufdir = assert(Path.new(vim.api.nvim_buf_get_name(bufnr and bufnr or 0)):parent())
+  local bufdir = Path.buf_dir(bufnr)
   return Workspace.new(bufdir, opts)
 end
 

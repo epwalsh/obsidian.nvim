@@ -210,6 +210,15 @@ Path.buffer = function(bufnr)
   return Path.new(vim.api.nvim_buf_get_name(bufnr or 0))
 end
 
+--- Get a path corresponding to the parent of a buffer.
+---
+---@param bufnr integer|? The buffer number or `0` / `nil` for the current buffer.
+---
+---@return obsidian.Path
+Path.buf_dir = function(bufnr)
+  return assert(Path.buffer(bufnr):parent())
+end
+
 -------------------------------------------------------------------------------
 --- Pure path methods.
 -------------------------------------------------------------------------------
