@@ -1,5 +1,4 @@
 local yaml = require "obsidian.yaml"
-local util = require "obsidian.util"
 
 describe("obsidian.yaml.dumps", function()
   it("should dump numbers", function()
@@ -61,80 +60,7 @@ describe("obsidian.yaml.dumps", function()
   end)
 end)
 
-describe("obsidian.yaml.native", function()
-  yaml.set_parser "native"
-  it("should parse inline lists with quotes on items", function()
-    local data = yaml.loads 'aliases: ["Foo", "Bar", "Foo Baz"]'
-    assert.equals(type(data), "table")
-    assert.equals(type(data.aliases), "table")
-    assert.equals(#data.aliases, 3)
-    assert.equals(data.aliases[3], "Foo Baz")
-
-    data = yaml.loads 'aliases: ["Foo"]'
-    assert.equals(type(data), "table")
-    assert.equals(type(data.aliases), "table")
-    assert.equals(#data.aliases, 1)
-    assert.equals(data.aliases[1], "Foo")
-
-    data = yaml.loads 'aliases: ["Foo Baz"]'
-    assert.equals(type(data), "table")
-    assert.equals(type(data.aliases), "table")
-    assert.equals(#data.aliases, 1)
-    assert.equals(data.aliases[1], "Foo Baz")
-  end)
-  it("should parse inline lists without quotes on items", function()
-    local data = yaml.loads "aliases: [Foo, Bar, Foo Baz]"
-    assert.equals(type(data), "table")
-    assert.equals(type(data.aliases), "table")
-    assert.equals(#data.aliases, 3)
-    assert.equals(data.aliases[3], "Foo Baz")
-
-    data = yaml.loads "aliases: [Foo]"
-    assert.equals(type(data), "table")
-    assert.equals(type(data.aliases), "table")
-    assert.equals(#data.aliases, 1)
-    assert.equals(data.aliases[1], "Foo")
-
-    data = yaml.loads "aliases: [Foo Baz]"
-    assert.equals(type(data), "table")
-    assert.equals(type(data.aliases), "table")
-    assert.equals(#data.aliases, 1)
-    assert.equals(data.aliases[1], "Foo Baz")
-  end)
-  it("should parse boolean field values", function()
-    local data = yaml.loads "complete: false"
-    assert.equals(type(data), "table")
-    assert.equals(type(data.complete), "boolean")
-  end)
-  it("should parse implicit null values", function()
-    local data = yaml.loads "tags: \ncomplete: false"
-    assert.equals(type(data), "table")
-    assert.equals(data.tags, nil)
-    assert.equals(data.complete, false)
-  end)
-end)
-
-describe("obsidian.yaml.yq", function()
-  if util.get_os() == util.OSType.Windows or util.get_os() == util.OSType.Wsl then
-    return
-  end
-
-  yaml.set_parser "yq"
-  for key, data in pairs {
-    ["numbers"] = 1,
-    ["strings"] = "hi there",
-    ["strings with single quotes"] = "hi it's me",
-    ["tables with string values"] = { foo = "bar" },
-    ["arrays with string values"] = { "foo", "bar" },
-    ["arrays with number values"] = { 1, 2 },
-    ["arrays with table values"] = { { a = 1 }, { b = 2 } },
-    ["tables with number values"] = { a = 1 },
-    ["tables with an empty array"] = { a = {} },
-  } do
-    it("should dump/parse " .. key, function()
-      assert.are.same(yaml.loads(yaml.dumps(data)), data)
-    end)
-  end
+describe("obsidian.yaml.loads()", function()
   it("should parse inline lists with quotes on items", function()
     local data = yaml.loads 'aliases: ["Foo", "Bar", "Foo Baz"]'
     assert.equals(type(data), "table")
