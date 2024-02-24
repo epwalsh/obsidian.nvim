@@ -134,7 +134,7 @@ end
 ---
 ---@return obsidian.Workspace
 Workspace.new_from_buf = function(bufnr, opts)
-  local bufdir = assert(Path.new(vim.api.nvim_buf_get_name(bufnr and bufnr or 0)):parent())
+  local bufdir = Path.buf_dir(bufnr)
   return Workspace.new(bufdir, opts)
 end
 
@@ -157,15 +157,10 @@ end
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
   cur_dir = Path.new(cur_dir):resolve { strict = true }
-  local dirs = cur_dir:parents()
-  table.insert(dirs, 1, cur_dir)
-
   for _, spec in ipairs(workspaces) do
     local w = Workspace.new_from_spec(spec)
-    for _, dir in ipairs(dirs) do
-      if w.path == dir then
-        return w
-      end
+    if w.path == cur_dir or w.path:is_parent_of(cur_dir) then
+      return w
     end
   end
 end
