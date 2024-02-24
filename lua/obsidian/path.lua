@@ -255,10 +255,21 @@ end
 ---@return obsidian.Path
 Path.joinpath = function(self, ...)
   local args = { ... }
-  for i, v in ipairs(args) do
-    args[i] = tostring(v)
+  -- `vim.fs.joinpath` was introduced after neovim 0.9.*
+  -- for i, v in ipairs(args) do
+  --   args[i] = tostring(v)
+  -- end
+  -- return Path.new(vim.fs.joinpath(self.filename, unpack(args)))
+  local filename = self.filename
+  for _, v in ipairs(args) do
+    v = vim.fs.normalize(tostring(v))
+    if vim.startswith(v, "/") then
+      filename = filename .. v
+    else
+      filename = filename .. "/" .. v
+    end
   end
-  return Path.new(vim.fs.joinpath(self.filename, unpack(args)))
+  return Path.new(filename)
 end
 
 --- Try to resolve a version of the path relative to the other.
