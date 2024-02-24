@@ -929,8 +929,8 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                                  *obsidian.Path*
                                      `Path`
-A Path class that provides a subset of the functionality of the Python pathlib library while
-staying true to its API. It improves on a number of bugs in plenary.path.
+A `Path` class that provides a subset of the functionality of the Python `pathlib` library while
+staying true to its API. It improves on a number of bugs in `plenary.path`.
 
 Class ~
 {obsidian.Path} : obsidian.ABC
@@ -960,8 +960,11 @@ obsidian.Path
 
 ------------------------------------------------------------------------------
                                                           *obsidian.Path.temp()*
-                                 `Path.temp`()
+                              `Path.temp`({opts})
 Get a temporary path with a unique name.
+
+Parameters ~
+{opts} { suffix: `(string|?)` }|?
 
 Return ~
 obsidian.Path
@@ -1116,7 +1119,12 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                          *obsidian.Path.rmdir()*
                               `Path.rmdir`({self})
-Remove the corresponding directory.
+Remove the corresponding directory. This directory must be empty.
+
+------------------------------------------------------------------------------
+                                                        *obsidian.Path.rmtree()*
+                             `Path.rmtree`({self})
+Recursively remove an entire directory and its contents.
 
 ------------------------------------------------------------------------------
                                                          *obsidian.Path.touch()*
