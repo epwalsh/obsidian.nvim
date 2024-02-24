@@ -1281,11 +1281,9 @@ Client.parse_title_id_path = function(self, title, id, dir)
   elseif dir ~= nil then
     base_dir = Path.new(dir)
   else
-    if
-      self.opts.new_notes_location == config.NewNotesLocation.current_dir
-      and self.dir:is_parent_of(vim.api.nvim_buf_get_name(0))
-    then
-      base_dir = self.buf_dir and self.buf_dir or Path:new(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
+    local bufpath = Path.buffer(0):resolve()
+    if self.opts.new_notes_location == config.NewNotesLocation.current_dir and self.dir:is_parent_of(bufpath) then
+      base_dir = self.buf_dir or assert(bufpath:parent())
     else
       base_dir = self.dir
       if self.opts.notes_subdir then

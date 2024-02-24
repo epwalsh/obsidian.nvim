@@ -320,16 +320,17 @@ Path.parents = function(self)
   return parents
 end
 
---- Check if the path is a parent of other.
+--- Check if the path is a parent of other. This is a pure path method, so it only checks by
+--- comparing strings. Therefore in practice you probably want to `:resolve()` each path before
+--- using this.
 ---
 ---@param other obsidian.Path|string
 ---
 ---@return boolean
 Path.is_parent_of = function(self, other)
-  local resolved = self:resolve()
-  other = Path.new(other):resolve()
+  other = Path.new(other)
   for _, parent in ipairs(other:parents()) do
-    if parent == resolved then
+    if parent == self then
       return true
     end
   end
