@@ -989,6 +989,17 @@ Return ~
 obsidian.Path
 
 ------------------------------------------------------------------------------
+                                                       *obsidian.Path.buf_dir()*
+                            `Path.buf_dir`({bufnr})
+Get a path corresponding to the parent of a buffer.
+
+Parameters ~
+{bufnr} `(integer|?)` The buffer number or `0` / `nil` for the current buffer.
+
+Return ~
+obsidian.Path
+
+------------------------------------------------------------------------------
 
 Pure path methods.
 
@@ -1051,7 +1062,9 @@ obsidian.Path[]
 ------------------------------------------------------------------------------
                                                   *obsidian.Path.is_parent_of()*
                       `Path.is_parent_of`({self}, {other})
-Check if the path is a parent of other.
+Check if the path is a parent of other. This is a pure path method, so it only checks by
+comparing strings. Therefore in practice you probably want to `:resolve()` each path before
+using this.
 
 Parameters ~
 {other} `(obsidian.Path|string)`
