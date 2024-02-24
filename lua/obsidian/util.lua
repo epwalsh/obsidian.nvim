@@ -393,6 +393,7 @@ util.OSType = {
   Wsl = "Wsl",
   Windows = "Windows",
   Darwin = "Darwin",
+  FreeBSD = "FreeBSD",
 }
 
 util._current_os = nil
