@@ -704,7 +704,7 @@ Client.follow_link_async = function(self, link, opts)
             id = res.location
           end
 
-          local note = self:new_note(res.name, id, nil, aliases)
+          local note = self:create_note { title = res.name, id = id, aliases = aliases }
           self:open_note(note, { open_strategy = opts.open_strategy })
         else
           log.warn "Aborting"
@@ -1127,9 +1127,9 @@ end
 
 --- An async version of 'list_tags()'.
 ---
----@param callback fun(tags: string[])
 ---@param term string|?
-Client.list_tags_async = function(self, callback, term)
+---@param callback fun(tags: string[])
+Client.list_tags_async = function(self, term, callback)
   self:find_tags_async(term and term or "", nil, function(tag_locations)
     local tags = {}
     for _, tag_loc in ipairs(tag_locations) do
@@ -1280,6 +1280,11 @@ Client.parse_title_id_path = function(self, title, id, dir)
     base_dir = self.dir / parent
   elseif dir ~= nil then
     base_dir = Path.new(dir)
+    if not base_dir:is_absolute() then
+      base_dir = self.dir / base_dir
+    else
+      base_dir = base_dir:resolve { strict = true }
+    end
   else
     local bufpath = Path.buffer(0):resolve()
     if self.opts.new_notes_location == config.NewNotesLocation.current_dir and self.dir:is_parent_of(bufpath) then
@@ -1291,6 +1296,9 @@ Client.parse_title_id_path = function(self, title, id, dir)
       end
     end
   end
+
+  -- Make sure `base_dir` is absolute at this point.
+  assert(base_dir:is_absolute(), ("failed to resolve note directory '%s'"):format(base_dir))
 
   -- Generate new ID if needed.
   if not id then
@@ -1306,40 +1314,78 @@ Client.parse_title_id_path = function(self, title, id, dir)
 end
 
 --- Create and save a new note.
+--- Deprecated: prefer `Client:create_note()` instead.
 ---
----@param title string|?
----@param id string|?
----@param dir string|obsidian.Path|?
----@param aliases string[]|?
+---@param title string|? The title for the note.
+---@param id string|? An optional ID for the note. If not provided one will be generated.
+---@param dir string|obsidian.Path|? An optional directory to place the note. If this is a relative path it will be interpreted relative the workspace / vault root.
+---@param aliases string[]|? Additional aliases to assign to the note.
 ---
 ---@return obsidian.Note
 Client.new_note = function(self, title, id, dir, aliases)
-  local new_title, new_id, path = self:parse_title_id_path(title, id, dir)
+  return self:create_note { title = title, id = id, dir = dir, aliases = aliases }
+end
 
-  if new_id == tostring(os.date "%Y-%m-%d") then
-    return self:today()
-  end
+--- Create a new note with the following options.
+---
+---@param opts { title: string|?, id: string|?, dir: string|obsidian.Path|?, aliases: string[]|?, tags: string[]|?, no_write: boolean|? }|? Options.
+---
+--- Options:
+---  - `title`: A title to assign the note.
+---  - `id`: An ID to assign the note. If not specified one will be generated.
+---  - `dir`: An optional directory to place the note in. Relative paths will be interpreted
+---    relative to the workspace / vault root.
+---  - `aliases`: Additional aliases to assign to the note.
+---  - `tags`: Additional tags to assign to the note.
+---  - `no_write`: Don't write the note to disk.
+---
+---@return obsidian.Note
+Client.create_note = function(self, opts)
+  opts = opts or {}
+
+  local new_title, new_id, path = self:parse_title_id_path(opts.title, opts.id, opts.dir)
 
   -- Add title as an alias.
   ---@type string[]
   ---@diagnostic disable-next-line: assign-type-mismatch
-  aliases = aliases == nil and {} or aliases
+  local aliases = opts.aliases or {}
   if new_title ~= nil and new_title:len() > 0 and not util.tbl_contains(aliases, new_title) then
     aliases[#aliases + 1] = new_title
   end
 
-  -- Create Note object and save.
-  local note = Note.new(new_id, aliases, {}, path)
+  -- Create `Note` object.
+  local note = Note.new(new_id, aliases, opts.tags or {}, path)
+  if opts.title then
+    note.title = opts.title
+  end
+
+  -- Write to disk.
+  if not opts.no_write then
+    self:write_note(note)
+  end
+
+  return note
+end
+
+--- Write the note to disk and update frontmatter.
+---
+---@param opts { path: string|obsidian.Path }|? Options.
+---
+--- Options:
+---  - `path`: override the path to write to.
+Client.write_note = function(self, note, opts)
+  opts = opts or {}
+  local path = Path.new(assert(opts.path or note.path, "A path must be provided"))
+
   local frontmatter = nil
   if self.opts.note_frontmatter_func ~= nil then
     frontmatter = self.opts.note_frontmatter_func(note)
   end
+
+  local verb = path:is_file() and "Updated" or "Created"
   note:save(nil, self:should_save_frontmatter(note), frontmatter)
 
-  local rel_path = self:vault_relative_path(note.path, { strict = true })
-  log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
-
-  return note
+  log.info("%s note '%s' at '%s'", verb, note.id, self:vault_relative_path(note.path) or note.path)
 end
 
 --- Get the path to a daily note.
@@ -1460,23 +1506,25 @@ end
 
 --- Create a formatted markdown / wiki link for a note.
 ---
----@param note obsidian.Note|string The note/path to link to.
----@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|? }|? Options.
+---@param note obsidian.Note|obsidian.Path|string The note/path to link to.
+---@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|? }|? Options.
 ---
 ---@return string
 Client.format_link = function(self, note, opts)
   opts = opts and opts or {}
 
-  ---@type string, string, string|?
+  ---@type string, string, string|integer|?
   local rel_path, label, note_id
-  if type(note) == "string" then
+  if type(note) == "string" or Path.is_path_obj(note) then
+    ---@cast note string|obsidian.Path
     rel_path = tostring(self:vault_relative_path(note, { strict = true }))
-    label = opts.label and opts.label or note
+    label = opts.label or tostring(note)
     note_id = opts.id
   else
+    ---@cast note obsidian.Note
     rel_path = tostring(self:vault_relative_path(note.path, { strict = true }))
-    label = opts.label and opts.label or note:display_name()
-    note_id = tostring(note.id)
+    label = opts.label or note:display_name()
+    note_id = opts.id or note.id
   end
 
   local link_style = opts.link_style

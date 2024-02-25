@@ -25,6 +25,19 @@ describe("Path.new()", function()
   end)
 end)
 
+describe("Path.is_path_obj()", function()
+  it("should return true for obsidian.Path objects", function()
+    local path = Path.new "README.md"
+    assert.is_true(Path.is_path_obj(path))
+  end)
+
+  it("should return false for all other kinds of objects", function()
+    assert.is_false(Path.is_path_obj(1))
+    assert.is_false(Path.is_path_obj { a = 2 })
+    assert.is_false(Path.is_path_obj(nil))
+  end)
+end)
+
 describe("Path.__eq", function()
   it("should compare with other paths correctly", function()
     assert.is_true(Path:new "README.md" == Path:new "README.md")

@@ -89,7 +89,7 @@ return function(client, data)
   if not vim.tbl_isempty(tags) then
     return gather_tag_picker_list(client, picker, util.tbl_unique(tags))
   else
-    client:list_tags_async(function(all_tags)
+    client:list_tags_async(nil, function(all_tags)
       vim.schedule(function()
         -- Open picker with tags.
         picker:pick(all_tags, {

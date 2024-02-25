@@ -27,7 +27,7 @@ return function(client, data)
   end
 
   -- create the new note.
-  local note = client:new_note(title)
+  local note = client:create_note { title = title }
 
   -- replace selection with link to new note
   local link = client:format_link(note)

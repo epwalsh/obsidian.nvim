@@ -20,7 +20,8 @@ return function(client, data)
   else
     title = viz.selection
   end
-  local note = client:new_note(title, nil, client.buf_dir)
+
+  local note = client:create_note { title = title }
 
   local new_line = string.sub(line, 1, viz.cscol - 1)
     .. client:format_link(note, { label = title })
