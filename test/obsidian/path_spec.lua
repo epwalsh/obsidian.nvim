@@ -238,16 +238,16 @@ describe("Path.mkdir()", function()
   end)
 
   it("should rename a directory", function()
-    local temp_file = Path.temp()
-    temp_file:mkdir()
-    assert.is_true(temp_file:is_dir())
+    local temp_dir = Path.temp()
+    temp_dir:mkdir()
+    assert.is_true(temp_dir:is_dir())
 
     local target = Path.temp()
     assert.is_false(target:exists())
 
-    temp_file:rename(target)
+    temp_dir:rename(target)
     assert.is_true(target:is_dir())
-    assert.is_false(temp_file:is_dir())
+    assert.is_false(temp_dir:is_dir())
 
     target:rmdir()
     assert.is_false(target:exists())
