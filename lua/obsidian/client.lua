@@ -1287,7 +1287,13 @@ Client.parse_title_id_path = function(self, title, id, dir)
     end
   else
     local bufpath = Path.buffer(0):resolve()
-    if self.opts.new_notes_location == config.NewNotesLocation.current_dir and self.dir:is_parent_of(bufpath) then
+    if
+      self.opts.new_notes_location == config.NewNotesLocation.current_dir
+      -- note is actually in the workspace.
+      and self.dir:is_parent_of(bufpath)
+      -- note is not in dailies folder
+      and (self.opts.daily_notes.folder == nil or not (self.dir / self.opts.daily_notes.folder):is_parent_of(bufpath))
+    then
       base_dir = self.buf_dir or assert(bufpath:parent())
     else
       base_dir = self.dir
@@ -1367,7 +1373,7 @@ Client.create_note = function(self, opts)
   return note
 end
 
---- Write the note to disk and update frontmatter.
+--- Write the note to disk.
 ---
 ---@param opts { path: string|obsidian.Path }|? Options.
 ---
@@ -1452,6 +1458,7 @@ Client._daily = function(self, datetime)
         write_frontmatter = false
       end
     end
+
     if write_frontmatter then
       local frontmatter = nil
       if self.opts.note_frontmatter_func ~= nil then
@@ -1460,8 +1467,7 @@ Client._daily = function(self, datetime)
       note:save(nil, self:should_save_frontmatter(note), frontmatter)
     end
 
-    local rel_path = self:vault_relative_path(note.path, { strict = true })
-    log.info("Created note " .. tostring(note.id) .. " at " .. tostring(rel_path and rel_path or note.path))
+    log.info("Created daily note '%s' at '%s'", note.id, self:vault_relative_path(note.path) or note.path)
   end
 
   return note
