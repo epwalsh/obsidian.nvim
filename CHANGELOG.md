@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.5.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.5.3) - 2024-02-25
+
 ### Fixed
 
 - Fixed regression with cloning templates where a directory was created instead of a file.
