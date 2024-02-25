@@ -396,12 +396,12 @@ Return ~
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.list_tags_async()*
-              `Client.list_tags_async`({self}, {callback}, {term})
+              `Client.list_tags_async`({self}, {term}, {callback})
 An async version of 'list_tags()'.
 
 Parameters ~
-{callback} `(fun(tags: string[]))`
 {term} `(string|?)`
+{callback} `(fun(tags: string[]))`
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.apply_async()*
@@ -451,15 +451,47 @@ Return ~
                                                     *obsidian.Client.new_note()*
            `Client.new_note`({self}, {title}, {id}, {dir}, {aliases})
 Create and save a new note.
+Deprecated: prefer `Client:create_note()` instead.
 
 Parameters ~
-{title} `(string|?)`
-{id} `(string|?)`
-{dir} `(string|obsidian.Path|?)`
-{aliases} `(string[]|?)`
+{title} `(string|?)` The title for the note.
+{id} `(string|?)` An optional ID for the note. If not provided one will be generated.
+{dir} `(string|obsidian.Path|?)` An optional directory to place the note. If this is a relative path it will be interpreted relative the workspace / vault root.
+{aliases} `(string[]|?)` Additional aliases to assign to the note.
 
 Return ~
 obsidian.Note
+
+------------------------------------------------------------------------------
+                                                 *obsidian.Client.create_note()*
+                      `Client.create_note`({self}, {opts})
+Create a new note with the following options.
+
+Parameters ~
+{opts} { title: `(string|?,)` id: string|?, dir: string|obsidian.Path|?, aliases: string[]|?, tags: string[]|?, no_write: boolean|? }|? Options.
+
+Options:
+ - `title`: A title to assign the note.
+ - `id`: An ID to assign the note. If not specified one will be generated.
+ - `dir`: An optional directory to place the note in. Relative paths will be interpreted
+   relative to the workspace / vault root.
+ - `aliases`: Additional aliases to assign to the note.
+ - `tags`: Additional tags to assign to the note.
+ - `no_write`: Don't write the note to disk.
+
+Return ~
+obsidian.Note
+
+------------------------------------------------------------------------------
+                                                  *obsidian.Client.write_note()*
+                  `Client.write_note`({self}, {note}, {opts})
+Write the note to disk.
+
+Parameters ~
+{opts} { path: `(string|obsidian.Path)` }|? Options.
+
+Options:
+ - `path`: override the path to write to.
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.daily_note_path()*
@@ -521,8 +553,8 @@ Parameters ~
 Create a formatted markdown / wiki link for a note.
 
 Parameters ~
-{note} `(obsidian.Note|string)` The note/path to link to.
-{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|? }|? Options.
+{note} `(obsidian.Note|obsidian.Path|string)` The note/path to link to.
+{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|integer|? }|? Options.
 
 Return ~
 `(string)`
@@ -941,6 +973,17 @@ Fields ~
 {suffix} `(string|?)` The final extension of the path, if any.
 {suffixes} `(string[])` A list of all of the path's extensions.
 {stem} `(string|?)` The final path component, without its suffix.
+
+------------------------------------------------------------------------------
+                                                   *obsidian.Path.is_path_obj()*
+                           `Path.is_path_obj`({path})
+Check if an object is an `obsidian.Path` object.
+
+Parameters ~
+{path} `(any)`
+
+Return ~
+`(boolean)`
 
 ------------------------------------------------------------------------------
 
