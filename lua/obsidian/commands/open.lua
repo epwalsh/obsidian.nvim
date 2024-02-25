@@ -59,7 +59,7 @@ return function(client, data)
 
   ---@type string, string[]
   local cmd, args
-  if this_os == util.OSType.Linux or util.OSType.FreeBSD then
+  if this_os == util.OSType.Linux or this_os == util.OSType.FreeBSD then
     cmd = "xdg-open"
     args = { uri }
   elseif this_os == util.OSType.Wsl then
