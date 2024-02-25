@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.5.2](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.5.2) - 2024-02-25
+
 ### Fixed
+
 - Fixed os selection in `ObsidianOpen` command.
 
 ## [v3.5.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.5.1) - 2024-02-24
