@@ -62,7 +62,7 @@ M.clone_template = function(template_name, note_path, client, title)
     return
   end
 
-  note_path:mkdir { parents = true, exist_ok = true }
+  assert(note_path:parent()):mkdir { parents = true, exist_ok = true }
 
   local template_path = Path:new(templates_dir) / template_name
   local template_file = io.open(tostring(template_path), "r")
