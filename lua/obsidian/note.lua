@@ -246,7 +246,9 @@ end
 ---
 ---@return string
 Note.display_name = function(self)
-  if #self.aliases > 0 then
+  if self.title then
+    return self.title
+  elseif #self.aliases > 0 then
     return self.aliases[#self.aliases]
   end
   return tostring(self.id)

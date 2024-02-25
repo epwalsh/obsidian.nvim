@@ -19,13 +19,13 @@ source.complete = function(_, request, callback)
   local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
   if can_complete and search ~= nil and #search >= client.opts.completion.min_chars then
-    local new_title, new_id, path
-    new_id = client:new_note_id(search)
-    new_title, new_id, path = client:parse_title_id_path(search, new_id)
+    local new_note = client:create_note { title = search, no_write = true }
 
-    if not new_title or string.len(new_title) == 0 then
+    if not new_note.title or string.len(new_note.title) == 0 then
       return
     end
+
+    assert(new_note.path)
 
     ---@type obsidian.config.LinkStyle, string, string
     local link_style, sort_text
@@ -39,7 +39,7 @@ source.complete = function(_, request, callback)
       error "not implemented"
     end
 
-    local new_text = client:format_link(tostring(path), { label = new_title, link_style = link_style, id = new_id })
+    local new_text = client:format_link(new_note, { link_style = link_style })
     local label = "Create: " .. new_text
 
     local items = {
@@ -61,8 +61,7 @@ source.complete = function(_, request, callback)
           },
         },
         data = {
-          id = new_id,
-          title = search,
+          note = new_note,
         },
       },
     }
@@ -79,7 +78,7 @@ end
 source.execute = function(_, item, callback)
   local client = assert(obsidian.get_client())
   local data = item.data
-  client:new_note(data.title, data.id)
+  client:write_note(data.note)
   return callback {}
 end
 

@@ -1,13 +1,5 @@
 local abc = require "obsidian.abc"
 
-local is_path_obj = function(path)
-  if type(path) == "table" and path.__is_obsidian_path then
-    return true
-  else
-    return false
-  end
-end
-
 local function coerce(v)
   if v == vim.NIL then
     return nil
@@ -143,6 +135,19 @@ Path.mt = {
   end,
 }
 
+--- Check if an object is an `obsidian.Path` object.
+---
+---@param path any
+---
+---@return boolean
+Path.is_path_obj = function(path)
+  if getmetatable(path) == Path.mt then
+    return true
+  else
+    return false
+  end
+end
+
 -------------------------------------------------------------------------------
 --- Constructors.
 -------------------------------------------------------------------------------
@@ -166,13 +171,12 @@ Path.new = function(...)
     error "expected one argument"
   end
 
-  if is_path_obj(arg) then
+  if Path.is_path_obj(arg) then
     ---@cast arg obsidian.Path
     return arg
   end
 
   self.filename = vim.fs.normalize(tostring(arg))
-  self.__is_obsidian_path = true
 
   return self
 end

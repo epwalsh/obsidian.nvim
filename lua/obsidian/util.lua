@@ -888,13 +888,13 @@ util.get_visual_selection = function()
   }
 end
 
----@param opts {path: string, label: string, id: string|?}
+---@param opts {path: string, label: string, id: string|integer|?}
 ---@return string
 util.wiki_link_path_only = function(opts)
   return string.format("[[%s]]", opts.path)
 end
 
----@param opts {path: string, label: string, id: string|?}
+---@param opts {path: string, label: string, id: string|integer|?}
 ---@return string
 util.wiki_link_path_prefix = function(opts)
   if opts.label ~= opts.path then
@@ -904,7 +904,7 @@ util.wiki_link_path_prefix = function(opts)
   end
 end
 
----@param opts {path: string, label: string, id: string|?}
+---@param opts {path: string, label: string, id: string|integer|?}
 ---@return string
 util.wiki_link_id_prefix = function(opts)
   if opts.id == nil then
@@ -916,7 +916,7 @@ util.wiki_link_id_prefix = function(opts)
   end
 end
 
----@param opts {path: string, label: string, id: string|?}
+---@param opts {path: string, label: string, id: string|integer|?}
 ---@return string
 util.markdown_link = function(opts)
   return string.format("[%s](%s)", opts.label, opts.path)
