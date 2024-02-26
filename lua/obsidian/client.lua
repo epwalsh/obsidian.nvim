@@ -1391,10 +1391,13 @@ end
 
 --- Write the note to disk.
 ---
----@param opts { path: string|obsidian.Path }|? Options.
+---@param note obsidian.Note
+---@param opts { path: string|obsidian.Path, update_content: (fun(lines: string[]): string[])|? }|? Options.
 ---
 --- Options:
----  - `path`: override the path to write to.
+---  - `path`: Override the path to write to.
+---  - `update_content`: A function to update the contents of the note. This takes a list of lines
+---    representing the text to be written, and returns the lines that will actually be written.
 Client.write_note = function(self, note, opts)
   opts = opts or {}
   local path = Path.new(assert(opts.path or note.path, "A path must be provided"))
@@ -1405,7 +1408,13 @@ Client.write_note = function(self, note, opts)
   end
 
   local verb = path:is_file() and "Updated" or "Created"
-  note:save(nil, self:should_save_frontmatter(note), frontmatter)
+
+  note:save {
+    path = path,
+    insert_frontmatter = self:should_save_frontmatter(note),
+    frontmatter = frontmatter,
+    update_content = opts.update_content,
+  }
 
   log.info("%s note '%s' at '%s'", verb, note.id, self:vault_relative_path(note.path) or note.path)
 end
@@ -1480,7 +1489,7 @@ Client._daily = function(self, datetime)
       if self.opts.note_frontmatter_func ~= nil then
         frontmatter = self.opts.note_frontmatter_func(note)
       end
-      note:save(nil, self:should_save_frontmatter(note), frontmatter)
+      note:save { insert_frontmatter = self:should_save_frontmatter(note), frontmatter = frontmatter }
     end
 
     log.info("Created daily note '%s' at '%s'", note.id, self:vault_relative_path(note.path) or note.path)

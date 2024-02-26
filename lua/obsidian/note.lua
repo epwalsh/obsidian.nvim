@@ -477,14 +477,22 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
   end
 end
 
---- Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
+--- Save the note to a file.
+--- In general this only updates the frontmatter and header, leaving the rest of the contents unchanged.
 ---
----@param path string|obsidian.Path|?
----@param insert_frontmatter boolean|?
----@param frontmatter table|?
-Note.save = function(self, path, insert_frontmatter, frontmatter)
-  if self.path == nil then
-    error "note path cannot be nil"
+---@param opts { path: string|obsidian.Path|?, insert_frontmatter: boolean|?, frontmatter: table|?, update_content: (fun(lines: string[]): string[])|? }|? Options.
+---
+--- Options:
+---  - `path`: Specify a path to save to. Defaults to `self.path`.
+---  - `insert_frontmatter`: Whether to insert/update frontmatter. Defaults to `true`.
+---  - `frontmatter`: Override the frontmatter. Defaults to the result of `self:frontmatter()`.
+---  - `update_content`: A function to update the contents of the note. This takes a list of lines
+---    representing the text to be written, and returns the lines that will actually be written.
+Note.save = function(self, opts)
+  opts = opts or {}
+
+  if self.path == nil and opts.path == nil then
+    error "a path is required"
   end
 
   local lines = {}
@@ -492,7 +500,7 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
   local end_idx = 0
 
   -- Read lines from existing file, if there is one.
-  -- TODO: check for open buffer.
+  -- TODO: check for open buffer?
   local self_f = io.open(tostring(self.path))
   if self_f ~= nil then
     local contents = self_f:read "*a"
@@ -520,8 +528,8 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
 
   -- Replace frontmatter.
   local new_lines = {}
-  if insert_frontmatter ~= false then
-    new_lines = self:frontmatter_lines(true, frontmatter)
+  if opts.insert_frontmatter ~= false then
+    new_lines = self:frontmatter_lines(true, opts.frontmatter)
   end
 
   -- Add remaining original lines.
@@ -529,13 +537,20 @@ Note.save = function(self, path, insert_frontmatter, frontmatter)
     table.insert(new_lines, lines[i])
   end
 
+  -- Pass lines through callback.
+  if opts.update_content then
+    new_lines = opts.update_content(new_lines)
+  end
+
   --Write new lines.
-  local save_path = Path.new(assert(path and path or self.path)):resolve()
+  local save_path = Path.new(assert(opts.path or self.path)):resolve()
   assert(save_path:parent()):mkdir { parents = true, exist_ok = true }
+
   local save_f = io.open(tostring(save_path), "w")
   if save_f == nil then
     error(string.format("failed to write file at " .. save_path))
   end
+
   for _, line in pairs(new_lines) do
     save_f:write(line)
   end
