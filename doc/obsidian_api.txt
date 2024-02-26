@@ -405,23 +405,31 @@ Parameters ~
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.apply_async()*
-         `Client.apply_async`({self}, {on_note}, {on_done}, {timeout})
+                `Client.apply_async`({self}, {on_note}, {opts})
 Apply a function over all notes in the current vault.
 
 Parameters ~
 {on_note} `(fun(note: obsidian.Note))`
-{on_done} `(fun()|?)`
-{timeout} `(integer|?)` Timeout in milliseconds.
+{opts} { on_done: `(fun()|?,)` timeout: integer|?, pattern: string|? }|?
+
+Options:
+ - `on_done`: A function to call when all notes have been processed.
+ - `timeout`: An optional timeout.
+ - `pattern`: A Lua search pattern. Defaults to ".*%.md".
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.apply_async_raw()*
-       `Client.apply_async_raw`({self}, {on_path}, {on_done}, {timeout})
+              `Client.apply_async_raw`({self}, {on_path}, {opts})
 Like apply, but the callback takes a path instead of a note instance.
 
 Parameters ~
 {on_path} `(fun(path: string))`
-{on_done} `(fun()|?)`
-{timeout} `(integer|?)` Timeout in milliseconds.
+{opts} { on_done: `(fun()|?,)` timeout: integer|?, pattern: string|? }|?
+
+Options:
+ - `on_done`: A function to call when all paths have been processed.
+ - `timeout`: An optional timeout.
+ - `pattern`: A Lua search pattern. Defaults to ".*%.md".
 
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.new_note_id()*
@@ -462,6 +470,7 @@ Parameters ~
 Return ~
 obsidian.Note
 
+
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.create_note()*
                       `Client.create_note`({self}, {opts})
@@ -488,10 +497,14 @@ obsidian.Note
 Write the note to disk.
 
 Parameters ~
-{opts} { path: `(string|obsidian.Path)` }|? Options.
+{note} obsidian.Note
+{opts} { path: `(string|obsidian.Path,)` update_content: (fun(lines: string[]): string[])|? }|? Options.
 
 Options:
- - `path`: override the path to write to.
+ - `path`: Override the path to write to.
+ - `update_content`: A function to update the contents of the note. This takes a list of lines
+   representing the text to be written excluding frontmatter, and returns the lines that will
+   actually be written (again excluding frontmatter).
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.daily_note_path()*
@@ -775,13 +788,21 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                           *obsidian.Note.save()*
-        `Note.save`({self}, {path}, {insert_frontmatter}, {frontmatter})
-Save note to file. This only updates the frontmatter and header, leaving the rest of the contents unchanged.
+                          `Note.save`({self}, {opts})
+Save the note to a file.
+In general this only updates the frontmatter and header, leaving the rest of the contents unchanged
+unless you use the `update_content()` callback.
 
 Parameters ~
-{path} `(string|obsidian.Path|?)`
-{insert_frontmatter} `(boolean|?)`
-{frontmatter} `(table|?)`
+{opts} { path: `(string|obsidian.Path|?,)` insert_frontmatter: boolean|?, frontmatter: table|?, update_content: (fun(lines: string[]): string[])|? }|? Options.
+
+Options:
+ - `path`: Specify a path to save to. Defaults to `self.path`.
+ - `insert_frontmatter`: Whether to insert/update frontmatter. Defaults to `true`.
+ - `frontmatter`: Override the frontmatter. Defaults to the result of `self:frontmatter()`.
+ - `update_content`: A function to update the contents of the note. This takes a list of lines
+   representing the text to be written excluding frontmatter, and returns the lines that will
+   actually be written (again excluding frontmatter).
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Note.save_to_buffer()*
