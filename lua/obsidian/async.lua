@@ -257,12 +257,12 @@ local File = abc.new_class()
 
 M.File = File
 
----@param path string
+---@param path string|obsidian.Path
 ---@param mode string|?
 ---@return obsidian.File
 File.open = function(path, mode)
   local self = File.init()
-  local err, fd = async.uv.fs_open(path, mode and mode or "r", 438)
+  local err, fd = async.uv.fs_open(tostring(path), mode and mode or "r", 438)
   assert(not err, err)
   self.fd = fd
   return self

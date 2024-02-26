@@ -1,4 +1,5 @@
 local Path = require "obsidian.path"
+local File = require("obsidian.async").File
 local abc = require "obsidian.abc"
 local with = require("plenary.context_manager").with
 local open = require("plenary.context_manager").open
@@ -188,33 +189,41 @@ Note.from_file = function(path)
   end
   local n
   with(open(tostring(Path.new(path):resolve { strict = true })), function(reader)
-    n = Note.from_lines(function()
-      return reader:lines()
-    end, path)
+    n = Note.from_lines(reader:lines(), path)
   end)
   return n
 end
 
---- An async version of `.from_file()`.
+--- An async version of `.from_file()`, i.e. it needs to be called in an async context.
 ---
 ---@param path string|obsidian.Path
 ---
 ---@return obsidian.Note
 Note.from_file_async = function(path)
-  local File = require("obsidian.async").File
-  if path == nil then
-    error "note path cannot be nil"
-  end
-  local f = File.open(tostring(Path.new(path):resolve { strict = true }))
-  local ok, res = pcall(Note.from_lines, function()
-    return f:lines(false)
-  end, path)
+  local f = File.open(Path.new(path):resolve { strict = true })
+  local ok, res = pcall(Note.from_lines, f:lines(false), path)
   f:close()
   if ok then
     return res
   else
     error(res)
   end
+end
+
+--- Like `.from_file_async()` but also returns the contents of the file as a list of lines.
+---
+---@param path string|obsidian.Path
+---
+---@return obsidian.Note,string[]
+Note.from_file_with_contents_async = function(path)
+  path = Path.new(path):resolve { strict = true }
+  local f = File.open(path)
+  local content = {}
+  for line in f:lines(false) do
+    table.insert(content, line)
+  end
+  f:close()
+  return Note.from_lines(iter(content), path), content
 end
 
 --- Initialize a note from a buffer.
@@ -226,21 +235,7 @@ Note.from_buffer = function(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local path = vim.api.nvim_buf_get_name(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-
-  local lines_iter = function()
-    local i = 0
-    local n = #lines
-    return function()
-      i = i + 1
-      if i <= n then
-        return lines[i]
-      else
-        return nil
-      end
-    end
-  end
-
-  return Note.from_lines(lines_iter, path)
+  return Note.from_lines(iter(lines), path)
 end
 
 --- Get the display name for note.
@@ -257,7 +252,7 @@ end
 
 --- Initialize a note from an iterator of lines.
 ---
----@param lines function
+---@param lines fun(): string|?
 ---@param path string|obsidian.Path
 ---
 ---@return obsidian.Note
@@ -274,7 +269,7 @@ Note.from_lines = function(lines, path)
   local has_frontmatter, in_frontmatter = false, false
   local frontmatter_end_line = nil
   local line_idx = 0
-  for line in lines() do
+  for line in lines do
     line_idx = line_idx + 1
     if line_idx == 1 then
       if Note._is_frontmatter_boundary(line) then
