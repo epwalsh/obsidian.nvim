@@ -1343,6 +1343,7 @@ end
 ---@param aliases string[]|? Additional aliases to assign to the note.
 ---
 ---@return obsidian.Note
+---@deprecated
 Client.new_note = function(self, title, id, dir, aliases)
   return self:create_note { title = title, id = id, dir = dir, aliases = aliases }
 end
