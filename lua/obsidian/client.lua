@@ -1397,10 +1397,12 @@ end
 --- Options:
 ---  - `path`: Override the path to write to.
 ---  - `update_content`: A function to update the contents of the note. This takes a list of lines
----    representing the text to be written, and returns the lines that will actually be written.
+---    representing the text to be written excluding frontmatter, and returns the lines that will
+---    actually be written (again excluding frontmatter).
 Client.write_note = function(self, note, opts)
   opts = opts or {}
-  local path = Path.new(assert(opts.path or note.path, "A path must be provided"))
+  local path = assert(opts.path or note.path, "A path must be provided")
+  path = Path.new(path)
 
   local frontmatter = nil
   if self.opts.note_frontmatter_func ~= nil then

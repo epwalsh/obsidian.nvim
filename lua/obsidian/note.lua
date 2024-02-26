@@ -7,6 +7,7 @@ local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
 local iter = require("obsidian.itertools").iter
+local enumerate = require("obsidian.itertools").enumerate
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
@@ -186,7 +187,7 @@ Note.from_file = function(path)
     error "note path cannot be nil"
   end
   local n
-  with(open(Path.new(path):resolve { strict = true }), function(reader)
+  with(open(tostring(Path.new(path):resolve { strict = true })), function(reader)
     n = Note.from_lines(function()
       return reader:lines()
     end, path)
@@ -478,7 +479,8 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
 end
 
 --- Save the note to a file.
---- In general this only updates the frontmatter and header, leaving the rest of the contents unchanged.
+--- In general this only updates the frontmatter and header, leaving the rest of the contents unchanged
+--- unless you use the `update_content()` callback.
 ---
 ---@param opts { path: string|obsidian.Path|?, insert_frontmatter: boolean|?, frontmatter: table|?, update_content: (fun(lines: string[]): string[])|? }|? Options.
 ---
@@ -487,7 +489,8 @@ end
 ---  - `insert_frontmatter`: Whether to insert/update frontmatter. Defaults to `true`.
 ---  - `frontmatter`: Override the frontmatter. Defaults to the result of `self:frontmatter()`.
 ---  - `update_content`: A function to update the contents of the note. This takes a list of lines
----    representing the text to be written, and returns the lines that will actually be written.
+---    representing the text to be written excluding frontmatter, and returns the lines that will
+---    actually be written (again excluding frontmatter).
 Note.save = function(self, opts)
   opts = opts or {}
 
@@ -495,68 +498,57 @@ Note.save = function(self, opts)
     error "a path is required"
   end
 
-  local lines = {}
-  local has_frontmatter, in_frontmatter = false, false
-  local end_idx = 0
-
-  -- Read lines from existing file, if there is one.
+  -- Read contents from existing file, if there is one, skipping frontmatter.
   -- TODO: check for open buffer?
-  local self_f = io.open(tostring(self.path))
-  if self_f ~= nil then
-    local contents = self_f:read "*a"
-    for idx, line in ipairs(vim.split(contents, "\n")) do
-      lines[#lines + 1] = line .. "\n"
-
-      if idx == 1 then
-        if Note._is_frontmatter_boundary(line) then
-          has_frontmatter = true
+  ---@type string[]
+  local content = {}
+  if self.path ~= nil and self.path:is_file() then
+    with(open(tostring(self.path)), function(reader)
+      local in_frontmatter, at_boundary = false, false
+      for idx, line in enumerate(reader:lines()) do
+        if idx == 1 and Note._is_frontmatter_boundary(line) then
+          at_boundary = true
           in_frontmatter = true
-        end
-      elseif has_frontmatter and in_frontmatter then
-        if Note._is_frontmatter_boundary(line) then
-          end_idx = idx
+        elseif in_frontmatter and Note._is_frontmatter_boundary(line) then
+          at_boundary = true
           in_frontmatter = false
+        else
+          at_boundary = false
+        end
+
+        if not in_frontmatter and not at_boundary then
+          table.insert(content, line)
         end
       end
-    end
-
-    self_f:close()
-  elseif #self.aliases > 0 then
+    end)
+  elseif self.title ~= nil then
     -- Add a header.
-    table.insert(lines, "# " .. self.aliases[1])
+    table.insert(content, "# " .. self.title)
   end
 
-  -- Replace frontmatter.
-  local new_lines = {}
-  if opts.insert_frontmatter ~= false then
-    new_lines = self:frontmatter_lines(true, opts.frontmatter)
-  end
-
-  -- Add remaining original lines.
-  for i = end_idx + 1, #lines do
-    table.insert(new_lines, lines[i])
-  end
-
-  -- Pass lines through callback.
+  -- Pass content through callback.
   if opts.update_content then
-    new_lines = opts.update_content(new_lines)
+    content = opts.update_content(content)
   end
 
-  --Write new lines.
+  ---@type string[]
+  local new_lines
+  if opts.insert_frontmatter ~= false then
+    -- Replace frontmatter.
+    new_lines = vim.tbl_flatten { self:frontmatter_lines(false, opts.frontmatter), content }
+  else
+    new_lines = content
+  end
+
   local save_path = Path.new(assert(opts.path or self.path)):resolve()
   assert(save_path:parent()):mkdir { parents = true, exist_ok = true }
 
-  local save_f = io.open(tostring(save_path), "w")
-  if save_f == nil then
-    error(string.format("failed to write file at " .. save_path))
-  end
-
-  for _, line in pairs(new_lines) do
-    save_f:write(line)
-  end
-  save_f:close()
-
-  return lines
+  -- Write new lines.
+  with(open(tostring(save_path), "w"), function(writer)
+    for _, line in ipairs(new_lines) do
+      writer:write(line .. "\n")
+    end
+  end)
 end
 
 --- Save frontmatter to the given buffer.

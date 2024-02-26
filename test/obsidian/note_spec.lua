@@ -49,12 +49,12 @@ describe("Note", function()
   it("should be able to save to file", function()
     local note = Note.from_file "test_fixtures/notes/foo.md"
     note:add_alias "Foo Bar"
-    note:save "./test_fixtures/notes/foo_bar.md"
+    note:save { path = "./test_fixtures/notes/foo_bar.md" }
   end)
 
   it("should be able to save note w/o frontmatter to file", function()
     local note = Note.from_file "test_fixtures/notes/note_without_frontmatter.md"
-    note:save "./test_fixtures/notes/note_without_frontmatter_saved.md"
+    note:save { path = "./test_fixtures/notes/note_without_frontmatter_saved.md" }
   end)
 
   it("should be able to save a new note", function()
@@ -87,7 +87,7 @@ describe("Note", function()
         "---",
       }, "\n")
     )
-    note:save "./test_fixtures/notes/note_with_additional_metadata_saved.md"
+    note:save { path = "./test_fixtures/notes/note_with_additional_metadata_saved.md" }
   end)
 
   it("should be able to be read frontmatter that's formatted differently", function()

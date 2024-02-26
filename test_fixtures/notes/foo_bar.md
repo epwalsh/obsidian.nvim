@@ -10,4 +10,3 @@ tags: []
 # foo
 
 This is some content.
-
