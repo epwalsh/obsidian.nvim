@@ -504,7 +504,7 @@ Note.save = function(self, opts)
   local content = {}
   if self.path ~= nil and self.path:is_file() then
     with(open(tostring(self.path)), function(reader)
-      local in_frontmatter, at_boundary = false, false
+      local in_frontmatter, at_boundary = false, false -- luacheck: ignore (false positive)
       for idx, line in enumerate(reader:lines()) do
         if idx == 1 and Note._is_frontmatter_boundary(line) then
           at_boundary = true
