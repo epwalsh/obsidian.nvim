@@ -1142,9 +1142,13 @@ end
 --- Apply a function over all notes in the current vault.
 ---
 ---@param on_note fun(note: obsidian.Note)
----@param on_done fun()|?
----@param timeout integer|? Timeout in milliseconds.
-Client.apply_async = function(self, on_note, on_done, timeout)
+---@param opts { on_done: fun()|?, timeout: integer|?, pattern: string|? }|?
+---
+--- Options:
+---  - `on_done`: A function to call when all notes have been processed.
+---  - `timeout`: An optional timeout.
+---  - `pattern`: A Lua search pattern. Defaults to ".*%.md".
+Client.apply_async = function(self, on_note, opts)
   self:apply_async_raw(function(path)
     local ok, res = pcall(Note.from_file_async, path)
     if not ok then
@@ -1152,16 +1156,21 @@ Client.apply_async = function(self, on_note, on_done, timeout)
     else
       on_note(res)
     end
-  end, on_done, timeout)
+  end, opts)
 end
 
 --- Like apply, but the callback takes a path instead of a note instance.
 ---
 ---@param on_path fun(path: string)
----@param on_done fun()|?
----@param timeout integer|? Timeout in milliseconds.
-Client.apply_async_raw = function(self, on_path, on_done, timeout)
+---@param opts { on_done: fun()|?, timeout: integer|?, pattern: string|? }|?
+---
+--- Options:
+---  - `on_done`: A function to call when all paths have been processed.
+---  - `timeout`: An optional timeout.
+---  - `pattern`: A Lua search pattern. Defaults to ".*%.md".
+Client.apply_async_raw = function(self, on_path, opts)
   local scan = require "plenary.scandir"
+  opts = opts or {}
 
   local skip_dirs = {}
   local templates_dir = self:templates_dir()
@@ -1175,22 +1184,28 @@ Client.apply_async_raw = function(self, on_path, on_done, timeout)
     hidden = false,
     add_dirs = false,
     respect_gitignore = true,
-    search_pattern = ".*%.md",
+    search_pattern = opts.pattern or ".*%.md",
     on_insert = function(entry)
       entry = Path.new(entry):resolve { strict = true }
+
+      if entry.suffix ~= ".md" then
+        return
+      end
+
       for skip_dir in iter(skip_dirs) do
         if skip_dir:is_parent_of(entry) then
           return
         end
       end
+
       executor:submit(on_path, nil, tostring(entry))
     end,
   })
 
-  if on_done then
-    executor:join_and_then(timeout, on_done)
+  if opts.on_done then
+    executor:join_and_then(opts.timeout, opts.on_done)
   else
-    executor:join_and_then(timeout, function() end)
+    executor:join_and_then(opts.timeout, function() end)
   end
 end
 

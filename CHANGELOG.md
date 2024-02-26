@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Deprecated `Client:new_note()` in favor of `Client:create_note()`.
+- Changed API of `Client:apply_async()` to take a table of options in place of the 2nd and 3rd arguments.
 
 ## [v3.5.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.5.3) - 2024-02-25
 
