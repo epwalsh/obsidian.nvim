@@ -716,13 +716,24 @@ obsidian.Note
 ------------------------------------------------------------------------------
                                                *obsidian.Note.from_file_async()*
                          `Note.from_file_async`({path})
-An async version of `.from_file()`.
+An async version of `.from_file()`, i.e. it needs to be called in an async context.
 
 Parameters ~
 {path} `(string|obsidian.Path)`
 
 Return ~
 obsidian.Note
+
+------------------------------------------------------------------------------
+                                 *obsidian.Note.from_file_with_contents_async()*
+                  `Note.from_file_with_contents_async`({path})
+Like `.from_file_async()` but also returns the contents of the file as a list of lines.
+
+Parameters ~
+{path} `(string|obsidian.Path)`
+
+Return ~
+`(obsidian.Note,string[])`
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Note.from_buffer()*
@@ -749,7 +760,7 @@ Return ~
 Initialize a note from an iterator of lines.
 
 Parameters ~
-{lines} `(function)`
+{lines} `(fun(): string|?)`
 {path} `(string|obsidian.Path)`
 
 Return ~
