@@ -802,12 +802,18 @@ Client.find_tags_async = function(self, term, opts, callback)
   terms = util.tbl_unique(terms)
 
   -- Maps paths to tag locations.
-  ---@type table<string, obsidian.TagLocation[]>
+  ---@type table<obsidian.Path, obsidian.TagLocation[]>
   local path_to_tag_loc = {}
+  -- Caches note objects.
+  ---@type table<obsidian.Path, obsidian.Note>
   local path_to_note = {}
+  -- Caches code block locations.
+  ---@type table<obsidian.Path, { [1]: integer, [2]: integer []}>
+  local path_to_code_blocks = {}
   -- Keeps track of the order of the paths.
   ---@type table<string, integer>
   local path_order = {}
+
   local num_paths = 0
   local err_count = 0
   local first_err = nil
@@ -837,6 +843,15 @@ Client.find_tags_async = function(self, term, opts, callback)
     }
   end
 
+  -- Wraps `Note.from_file_with_contents_async()` to return a table instead of a tuple and
+  -- find the code blocks.
+  ---@param path obsidian.Path
+  ---@return { [1]: obsidian.Note, [2]: {[1]: integer, [2]: integer}[] }
+  local load_note = function(path)
+    local note, contents = Note.from_file_with_contents_async(path)
+    return { note, search.find_code_blocks(contents) }
+  end
+
   ---@param match_data MatchData
   local on_match = function(match_data)
     local path = Path.new(match_data.path.text):resolve { strict = true }
@@ -849,17 +864,26 @@ Client.find_tags_async = function(self, term, opts, callback)
     executor:submit(function()
       -- Load note.
       local note = path_to_note[path]
-      if not note then
-        local ok, res = pcall(Note.from_file_async, path)
+      local code_blocks = path_to_code_blocks[path]
+      if not note or not code_blocks then
+        local ok, res = pcall(load_note, path)
         if ok then
-          note = res
+          note, code_blocks = unpack(res)
           path_to_note[path] = note
+          path_to_code_blocks[path] = code_blocks
         else
           err_count = err_count + 1
           if first_err == nil then
             first_err = res
             first_err_path = path
           end
+          return
+        end
+      end
+
+      -- check if the match was inside a code block.
+      for block in iter(code_blocks) do
+        if block[1] <= match_data.line_number and match_data.line_number <= block[2] then
           return
         end
       end

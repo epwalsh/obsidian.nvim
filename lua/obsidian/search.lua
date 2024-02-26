@@ -233,6 +233,32 @@ M.find_and_replace_refs = function(s)
   return table.concat(pieces, ""), indices, refs
 end
 
+--- Find all code block boundaries in a list of lines.
+---
+---@param lines string[]
+---
+---@return { [1]: integer, [2]: integer }[]
+M.find_code_blocks = function(lines)
+  ---@type { [1]: integer, [2]: integer }[]
+  local blocks = {}
+  ---@type integer|?
+  local start_idx
+  for i, line in ipairs(lines) do
+    if string.match(line, "^%s*```.*```%s*$") then
+      table.insert(blocks, { i, i })
+      start_idx = nil
+    elseif string.match(line, "^%s*```") then
+      if start_idx ~= nil then
+        table.insert(blocks, { start_idx, i })
+        start_idx = nil
+      else
+        start_idx = i
+      end
+    end
+  end
+  return blocks
+end
+
 ---@class obsidian.search.SearchOpts : obsidian.ABC
 ---
 ---@field sort_by obsidian.config.SortBy|?

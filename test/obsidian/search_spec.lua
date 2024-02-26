@@ -143,3 +143,121 @@ describe("search.Patterns", function()
     end
   end)
 end)
+
+describe("search.find_code_blocks", function()
+  it("should find generic code blocks", function()
+    ---@type string[]
+    local lines
+    local results = {
+      { 3, 6 },
+    }
+
+    -- no indentation
+    lines = {
+      "this is a python function:",
+      "",
+      "```",
+      "def foo():",
+      "    pass",
+      "```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+
+    -- indentation
+    lines = {
+      "  this is a python function:",
+      "",
+      "  ```",
+      "  def foo():",
+      "      pass",
+      "  ```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+  end)
+
+  it("should find generic inline code blocks", function()
+    ---@type string[]
+    local lines
+    local results = {
+      { 3, 3 },
+    }
+
+    -- no indentation
+    lines = {
+      "this is a python function:",
+      "",
+      "```lambda x: x + 1```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+
+    -- indentation
+    lines = {
+      "  this is a python function:",
+      "",
+      "  ```lambda x: x + 1```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+  end)
+
+  it("should find lang-specific code blocks", function()
+    ---@type string[]
+    local lines
+    local results = {
+      { 3, 6 },
+    }
+
+    -- no indentation
+    lines = {
+      "this is a python function:",
+      "",
+      "```python",
+      "def foo():",
+      "    pass",
+      "```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+
+    -- indentation
+    lines = {
+      "  this is a python function:",
+      "",
+      "  ```",
+      "  def foo():",
+      "      pass",
+      "  ```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+  end)
+
+  it("should find lang-specific inline code blocks", function()
+    ---@type string[]
+    local lines
+    local results = {
+      { 3, 3 },
+    }
+
+    -- no indentation
+    lines = {
+      "this is a python function:",
+      "",
+      "```{python} lambda x: x + 1```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+
+    -- indentation
+    lines = {
+      "  this is a python function:",
+      "",
+      "  ```{python} lambda x: x + 1```",
+      "",
+    }
+    assert.are.same(results, search.find_code_blocks(lines))
+  end)
+end)

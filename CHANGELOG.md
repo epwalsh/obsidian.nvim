@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed API of `Client:apply_async()` to take a table of options in place of the 2nd and 3rd arguments.
 - Changed API of `Note:save()` to take a table of options.
 
+### Fixed
+
+- Ignore things that looks like tags within code blocks.
+
 ## [v3.5.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.5.3) - 2024-02-25
 
 ### Fixed
