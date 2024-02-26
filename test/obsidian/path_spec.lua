@@ -23,6 +23,13 @@ describe("Path.new()", function()
     local path = Path.new "README.md"
     assert.is_true(path == Path.new(PlenaryPath:new "README.md"))
   end)
+
+  it("should raise an error if 2 args are passed and the first isn't Path", function()
+    assert.has_error(function()
+      ---@diagnostic disable-next-line
+      Path.new(1, "bar")
+    end)
+  end)
 end)
 
 describe("Path.is_path_obj()", function()

@@ -165,7 +165,7 @@ Path.new = function(...)
   local arg
   if #args == 1 then
     arg = tostring(args[1])
-  elseif #args == 2 then
+  elseif #args == 2 and args[1] == Path then
     arg = tostring(args[2])
   else
     error "expected one argument"
