@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.6.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.0) - 2024-02-27
+
+Various bug fixes and Lua API improvements.
+
 ### Changed
 
 - Deprecated `Client:new_note()` in favor of `Client:create_note()`.
