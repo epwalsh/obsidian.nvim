@@ -926,6 +926,7 @@ Client.find_tags_async = function(self, term, opts, callback)
         .. search.Patterns.TagCharsOptional
         .. t
         .. search.Patterns.TagCharsOptional
+        .. "$"
       -- frontmatter tag in inline list
       search_terms[#search_terms + 1] = "tags: .*"
         .. search.Patterns.TagCharsOptional
@@ -935,7 +936,7 @@ Client.find_tags_async = function(self, term, opts, callback)
       -- tag in the wild
       search_terms[#search_terms + 1] = "#" .. search.Patterns.TagCharsRequired
       -- frontmatter tag in multiline list
-      search_terms[#search_terms + 1] = "\\s*- " .. search.Patterns.TagCharsRequired
+      search_terms[#search_terms + 1] = "\\s*- " .. search.Patterns.TagCharsRequired .. "$"
       -- frontmatter tag in inline list
       search_terms[#search_terms + 1] = "tags: .*" .. search.Patterns.TagCharsRequired
     end
