@@ -87,9 +87,10 @@ end
 ---@param fname string|?
 ---@param default_dir obsidian.Path|string
 ---@param default_name string|?
+---@param should_confirm boolean|?
 ---
 ---@return obsidian.Path|? image_path the absolute path to the image file
-M.paste_img = function(fname, default_dir, default_name)
+M.paste_img = function(fname, default_dir, default_name, should_confirm)
   if not clipboard_is_img() then
     log.err "There is no image data in the clipboard"
     return
@@ -119,13 +120,15 @@ M.paste_img = function(fname, default_dir, default_name)
       path = (Path.new(default_dir) / fname):resolve()
     end
 
-    -- Get confirmation from user.
-    local confirmation = string.lower(vim.fn.input {
-      prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
-    })
-    if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
-      log.warn "Paste canceled"
-      return
+    if should_confirm then
+      -- Get confirmation from user.
+      local confirmation = string.lower(vim.fn.input {
+        prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
+      })
+      if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
+        log.warn "Paste canceled"
+        return
+      end
     end
 
     -- Ensure parent directory exists.
