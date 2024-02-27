@@ -13,13 +13,14 @@ return function(client)
     return
   end
 
-  ---@type (string[])[]
+  -- Gather all unique raw links (strings) from the buffer.
+  ---@type table<string, boolean>
   local links = {}
   for line in iter(vim.api.nvim_buf_get_lines(0, 0, -1, true)) do
     for match in iter(search.find_refs(line, { include_naked_urls = true, include_file_urls = true })) do
       local m_start, m_end = unpack(match)
       local link = string.sub(line, m_start, m_end)
-      links[#links + 1] = { link }
+      links[link] = true
     end
   end
 
@@ -57,7 +58,7 @@ return function(client)
       rx()
       return entry
     end,
-    links,
+    vim.tbl_keys(links),
     function(results)
       vim.schedule(function()
         -- Flatten entries.

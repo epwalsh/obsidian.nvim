@@ -70,6 +70,9 @@ Executor.map = function(self, fn, task_args, callback)
       if i == #task_args then
         all_submitted = true
       end
+      if type(args) ~= "table" then
+        args = { args }
+      end
       self:submit(fn, get_task_done_fn(i), unpack(args))
     end
   elseif type(task_args) == "table" then
