@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added configuration option `attachments.confirm_img_paste: boolean` to allow users to control whether they are prompted for confirmation when pasting an image.
+
 ### Fixed
 
 - Only show unique links in buffer with `:ObsidianLinks`.
-- Let user control whether paste image is confirmed
 
 ## [v3.6.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.0) - 2024-02-27
 

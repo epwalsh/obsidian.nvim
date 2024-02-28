@@ -217,14 +217,20 @@ end
 ---@return obsidian.Path|?
 Client.vault_relative_path = function(self, path, opts)
   opts = opts or {}
+
   -- NOTE: we don't try to resolve the `path` here because that would make the path absolute,
   -- which may result in the wrong relative path if the current working directory is not within
   -- the vault.
+  path = Path.new(path)
+
   local ok, relative_path = pcall(function()
-    return Path.new(path):relative_to(self:vault_root())
+    return path:relative_to(self:vault_root())
   end)
+
   if ok then
     return relative_path
+  elseif not path:is_absolute() then
+    return path
   elseif opts.strict then
     error(string.format("failed to resolve '%s' relative to vault root '%s'", path, self:vault_root()))
   end

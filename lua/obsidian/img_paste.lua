@@ -84,72 +84,84 @@ local function save_clipboard_image(path)
   end
 end
 
---- @param opts table The options table containing:
----     fname string|? The filename.
----     default_dir obsidian.Path|string The default directory.
----     default_name string|? The default name.
----     should_confirm boolean|? Flag to confirm before proceeding.
+---@param opts { fname: string|?, default_dir: obsidian.Path|string|?, default_name: string|?, should_confirm: boolean|? }|? Options.
+---
+--- Options:
+---  - `fname`: The filename.
+---  - `default_dir`: The default directory to put the image file in.
+---  - `default_name`: The default name to assign the image.
+---  - `should_confirm`: Prompt to confirm before proceeding.
 ---
 --- @return obsidian.Path|? image_path The absolute path to the image file.
 M.paste_img = function(opts)
   opts = opts or {}
-  local fname = opts.fname
-  local default_dir = opts.default_dir
-  local default_name = opts.default_name
-  local should_confirm = opts.should_confirm
+
+  local fname = opts.fname and util.strip_whitespace(opts.fname) or nil
 
   if not clipboard_is_img() then
     log.err "There is no image data in the clipboard"
     return
-  else
-    -- Get filename to save to.
-    if fname == "" then
-      fname = vim.fn.input { prompt = "Enter file name: ", default = default_name }
-    end
-
-    if fname == "" then
-      log.err "Invalid file name"
-      return
-    end
-
-    -- Make sure fname ends with ".png"
-    if not vim.endswith(fname, ".png") then
-      fname = fname .. ".png"
-    end
-
-    -- Resolve path to paste image to.
-    ---@type obsidian.Path
-    local path
-    if vim.fs.basename(fname) ~= fname then
-      -- fname is a full path
-      path = Path.new(fname):resolve()
-    else
-      path = (Path.new(default_dir) / fname):resolve()
-    end
-
-    if should_confirm then
-      -- Get confirmation from user.
-      local confirmation = string.lower(vim.fn.input {
-        prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
-      })
-      if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
-        log.warn "Paste canceled"
-        return
-      end
-    end
-
-    -- Ensure parent directory exists.
-    assert(path:parent()):mkdir { exist_ok = true, parents = true }
-
-    -- Paste image.
-    local result = save_clipboard_image(tostring(path))
-    if result == false then
-      log.err "Failed to save image"
-      return
-    end
-
-    return path
   end
+
+  -- Get filename to save to.
+  if fname == nil or fname == "" then
+    if opts.default_name ~= nil and not opts.should_confirm then
+      fname = opts.default_name
+    else
+      fname = vim.fn.input { prompt = "Enter file name: ", default = opts.default_name }
+    end
+
+    fname = util.strip_whitespace(fname)
+  end
+
+  if fname == "" then
+    log.err "Invalid file name"
+    return
+  end
+
+  local path = Path.new(fname)
+
+  -- Make sure fname ends with ".png"
+  if not path.suffix then
+    path = path:with_suffix ".png"
+  elseif path.suffix ~= ".png" then
+    log.err("invalid suffix for image name '%s', must be '.png'", path.suffix)
+    return
+  end
+
+  -- Resolve absolute path to write image to.
+  if path.name ~= path.filename then
+    -- fname is a full path
+    path = path:resolve()
+  elseif opts.default_dir ~= nil then
+    path = (Path.new(opts.default_dir) / path):resolve()
+  else
+    log.err "'default_dir' must be provided"
+    return
+  end
+
+  if opts.should_confirm then
+    -- Get confirmation from user.
+    local confirmation = string.lower(vim.fn.input {
+      prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
+    })
+    if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
+      log.warn "Paste canceled"
+      return
+    end
+  end
+
+  -- Ensure parent directory exists.
+  assert(path:parent()):mkdir { exist_ok = true, parents = true }
+
+  -- Paste image.
+  local result = save_clipboard_image(tostring(path))
+  if result == false then
+    log.err "Failed to save image"
+    return
+  end
+
+  return path
 end
 
 return M

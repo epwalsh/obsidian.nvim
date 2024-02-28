@@ -235,12 +235,20 @@ end
 Path.with_suffix = function(self, suffix)
   if not vim.startswith(suffix, ".") and string.len(suffix) > 1 then
     error(string.format("invalid suffix '%s'", suffix))
+  elseif self.stem == nil then
+    error(string.format("path '%s' has no stem", self.filename))
   end
 
   local new_name = self.stem .. suffix
-  local dirname = self:parent()
-  if dirname then
-    return dirname / new_name
+
+  ---@type obsidian.Path|?
+  local parent = nil
+  if self.name ~= self.filename then
+    parent = self:parent()
+  end
+
+  if parent then
+    return parent / new_name
   else
     return Path.new(new_name)
   end
@@ -292,10 +300,6 @@ end
 ---
 ---@return obsidian.Path
 Path.relative_to = function(self, other)
-  if not self:is_absolute() then
-    return self
-  end
-
   other = Path.new(other)
 
   local other_fname = other.filename
@@ -305,9 +309,25 @@ Path.relative_to = function(self, other)
 
   if vim.startswith(self.filename, other_fname) then
     return Path.new(string.sub(self.filename, string.len(other_fname) + 1))
-  else
-    error(string.format("'%s' is not in the subpath of '%s'", self.filename, other.filename))
   end
+
+  if not self:is_absolute() and not vim.startswith(self.filename, "./") and vim.startswith(other_fname, "./") then
+    if other_fname == "./" then
+      return self
+    end
+
+    local self_rel_to_cwd = Path.new "./" / self
+    if vim.startswith(self_rel_to_cwd.filename, other_fname) then
+      return Path.new(string.sub(self_rel_to_cwd.filename, string.len(other_fname) + 1))
+    end
+  end
+
+  local parent = self:parent()
+  if parent and parent == other then
+    return parent / self.name
+  end
+
+  error(string.format("'%s' is not in the subpath of '%s'", self.filename, other.filename))
 end
 
 --- The logical parent of the path.
