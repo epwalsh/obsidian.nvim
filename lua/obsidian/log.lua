@@ -12,16 +12,32 @@ local function has_tostring(t)
   return mt ~= nil and mt.__tostring ~= nil
 end
 
+---@param msg string
 ---@return any[]
-local function message_args(...)
+local function message_args(msg, ...)
+  local args = { ... }
+  local num_directives = select(2, string.gsub(msg, "%%", "")) - 2 * select(2, string.gsub(msg, "%%%%", ""))
+
+  -- Some elements might be nil, so we can't use 'ipairs'.
   local out = {}
-  for i, v in ipairs { ... } do
-    if type(v) == "table" and not has_tostring(v) then
+  for i = 1, #args do
+    local v = args[i]
+    if v == nil then
+      out[i] = tostring(v)
+    elseif type(v) == "table" and not has_tostring(v) then
       out[i] = vim.inspect(v)
     else
       out[i] = v
     end
   end
+
+  -- If were short formatting args relative to the number of directives, add "nil" strings on.
+  if #out < num_directives then
+    for i = #out + 1, num_directives do
+      out[i] = "nil"
+    end
+  end
+
   return out
 end
 
@@ -36,7 +52,7 @@ end
 ---@param level integer|?
 log.log = function(msg, level, ...)
   if level == nil or log._log_level == nil or level >= log._log_level then
-    msg = string.format(tostring(msg), unpack(message_args(...)))
+    msg = string.format(tostring(msg), unpack(message_args(msg, ...)))
     if vim.in_fast_event() then
       vim.schedule(function()
         vim.notify(msg, level, { title = "Obsidian.nvim" })
@@ -50,7 +66,7 @@ end
 ---@param msg string
 ---@param level integer
 log.lazy_log = function(msg, level, ...)
-  msg = string.format(tostring(msg), unpack(message_args(...)))
+  msg = string.format(tostring(msg), unpack(message_args(msg, ...)))
   buffer[#buffer + 1] = { msg = msg, level = level }
 end
 

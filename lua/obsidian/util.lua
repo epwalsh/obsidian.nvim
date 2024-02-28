@@ -383,6 +383,16 @@ util.string_replace = function(s, what, with, n)
   return s, count
 end
 
+--- Count occurrences of the `pattern` in `s`.
+---
+---@param s string
+---@param pattern string
+---
+---@return integer
+util.string_count = function(s, pattern)
+  return select(2, string.gsub(s, pattern, ""))
+end
+
 ------------------------------------
 -- Miscellaneous helper functions --
 ------------------------------------
