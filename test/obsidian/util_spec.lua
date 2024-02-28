@@ -144,8 +144,16 @@ describe("util.strip_comments()", function()
     assert.equals("foo: 1", util.strip_comments "foo: 1  # this is a comment")
   end)
 
+  it("should strip comments even when they start at the beginning of the string", function()
+    assert.equals("", util.strip_comments "# foo: 1")
+  end)
+
   it("should ignore '#' when enclosed in quotes", function()
     assert.equals([["hashtags start with '#'"]], util.strip_comments [["hashtags start with '#'"]])
+  end)
+
+  it("should ignore an escaped '#'", function()
+    assert.equals([[hashtags start with \# right?]], util.strip_comments [[hashtags start with \# right?]])
   end)
 end)
 

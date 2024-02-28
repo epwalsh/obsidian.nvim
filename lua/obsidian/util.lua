@@ -333,17 +333,13 @@ end
 ---@param str string
 ---@return string
 util.strip_comments = function(str)
-  if not util.has_enclosing_chars(str) then
-    for i = 1, #str do
-      -- TODO: handle case where '#' is escaped
-      local c = string.sub(str, i, i)
-      if c == "#" then
-        str = util.rstrip_whitespace(string.sub(str, 1, i - 1))
-        break
-      end
-    end
+  if vim.startswith(str, "#") then
+    return ""
+  elseif not util.has_enclosing_chars(str) then
+    return select(1, string.gsub(str, [[%s+#.*$]], ""))
+  else
+    return str
   end
-  return str
 end
 
 ---Check if a string contains a substring.
