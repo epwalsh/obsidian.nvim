@@ -227,7 +227,7 @@ Client.vault_relative_path = function(self, path, opts)
     return path:relative_to(self:vault_root())
   end)
 
-  if ok then
+  if ok and relative_path then
     return relative_path
   elseif not path:is_absolute() then
     return path
