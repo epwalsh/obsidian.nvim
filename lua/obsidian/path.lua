@@ -311,6 +311,7 @@ Path.relative_to = function(self, other)
     return Path.new(string.sub(self.filename, string.len(other_fname) + 1))
   end
 
+  -- Edge cases when the paths are relative or under-specified, see tests.
   if not self:is_absolute() and not vim.startswith(self.filename, "./") and vim.startswith(other_fname, "./") then
     if other_fname == "./" then
       return self
@@ -320,11 +321,6 @@ Path.relative_to = function(self, other)
     if vim.startswith(self_rel_to_cwd.filename, other_fname) then
       return Path.new(string.sub(self_rel_to_cwd.filename, string.len(other_fname) + 1))
     end
-  end
-
-  local parent = self:parent()
-  if parent and parent == other then
-    return parent / self.name
   end
 
   error(string.format("'%s' is not in the subpath of '%s'", self.filename, other.filename))
