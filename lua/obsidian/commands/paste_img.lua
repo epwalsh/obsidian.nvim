@@ -15,8 +15,12 @@ return function(client, data)
     default_name = client.opts.image_name_func()
   end
 
-  local should_confirm = client.opts.attachments.img_confirm_paste
-  local path = paste_img(data.args, img_folder, default_name, should_confirm)
+  local path = paste_img {
+    fname = data.args,
+    default_dir = img_folder,
+    default_name = default_name,
+    should_confirm = client.opts.attachments.confirm_img_paste,
+  }
 
   if path ~= nil then
     util.insert_text(client.opts.attachments.img_text_func(client, path))

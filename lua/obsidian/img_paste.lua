@@ -84,13 +84,20 @@ local function save_clipboard_image(path)
   end
 end
 
----@param fname string|?
----@param default_dir obsidian.Path|string
----@param default_name string|?
----@param should_confirm boolean|?
+--- @param opts table The options table containing:
+---     fname string|? The filename.
+---     default_dir obsidian.Path|string The default directory.
+---     default_name string|? The default name.
+---     should_confirm boolean|? Flag to confirm before proceeding.
 ---
----@return obsidian.Path|? image_path the absolute path to the image file
-M.paste_img = function(fname, default_dir, default_name, should_confirm)
+--- @return obsidian.Path|? image_path The absolute path to the image file.
+M.paste_img = function(opts)
+  opts = opts or {}
+  local fname = opts.fname
+  local default_dir = opts.default_dir
+  local default_name = opts.default_name
+  local should_confirm = opts.should_confirm
+
   if not clipboard_is_img() then
     log.err "There is no image data in the clipboard"
     return

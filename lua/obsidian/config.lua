@@ -398,7 +398,7 @@ end
 ---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
 ---@field img_text_func function (obsidian.Client, Path,) -> string
----@field img_confirm_paste boolean Whether to confirm the paste or not. Defaults to true.
+---@field confirm_img_paste boolean Whether to confirm the paste or not. Defaults to true.
 config.AttachmentsOpts = {}
 
 ---@return obsidian.config.AttachmentsOpts
@@ -422,7 +422,7 @@ config.AttachmentsOpts.default = function()
       local display_name = vim.fs.basename(link_path)
       return string.format("![%s](%s)", display_name, link_path)
     end,
-    img_confirm_paste = true,
+    confirm_img_paste = true,
   }
 end
 
