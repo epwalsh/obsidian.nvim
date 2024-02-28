@@ -104,6 +104,16 @@ describe("Path.with_suffix()", function()
     assert.is_true(Path:new("/foo/bar.tar.gz"):with_suffix ".bz2" == Path.new "/foo/bar.tar.bz2")
     assert.is_true(Path:new("/foo/bar"):with_suffix ".md" == Path.new "/foo/bar.md")
   end)
+
+  it("should not add anything else to the filename", function()
+    assert.equals(Path.new "foo-bar.png", Path.new("foo-bar"):with_suffix ".png")
+  end)
+
+  it("should fail when there is no stem", function()
+    assert.has_error(function()
+      Path.new("/"):with_suffix ".png"
+    end)
+  end)
 end)
 
 describe("Path.is_absolute()", function()
@@ -125,8 +135,9 @@ describe("Path.joinpath()", function()
 end)
 
 describe("Path.relative_to()", function()
-  it("should resolve the relative path", function()
+  it("should work on absolute paths", function()
     assert.equals("baz.md", Path:new("/foo/bar/baz.md"):relative_to("/foo/bar/").filename)
+    assert.equals("baz.md", Path:new("/foo/bar/baz.md"):relative_to("/foo/bar").filename)
     assert.equals("baz.md", Path:new("/baz.md"):relative_to("/").filename)
   end)
 
@@ -134,12 +145,32 @@ describe("Path.relative_to()", function()
     assert.has_error(function()
       Path:new("/bar/bar/baz.md"):relative_to "/foo/"
     end)
+
+    assert.has_error(function()
+      Path:new("bar/bar/baz.md"):relative_to "/bar"
+    end)
+  end)
+
+  it("should work on relative paths", function()
+    assert.equals("img.png", Path:new("assets/img.png"):relative_to("assets").filename)
+    assert.equals("img.png", Path:new("assets/img.png"):relative_to("./assets").filename)
+
+    assert.equals("assets/img.png", Path:new("assets/img.png"):relative_to("./").filename)
+    assert.equals("assets/img.png", Path:new("./assets/img.png"):relative_to("./").filename)
   end)
 end)
 
 describe("Path.parent()", function()
   it("should get the parent of the current", function()
     assert.are_same(Path.new("/foo/bar/README.md"):parent(), Path.new "/foo/bar")
+  end)
+
+  it("should return './' for an unresolved name to match Python pathlib API", function()
+    assert.equals(Path.new "./", Path.new("foo-bar"):parent())
+  end)
+
+  it("should return '/' for '/' to match Python pathlib API", function()
+    assert.equals(Path.new "/", Path.new("/"):parent())
   end)
 end)
 
@@ -154,11 +185,12 @@ describe("Path.resolve()", function()
     assert.equals(vim.fs.normalize(assert(vim.loop.fs_realpath "README.md")), Path.new("README.md"):resolve().filename)
   end)
 
-  it("should always resolve to the an absolute path if a parent exists", function()
+  it("should always resolve to an absolute path if a parent exists", function()
     assert.equals(
       vim.fs.normalize(assert(vim.loop.fs_realpath ".")) .. "/tmp/dne.md",
       Path.new("tmp/dne.md"):resolve().filename
     )
+
     assert.equals(
       vim.fs.normalize(assert(vim.loop.fs_realpath ".")) .. "/dne.md",
       Path.new("dne.md"):resolve().filename
