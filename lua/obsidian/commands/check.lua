@@ -37,7 +37,7 @@ return function(client, _)
   }
 
   client:apply_async_raw(function(path)
-    local relative_path = client:vault_relative_path(path, { strict = true })
+    local relative_path = assert(client:vault_relative_path(path, { strict = true }))
     local ok, res = pcall(Note.from_file_async, path)
     if not ok then
       errors[#errors + 1] = "Failed to parse note '" .. relative_path .. "': " .. tostring(res)
