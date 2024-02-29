@@ -6,10 +6,11 @@ local Path = require "obsidian.path"
 local abc = require "obsidian.abc"
 local util = require "obsidian.util"
 local Picker = require "obsidian.pickers.picker"
+local log = require "obsidian.log"
 
 ---@param prompt_title string|?
 ---@return string|?
-local function get_prompt(prompt_title)
+local function format_prompt(prompt_title)
   if not prompt_title then
     return
   else
@@ -62,22 +63,59 @@ local function get_path_actions(opts)
 end
 
 ---@param display_to_value_map table<string, any>
----@param opts { callback: fun(path: string)|?, selection_mappings: obsidian.PickerMappingTable|? }
+---@param opts { callback: fun(path: string)|?, allow_multiple: boolean|?, selection_mappings: obsidian.PickerMappingTable|? }
 local function get_value_actions(display_to_value_map, opts)
+  ---@param allow_multiple boolean|?
+  ---@return any[]|?
+  local function get_values(selected, allow_multiple)
+    if not selected then
+      return
+    end
+
+    local values = vim.tbl_map(function(k)
+      return display_to_value_map[k]
+    end, selected)
+
+    values = vim.tbl_filter(function(v)
+      return v ~= nil
+    end, values)
+
+    if #values > 1 and not allow_multiple then
+      log.err "This mapping does not allow multiple entries"
+      return
+    end
+
+    if #values > 0 then
+      return values
+    else
+      return nil
+    end
+  end
+
   local actions = {
     default = function(selected)
-      if opts.callback and selected and display_to_value_map[selected[1]] then
-        opts.callback(display_to_value_map[selected[1]])
+      if not opts.callback then
+        return
       end
+
+      local values = get_values(selected, opts.allow_multiple)
+      if not values then
+        return
+      end
+
+      opts.callback(unpack(values))
     end,
   }
 
   if opts.selection_mappings then
     for key, mapping in pairs(opts.selection_mappings) do
       actions[format_keymap(key)] = function(selected)
-        if selected and display_to_value_map[selected[1]] then
-          mapping.callback(display_to_value_map[selected[1]])
+        local values = get_values(selected, mapping.allow_multiple)
+        if not values then
+          return
         end
+
+        mapping.callback(unpack(values))
       end
     end
   end
@@ -100,7 +138,7 @@ FzfPicker.find_files = function(self, opts)
       no_default_mappings = opts.no_default_mappings,
       selection_mappings = opts.selection_mappings,
     },
-    prompt = get_prompt(opts.prompt_title),
+    prompt = format_prompt(opts.prompt_title),
   }
 end
 
@@ -123,14 +161,14 @@ FzfPicker.grep = function(self, opts)
       search = opts.query,
       cmd = cmd,
       actions = actions,
-      prompt = get_prompt(opts.prompt_title),
+      prompt = format_prompt(opts.prompt_title),
     }
   else
     fzf.live_grep {
       cwd = tostring(dir),
       cmd = cmd,
       actions = actions,
-      prompt = get_prompt(opts.prompt_title),
+      prompt = format_prompt(opts.prompt_title),
     }
   end
 end
@@ -160,9 +198,12 @@ FzfPicker.pick = function(self, values, opts)
   end
 
   fzf.fzf_exec(entries, {
-    prompt = get_prompt(opts.prompt_title),
+    prompt = format_prompt(
+      self:_build_prompt { prompt_title = opts.prompt_title, selection_mappings = opts.selection_mappings }
+    ),
     actions = get_value_actions(display_to_value_map, {
       callback = opts.callback,
+      allow_multiple = opts.allow_multiple,
       selection_mappings = opts.selection_mappings,
     }),
   })

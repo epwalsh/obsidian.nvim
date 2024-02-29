@@ -93,9 +93,10 @@ return function(client, data)
       vim.schedule(function()
         -- Open picker with tags.
         picker:pick_tag(all_tags, {
-          callback = function(tag)
-            gather_tag_picker_list(client, picker, { tag })
+          callback = function(...)
+            gather_tag_picker_list(client, picker, { ... })
           end,
+          allow_multiple = true,
         })
       end)
     end)

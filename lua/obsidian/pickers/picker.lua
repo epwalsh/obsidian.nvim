@@ -27,6 +27,7 @@ end
 ---@field callback fun(value: any)
 ---@field fallback_to_query boolean|?
 ---@field keep_open boolean|?
+---@field allow_multiple boolean|?
 
 ---@alias obsidian.PickerMappingTable table<string, obsidian.PickerMappingOpts>
 
@@ -100,6 +101,7 @@ end
 ---
 ---@field prompt_title string|?
 ---@field callback fun(value: any)|?
+---@field allow_multiple boolean|?
 ---@field query_mappings obsidian.PickerMappingTable|?
 ---@field selection_mappings obsidian.PickerMappingTable|?
 
@@ -111,6 +113,7 @@ end
 --- Options:
 ---  `prompt_title`: Title for the prompt window.
 ---  `callback`: Callback to run with the selected item.
+---  `allow_multiple`: Allow multiple selections to pass to the callback.
 ---  `query_mappings`: Mappings that run with the query prompt.
 ---  `selection_mappings`: Mappings that run with the current selection.
 ---
@@ -214,11 +217,12 @@ end
 --- Open picker with a list of tags.
 ---
 ---@param tags string[]
----@param opts { prompt_title: string|?, callback: fun(tag: string), no_default_mappings: boolean|? }|? Options.
+---@param opts { prompt_title: string|?, callback: fun(tag: string), allow_multiple: boolean|?, no_default_mappings: boolean|? }|? Options.
 ---
 --- Options:
 ---  `prompt_title`: Title for the prompt window.
 ---  `callback`: Callback to run with the selected tag.
+---  `allow_multiple`: Allow multiple selections to pass to the callback.
 ---  `no_default_mappings`: Don't apply picker's default mappings.
 Picker.pick_tag = function(self, tags, opts)
   self.calling_bufnr = vim.api.nvim_get_current_buf()
@@ -233,6 +237,7 @@ Picker.pick_tag = function(self, tags, opts)
   self:pick(tags, {
     prompt_title = opts.prompt_title or "Tags",
     callback = opts.callback,
+    allow_multiple = opts.allow_multiple,
     no_default_mappings = opts.no_default_mappings,
     selection_mappings = selection_mappings,
   })
@@ -300,7 +305,9 @@ Picker._tag_selection_mappings = function(self)
     if key_is_set(self.client.opts.picker.tag_mappings.tag_note) then
       mappings[self.client.opts.picker.tag_mappings.tag_note] = {
         desc = "tag note",
-        callback = function(tag)
+        callback = function(...)
+          local tags = { ... }
+
           local note = self.client:current_note(self.calling_bufnr)
           if not note then
             log.warn("'%s' is not a note in your workspace", vim.api.nvim_buf_get_name(self.calling_bufnr))
@@ -308,18 +315,31 @@ Picker._tag_selection_mappings = function(self)
           end
 
           -- Add the tag and save the new frontmatter to the buffer.
-          if note:add_tag(tag) then
+          local tags_added = {}
+          local tags_not_added = {}
+          for _, tag in ipairs(tags) do
+            if note:add_tag(tag) then
+              table.insert(tags_added, tag)
+            else
+              table.insert(tags_not_added, tag)
+            end
+          end
+
+          if #tags_added > 0 then
             if self.client:update_frontmatter(note, self.calling_bufnr) then
-              log.info("Added tag '%s' to frontmatter", tag)
+              log.info("Added tags %s to frontmatter", tags_added)
             else
               log.warn "Frontmatter unchanged"
             end
-          else
-            log.warn("Note already has tag '%s'", tag)
+          end
+
+          if #tags_not_added > 0 then
+            log.warn("Note already has tags %s", tags_not_added)
           end
         end,
         fallback_to_query = true,
         keep_open = true,
+        allow_multiple = true,
       }
     end
 
@@ -345,16 +365,22 @@ Picker._build_prompt = function(self, opts)
 
   ---@type string
   local prompt = opts.prompt_title or "Find"
-  prompt = prompt .. " | <CR> select"
+  prompt = prompt .. " | <CR> confirm"
 
   if opts.query_mappings then
-    for key, mapping in pairs(opts.query_mappings) do
+    local keys = vim.tbl_keys(opts.query_mappings)
+    table.sort(keys)
+    for _, key in ipairs(keys) do
+      local mapping = opts.query_mappings[key]
       prompt = prompt .. " | " .. key .. " " .. mapping.desc
     end
   end
 
   if opts.selection_mappings then
-    for key, mapping in pairs(opts.selection_mappings) do
+    local keys = vim.tbl_keys(opts.selection_mappings)
+    table.sort(keys)
+    for _, key in ipairs(keys) do
+      local mapping = opts.selection_mappings[key]
       prompt = prompt .. " | " .. key .. " " .. mapping.desc
     end
   end
