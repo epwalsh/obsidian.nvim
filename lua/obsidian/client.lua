@@ -1240,7 +1240,8 @@ Client.apply_async_raw = function(self, on_path, opts)
   end
 end
 
---- Create a new note ID.
+--- Generate a unique ID for a new note. This respects the user's `note_id_func` if configured,
+--- otherwise falls back to generated a Zettelkasten style ID.
 ---
 ---@param title string|?
 ---
@@ -1254,6 +1255,30 @@ Client.new_note_id = function(self, title)
   else
     return util.zettel_id()
   end
+end
+
+--- Generate the file path for a new note given its ID, parent directory, and title.
+--- This respects the user's `note_path_func` if configured, otherwise essentially falls back to
+--- `spec.dir / (spec.id .. ".md")`.
+---
+---@param spec { id: string, dir: obsidian.Path, title: string|? }
+---
+---@return obsidian.Path
+Client.new_note_path = function(self, spec)
+  ---@type obsidian.Path
+  local path
+  if self.opts.note_path_func ~= nil then
+    path = Path.new(self.opts.note_path_func(spec))
+    -- Ensure path is either absolute or inside `spec.dir`.
+    -- NOTE: `spec.dir` should always be absolute, but for extra safety we handle the case where
+    -- it's not.
+    if not path:is_absolute() and (spec.dir:is_absolute() or not spec.dir:is_parent_of(path)) then
+      path = spec.dir / path
+    end
+  else
+    path = spec.dir / tostring(spec.id)
+  end
+  return Path.new(path):with_suffix ".md"
 end
 
 --- Parse the title, ID, and path for a new note.
@@ -1357,10 +1382,10 @@ Client.parse_title_id_path = function(self, title, id, dir)
     id = self:new_note_id(title)
   end
 
-  -- Get path.
+  -- Generate path.
   ---@type obsidian.Path
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local path = base_dir / (id .. ".md")
+  local path = self:new_note_path { id = id, dir = base_dir, title = title }
 
   return title, id, path
 end
