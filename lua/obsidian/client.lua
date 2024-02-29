@@ -1278,7 +1278,7 @@ Client.new_note_path = function(self, spec)
   else
     path = spec.dir / tostring(spec.id)
   end
-  return Path.new(path):with_suffix ".md"
+  return path:with_suffix ".md"
 end
 
 --- Parse the title, ID, and path for a new note.
