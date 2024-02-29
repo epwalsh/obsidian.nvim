@@ -53,40 +53,17 @@ end
 
 ---Print general information about the current installation of Obsidian.nvim.
 obsidian.info = function()
-  local iter = obsidian.itertools.iter
-
-  local info = obsidian.util.get_plugin_info()
-  if info ~= nil then
-    print "Plugins:"
-    print("  [obsidian.nvim (v" .. obsidian.VERSION .. ")] " .. info)
-  else
+  if obsidian._client == nil then
     print(
-      "ERROR: could not find path to obsidian.nvim installation.\n"
+      "ERROR: it appears obsidian.nvim has not been setup.\n"
         .. "Please ensure obsidian.nvim loads upfront (e.g. by setting 'lazy=false' with your plugin manager) "
         .. "and then run this again."
     )
     return
   end
 
-  for plugin in iter { "plenary.nvim", "nvim-cmp", "telescope.nvim", "fzf-lua", "mini.pick" } do
-    local plugin_info = obsidian.util.get_plugin_info(plugin)
-    if plugin_info ~= nil then
-      print("  [" .. plugin .. "] " .. plugin_info)
-    end
-  end
-
-  print "Tools:"
-  for cmd in iter { "rg" } do
-    local cmd_info = obsidian.util.get_external_dependency_info(cmd)
-    if cmd_info ~= nil then
-      print("  [" .. cmd .. "] " .. cmd_info)
-    else
-      print("  [" .. cmd .. "] " .. "not found")
-    end
-  end
-
-  print "Environment:"
-  print("  [OS] " .. obsidian.util.get_os())
+  local client = obsidian.get_client()
+  client:command("ObsidianDebug", { raw_print = true })
 end
 
 ---Create a new Obsidian client without additional setup.

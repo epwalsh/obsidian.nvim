@@ -70,8 +70,13 @@ log.lazy_log = function(msg, level, ...)
   buffer[#buffer + 1] = { msg = msg, level = level }
 end
 
-log.flush = function()
+--- Flush lazy logs.
+---
+---@param opts { raw_print: boolean|? }|?
+log.flush = function(opts)
   local util = require "obsidian.util"
+
+  opts = opts or {}
 
   ---@type integer|?
   local level
@@ -81,7 +86,11 @@ log.flush = function()
   for i, record in ipairs(buffer) do
     if level ~= nil and level ~= record.level then
       -- flush messages for current log level
-      log.log(table.concat(messages, "\n"), level)
+      if opts.raw_print then
+        print(table.concat(messages, "\n"))
+      else
+        log.log(table.concat(messages, "\n"), level)
+      end
       util.tbl_clear(messages)
     end
 
@@ -90,7 +99,11 @@ log.flush = function()
 
     if i == n then
       -- flush remaining messages
-      log.log(table.concat(messages, "\n"), level)
+      if opts.raw_print then
+        print(table.concat(messages, "\n"))
+      else
+        log.log(table.concat(messages, "\n"), level)
+      end
     end
   end
 

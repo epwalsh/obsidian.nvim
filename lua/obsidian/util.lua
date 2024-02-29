@@ -715,26 +715,34 @@ util.get_src_root = function(name)
   return nil
 end
 
----Get info about a plugin.
+--- Get info about a plugin.
+---
 ---@param name string|?
----@return string|?
+---
+---@return { commit: string|?, path: string }|?
 util.get_plugin_info = function(name)
   name = name and name or "obsidian.nvim"
+
   local src_root = util.get_src_root(name)
-
-  if src_root ~= nil then
-    local Job = require "plenary.job"
-    local output, exit_code = Job:new({ ---@diagnostic disable-line: missing-fields
-      command = "git",
-      args = { "rev-parse", "HEAD" },
-      cwd = src_root,
-      enable_recording = true,
-    }):sync(1000)
-
-    if exit_code == 0 then
-      return "Commit SHA: " .. output[1]
-    end
+  if src_root == nil then
+    return nil
   end
+
+  local out = { path = src_root }
+
+  local Job = require "plenary.job"
+  local output, exit_code = Job:new({ ---@diagnostic disable-line: missing-fields
+    command = "git",
+    args = { "rev-parse", "HEAD" },
+    cwd = src_root,
+    enable_recording = true,
+  }):sync(1000)
+
+  if exit_code == 0 then
+    out.commit = output[1]
+  end
+
+  return out
 end
 
 ---@param cmd string

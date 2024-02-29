@@ -12,7 +12,12 @@ local function clean_path(entry)
 end
 
 ---@class obsidian.pickers.MiniPicker : obsidian.Picker
-local MiniPicker = abc.new_class({}, Picker)
+local MiniPicker = abc.new_class({
+  ---@diagnostic disable-next-line: unused-local
+  __tostring = function(self)
+    return "MiniPicker()"
+  end,
+}, Picker)
 
 ---@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }|?
 MiniPicker.find_files = function(self, opts)

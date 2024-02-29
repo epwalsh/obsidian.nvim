@@ -5,7 +5,12 @@ local abc = require "obsidian.abc"
 local Picker = require "obsidian.pickers.picker"
 
 ---@class obsidian.pickers.TelescopePicker : obsidian.Picker
-local TelescopePicker = abc.new_class({}, Picker)
+local TelescopePicker = abc.new_class({
+  ---@diagnostic disable-next-line: unused-local
+  __tostring = function(self)
+    return "TelescopePicker()"
+  end,
+}, Picker)
 
 ---@param opts { prompt_title: string|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }
 ---

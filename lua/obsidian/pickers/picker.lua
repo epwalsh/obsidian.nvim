@@ -14,7 +14,7 @@ Picker.new = function(client)
   return self
 end
 
----@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|Path|? }|?
+---@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }|?
 ---@diagnostic disable-next-line: unused-local
 Picker.find_files = function(self, opts)
   error "not implemented"
@@ -49,7 +49,7 @@ end
 
 --- Grep for a string.
 ---
----@param opts { prompt_title: string|?, dir: string|Path|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|?
+---@param opts { prompt_title: string|?, dir: string|obsidian.Path|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|?
 ---@diagnostic disable-next-line: unused-local
 Picker.grep = function(self, opts)
   error "not implemented"

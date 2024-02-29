@@ -27,7 +27,12 @@ local function format_keymap(keymap)
 end
 
 ---@class obsidian.pickers.FzfPicker : obsidian.Picker
-local FzfPicker = abc.new_class({}, Picker)
+local FzfPicker = abc.new_class({
+  ---@diagnostic disable-next-line: unused-local
+  __tostring = function(self)
+    return "FzfPicker()"
+  end,
+}, Picker)
 
 ---@param opts { callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }
 FzfPicker.get_actions = function(self, opts)
