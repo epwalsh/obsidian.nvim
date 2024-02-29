@@ -185,13 +185,7 @@ obsidian.setup = function(opts)
         return
       end
 
-      local frontmatter = nil
-      if client.opts.note_frontmatter_func ~= nil then
-        frontmatter = client.opts.note_frontmatter_func(note)
-      end
-
-      local updated = note:save_to_buffer(bufnr, frontmatter)
-      if not client._quiet and updated then
+      if client:update_frontmatter(note, bufnr) then
         log.info "Updated frontmatter"
       end
     end,

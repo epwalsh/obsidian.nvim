@@ -755,7 +755,7 @@ end
 ---@return obsidian.Note|?
 ---@diagnostic disable-next-line: unused-local
 Client.current_note = function(self)
-  if vim.bo.filetype ~= "markdown" then
+  if vim.bo.filetype ~= "markdown" or not self:path_is_note(vim.api.nvim_buf_get_name(0)) then
     return nil
   end
 
@@ -1450,6 +1450,20 @@ Client.write_note = function(self, note, opts)
   }
 
   log.info("%s note '%s' at '%s'", verb, note.id, self:vault_relative_path(note.path) or note.path)
+end
+
+--- Update the frontmatter in a buffer for the note.
+---
+---@param note obsidian.Note
+---@param bufnr integer|?
+---
+---@return boolean updated If the the frontmatter was updated.
+Client.update_frontmatter = function(self, note, bufnr)
+  local frontmatter = nil
+  if self.opts.note_frontmatter_func ~= nil then
+    frontmatter = self.opts.note_frontmatter_func(note)
+  end
+  return note:save_to_buffer(bufnr, frontmatter)
 end
 
 --- Get the path to a daily note.

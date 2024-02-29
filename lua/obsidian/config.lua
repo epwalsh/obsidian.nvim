@@ -100,8 +100,12 @@ config.ClientOpts.normalize = function(opts, defaults)
       opts.finder = nil
     end
     if opts.finder_mappings then
-      opts.picker.mappings = opts.finder_mappings
+      opts.picker.note_mappings = opts.finder_mappings
       opts.finder_mappings = nil
+    end
+    if opts.picker.mappings and not opts.picker.note_mappings then
+      opts.picker.note_mappings = opts.picker.mappings
+      opts.picker.mappings = nil
     end
   end
 
@@ -265,18 +269,32 @@ config.MappingOpts.default = function()
   }
 end
 
----@class obsidian.config.PickerMappingOpts
+---@class obsidian.config.PickerNoteMappingOpts
 ---
 ---@field new string|?
 ---@field insert_link string|?
-config.PickerMappingOpts = {}
+config.PickerNoteMappingOpts = {}
 
 ---Get defaults.
----@return obsidian.config.PickerMappingOpts
-config.PickerMappingOpts.default = function()
+---@return obsidian.config.PickerNoteMappingOpts
+config.PickerNoteMappingOpts.default = function()
   return {
     new = "<C-x>",
     insert_link = "<C-l>",
+  }
+end
+
+---@class obsidian.config.PickerTagMappingOpts
+---
+---@field tag_note string|?
+---@field insert_tag string|?
+config.PickerTagMappingOpts = {}
+
+---@return obsidian.config.PickerTagMappingOpts
+config.PickerTagMappingOpts.default = function()
+  return {
+    tag_note = "<C-x>",
+    insert_tag = "<C-l>",
   }
 end
 
@@ -290,7 +308,8 @@ config.Picker = {
 ---@class obsidian.config.PickerOpts
 ---
 ---@field name obsidian.config.Picker|?
----@field mappings obsidian.config.PickerMappingOpts
+---@field note_mappings obsidian.config.PickerNoteMappingOpts
+---@field tag_mappings obsidian.config.PickerTagMappingOpts
 config.PickerOpts = {}
 
 --- Get the defaults.
@@ -299,7 +318,8 @@ config.PickerOpts = {}
 config.PickerOpts.default = function()
   return {
     name = nil,
-    mappings = config.PickerMappingOpts.default(),
+    note_mappings = config.PickerNoteMappingOpts.default(),
+    tag_mappings = config.PickerTagMappingOpts.default(),
   }
 end
 
