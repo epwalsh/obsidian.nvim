@@ -7,11 +7,13 @@ local Note = require "obsidian.note"
 ---@class obsidian.Picker : obsidian.ABC
 ---
 ---@field client obsidian.Client
+---@field calling_bufnr integer
 local Picker = abc.new_class()
 
 Picker.new = function(client)
   local self = Picker.init()
   self.client = client
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
   return self
 end
 
@@ -19,7 +21,12 @@ end
 --- Abstract methods that need to be implemented by subclasses. ---
 -------------------------------------------------------------------
 
----@alias obsidian.PickerMappingOpts { desc: string, callback: fun(value: any), fallback_to_query: boolean|? }
+---@class obsidian.PickerMappingOpts
+---
+---@field desc string
+---@field callback fun(value: any)
+---@field fallback_to_query boolean|?
+---@field keep_open boolean|?
 
 ---@alias obsidian.PickerMappingTable table<string, obsidian.PickerMappingOpts>
 
@@ -125,6 +132,8 @@ end
 ---  `callback`: Callback to run with the selected note path.
 ---  `no_default_mappings`: Don't apply picker's default mappings.
 Picker.find_notes = function(self, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts or {}
 
   local query_mappings
@@ -151,6 +160,8 @@ end
 --- Options:
 ---  `callback`: Callback to run with the selected template path.
 Picker.find_templates = function(self, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts or {}
 
   local templates_dir = self.client:templates_dir()
@@ -178,6 +189,8 @@ end
 ---  `callback`: Callback to run with the selected path.
 ---  `no_default_mappings`: Don't apply picker's default mappings.
 Picker.grep_notes = function(self, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts or {}
 
   local query_mappings
@@ -208,6 +221,8 @@ end
 ---  `callback`: Callback to run with the selected tag.
 ---  `no_default_mappings`: Don't apply picker's default mappings.
 Picker.pick_tag = function(self, tags, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts or {}
 
   local selection_mappings
@@ -286,19 +301,25 @@ Picker._tag_selection_mappings = function(self)
       mappings[self.client.opts.picker.tag_mappings.tag_note] = {
         desc = "tag note",
         callback = function(tag)
-          local note = self.client:current_note()
+          local note = self.client:current_note(self.calling_bufnr)
           if not note then
-            log.warn("'%s' is not a note in your workspace", vim.api.nvim_buf_get_name(0))
+            log.warn("'%s' is not a note in your workspace", vim.api.nvim_buf_get_name(self.calling_bufnr))
             return
           end
 
           -- Add the tag and save the new frontmatter to the buffer.
-          note:add_tag(tag)
-          if self.client:update_frontmatter(note) then
-            log.info("Added tag '%s' to frontmatter", tag)
+          if note:add_tag(tag) then
+            if self.client:update_frontmatter(note, self.calling_bufnr) then
+              log.info("Added tag '%s' to frontmatter", tag)
+            else
+              log.warn "Frontmatter unchanged"
+            end
+          else
+            log.warn("Note already has tag '%s'", tag)
           end
         end,
         fallback_to_query = true,
+        keep_open = true,
       }
     end
 

@@ -82,6 +82,8 @@ end
 ---@param opts obsidian.PickerPickOpts|? Options.
 ---@diagnostic disable-next-line: unused-local
 MiniPicker.pick = function(self, values, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts and opts or {}
 
   local entries = {}

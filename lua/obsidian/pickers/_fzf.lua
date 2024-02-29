@@ -139,6 +139,8 @@ end
 ---@param opts obsidian.PickerPickOpts|? Options.
 ---@diagnostic disable-next-line: unused-local
 FzfPicker.pick = function(self, values, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts or {}
 
   ---@type table<string, any>

@@ -14,24 +14,30 @@ local TelescopePicker = abc.new_class({
   end,
 }, Picker)
 
+---@param prompt_bufnr integer
+---@param keep_open boolean|?
 ---@return table|?
-local function get_entry_and_close(prompt_bufnr)
+local function get_entry(prompt_bufnr, keep_open)
   local entry = actions_state.get_selected_entry()
-  if entry then
+  if entry and not keep_open then
     telescope_actions.close(prompt_bufnr)
   end
   return entry
 end
 
+---@param prompt_bufnr integer
+---@param keep_open boolean|?
 ---@param initial_query string|?
 ---@return string|?
-local function get_query_and_close(prompt_bufnr, initial_query)
+local function get_query(prompt_bufnr, keep_open, initial_query)
   local query = actions_state.get_current_line()
   if not query or string.len(query) == 0 then
     query = initial_query
   end
   if query and string.len(query) > 0 then
-    telescope_actions.close(prompt_bufnr)
+    if not keep_open then
+      telescope_actions.close(prompt_bufnr)
+    end
     return query
   else
     return nil
@@ -47,7 +53,7 @@ local function attach_path_picker_mappings(map, opts)
   if opts.query_mappings then
     for key, mapping in pairs(opts.query_mappings) do
       map({ "i", "n" }, key, function(prompt_bufnr)
-        local query = get_query_and_close(prompt_bufnr, opts.initial_query)
+        local query = get_query(prompt_bufnr, false, opts.initial_query)
         if query then
           mapping.callback(query)
         end
@@ -58,7 +64,7 @@ local function attach_path_picker_mappings(map, opts)
   if opts.selection_mappings then
     for key, mapping in pairs(opts.selection_mappings) do
       map({ "i", "n" }, key, function(prompt_bufnr)
-        local entry = get_entry_and_close(prompt_bufnr)
+        local entry = get_entry(prompt_bufnr)
         if entry then
           mapping.callback(entry.path)
         end
@@ -68,7 +74,7 @@ local function attach_path_picker_mappings(map, opts)
 
   if opts.callback then
     map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-      local entry = get_entry_and_close(prompt_bufnr)
+      local entry = get_entry(prompt_bufnr)
       if entry then
         opts.callback(entry.path)
       end
@@ -82,7 +88,7 @@ local function attach_value_picker_mappings(map, opts)
   if opts.query_mappings then
     for key, mapping in pairs(opts.query_mappings) do
       map({ "i", "n" }, key, function(prompt_bufnr)
-        local query = get_query_and_close(prompt_bufnr)
+        local query = get_query(prompt_bufnr)
         if query then
           mapping.callback(query)
         end
@@ -93,11 +99,11 @@ local function attach_value_picker_mappings(map, opts)
   if opts.selection_mappings then
     for key, mapping in pairs(opts.selection_mappings) do
       map({ "i", "n" }, key, function(prompt_bufnr)
-        local entry = get_entry_and_close(prompt_bufnr)
+        local entry = get_entry(prompt_bufnr, mapping.keep_open)
         if entry then
           mapping.callback(entry.value)
         elseif mapping.fallback_to_query then
-          local query = get_query_and_close(prompt_bufnr)
+          local query = get_query(prompt_bufnr, mapping.keep_open)
           if query then
             mapping.callback(query)
           end
@@ -108,7 +114,7 @@ local function attach_value_picker_mappings(map, opts)
 
   if opts.callback then
     map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-      local entry = get_entry_and_close(prompt_bufnr)
+      local entry = get_entry(prompt_bufnr)
       if entry then
         opts.callback(entry.value)
       end
@@ -187,6 +193,8 @@ TelescopePicker.pick = function(self, values, opts)
   local finders = require "telescope.finders"
   local conf = require("telescope.config").values
   local make_entry = require "telescope.make_entry"
+
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
 
   opts = opts and opts or {}
 

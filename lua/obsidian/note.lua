@@ -130,18 +130,28 @@ end
 --- Add an alias to the note.
 ---
 ---@param alias string
+---
+---@return boolean added True if the alias was added, false if it was already present.
 Note.add_alias = function(self, alias)
   if not self:has_alias(alias) then
     table.insert(self.aliases, alias)
+    return true
+  else
+    return false
   end
 end
 
 --- Add a tag to the note.
 ---
 ---@param tag string
+---
+---@return boolean added True if the tag was added, false if it was already present.
 Note.add_tag = function(self, tag)
   if not self:has_tag(tag) then
     table.insert(self.tags, tag)
+    return true
+  else
+    return false
   end
 end
 

@@ -750,16 +750,19 @@ Client.open_note = function(self, note_or_path, opts)
   util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
 end
 
---- Get the current note.
+--- Get the current note from a buffer.
+---
+---@param bufnr integer|?
 ---
 ---@return obsidian.Note|?
 ---@diagnostic disable-next-line: unused-local
-Client.current_note = function(self)
-  if vim.bo.filetype ~= "markdown" or not self:path_is_note(vim.api.nvim_buf_get_name(0)) then
+Client.current_note = function(self, bufnr)
+  bufnr = bufnr or 0
+  if not self:path_is_note(vim.api.nvim_buf_get_name(bufnr)) then
     return nil
   end
 
-  return Note.from_buffer(0)
+  return Note.from_buffer(bufnr)
 end
 
 ---@class obsidian.TagLocation
