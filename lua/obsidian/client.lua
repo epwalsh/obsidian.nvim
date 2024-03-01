@@ -65,6 +65,7 @@ end
 ---@field opts obsidian.config.ClientOpts The client config.
 ---@field buf_dir obsidian.Path|? The parent directory of the current buffer.
 ---@field callback_manager obsidian.CallbackManager
+---@field log obsidian.Logger
 ---@field _default_opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
@@ -85,6 +86,7 @@ local Client = abc.new_class {
 Client.new = function(opts)
   local self = Client.init()
 
+  self.log = log
   self._default_opts = opts
   self._quiet = false
 
