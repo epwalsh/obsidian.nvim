@@ -30,6 +30,7 @@ local config = {}
 ---@field open_notes_in obsidian.config.OpenStrategy
 ---@field ui obsidian.config.UIOpts
 ---@field attachments obsidian.config.AttachmentsOpts
+---@field callbacks obsidian.config.CallbackConfig
 config.ClientOpts = {}
 
 --- Get defaults.
@@ -61,6 +62,7 @@ config.ClientOpts.default = function()
     open_notes_in = "current",
     ui = config.UIOpts.default(),
     attachments = config.AttachmentsOpts.default(),
+    callbacks = config.CallbackConfig.default(),
   }
 end
 
@@ -418,7 +420,7 @@ end
 ---@class obsidian.config.AttachmentsOpts
 ---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
----@field img_text_func function (obsidian.Client, Path,) -> string
+---@field img_text_func fun(client: obsidian.Client, path: obsidian.Path): string
 ---@field confirm_img_paste boolean Whether to confirm the paste or not. Defaults to true.
 config.AttachmentsOpts = {}
 
@@ -445,6 +447,19 @@ config.AttachmentsOpts.default = function()
     end,
     confirm_img_paste = true,
   }
+end
+
+---@class obsidian.config.CallbackConfig
+---
+---@field post_setup fun(client: obsidian.Client)|? Runs right after the `obsidian.Client` is initialized.
+---@field enter_note fun(client: obsidian.Client, note: obsidian.Note)|? Runs when entering a note buffer.
+---@field pre_write_note fun(client: obsidian.Client, note: obsidian.Note)|? Runs right before writing a note buffer.
+---@field post_set_workspace fun(client: obsidian.Client, workspace: obsidian.Workspace)|? Runs anytime the workspace is set/changed.
+config.CallbackConfig = {}
+
+---@return obsidian.config.CallbackConfig
+config.CallbackConfig.default = function()
+  return {}
 end
 
 return config

@@ -1,3 +1,4 @@
+---@class obsidian.Logger
 local log = {}
 
 log._log_level = vim.log.levels.INFO
@@ -46,7 +47,7 @@ log.set_level = function(level)
   log._log_level = level
 end
 
----Log a message.
+--- Log a message.
 ---
 ---@param msg any
 ---@param level integer|?
