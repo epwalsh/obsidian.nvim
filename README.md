@@ -284,7 +284,9 @@ This is a complete list of all of the options that can be passed to `require("ob
   --  * "notes_subdir" - put new notes in the default notes subdirectory.
   new_notes_location = "notes_subdir",
 
-  -- Optional, customize how names/IDs for new notes are created.
+  -- Optional, customize how note IDs are generated given an optional title.
+  ---@param title string|?
+  ---@return string
   note_id_func = function(title)
     -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
     -- In this case a note with the title 'My new note' will be given an ID that looks
@@ -300,6 +302,15 @@ This is a complete list of all of the options that can be passed to `require("ob
       end
     end
     return tostring(os.time()) .. "-" .. suffix
+  end,
+
+  -- Optional, customize how note file names are generated given the ID, target directory, and title.
+  ---@param spec { id: string, dir: obsidian.Path, title: string|? }
+  ---@return string|obsidian.Path The full path to the new note.
+  note_path_func = function(spec)
+    -- This is equivalent to the default behavior.
+    local path = spec.dir / tostring(spec.id)
+    return path:with_suffix(".md")
   end,
 
   -- Optional, customize how wiki links are formatted.

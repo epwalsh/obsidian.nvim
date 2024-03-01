@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added configuration option `note_path_func(spec): obsidian.Path` for customizing how file names for new notes are generated. This takes a single argument, a table that looks like `{ id: string, dir: obsidian.Path, title: string|? }`, and returns an `obsidian.Path` object. The default behavior is equivalent to this:
+
+    ```lua
+    ---@param spec { id: string, dir: obsidian.Path, title: string|? }
+    ---@return string|obsidian.Path The full path to the new note.
+    note_path_func = function(spec)
+      local path = spec.dir / tostring(spec.id)
+      return path:with_suffix(".md")
+    end
+    ```
+
 - Added config option `picker.tag_mappings`, analogous to `picker.note_mappings`.
 
 ### Changed

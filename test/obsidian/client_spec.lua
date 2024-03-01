@@ -124,6 +124,47 @@ describe("Client:parse_title_id_path()", function()
       assert.equals(tostring(path), tostring(Path:new(client.dir) / "notes" / (id .. ".md")))
     end)
   end)
+
+  it("should respect configured 'note_path_func'", function()
+    with_tmp_client(function(client)
+      client.opts.note_path_func = function(spec)
+        return (spec.dir / "foo-bar-123"):with_suffix ".md"
+      end
+
+      local title, id, path = client:parse_title_id_path "New Note"
+      assert.equals("New Note", title)
+      assert.equals("new-note", id)
+      assert.equals(Path:new(client.dir) / "foo-bar-123.md", path)
+    end)
+  end)
+
+  it("should ensure result of 'note_path_func' always has '.md' suffix", function()
+    with_tmp_client(function(client)
+      client.opts.note_path_func = function(spec)
+        return spec.dir / "foo-bar-123"
+      end
+
+      local title, id, path = client:parse_title_id_path "New Note"
+      assert.equals("New Note", title)
+      assert.equals("new-note", id)
+      assert.equals(Path:new(client.dir) / "foo-bar-123.md", path)
+    end)
+  end)
+
+  it("should ensure result of 'note_path_func' is always an absolute path and within provided directory", function()
+    with_tmp_client(function(client)
+      client.opts.note_path_func = function(_)
+        return "foo-bar-123.md"
+      end;
+
+      (client.dir / "notes"):mkdir { exist_ok = true }
+
+      local title, id, path = client:parse_title_id_path("New Note", nil, client.dir / "notes")
+      assert.equals("New Note", title)
+      assert.equals("new-note", id)
+      assert.equals(Path:new(client.dir) / "notes" / "foo-bar-123.md", path)
+    end)
+  end)
 end)
 
 describe("Client:_prepare_search_opts()", function()
