@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       ---@param client obsidian.Client
       ---@param note obsidian.Note
       pre_write_note = function(client, note) end,
+
+      -- Runs anytime the workspace is set/changed.
+      ---@param client obsidian.Client
+      ---@param workspace obsidian.Workspace
+      ---@diagnostic disable-next-line: unused-local
+      post_set_workspace = function(client, workspace) end,
     }
     ```
 

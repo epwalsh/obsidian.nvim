@@ -454,6 +454,7 @@ end
 ---@field post_setup fun(client: obsidian.Client)|? Runs right after the `obsidian.Client` is initialized.
 ---@field enter_note fun(client: obsidian.Client, note: obsidian.Note)|? Runs when entering a note buffer.
 ---@field pre_write_note fun(client: obsidian.Client, note: obsidian.Note)|? Runs right before writing a note buffer.
+---@field post_set_workspace fun(client: obsidian.Client, workspace: obsidian.Workspace)|? Runs anytime the workspace is set/changed.
 config.CallbackConfig = {}
 
 ---@return obsidian.config.CallbackConfig

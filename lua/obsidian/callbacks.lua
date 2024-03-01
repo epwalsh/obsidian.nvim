@@ -56,4 +56,12 @@ CallbackManager.pre_write_note = function(self, note)
   end
 end
 
+---@param workspace obsidian.Workspace
+---@return boolean|? success
+CallbackManager.post_set_workspace = function(self, workspace)
+  if self.callbacks.post_set_workspace then
+    return fire_callback("post_set_workspace", self.callbacks.post_set_workspace, self.client, workspace)
+  end
+end
+
 return M

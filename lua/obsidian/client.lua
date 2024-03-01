@@ -130,6 +130,8 @@ Client.set_workspace = function(self, workspace, opts)
   if opts.lock then
     self.current_workspace:lock()
   end
+
+  self.callback_manager:post_set_workspace(workspace)
 end
 
 --- Get the normalize opts for a given workspace.
