@@ -228,6 +228,11 @@ TelescopePicker.pick = function(self, values, opts)
     selection_mappings = opts.selection_mappings,
   }
 
+  local previewer
+  if type(values[1]) == "table" then
+    previewer = conf.grep_previewer(picker_opts)
+  end
+
   pickers
     .new(picker_opts, {
       prompt_title = prompt_title,
@@ -262,7 +267,7 @@ TelescopePicker.pick = function(self, values, opts)
         end,
       },
       sorter = conf.generic_sorter(picker_opts),
-      previewer = conf.grep_previewer(picker_opts),
+      previewer = previewer,
     })
     :find()
 end
