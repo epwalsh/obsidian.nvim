@@ -19,9 +19,9 @@ local MiniPicker = abc.new_class({
   end,
 }, Picker)
 
----@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }|?
+---@param opts obsidian.PickerFindOpts|? Options.
 MiniPicker.find_files = function(self, opts)
-  opts = opts and opts or {}
+  opts = opts or {}
 
   ---@type obsidian.Path
   local dir = opts.dir and Path:new(opts.dir) or self.client.dir
@@ -45,7 +45,7 @@ MiniPicker.find_files = function(self, opts)
   end
 end
 
----@param opts { prompt_title: string|?, dir: string|obsidian.Path|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|?
+---@param opts obsidian.PickerGrepOpts|? Options.
 MiniPicker.grep = function(self, opts)
   opts = opts and opts or {}
 
@@ -79,9 +79,11 @@ MiniPicker.grep = function(self, opts)
 end
 
 ---@param values string[]|obsidian.PickerEntry[]
----@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
+---@param opts obsidian.PickerPickOpts|? Options.
 ---@diagnostic disable-next-line: unused-local
 MiniPicker.pick = function(self, values, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts and opts or {}
 
   local entries = {}

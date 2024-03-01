@@ -7,5 +7,5 @@ return function(client, data)
     log.err "No picker configured"
     return
   end
-  picker:grep { prompt_title = "Grep notes", query = data.args }
+  picker:grep_notes { query = data.args }
 end

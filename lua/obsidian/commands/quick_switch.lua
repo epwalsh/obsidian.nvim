@@ -8,5 +8,5 @@ return function(client, _)
     return
   end
 
-  picker:find_notes { prompt_title = "Notes" }
+  picker:find_notes()
 end

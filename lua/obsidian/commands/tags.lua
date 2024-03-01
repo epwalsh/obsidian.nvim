@@ -92,11 +92,11 @@ return function(client, data)
     client:list_tags_async(nil, function(all_tags)
       vim.schedule(function()
         -- Open picker with tags.
-        picker:pick(all_tags, {
-          prompt_title = "Tags",
-          callback = function(tag)
-            gather_tag_picker_list(client, picker, { tag })
+        picker:pick_tag(all_tags, {
+          callback = function(...)
+            gather_tag_picker_list(client, picker, { ... })
           end,
+          allow_multiple = true,
         })
       end)
     end)
