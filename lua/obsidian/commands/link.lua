@@ -45,7 +45,7 @@ return function(client, data)
     return
   end
 
-  picker:grep {
+  picker:grep_notes {
     prompt_title = "Link note",
     query = search_term,
     no_default_mappings = true,

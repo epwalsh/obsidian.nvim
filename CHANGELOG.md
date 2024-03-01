@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     end
     ```
 
+- Added config option `picker.tag_mappings`, analogous to `picker.note_mappings`.
+
+### Changed
+
+- Renamed config option `picker.mappings` to `picker.note_mappings`.
+
 ## [v3.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.1) - 2024-02-28
 
 ### Added

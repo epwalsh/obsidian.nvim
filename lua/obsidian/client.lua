@@ -117,6 +117,11 @@ Client.set_workspace = function(self, workspace, opts)
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
   end
 
+  -- Setup UI add-ons.
+  if self.opts.ui.enable then
+    require("obsidian.ui").setup(self.current_workspace, self.opts.ui)
+  end
+
   if opts.lock then
     self.current_workspace:lock()
   end
@@ -750,16 +755,19 @@ Client.open_note = function(self, note_or_path, opts)
   util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
 end
 
---- Get the current note.
+--- Get the current note from a buffer.
+---
+---@param bufnr integer|?
 ---
 ---@return obsidian.Note|?
 ---@diagnostic disable-next-line: unused-local
-Client.current_note = function(self)
-  if vim.bo.filetype ~= "markdown" then
+Client.current_note = function(self, bufnr)
+  bufnr = bufnr or 0
+  if not self:path_is_note(vim.api.nvim_buf_get_name(bufnr)) then
     return nil
   end
 
-  return Note.from_buffer(0)
+  return Note.from_buffer(bufnr)
 end
 
 ---@class obsidian.TagLocation
@@ -1475,6 +1483,20 @@ Client.write_note = function(self, note, opts)
   }
 
   log.info("%s note '%s' at '%s'", verb, note.id, self:vault_relative_path(note.path) or note.path)
+end
+
+--- Update the frontmatter in a buffer for the note.
+---
+---@param note obsidian.Note
+---@param bufnr integer|?
+---
+---@return boolean updated If the the frontmatter was updated.
+Client.update_frontmatter = function(self, note, bufnr)
+  local frontmatter = nil
+  if self.opts.note_frontmatter_func ~= nil then
+    frontmatter = self.opts.note_frontmatter_func(note)
+  end
+  return note:save_to_buffer(bufnr, frontmatter)
 end
 
 --- Get the path to a daily note.

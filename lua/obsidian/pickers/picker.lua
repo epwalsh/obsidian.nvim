@@ -2,54 +2,84 @@ local abc = require "obsidian.abc"
 local log = require "obsidian.log"
 local util = require "obsidian.util"
 local strings = require "plenary.strings"
+local Note = require "obsidian.note"
 
 ---@class obsidian.Picker : obsidian.ABC
 ---
 ---@field client obsidian.Client
+---@field calling_bufnr integer
 local Picker = abc.new_class()
 
 Picker.new = function(client)
   local self = Picker.init()
   self.client = client
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
   return self
 end
 
----@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }|?
+-------------------------------------------------------------------
+--- Abstract methods that need to be implemented by subclasses. ---
+-------------------------------------------------------------------
+
+---@class obsidian.PickerMappingOpts
+---
+---@field desc string
+---@field callback fun(...)
+---@field fallback_to_query boolean|?
+---@field keep_open boolean|?
+---@field allow_multiple boolean|?
+
+---@alias obsidian.PickerMappingTable table<string, obsidian.PickerMappingOpts>
+
+---@class obsidian.PickerFindOpts
+---
+---@field prompt_title string|?
+---@field dir string|obsidian.Path|?
+---@field callback fun(path: string)|?
+---@field no_default_mappings boolean|?
+---@field query_mappings obsidian.PickerMappingTable|?
+---@field selection_mappings obsidian.PickerMappingTable|?
+
+--- Find files in a directory.
+---
+---@param opts obsidian.PickerFindOpts|? Options.
+---
+--- Options:
+---  `prompt_title`: Title for the prompt window.
+---  `dir`: Directory to search in.
+---  `callback`: Callback to run with the selected entry.
+---  `no_default_mappings`: Don't apply picker's default mappings.
+---  `query_mappings`: Mappings that run with the query prompt.
+---  `selection_mappings`: Mappings that run with the current selection.
+---
 ---@diagnostic disable-next-line: unused-local
 Picker.find_files = function(self, opts)
   error "not implemented"
 end
 
---- Find notes.
+---@class obsidian.PickerGrepOpts
 ---
----@param opts { prompt_title: string|?, callback: fun(path: string)|? }|?
-Picker.find_notes = function(self, opts)
-  opts = opts and opts or {}
-  return self:find_files { prompt_title = opts.prompt_title, callback = opts.callback }
-end
-
---- Find templates.
----
----@param opts { callback: fun(path: string) }
-Picker.find_templates = function(self, opts)
-  local templates_dir = self.client:templates_dir()
-
-  if templates_dir == nil then
-    log.err "Templates folder is not defined or does not exist"
-    return
-  end
-
-  return self:find_files {
-    prompt_title = "Templates",
-    callback = opts.callback,
-    dir = templates_dir,
-    no_default_mappings = true,
-  }
-end
+---@field prompt_title string|?
+---@field dir string|obsidian.Path|?
+---@field query string|?
+---@field callback fun(path: string)|?
+---@field no_default_mappings boolean|?
+---@field query_mappings obsidian.PickerMappingTable
+---@field selection_mappings obsidian.PickerMappingTable
 
 --- Grep for a string.
 ---
----@param opts { prompt_title: string|?, dir: string|obsidian.Path|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|?
+---@param opts obsidian.PickerGrepOpts|? Options.
+---
+--- Options:
+---  `prompt_title`: Title for the prompt window.
+---  `dir`: Directory to search in.
+---  `query`: Initial query to grep for.
+---  `callback`: Callback to run with the selected path.
+---  `no_default_mappings`: Don't apply picker's default mappings.
+---  `query_mappings`: Mappings that run with the query prompt.
+---  `selection_mappings`: Mappings that run with the current selection.
+---
 ---@diagnostic disable-next-line: unused-local
 Picker.grep = function(self, opts)
   error "not implemented"
@@ -67,13 +97,295 @@ end
 ---@field icon string|?
 ---@field icon_hl string|?
 
---- Picker from a list of values.
+---@class obsidian.PickerPickOpts
 ---
----@param values string[]|obsidian.PickerEntry[]
----@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
+---@field prompt_title string|?
+---@field callback fun(value: any, ...: any)|?
+---@field allow_multiple boolean|?
+---@field query_mappings obsidian.PickerMappingTable|?
+---@field selection_mappings obsidian.PickerMappingTable|?
+
+--- Pick from a list of items.
+---
+---@param values string[]|obsidian.PickerEntry[] Items to pick from.
+---@param opts obsidian.PickerPickOpts|? Options.
+---
+--- Options:
+---  `prompt_title`: Title for the prompt window.
+---  `callback`: Callback to run with the selected item(s).
+---  `allow_multiple`: Allow multiple selections to pass to the callback.
+---  `query_mappings`: Mappings that run with the query prompt.
+---  `selection_mappings`: Mappings that run with the current selection.
+---
 ---@diagnostic disable-next-line: unused-local
 Picker.pick = function(self, values, opts)
   error "not implemented"
+end
+
+------------------------------------------------------------------
+--- Concrete methods with a default implementation subclasses. ---
+------------------------------------------------------------------
+
+--- Find notes by filename.
+---
+---@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|? Options.
+---
+--- Options:
+---  `prompt_title`: Title for the prompt window.
+---  `callback`: Callback to run with the selected note path.
+---  `no_default_mappings`: Don't apply picker's default mappings.
+Picker.find_notes = function(self, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
+  opts = opts or {}
+
+  local query_mappings
+  local selection_mappings
+  if not opts.no_default_mappings then
+    query_mappings = self:_note_query_mappings()
+    selection_mappings = self:_note_selection_mappings()
+  end
+
+  return self:find_files {
+    prompt_title = opts.prompt_title or "Notes",
+    dir = self.client.dir,
+    callback = opts.callback,
+    no_default_mappings = opts.no_default_mappings,
+    query_mappings = query_mappings,
+    selection_mappings = selection_mappings,
+  }
+end
+
+--- Find templates by filename.
+---
+---@param opts { prompt_title: string|?, callback: fun(path: string) }|? Options.
+---
+--- Options:
+---  `callback`: Callback to run with the selected template path.
+Picker.find_templates = function(self, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
+  opts = opts or {}
+
+  local templates_dir = self.client:templates_dir()
+
+  if templates_dir == nil then
+    log.err "Templates folder is not defined or does not exist"
+    return
+  end
+
+  return self:find_files {
+    prompt_title = opts.prompt_title or "Templates",
+    callback = opts.callback,
+    dir = templates_dir,
+    no_default_mappings = true,
+  }
+end
+
+--- Grep search in notes.
+---
+---@param opts { prompt_title: string|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|? Options.
+---
+--- Options:
+---  `prompt_title`: Title for the prompt window.
+---  `query`: Initial query to grep for.
+---  `callback`: Callback to run with the selected path.
+---  `no_default_mappings`: Don't apply picker's default mappings.
+Picker.grep_notes = function(self, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
+  opts = opts or {}
+
+  local query_mappings
+  local selection_mappings
+  if not opts.no_default_mappings then
+    query_mappings = self:_note_query_mappings()
+    selection_mappings = self:_note_selection_mappings()
+  end
+
+  self:grep {
+    prompt_title = opts.prompt_title or "Grep notes",
+    dir = self.client.dir,
+    query = opts.query,
+    callback = opts.callback,
+    no_default_mappings = opts.no_default_mappings,
+    query_mappings = query_mappings,
+    selection_mappings = selection_mappings,
+  }
+end
+
+--- Open picker with a list of tags.
+---
+---@param tags string[]
+---@param opts { prompt_title: string|?, callback: fun(tag: string, ...: string), allow_multiple: boolean|?, no_default_mappings: boolean|? }|? Options.
+---
+--- Options:
+---  `prompt_title`: Title for the prompt window.
+---  `callback`: Callback to run with the selected tag(s).
+---  `allow_multiple`: Allow multiple selections to pass to the callback.
+---  `no_default_mappings`: Don't apply picker's default mappings.
+Picker.pick_tag = function(self, tags, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
+  opts = opts or {}
+
+  local selection_mappings
+  if not opts.no_default_mappings then
+    selection_mappings = self:_tag_selection_mappings()
+  end
+
+  self:pick(tags, {
+    prompt_title = opts.prompt_title or "Tags",
+    callback = opts.callback,
+    allow_multiple = opts.allow_multiple,
+    no_default_mappings = opts.no_default_mappings,
+    selection_mappings = selection_mappings,
+  })
+end
+
+--------------------------------
+--- Concrete helper methods. ---
+--------------------------------
+
+---@param key string|?
+---@return boolean
+local function key_is_set(key)
+  if key ~= nil and string.len(key) > 0 then
+    return true
+  else
+    return false
+  end
+end
+
+--- Get query mappings to use for `find_notes()` or `grep_notes()`.
+---@return obsidian.PickerMappingTable
+Picker._note_query_mappings = function(self)
+  ---@type obsidian.PickerMappingTable
+  local mappings = {}
+
+  if self.client.opts.picker.note_mappings and key_is_set(self.client.opts.picker.note_mappings.new) then
+    mappings[self.client.opts.picker.note_mappings.new] = {
+      desc = "new",
+      callback = function(query)
+        self.client:command("ObsidianNew", { args = query })
+      end,
+    }
+  end
+
+  return mappings
+end
+
+--- Get selection mappings to use for `find_notes()` or `grep_notes()`.
+---@return obsidian.PickerMappingTable
+Picker._note_selection_mappings = function(self)
+  ---@type obsidian.PickerMappingTable
+  local mappings = {}
+
+  if self.client.opts.picker.note_mappings and key_is_set(self.client.opts.picker.note_mappings.insert_link) then
+    mappings[self.client.opts.picker.note_mappings.insert_link] = {
+      desc = "insert link",
+      callback = function(path)
+        local note = Note.from_file(path)
+        local link = self.client:format_link(note, {})
+        vim.api.nvim_put({ link }, "", false, true)
+      end,
+    }
+  end
+
+  return mappings
+end
+
+--- Get selection mappings to use for `pick_tag()`.
+---@return obsidian.PickerMappingTable
+Picker._tag_selection_mappings = function(self)
+  ---@type obsidian.PickerMappingTable
+  local mappings = {}
+
+  if self.client.opts.picker.tag_mappings then
+    if key_is_set(self.client.opts.picker.tag_mappings.tag_note) then
+      mappings[self.client.opts.picker.tag_mappings.tag_note] = {
+        desc = "tag note",
+        callback = function(...)
+          local tags = { ... }
+
+          local note = self.client:current_note(self.calling_bufnr)
+          if not note then
+            log.warn("'%s' is not a note in your workspace", vim.api.nvim_buf_get_name(self.calling_bufnr))
+            return
+          end
+
+          -- Add the tag and save the new frontmatter to the buffer.
+          local tags_added = {}
+          local tags_not_added = {}
+          for _, tag in ipairs(tags) do
+            if note:add_tag(tag) then
+              table.insert(tags_added, tag)
+            else
+              table.insert(tags_not_added, tag)
+            end
+          end
+
+          if #tags_added > 0 then
+            if self.client:update_frontmatter(note, self.calling_bufnr) then
+              log.info("Added tags %s to frontmatter", tags_added)
+            else
+              log.warn "Frontmatter unchanged"
+            end
+          end
+
+          if #tags_not_added > 0 then
+            log.warn("Note already has tags %s", tags_not_added)
+          end
+        end,
+        fallback_to_query = true,
+        keep_open = true,
+        allow_multiple = true,
+      }
+    end
+
+    if key_is_set(self.client.opts.picker.tag_mappings.insert_tag) then
+      mappings[self.client.opts.picker.tag_mappings.insert_tag] = {
+        desc = "insert tag",
+        callback = function(tag)
+          vim.api.nvim_put({ "#" .. tag }, "", false, true)
+        end,
+        fallback_to_query = true,
+      }
+    end
+  end
+
+  return mappings
+end
+
+---@param opts { prompt_title: string, query_mappings: obsidian.PickerMappingTable|?, selection_mappings: obsidian.PickerMappingTable|? }|?
+---@return string
+---@diagnostic disable-next-line: unused-local
+Picker._build_prompt = function(self, opts)
+  opts = opts or {}
+
+  ---@type string
+  local prompt = opts.prompt_title or "Find"
+  prompt = prompt .. " | <CR> confirm"
+
+  if opts.query_mappings then
+    local keys = vim.tbl_keys(opts.query_mappings)
+    table.sort(keys)
+    for _, key in ipairs(keys) do
+      local mapping = opts.query_mappings[key]
+      prompt = prompt .. " | " .. key .. " " .. mapping.desc
+    end
+  end
+
+  if opts.selection_mappings then
+    local keys = vim.tbl_keys(opts.selection_mappings)
+    table.sort(keys)
+    for _, key in ipairs(keys) do
+      local mapping = opts.selection_mappings[key]
+      prompt = prompt .. " | " .. key .. " " .. mapping.desc
+    end
+  end
+
+  return prompt
 end
 
 ---@param entry obsidian.PickerEntry

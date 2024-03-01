@@ -577,19 +577,22 @@ M.update = function(ui_opts, bufnr)
   update_extmarks(bufnr, ns_id, ui_opts)
 end
 
+---@param workspace obsidian.Workspace
 ---@param ui_opts obsidian.config.UIOpts
-M.setup = function(ui_opts)
+M.setup = function(workspace, ui_opts)
   if ui_opts.enable == false then
     return
   end
 
-  local group = vim.api.nvim_create_augroup("obsidian_ui", { clear = true })
+  local group = vim.api.nvim_create_augroup("ObsidianUI" .. workspace.name, { clear = true })
 
   install_hl_groups(ui_opts)
 
+  local pattern = tostring(workspace.root) .. "/**.md"
+
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,
-    pattern = "*.md",
+    pattern = pattern,
     callback = function()
       local conceallevel = vim.opt_local.conceallevel:get()
 
@@ -611,19 +614,19 @@ M.setup = function(ui_opts)
 
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,
-    pattern = "*.md",
+    pattern = pattern,
     callback = get_extmarks_autocmd_callback(ui_opts, false),
   })
 
   vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI", "TextChangedP" }, {
     group = group,
-    pattern = "*.md",
+    pattern = pattern,
     callback = get_extmarks_autocmd_callback(ui_opts, true),
   })
 
   vim.api.nvim_create_autocmd({ "BufUnload" }, {
     group = group,
-    pattern = "*.md",
+    pattern = pattern,
     callback = function(ev)
       local ns_id = vim.api.nvim_create_namespace(NAMESPACE)
       cache_clear(ev.buf, ns_id)

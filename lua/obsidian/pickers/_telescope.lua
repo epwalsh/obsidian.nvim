@@ -1,8 +1,11 @@
 local telescope = require "telescope.builtin"
+local telescope_actions = require "telescope.actions"
+local actions_state = require "telescope.actions.state"
 
 local Path = require "obsidian.path"
 local abc = require "obsidian.abc"
 local Picker = require "obsidian.pickers.picker"
+local log = require "obsidian.log"
 
 ---@class obsidian.pickers.TelescopePicker : obsidian.Picker
 local TelescopePicker = abc.new_class({
@@ -12,112 +15,167 @@ local TelescopePicker = abc.new_class({
   end,
 }, Picker)
 
----@param opts { prompt_title: string|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }
----
----@return string
-TelescopePicker.prompt_title = function(self, opts)
-  local name = opts.prompt_title and opts.prompt_title or "Find"
-  local prompt_title = name .. " | <CR> select"
-  if opts.no_default_mappings then
-    return prompt_title
+---@param prompt_bufnr integer
+---@param keep_open boolean|?
+---@return table|?
+local function get_entry(prompt_bufnr, keep_open)
+  local entry = actions_state.get_selected_entry()
+  if entry and not keep_open then
+    telescope_actions.close(prompt_bufnr)
   end
-  local keys = self.client.opts.picker.mappings.new
-  if keys ~= nil then
-    prompt_title = prompt_title .. " | " .. keys .. " new"
-  end
-  keys = self.client.opts.picker.mappings.insert_link
-  if keys ~= nil then
-    prompt_title = prompt_title .. " | " .. keys .. " insert link"
-  end
-  return prompt_title
+  return entry
 end
 
+---@param prompt_bufnr integer
+---@param keep_open boolean|?
+---@param allow_multiple boolean|?
+---@return table[]|?
+local function get_selected(prompt_bufnr, keep_open, allow_multiple)
+  local picker = actions_state.get_current_picker(prompt_bufnr)
+  local entries = picker:get_multi_selection()
+  if entries and #entries > 0 then
+    if #entries > 1 and not allow_multiple then
+      log.err "This mapping does not allow multiple entries"
+      return
+    end
+
+    if not keep_open then
+      telescope_actions.close(prompt_bufnr)
+    end
+
+    return entries
+  else
+    local entry = get_entry(prompt_bufnr, keep_open)
+
+    if entry then
+      return { entry }
+    end
+  end
+end
+
+---@param prompt_bufnr integer
+---@param keep_open boolean|?
 ---@param initial_query string|?
-TelescopePicker.default_mappings = function(self, map, initial_query)
+---@return string|?
+local function get_query(prompt_bufnr, keep_open, initial_query)
+  local query = actions_state.get_current_line()
+  if not query or string.len(query) == 0 then
+    query = initial_query
+  end
+  if query and string.len(query) > 0 then
+    if not keep_open then
+      telescope_actions.close(prompt_bufnr)
+    end
+    return query
+  else
+    return nil
+  end
+end
+
+---@param opts { entry_key: string|?, callback: fun(path: string)|?, allow_multiple: boolean|?, query_mappings: obsidian.PickerMappingTable|?, selection_mappings: obsidian.PickerMappingTable|?, initial_query: string|? }
+local function attach_picker_mappings(map, opts)
   -- Docs for telescope actions:
   -- https://github.com/nvim-telescope/telescope.nvim/blob/master/lua/telescope/actions/init.lua
-  local telescope_actions = require("telescope.actions.mt").transform_mod {
-    obsidian_new = function(prompt_bufnr)
-      local query = require("telescope.actions.state").get_current_line()
-      if not query or string.len(query) == 0 then
-        query = initial_query
+
+  local function entry_to_value(entry)
+    if opts.entry_key then
+      return entry[opts.entry_key]
+    else
+      return entry
+    end
+  end
+
+  if opts.query_mappings then
+    for key, mapping in pairs(opts.query_mappings) do
+      map({ "i", "n" }, key, function(prompt_bufnr)
+        local query = get_query(prompt_bufnr, false, opts.initial_query)
+        if query then
+          mapping.callback(query)
+        end
+      end)
+    end
+  end
+
+  if opts.selection_mappings then
+    for key, mapping in pairs(opts.selection_mappings) do
+      map({ "i", "n" }, key, function(prompt_bufnr)
+        local entries = get_selected(prompt_bufnr, mapping.keep_open, mapping.allow_multiple)
+        if entries then
+          local values = vim.tbl_map(entry_to_value, entries)
+          mapping.callback(unpack(values))
+        elseif mapping.fallback_to_query then
+          local query = get_query(prompt_bufnr, mapping.keep_open)
+          if query then
+            mapping.callback(query)
+          end
+        end
+      end)
+    end
+  end
+
+  if opts.callback then
+    map({ "i", "n" }, "<CR>", function(prompt_bufnr)
+      local entries = get_selected(prompt_bufnr, false, opts.allow_multiple)
+      if entries then
+        local values = vim.tbl_map(entry_to_value, entries)
+        opts.callback(unpack(values))
       end
-      require("telescope.actions").close(prompt_bufnr)
-      self.client:command("ObsidianNew", { args = query })
-    end,
-
-    obsidian_insert_link = function(prompt_bufnr)
-      require("telescope.actions").close(prompt_bufnr)
-      local path = require("telescope.actions.state").get_selected_entry().path
-      local note = require("obsidian").Note.from_file(path)
-      local link = self.client:format_link(note, {})
-      vim.api.nvim_put({ link }, "", false, true)
-    end,
-  }
-
-  local new_mapping = self.client.opts.picker.mappings.new
-  if new_mapping ~= nil then
-    map({ "i", "n" }, new_mapping, telescope_actions.obsidian_new)
+    end)
   end
-
-  local insert_link_mapping = self.client.opts.picker.mappings.insert_link
-  if insert_link_mapping ~= nil then
-    map({ "i", "n" }, insert_link_mapping, telescope_actions.obsidian_insert_link)
-  end
-
-  return true
 end
 
----@param opts { prompt_title: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|?, dir: string|obsidian.Path|? }|?
+---@param opts obsidian.PickerFindOpts|? Options.
 TelescopePicker.find_files = function(self, opts)
-  opts = opts and opts or {}
+  opts = opts or {}
+
+  local prompt_title = self:_build_prompt {
+    prompt_title = opts.prompt_title,
+    query_mappings = opts.query_mappings,
+    selection_mappings = opts.selection_mappings,
+  }
+
   telescope.find_files {
-    prompt_title = self:prompt_title(opts),
+    prompt_title = prompt_title,
     cwd = opts.dir and tostring(opts.dir) or tostring(self.client.dir),
     find_command = self:_build_find_cmd(),
     attach_mappings = function(_, map)
-      if not opts.no_default_mappings then
-        self:default_mappings(map)
-      end
-
-      if opts.callback then
-        map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-          local entry = require("telescope.actions.state").get_selected_entry()
-          require("telescope.actions").close(prompt_bufnr)
-          opts.callback(entry[1])
-        end)
-      end
-
+      attach_picker_mappings(map, {
+        entry_key = "path",
+        callback = opts.callback,
+        query_mappings = opts.query_mappings,
+        selection_mappings = opts.selection_mappings,
+      })
       return true
     end,
   }
 end
 
----@param opts { prompt_title: string|?, dir: string|obsidian.Path|?, query: string|?, callback: fun(path: string)|?, no_default_mappings: boolean|? }|?
+---@param opts obsidian.PickerGrepOpts|? Options.
 TelescopePicker.grep = function(self, opts)
-  opts = opts and opts or {}
+  opts = opts or {}
 
   local cwd = opts.dir and Path:new(opts.dir) or self.client.dir
 
+  local prompt_title = self:_build_prompt {
+    prompt_title = opts.prompt_title,
+    query_mappings = opts.query_mappings,
+    selection_mappings = opts.selection_mappings,
+  }
+
   local attach_mappings = function(_, map)
-    if not opts.no_default_mappings then
-      self:default_mappings(map, opts.query)
-    end
-
-    if opts.callback then
-      map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-        local filename = require("telescope.actions.state").get_selected_entry().filename
-        require("telescope.actions").close(prompt_bufnr)
-        opts.callback(tostring(cwd / filename))
-      end)
-    end
-
+    attach_picker_mappings(map, {
+      entry_key = "path",
+      callback = opts.callback,
+      query_mappings = opts.query_mappings,
+      selection_mappings = opts.selection_mappings,
+      initial_query = opts.query,
+    })
     return true
   end
 
   if opts.query and string.len(opts.query) > 0 then
     telescope.grep_string {
-      prompt_title = self:prompt_title(opts),
+      prompt_title = prompt_title,
       cwd = tostring(cwd),
       vimgrep_arguments = self:_build_grep_cmd(),
       search = opts.query,
@@ -125,7 +183,7 @@ TelescopePicker.grep = function(self, opts)
     }
   else
     telescope.live_grep {
-      prompt_title = self:prompt_title(opts),
+      prompt_title = prompt_title,
       cwd = tostring(cwd),
       vimgrep_arguments = self:_build_grep_cmd(),
       attach_mappings = attach_mappings,
@@ -134,25 +192,26 @@ TelescopePicker.grep = function(self, opts)
 end
 
 ---@param values string[]|obsidian.PickerEntry[]
----@param opts { prompt_title: string|?, callback: fun(value: any)|? }|?
+---@param opts obsidian.PickerPickOpts|? Options.
 TelescopePicker.pick = function(self, values, opts)
   local pickers = require "telescope.pickers"
   local finders = require "telescope.finders"
   local conf = require("telescope.config").values
   local make_entry = require "telescope.make_entry"
 
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
   opts = opts and opts or {}
 
   local picker_opts = {
     attach_mappings = function(_, map)
-      if opts.callback then
-        map({ "i", "n" }, "<CR>", function(prompt_bufnr)
-          local entry = require("telescope.actions.state").get_selected_entry()
-          require("telescope.actions").close(prompt_bufnr)
-          opts.callback(entry.value)
-        end)
-      end
-
+      attach_picker_mappings(map, {
+        entry_key = "value",
+        callback = opts.callback,
+        allow_multiple = opts.allow_multiple,
+        query_mappings = opts.query_mappings,
+        selection_mappings = opts.selection_mappings,
+      })
       return true
     end,
   }
@@ -163,9 +222,15 @@ TelescopePicker.pick = function(self, values, opts)
     return self:_make_display(entry.raw)
   end
 
+  local prompt_title = self:_build_prompt {
+    prompt_title = opts.prompt_title,
+    query_mappings = opts.query_mappings,
+    selection_mappings = opts.selection_mappings,
+  }
+
   pickers
     .new(picker_opts, {
-      prompt_title = self:prompt_title { prompt_title = opts.prompt_title, no_default_mappings = true },
+      prompt_title = prompt_title,
       finder = finders.new_table {
         results = values,
         entry_maker = function(v)
