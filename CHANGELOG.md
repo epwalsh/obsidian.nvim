@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a configurable callback system to further customize obsidian.nvim's behavior. Callbacks are defined through the `callbacks` field in the config:
+
+    ```lua
+    callbacks = {
+      -- Runs at the end of `require("obsidian").setup()`.
+      ---@param client obsidian.Client
+      post_setup = function(client) end,
+
+      -- Runs anytime you enter the buffer for a note.
+      ---@param client obsidian.Client
+      ---@param note obsidian.Note
+      enter_note = function(client, note) end,
+
+      -- Runs right before writing the buffer for a note.
+      ---@param client obsidian.Client
+      ---@param note obsidian.Note
+      pre_write_note = function(client, note) end,
+    }
+    ```
+
 - Added configuration option `note_path_func(spec): obsidian.Path` for customizing how file names for new notes are generated. This takes a single argument, a table that looks like `{ id: string, dir: obsidian.Path, title: string|? }`, and returns an `obsidian.Path` object. The default behavior is equivalent to this:
 
     ```lua

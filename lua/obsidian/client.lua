@@ -19,6 +19,7 @@ local log = require "obsidian.log"
 local util = require "obsidian.util"
 local search = require "obsidian.search"
 local AsyncExecutor = require("obsidian.async").AsyncExecutor
+local CallbackManager = require("obsidian.callbacks").CallbackManager
 local block_on = require("obsidian.async").block_on
 local iter = require("obsidian.itertools").iter
 
@@ -63,6 +64,7 @@ end
 ---@field dir obsidian.Path The root of the vault for the current workspace.
 ---@field opts obsidian.config.ClientOpts The client config.
 ---@field buf_dir obsidian.Path|? The parent directory of the current buffer.
+---@field callback_manager obsidian.CallbackManager
 ---@field _default_opts obsidian.config.ClientOpts
 ---@field _quiet boolean
 local Client = abc.new_class {
@@ -116,6 +118,9 @@ Client.set_workspace = function(self, workspace, opts)
     local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
   end
+
+  -- Initialize callback manager.
+  self.callback_manager = CallbackManager.new(self, self.opts.callbacks)
 
   -- Setup UI add-ons.
   if self.opts.ui.enable then

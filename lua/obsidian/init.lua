@@ -4,6 +4,7 @@ local module_lookups = {
   abc = "obsidian.abc",
   async = "obsidian.async",
   Client = "obsidian.client",
+  callbacks = "obsidian.callbacks",
   collections = "obsidian.collections",
   commands = "obsidian.commands",
   completion = "obsidian.completion",
@@ -155,6 +156,10 @@ obsidian.setup = function(opts)
         ---@diagnostic disable-next-line: missing-fields
         cmp.setup.buffer { sources = sources }
       end
+
+      -- Run enter-note callback.
+      local note = obsidian.Note.from_buffer(ev.bufnr)
+      client.callback_manager:enter_note(note)
     end,
   })
 
@@ -171,16 +176,23 @@ obsidian.setup = function(opts)
         return
       end
 
+      -- Check if current buffer is actually a note within the workspace.
       if not client:path_is_note(ev.match, workspace) then
         return
       end
 
+      -- Initialize note.
       local bufnr = ev.buf
       local note = obsidian.Note.from_buffer(bufnr)
+
+      -- Run pre-write-note callback.
+      client.callback_manager:pre_write_note(note)
+
       if not client:should_save_frontmatter(note) then
         return
       end
 
+      -- Update buffer with new frontmatter.
       if client:update_frontmatter(note, bufnr) then
         log.info "Updated frontmatter"
       end
@@ -189,6 +201,9 @@ obsidian.setup = function(opts)
 
   -- Set global client.
   obsidian._client = client
+
+  -- Call post-setup callback.
+  client.callback_manager:post_setup()
 
   return client
 end

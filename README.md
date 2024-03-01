@@ -418,6 +418,23 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- 3. "hsplit" - to open in a horizontal split if there's not already a horizontal split
   open_notes_in = "current",
 
+  -- Optional, define your own callbacks to further customize behavior.
+  callbacks = {
+    -- Runs at the end of `require("obsidian").setup()`.
+    ---@param client obsidian.Client
+    post_setup = function(client) end,
+
+    -- Runs anytime you enter the buffer for a note.
+    ---@param client obsidian.Client
+    ---@param note obsidian.Note
+    enter_note = function(client, note) end,
+
+    -- Runs right before writing the buffer for a note.
+    ---@param client obsidian.Client
+    ---@param note obsidian.Note
+    pre_write_note = function(client, note) end,
+  },
+
   -- Optional, configure additional syntax highlighting / extmarks.
   -- This requires you have `conceallevel` set to 1 or 2. See `:help conceallevel` for more details.
   ui = {
