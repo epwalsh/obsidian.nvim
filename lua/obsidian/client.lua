@@ -117,6 +117,11 @@ Client.set_workspace = function(self, workspace, opts)
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
   end
 
+  -- Setup UI add-ons.
+  if self.opts.ui.enable then
+    require("obsidian.ui").setup(self.current_workspace, self.opts.ui)
+  end
+
   if opts.lock then
     self.current_workspace:lock()
   end
