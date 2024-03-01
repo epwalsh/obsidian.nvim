@@ -7,7 +7,7 @@ local M = {}
 ---
 ---@field client obsidian.Client
 ---@field callbacks obsidian.config.CallbackConfig
-CallbackManager = abc.new_class()
+local CallbackManager = abc.new_class()
 M.CallbackManager = CallbackManager
 
 ---@param client obsidian.Client
