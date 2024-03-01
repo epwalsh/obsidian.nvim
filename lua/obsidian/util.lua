@@ -830,7 +830,7 @@ end
 
 --- Get the current visual selection of text and exit visual mode.
 ---
----@return { lines: string[], selection: string, csrow: integer, cscol: integer, cerow: integer, cecol: integer }
+---@return { lines: string[], selection: string, csrow: integer, cscol: integer, cerow: integer, cecol: integer }|?
 util.get_visual_selection = function()
   -- Adapted from fzf-lua:
   -- https://github.com/ibhagwan/fzf-lua/blob/6ee73fdf2a79bbd74ec56d980262e29993b46f2b/lua/fzf-lua/utils.lua#L434-L466
@@ -864,6 +864,9 @@ util.get_visual_selection = function()
 
   local lines = vim.fn.getline(csrow, cerow)
   assert(type(lines) == "table")
+  if vim.tbl_isempty(lines) then
+    return
+  end
 
   -- When the whole line is selected via visual line mode ("V"), cscol / cecol will be equal to "v:maxcol"
   -- for some odd reason. So change that to what they should be here. See ':h getpos' for more info.

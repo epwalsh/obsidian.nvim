@@ -4,7 +4,7 @@ local util = require "obsidian.util"
 ---@param client obsidian.Client
 return function(client, data)
   local viz = util.get_visual_selection()
-  if viz.lines == nil or #viz.lines == 0 then
+  if not viz then
     log.err "ObsidianLink must be called with visual selection"
     return
   elseif #viz.lines ~= 1 then
