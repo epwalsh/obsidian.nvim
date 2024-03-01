@@ -437,13 +437,27 @@ Options:
 ------------------------------------------------------------------------------
                                                  *obsidian.Client.new_note_id()*
                      `Client.new_note_id`({self}, {title})
-Create a new note ID.
+Generate a unique ID for a new note. This respects the user's `note_id_func` if configured,
+otherwise falls back to generated a Zettelkasten style ID.
 
 Parameters ~
 {title} `(string|?)`
 
 Return ~
 `(string)`
+
+------------------------------------------------------------------------------
+                                               *obsidian.Client.new_note_path()*
+                     `Client.new_note_path`({self}, {spec})
+Generate the file path for a new note given its ID, parent directory, and title.
+This respects the user's `note_path_func` if configured, otherwise essentially falls back to
+`spec.dir / (spec.id .. ".md")`.
+
+Parameters ~
+{spec} { id: `(string,)` dir: obsidian.Path, title: string|? }
+
+Return ~
+obsidian.Path
 
 ------------------------------------------------------------------------------
                                          *obsidian.Client.parse_title_id_path()*
