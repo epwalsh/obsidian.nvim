@@ -380,8 +380,8 @@ Note.from_lines = function(lines, path)
     end
   end
 
-  -- The ID should match the filename with or without the extension.
-  if id ~= path.name and id ~= path.stem then
+  -- ID should default to the filename without the extension.
+  if id == nil or id == path.name then
     id = path.stem
   end
   assert(id)
