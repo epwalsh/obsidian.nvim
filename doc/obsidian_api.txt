@@ -57,6 +57,8 @@ Fields ~
 {dir} obsidian.Path The root of the vault for the current workspace.
 {opts} obsidian.config.ClientOpts The client config.
 {buf_dir} obsidian.Path|? The parent directory of the current buffer.
+{callback_manager} obsidian.CallbackManager
+{log} obsidian.Logger
 {_default_opts} obsidian.config.ClientOpts
 {_quiet} `(boolean)`
 
