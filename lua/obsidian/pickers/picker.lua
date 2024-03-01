@@ -24,7 +24,7 @@ end
 ---@class obsidian.PickerMappingOpts
 ---
 ---@field desc string
----@field callback fun(value: any)
+---@field callback fun(...)
 ---@field fallback_to_query boolean|?
 ---@field keep_open boolean|?
 ---@field allow_multiple boolean|?
@@ -100,7 +100,7 @@ end
 ---@class obsidian.PickerPickOpts
 ---
 ---@field prompt_title string|?
----@field callback fun(value: any)|?
+---@field callback fun(value: any, ...: any)|?
 ---@field allow_multiple boolean|?
 ---@field query_mappings obsidian.PickerMappingTable|?
 ---@field selection_mappings obsidian.PickerMappingTable|?
@@ -112,7 +112,7 @@ end
 ---
 --- Options:
 ---  `prompt_title`: Title for the prompt window.
----  `callback`: Callback to run with the selected item.
+---  `callback`: Callback to run with the selected item(s).
 ---  `allow_multiple`: Allow multiple selections to pass to the callback.
 ---  `query_mappings`: Mappings that run with the query prompt.
 ---  `selection_mappings`: Mappings that run with the current selection.
@@ -217,11 +217,11 @@ end
 --- Open picker with a list of tags.
 ---
 ---@param tags string[]
----@param opts { prompt_title: string|?, callback: fun(tag: string), allow_multiple: boolean|?, no_default_mappings: boolean|? }|? Options.
+---@param opts { prompt_title: string|?, callback: fun(tag: string, ...: string), allow_multiple: boolean|?, no_default_mappings: boolean|? }|? Options.
 ---
 --- Options:
 ---  `prompt_title`: Title for the prompt window.
----  `callback`: Callback to run with the selected tag.
+---  `callback`: Callback to run with the selected tag(s).
 ---  `allow_multiple`: Allow multiple selections to pass to the callback.
 ---  `no_default_mappings`: Don't apply picker's default mappings.
 Picker.pick_tag = function(self, tags, opts)
