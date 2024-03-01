@@ -299,8 +299,11 @@ Parameters ~
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.current_note()*
-                         `Client.current_note`({self})
-Get the current note.
+                     `Client.current_note`({self}, {bufnr})
+Get the current note from a buffer.
+
+Parameters ~
+{bufnr} `(integer|?)`
 
 Return ~
 obsidian.Note| `(optional)`
@@ -507,6 +510,18 @@ Options:
    actually be written (again excluding frontmatter).
 
 ------------------------------------------------------------------------------
+                                          *obsidian.Client.update_frontmatter()*
+              `Client.update_frontmatter`({self}, {note}, {bufnr})
+Update the frontmatter in a buffer for the note.
+
+Parameters ~
+{note} obsidian.Note
+{bufnr} `(integer|?)`
+
+Return ~
+`(boolean)` updated If the the frontmatter was updated.
+
+------------------------------------------------------------------------------
                                              *obsidian.Client.daily_note_path()*
                   `Client.daily_note_path`({self}, {datetime})
 Get the path to a daily note.
@@ -674,6 +689,9 @@ Add an alias to the note.
 Parameters ~
 {alias} `(string)`
 
+Return ~
+`(boolean)` added True if the alias was added, false if it was already present.
+
 ------------------------------------------------------------------------------
                                                        *obsidian.Note.add_tag()*
                          `Note.add_tag`({self}, {tag})
@@ -681,6 +699,9 @@ Add a tag to the note.
 
 Parameters ~
 {tag} `(string)`
+
+Return ~
+`(boolean)` added True if the tag was added, false if it was already present.
 
 ------------------------------------------------------------------------------
                                                      *obsidian.Note.add_field()*
