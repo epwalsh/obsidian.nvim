@@ -55,22 +55,13 @@ return function(client, data)
 
   if vim.tbl_isempty(tags) then
     -- Check for visual selection.
-    local _, csrow, cscol, _ = unpack(assert(vim.fn.getpos "'<"))
-    local _, cerow, cecol, _ = unpack(assert(vim.fn.getpos "'>"))
-    if data.line1 == csrow and data.line2 == cerow then
-      local lines = vim.fn.getline(csrow, cerow)
-      if #lines ~= 1 then
-        log.err "Only in-line visual selections allowed"
-        return
-      end
-
-      local line = assert(lines[1])
-      local tag = string.sub(line, cscol, cecol)
-
-      if not string.match(tag, "^#?" .. search.Patterns.TagCharsRequired .. "$") then
-        log.err("Visual selection '%s' is not a valid tag", tag)
-        return
-      end
+    local viz = util.get_visual_selection()
+    if
+      viz.lines ~= nil
+      and #viz.lines == 1
+      and string.match(viz.selection, "^#?" .. search.Patterns.TagCharsRequired .. "$")
+    then
+      local tag = viz.selection
 
       if vim.startswith(tag, "#") then
         tag = string.sub(tag, 2)
