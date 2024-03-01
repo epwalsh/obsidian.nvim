@@ -433,6 +433,11 @@ This is a complete list of all of the options that can be passed to `require("ob
     ---@param client obsidian.Client
     ---@param note obsidian.Note
     pre_write_note = function(client, note) end,
+
+    -- Runs anytime the workspace is set/changed.
+    ---@param client obsidian.Client
+    ---@param workspace obsidian.Workspace
+    post_set_workspace = function(client, workspace) end,
   },
 
   -- Optional, configure additional syntax highlighting / extmarks.
