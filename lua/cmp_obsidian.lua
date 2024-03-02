@@ -101,7 +101,7 @@ source.complete = function(_, request, callback)
       }
     end
 
-    client:find_notes_async(search, { ignore_case = true }, search_callback)
+    client:find_notes_async(search, search_callback, { search = { ignore_case = true } })
   else
     callback { isIncomplete = true }
   end

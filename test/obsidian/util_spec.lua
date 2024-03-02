@@ -200,3 +200,18 @@ describe("util.header_to_anchor()", function()
     assert.equals("#hello--world", util.header_to_anchor "# Hello  World!")
   end)
 end)
+
+describe("util.header_level()", function()
+  it("should return 0 when the line is not a header", function()
+    assert.equals(0, util.header_level "Hello World")
+    assert.equals(0, util.header_level "#Hello World")
+  end)
+
+  it("should return 1 for H1 headers", function()
+    assert.equals(1, util.header_level "# Hello World")
+  end)
+
+  it("should return 2 for H2 headers", function()
+    assert.equals(2, util.header_level "## Hello World")
+  end)
+end)

@@ -1000,6 +1000,18 @@ util.is_header = function(line)
   end
 end
 
+--- Get the header level of a line.
+---@param line string
+---@return integer
+util.header_level = function(line)
+  local headers, match_count = string.gsub(line, "^(#+)%s+[%w]+.*", "%1")
+  if match_count > 0 then
+    return string.len(headers)
+  else
+    return 0
+  end
+end
+
 --- Transform a markdown header into an link, e.g. "# Hello World" -> "#hello-world".
 ---
 ---@param header string

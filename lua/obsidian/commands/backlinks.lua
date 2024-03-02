@@ -26,7 +26,7 @@ return function(client, _)
 
   assert(note)
 
-  client:find_backlinks_async(note, true, function(backlinks)
+  client:find_backlinks_async(note, function(backlinks)
     if vim.tbl_isempty(backlinks) then
       log.info "No backlinks found"
       return
@@ -51,5 +51,5 @@ return function(client, _)
         end,
       })
     end)
-  end)
+  end, { search = { sort = true } })
 end

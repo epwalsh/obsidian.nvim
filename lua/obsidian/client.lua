@@ -430,23 +430,25 @@ end
 --- Find notes matching the given term. Notes are searched based on ID, title, filename, and aliases.
 ---
 ---@param term string The term to search for
----@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
----@param timeout integer|? Timeout to wait in milliseconds
+---@param opts { search: obsidian.SearchOpts|?, notes: obsidian.note.LoadOpts|?, timeout: integer|? }|?
 ---
 ---@return obsidian.Note[]
-Client.find_notes = function(self, term, opts, timeout)
+Client.find_notes = function(self, term, opts)
+  opts = opts or {}
   return block_on(function(cb)
-    return self:find_notes_async(term, opts, cb)
-  end, timeout)
+    return self:find_notes_async(term, cb, opts)
+  end, opts.timeout)
 end
 
 --- An async version of `find_notes()` that runs the callback with an array of all matching notes.
 ---
 ---@param term string The term to search for
----@param opts obsidian.SearchOpts|boolean|? search options or a boolean indicating if sorting should be used
 ---@param callback fun(notes: obsidian.Note[])
-Client.find_notes_async = function(self, term, opts, callback)
-  local next_path = self:_search_iter_async(term, opts)
+---@param opts { search: obsidian.SearchOpts|?, notes: obsidian.note.LoadOpts|? }|?
+Client.find_notes_async = function(self, term, callback, opts)
+  opts = opts or {}
+
+  local next_path = self:_search_iter_async(term, opts.search)
   local executor = AsyncExecutor.new()
 
   local err_count = 0
@@ -454,7 +456,7 @@ Client.find_notes_async = function(self, term, opts, callback)
   local first_err_path
 
   local function task_fn(path)
-    local ok, res = pcall(Note.from_file_async, path)
+    local ok, res = pcall(Note.from_file_async, path, opts.notes)
     if ok then
       return res
     else
@@ -496,22 +498,24 @@ end
 --- Find non-markdown files in the vault.
 ---
 ---@param term string The search term.
----@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
----@param timeout integer|? Timeout to wait in milliseconds.
+---@param opts { search: obsidian.SearchOpts, timeout: integer|? }|?
 ---
 ---@return obsidian.Path[]
-Client.find_files = function(self, term, opts, timeout)
+Client.find_files = function(self, term, opts)
+  opts = opts or {}
   return block_on(function(cb)
-    return self:find_files_async(term, opts, cb)
-  end, timeout)
+    return self:find_files_async(term, cb, opts)
+  end, opts.timeout)
 end
 
 --- An async version of `find_files`.
 ---
 ---@param term string The search term.
----@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be done
 ---@param callback fun(paths: obsidian.Path[])
-Client.find_files_async = function(self, term, opts, callback)
+---@param opts { search: obsidian.SearchOpts }|?
+Client.find_files_async = function(self, term, callback, opts)
+  opts = opts or {}
+
   local matches = {}
   local tx, rx = channel.oneshot()
   local on_find_match = function(path_match)
@@ -522,7 +526,7 @@ Client.find_files_async = function(self, term, opts, callback)
     tx()
   end
 
-  local find_opts = self:_prepare_search_opts(opts)
+  local find_opts = self:_prepare_search_opts(opts.search)
   find_opts:add_exclude "*.md"
   find_opts.include_non_markdown = true
 
@@ -538,21 +542,26 @@ end
 --- The 'query' can be a path, filename, note ID, alias, title, etc.
 ---
 ---@param query string
+---@param opts { timeout: integer|?, notes: obsidian.note.LoadOpts|? }|?
 ---
 ---@return obsidian.Note|?
-Client.resolve_note = function(self, query, timeout)
+Client.resolve_note = function(self, query, opts)
+  opts = opts or {}
   return block_on(function(cb)
-    return self:resolve_note_async(query, cb)
-  end, timeout)
+    return self:resolve_note_async(query, cb, { notes = opts.notes })
+  end, opts.timeout)
 end
 
 --- An async version of `resolve_note()`.
 ---
 ---@param query string
 ---@param callback fun(note: obsidian.Note|?)
+---@param opts { notes: obsidian.note.LoadOpts|? }|?
 ---
 ---@return obsidian.Note|?
-Client.resolve_note_async = function(self, query, callback)
+Client.resolve_note_async = function(self, query, callback, opts)
+  opts = opts or {}
+
   -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
   if count > 0 then
@@ -560,7 +569,7 @@ Client.resolve_note_async = function(self, query, callback)
     ---@diagnostic disable-next-line: assign-type-mismatch
     local full_path = self.dir / note_path
     return async.run(function()
-      return Note.from_file_async(full_path)
+      return Note.from_file_async(full_path, opts.notes)
     end, callback)
   end
 
@@ -587,12 +596,12 @@ Client.resolve_note_async = function(self, query, callback)
   for _, path in pairs(paths_to_check) do
     if path:is_file() then
       return async.run(function()
-        return Note.from_file_async(path)
+        return Note.from_file_async(path, opts.notes)
       end, callback)
     end
   end
 
-  self:find_notes_async(query, { ignore_case = true }, function(results)
+  self:find_notes_async(query, function(results)
     local query_lwr = string.lower(query)
     local maybe_matches = {}
     for note in iter(results) do
@@ -615,7 +624,7 @@ Client.resolve_note_async = function(self, query, callback)
     else
       return callback(nil)
     end
-  end)
+  end, { search = { ignore_case = true }, notes = opts.notes })
 end
 
 ---@class obsidian.ResolveLinkResult
@@ -683,7 +692,7 @@ Client.resolve_link_async = function(self, link, callback)
     end
 
     return callback(res)
-  end)
+  end, { notes = { collect_anchor_links = anchor_link and true or false } })
 end
 
 --- Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
@@ -798,22 +807,24 @@ end
 --- Find all tags starting with the given search term(s).
 ---
 ---@param term string|string[] The search term.
----@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
----@param timeout integer|? Timeout in milliseconds.
+---@param opts { search: obsidian.SearchOpts|?, timeout: integer|? }|?
 ---
 ---@return obsidian.TagLocation[]
-Client.find_tags = function(self, term, opts, timeout)
+Client.find_tags = function(self, term, opts)
+  opts = opts or {}
   return block_on(function(cb)
-    return self:find_tags_async(term, opts, cb)
-  end, timeout)
+    return self:find_tags_async(term, cb, { search = opts.search })
+  end, opts.timeout)
 end
 
 --- An async version of 'find_tags()'.
 ---
 ---@param term string|string[] The search term.
----@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
 ---@param callback fun(tags: obsidian.TagLocation[])
-Client.find_tags_async = function(self, term, opts, callback)
+---@param opts { search: obsidian.SearchOpts }|?
+Client.find_tags_async = function(self, term, callback, opts)
+  opts = opts or {}
+
   ---@type string[]
   local terms
   if type(term) == "string" then
@@ -974,7 +985,7 @@ Client.find_tags_async = function(self, term, opts, callback)
   search.search_async(
     self.dir,
     search_terms,
-    self:_prepare_search_opts(opts, { ignore_case = true }),
+    self:_prepare_search_opts(opts.search, { ignore_case = true }),
     on_match,
     function(_)
       tx()
@@ -1035,22 +1046,23 @@ end
 --- Find all backlinks to a note.
 ---
 ---@param note obsidian.Note The note to find backlinks for.
----@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
----@param timeout integer|? Timeout in milliseconds.
+---@param opts { search: obsidian.SearchOpts|?, timeout: integer|? }|?
 ---
 ---@return obsidian.BacklinkMatches[]
-Client.find_backlinks = function(self, note, opts, timeout)
+Client.find_backlinks = function(self, note, opts)
+  opts = opts or {}
   return block_on(function(cb)
-    return self:find_backlinks_async(note, opts, cb)
-  end, timeout)
+    return self:find_backlinks_async(note, cb, { search = opts.search })
+  end, opts.timeout)
 end
 
 --- An async version of 'find_backlinks()'.
 ---
 ---@param note obsidian.Note The note to find backlinks for.
----@param opts obsidian.SearchOpts|boolean|? Search options or a boolean indicating if sorting should be used.
 ---@param callback fun(backlinks: obsidian.BacklinkMatches[])
-Client.find_backlinks_async = function(self, note, opts, callback)
+---@param opts { search: obsidian.SearchOpts }|?
+Client.find_backlinks_async = function(self, note, callback, opts)
+  opts = opts or {}
   -- Maps paths (string) to note object and a list of matches.
   ---@type table<string, obsidian.BacklinkMatch[]>
   local backlink_matches = {}
@@ -1125,7 +1137,7 @@ Client.find_backlinks_async = function(self, note, opts, callback)
   search.search_async(
     self.dir,
     util.tbl_unique(search_terms),
-    self:_prepare_search_opts(opts, { fixed_strings = true }),
+    self:_prepare_search_opts(opts.search, { fixed_strings = true }),
     on_match,
     function()
       tx()
@@ -1173,7 +1185,7 @@ end
 ---@return string[]
 Client.list_tags = function(self, term, timeout)
   local tags = {}
-  for _, tag_loc in ipairs(self:find_tags(term and term or "", nil, timeout)) do
+  for _, tag_loc in ipairs(self:find_tags(term and term or "", { timeout = timeout })) do
     tags[tag_loc.tag] = true
   end
   return vim.tbl_keys(tags)
@@ -1184,7 +1196,7 @@ end
 ---@param term string|?
 ---@param callback fun(tags: string[])
 Client.list_tags_async = function(self, term, callback)
-  self:find_tags_async(term and term or "", nil, function(tag_locations)
+  self:find_tags_async(term and term or "", function(tag_locations)
     local tags = {}
     for _, tag_loc in ipairs(tag_locations) do
       tags[tag_loc.tag] = true
