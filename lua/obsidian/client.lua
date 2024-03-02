@@ -662,9 +662,8 @@ Client.resolve_link_async = function(self, link, callback)
     return callback(res)
   end
 
-  -- The Obsidian app will follow links with spaces encoded as "%20" (as they are in URLs),
-  -- so we should too.
-  location = util.string_replace(location, "%20", " ")
+  -- The Obsidian app will follow URL-encoded links, so we should to.
+  location = util.urldecode(location)
 
   -- Remove anchor links from the end if there are any.
   ---@type string|?
@@ -679,7 +678,10 @@ Client.resolve_link_async = function(self, link, callback)
       res.note = note
       -- Resolve anchor link to line.
       if anchor_link ~= nil then
-        res.line = note:resolve_anchor_link(anchor_link)
+        local anchor_match = note:resolve_anchor_link(anchor_link)
+        if anchor_match then
+          res.line = anchor_match.line
+        end
       end
       return callback(res)
     end
@@ -1079,7 +1081,7 @@ Client.find_backlinks_async = function(self, note, callback, opts)
 
   -- Prepare search terms.
   local search_terms = {}
-  for ref in iter { tostring(note.id), note:fname() } do
+  for ref in iter { tostring(note.id), note:fname(), self:vault_relative_path(note.path) } do
     if ref ~= nil then
       -- Wiki links without anchors.
       search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
@@ -1656,11 +1658,11 @@ end
 --- Create a formatted markdown / wiki link for a note.
 ---
 ---@param note obsidian.Note|obsidian.Path|string The note/path to link to.
----@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|? }|? Options.
+---@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: string|?, header: string|? }|? Options.
 ---
 ---@return string
 Client.format_link = function(self, note, opts)
-  opts = opts and opts or {}
+  opts = opts or {}
 
   ---@type string, string, string|integer|?
   local rel_path, label, note_id
@@ -1681,7 +1683,7 @@ Client.format_link = function(self, note, opts)
     link_style = self.opts.preferred_link_style
   end
 
-  local new_opts = { path = rel_path, label = label, id = note_id }
+  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor, header = opts.header }
 
   if link_style == config.LinkStyle.markdown then
     return self.opts.markdown_link_func(new_opts)

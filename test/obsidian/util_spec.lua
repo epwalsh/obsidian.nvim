@@ -2,7 +2,23 @@ local util = require "obsidian.util"
 
 describe("util.urlencode()", function()
   it("should correctly URL-encode a path", function()
-    assert.equals(util.urlencode [[~/Library/Foo Bar.md]], [[~%2FLibrary%2FFoo%20Bar.md]])
+    assert.equals([[~%2FLibrary%2FFoo%20Bar.md]], util.urlencode [[~/Library/Foo Bar.md]])
+  end)
+
+  it("should keep path separated when asks", function()
+    assert.equals([[~/Library/Foo%20Bar.md]], util.urlencode([[~/Library/Foo Bar.md]], { keep_path_sep = true }))
+  end)
+end)
+
+describe("util.urldecode()", function()
+  it("should correctly decode an encoded string", function()
+    local str = [[~/Library/Foo Bar.md]]
+    assert.equals(str, util.urldecode(util.urlencode(str)))
+  end)
+
+  it("should correctly decode an encoded string with path seps", function()
+    local str = [[~/Library/Foo Bar.md]]
+    assert.equals(str, util.urldecode(util.urlencode(str, { keep_path_sep = true })))
   end)
 end)
 
@@ -190,6 +206,12 @@ describe("util.strip_anchor_links()", function()
     assert.equals("#hello-world", anchor)
   end)
 
+  it("should strip non-standard anchor links", function()
+    local line, anchor = util.strip_anchor_links "Foo Bar#Hello World"
+    assert.equals("Foo Bar", line)
+    assert.equals("#Hello World", anchor)
+  end)
+
   it("should strip multiple anchor links", function()
     local line, anchor = util.strip_anchor_links "Foo Bar#hello-world#sub-header"
     assert.equals("Foo Bar", line)
@@ -237,5 +259,100 @@ describe("util.header_level()", function()
 
   it("should return 2 for H2 headers", function()
     assert.equals(2, util.header_level "## Hello World")
+  end)
+end)
+
+describe("util.wiki_link_id_prefix()", function()
+  it("should work without an anchor link", function()
+    assert.equals("[[123-foo|Foo]]", util.wiki_link_id_prefix { path = "123-foo.md", id = "123-foo", label = "Foo" })
+  end)
+
+  it("should work with an anchor link", function()
+    assert.equals(
+      "[[123-foo#heading|Foo]]",
+      util.wiki_link_id_prefix { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
+    )
+  end)
+
+  it("should work with an anchor link and header", function()
+    assert.equals(
+      "[[123-foo#heading|Foo ❯ Heading]]",
+      util.wiki_link_id_prefix {
+        path = "123-foo.md",
+        id = "123-foo",
+        label = "Foo",
+        anchor = "#heading",
+        header = "Heading",
+      }
+    )
+  end)
+end)
+
+describe("util.wiki_link_path_prefix()", function()
+  it("should work without an anchor link", function()
+    assert.equals(
+      "[[123-foo.md|Foo]]",
+      util.wiki_link_path_prefix { path = "123-foo.md", id = "123-foo", label = "Foo" }
+    )
+  end)
+
+  it("should work with an anchor link", function()
+    assert.equals(
+      "[[123-foo.md#heading|Foo]]",
+      util.wiki_link_path_prefix { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
+    )
+  end)
+
+  it("should work with an anchor link and header", function()
+    assert.equals(
+      "[[123-foo.md#heading|Foo ❯ Heading]]",
+      util.wiki_link_path_prefix {
+        path = "123-foo.md",
+        id = "123-foo",
+        label = "Foo",
+        anchor = "#heading",
+        header = "Heading",
+      }
+    )
+  end)
+end)
+
+describe("util.wiki_link_path_only()", function()
+  it("should work without an anchor link", function()
+    assert.equals("[[123-foo.md]]", util.wiki_link_path_only { path = "123-foo.md", id = "123-foo", label = "Foo" })
+  end)
+
+  it("should work with an anchor link", function()
+    assert.equals(
+      "[[123-foo.md#heading]]",
+      util.wiki_link_path_only { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
+    )
+  end)
+end)
+
+describe("util.markdown_link()", function()
+  it("should work without an anchor link", function()
+    assert.equals("[Foo](123-foo.md)", util.markdown_link { path = "123-foo.md", id = "123-foo", label = "Foo" })
+  end)
+
+  it("should work with an anchor link", function()
+    assert.equals(
+      "[Foo](123-foo.md#heading)",
+      util.markdown_link { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
+    )
+  end)
+
+  it("should work with an anchor link and header", function()
+    assert.equals(
+      "[Foo ❯ Heading](123-foo.md#heading)",
+      util.markdown_link { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading", header = "Heading" }
+    )
+  end)
+
+  it("should URL-encode paths", function()
+    assert.equals(
+      "[Foo](notes/123%20foo.md)",
+      util.markdown_link { path = "notes/123 foo.md", id = "123-foo", label = "Foo" }
+    )
   end)
 end)

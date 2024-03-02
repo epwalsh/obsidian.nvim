@@ -29,7 +29,7 @@ local DEFAULT_MAX_LINES = 500
 ---@field has_frontmatter boolean|?
 ---@field frontmatter_end_line integer|?
 ---@field contents string[]|?
----@field anchor_links table<string, integer>|?
+---@field anchor_links table<string, { line: integer, header: string }>|?
 local Note = abc.new_class {
   __tostring = function(self)
     return string.format("Note('%s')", self.id)
@@ -293,7 +293,7 @@ Note.from_lines = function(lines, path, opts)
     contents = {}
   end
 
-  ---@type table<string, integer>|?
+  ---@type table<string, { line: integer, header: string }>|?
   local anchor_links
   if opts.collect_anchor_links then
     anchor_links = {}
@@ -319,20 +319,21 @@ Note.from_lines = function(lines, path, opts)
     if in_frontmatter and not at_boundary then
       table.insert(frontmatter_lines, line)
     elseif not in_frontmatter and not at_boundary then
-      -- Check for title/header.
+      -- Check for title/header and collect anchor link.
       local header_level = util.header_level(line)
-      if not title and header_level == 1 then
-        local maybe_title = Note._parse_header(line)
-        if maybe_title then
-          title = maybe_title
+      if header_level > 0 then
+        local header = Note._parse_header(line)
+        if not title and header and header_level == 1 then
+          title = header
         end
-      end
 
-      -- Collect anchor link.
-      if opts.collect_anchor_links and header_level > 0 then
-        local anchor = util.header_to_anchor(line)
-        if anchor then
-          anchor_links[anchor] = line_idx
+        -- Collect anchor link.
+        if header and opts.collect_anchor_links then
+          assert(anchor_links)
+          local anchor = util.header_to_anchor(line)
+          if anchor and not anchor_links[anchor] then
+            anchor_links[anchor] = { line = line_idx, header = header }
+          end
         end
       end
     end
@@ -631,8 +632,10 @@ end
 --- Try to resolve an anchor link to a line number in the note's file.
 ---
 ---@param anchor_link string
----@return integer|? line_number
+---@return { line: integer, header: string}|?
 Note.resolve_anchor_link = function(self, anchor_link)
+  anchor_link = util.standardize_anchor(anchor_link)
+
   if self.anchor_links ~= nil then
     return self.anchor_links[anchor_link]
   end
@@ -640,15 +643,20 @@ Note.resolve_anchor_link = function(self, anchor_link)
   assert(self.path, "'note.path' is not set")
   ---@type integer
   local lnum
+  local header
   with(open(tostring(self.path)), function(reader)
     for i, line in enumerate(reader:lines()) do
       if util.is_header(line) and util.header_to_anchor(line) == anchor_link then
         lnum = i
+        header = Note._parse_header(line)
         break
       end
     end
   end)
-  return lnum
+
+  if lnum and header then
+    return { line = lnum, header = header }
+  end
 end
 
 return Note

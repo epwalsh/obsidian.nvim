@@ -1,6 +1,7 @@
 local abc = require "obsidian.abc"
 local completion = require "obsidian.completion.refs"
 local obsidian = require "obsidian"
+local util = require "obsidian.util"
 local LinkStyle = require("obsidian.config").LinkStyle
 
 ---@class cmp_obsidian_new.Source : obsidian.ABC
@@ -18,61 +19,72 @@ source.complete = function(_, request, callback)
   local client = assert(obsidian.get_client())
   local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
-  if can_complete and search ~= nil and #search >= client.opts.completion.min_chars then
-    local new_note = client:create_note { title = search, no_write = true }
+  if not (can_complete and search ~= nil and #search >= client.opts.completion.min_chars) then
+    callback { isIncomplete = true }
+    return
+  end
 
-    if not new_note.title or string.len(new_note.title) == 0 then
-      return
-    end
+  ---@type string|?
+  local anchor_link
+  search, anchor_link = util.strip_anchor_links(search)
 
-    assert(new_note.path)
+  -- Anchor link might be incomplete, in which case we should strip the '#' off the end of 'search'.
+  if not anchor_link and vim.endswith(search, "#") then
+    search = string.sub(search, 1, -2)
+    anchor_link = "#"
+  end
 
-    ---@type obsidian.config.LinkStyle, string, string
-    local link_style, sort_text
-    if ref_type == completion.RefType.Wiki then
-      link_style = LinkStyle.wiki
-      sort_text = "[[" .. search
-    elseif ref_type == completion.RefType.Markdown then
-      link_style = LinkStyle.markdown
-      sort_text = "[" .. search
-    else
-      error "not implemented"
-    end
+  local new_note = client:create_note { title = search, no_write = true }
 
-    local new_text = client:format_link(new_note, { link_style = link_style })
-    local label = "Create: " .. new_text
+  if not new_note.title or string.len(new_note.title) == 0 then
+    return
+  end
 
-    local items = {
-      {
-        sortText = sort_text,
-        label = label,
-        kind = 18,
-        textEdit = {
-          newText = new_text,
-          range = {
-            start = {
-              line = request.context.cursor.row - 1,
-              character = insert_start,
-            },
-            ["end"] = {
-              line = request.context.cursor.row - 1,
-              character = insert_end,
-            },
+  assert(new_note.path)
+
+  ---@type obsidian.config.LinkStyle, string, string
+  local link_style, sort_text
+  if ref_type == completion.RefType.Wiki then
+    link_style = LinkStyle.wiki
+    sort_text = "[[" .. search
+  elseif ref_type == completion.RefType.Markdown then
+    link_style = LinkStyle.markdown
+    sort_text = "[" .. search
+  else
+    error "not implemented"
+  end
+
+  local new_text = client:format_link(new_note, { link_style = link_style, anchor = anchor_link })
+  local label = "Create: " .. new_text
+
+  local items = {
+    {
+      sortText = sort_text,
+      label = label,
+      kind = 18,
+      textEdit = {
+        newText = new_text,
+        range = {
+          start = {
+            line = request.context.cursor.row - 1,
+            character = insert_start,
+          },
+          ["end"] = {
+            line = request.context.cursor.row - 1,
+            character = insert_end,
           },
         },
-        data = {
-          note = new_note,
-        },
       },
-    }
+      data = {
+        note = new_note,
+      },
+    },
+  }
 
-    return callback {
-      items = items,
-      isIncomplete = true,
-    }
-  else
-    return callback { isIncomplete = true }
-  end
+  return callback {
+    items = items,
+    isIncomplete = true,
+  }
 end
 
 source.execute = function(_, item, callback)
