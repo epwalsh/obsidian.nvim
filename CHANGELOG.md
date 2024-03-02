@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed config option `picker.mappings` to `picker.note_mappings`.
 
+### Fixed
+
+- Respect telescope.nvim themes configured by user.
+
 ## [v3.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.1) - 2024-02-28
 
 ### Added
