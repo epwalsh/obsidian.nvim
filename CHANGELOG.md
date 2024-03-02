@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed issue with `:ObsidianOpen` on windows.
 - Respect telescope.nvim themes configured by user.
 
 ## [v3.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.1) - 2024-02-28
