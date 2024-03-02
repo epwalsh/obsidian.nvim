@@ -586,4 +586,23 @@ Note.save_to_buffer = function(self, bufnr, frontmatter)
   end
 end
 
+--- Try to resolve an anchor link to a line number in the note's file.
+---
+---@param anchor_link string
+---@return integer|? line_number
+Note.resolve_anchor_link = function(self, anchor_link)
+  assert(self.path)
+  ---@type integer
+  local lnum
+  with(open(tostring(self.path)), function(reader)
+    for i, line in enumerate(reader:lines()) do
+      if util.is_header(line) and util.header_to_anchor(line) == anchor_link then
+        lnum = i
+        break
+      end
+    end
+  end)
+  return lnum
+end
+
 return Note

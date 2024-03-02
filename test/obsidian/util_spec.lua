@@ -182,3 +182,21 @@ describe("util.is_url()", function()
     assert.is_true(util.is_url "https://api.semanticscholar.org/CorpusID:235829052")
   end)
 end)
+
+describe("util.header_to_anchor()", function()
+  it("should strip leading '#' and put everything in lowercase", function()
+    assert.equals("#hello-world", util.header_to_anchor "## Hello World")
+  end)
+
+  it("should remove punctuation", function()
+    assert.equals("#hello-world", util.header_to_anchor "# Hello, World!")
+  end)
+
+  it("should keep numbers", function()
+    assert.equals("#hello-world-123", util.header_to_anchor "# Hello, World! 123")
+  end)
+
+  it("should have a '-' for every space", function()
+    assert.equals("#hello--world", util.header_to_anchor "# Hello  World!")
+  end)
+end)

@@ -989,4 +989,30 @@ util.get_icon = function(path)
   return nil
 end
 
+--- Check if a line is a markdown header.
+---@param line string
+---@return boolean
+util.is_header = function(line)
+  if string.match(line, "^#+%s+[%w]+") then
+    return true
+  else
+    return false
+  end
+end
+
+--- Transform a markdown header into an link, e.g. "# Hello World" -> "#hello-world".
+---
+---@param header string
+---
+---@return string
+util.header_to_anchor = function(header)
+  -- Remove leading '#' and strip whitespace.
+  local anchor = string.lower(util.strip_whitespace(string.gsub(header, [[^#+%s+]], "")))
+  -- Replace whitespace with "-".
+  anchor = string.gsub(anchor, "%s", "-")
+  -- Remove every non-alphanumeric character.
+  anchor = string.gsub(anchor, "[^%w-]", "")
+  return "#" .. anchor
+end
+
 return util

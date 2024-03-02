@@ -626,6 +626,8 @@ end
 ---@field path obsidian.Path|?
 ---@field note obsidian.Note|?
 ---@field url string|?
+---@field line integer|?
+---@field col integer|?
 
 --- Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
 ---
@@ -655,10 +657,10 @@ Client.resolve_link_async = function(self, link, callback)
   -- so we should too.
   location = util.string_replace(location, "%20", " ")
 
-  -- Remove links from the end if there are any.
-  local header_link = location:match "#[%a%d%s-_^]+$"
-  if header_link ~= nil then
-    location = location:sub(1, -header_link:len() - 1)
+  -- Remove anchor links from the end if there are any.
+  local anchor_link = location:match "#[%a%d%s-_^]+$"
+  if anchor_link ~= nil then
+    location = location:sub(1, -anchor_link:len() - 1)
   end
 
   res.location = location
@@ -667,6 +669,10 @@ Client.resolve_link_async = function(self, link, callback)
     if note ~= nil then
       res.path = note.path
       res.note = note
+      -- Resolve anchor link to line.
+      if anchor_link ~= nil then
+        res.line = note:resolve_anchor_link(anchor_link)
+      end
       return callback(res)
     end
 
@@ -703,7 +709,7 @@ Client.follow_link_async = function(self, link, opts)
     if res.note ~= nil then
       -- Go to resolved note.
       return vim.schedule(function()
-        self:open_note(res.note, { open_strategy = opts.open_strategy })
+        self:open_note(res.note, { line = res.line, col = res.col, open_strategy = opts.open_strategy })
       end)
     end
 
