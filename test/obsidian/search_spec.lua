@@ -15,7 +15,7 @@ describe("search.find_notes_async()", function()
         assert.equals(#matches, 1)
         assert.equals(
           tostring(matches[1]),
-          tostring(Path.new("./test_fixtures/notes/foo.md"):resolve { strict = true })
+          tostring(Path.new("./test/fixtures/notes/foo.md"):resolve { strict = true })
         )
         tx()
       end)
@@ -29,7 +29,7 @@ describe("search.find_notes_async()", function()
         assert.equals(#matches, 1)
         assert.equals(
           tostring(matches[1]),
-          tostring(Path.new("./test_fixtures/notes/foo.md"):resolve { strict = true })
+          tostring(Path.new("./test/fixtures/notes/foo.md"):resolve { strict = true })
         )
         tx()
       end)

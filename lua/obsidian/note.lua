@@ -12,6 +12,8 @@ local enumerate = require("obsidian.itertools").enumerate
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
+local DEFAULT_MAX_LINES = 500
+
 --- A class that represents a note within a vault.
 ---
 ---@toc_entry obsidian.Note
@@ -26,6 +28,7 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 ---@field metadata table|?
 ---@field has_frontmatter boolean|?
 ---@field frontmatter_end_line integer|?
+---@field contents string[]|?
 ---@field anchor_links table<string, integer>|?
 local Note = abc.new_class {
   __tostring = function(self)
@@ -191,6 +194,7 @@ end
 
 ---@class obsidian.note.LoadOpts
 ---@field max_lines integer|?
+---@field load_contents boolean|?
 ---@field collect_anchor_links boolean|?
 
 --- Initialize a note from a file.
@@ -234,17 +238,10 @@ end
 ---
 ---@return obsidian.Note,string[]
 Note.from_file_with_contents_async = function(path, opts)
-  opts = opts or {}
-  path = Path.new(path):resolve { strict = true }
-  local f = File.open(path)
-  local content = {}
-  -- TODO: don't iterate over lines twice. Collect content within `Note.from_lines()`.
-  for line in f:lines(false) do
-    table.insert(content, line)
-  end
-  f:close()
-  opts.max_lines = #content
-  return Note.from_lines(iter(content), path, opts), content
+  opts = vim.tbl_extend("force", opts or {}, { load_contents = true })
+  local note = Note.from_file_async(path, opts)
+  assert(note.contents ~= nil)
+  return note, note.contents
 end
 
 --- Initialize a note from a buffer.
@@ -283,12 +280,18 @@ Note.from_lines = function(lines, path, opts)
   opts = opts or {}
   path = Path.new(path):resolve()
 
-  local max_lines = opts.max_lines or 100
+  local max_lines = opts.max_lines or DEFAULT_MAX_LINES
 
   local id = nil
   local title = nil
   local aliases = {}
   local tags = {}
+
+  ---@type string[]|?
+  local contents
+  if opts.load_contents then
+    contents = {}
+  end
 
   ---@type table<string, integer>|?
   local anchor_links
@@ -322,12 +325,10 @@ Note.from_lines = function(lines, path, opts)
         local maybe_title = Note._parse_header(line)
         if maybe_title then
           title = maybe_title
-          if not opts.collect_anchor_links then
-            break
-          end
         end
       end
 
+      -- Collect anchor link.
       if opts.collect_anchor_links and header_level > 0 then
         local anchor = util.header_to_anchor(line)
         if anchor then
@@ -336,7 +337,13 @@ Note.from_lines = function(lines, path, opts)
       end
     end
 
-    if line_idx > max_lines then
+    -- Collect contents.
+    if contents ~= nil then
+      table.insert(contents, line)
+    end
+
+    -- Check if we can stop reading lines now.
+    if line_idx > max_lines or (title and not opts.load_contents and not opts.collect_anchor_links) then
       break
     end
   end
@@ -424,6 +431,7 @@ Note.from_lines = function(lines, path, opts)
   n.metadata = metadata
   n.has_frontmatter = has_frontmatter
   n.frontmatter_end_line = frontmatter_end_line
+  n.contents = contents
   n.anchor_links = anchor_links
   return n
 end
