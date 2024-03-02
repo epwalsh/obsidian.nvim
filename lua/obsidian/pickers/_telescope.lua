@@ -196,7 +196,7 @@ end
 TelescopePicker.pick = function(self, values, opts)
   local pickers = require "telescope.pickers"
   local finders = require "telescope.finders"
-  local conf = require("telescope.config").values
+  local conf = require "telescope.config"
   local make_entry = require "telescope.make_entry"
 
   self.calling_bufnr = vim.api.nvim_get_current_buf()
@@ -216,8 +216,6 @@ TelescopePicker.pick = function(self, values, opts)
     end,
   }
 
-  local make_entry_from_string = make_entry.gen_from_string(picker_opts)
-
   local displayer = function(entry)
     return self:_make_display(entry.raw)
   end
@@ -230,8 +228,21 @@ TelescopePicker.pick = function(self, values, opts)
 
   local previewer
   if type(values[1]) == "table" then
-    previewer = conf.grep_previewer(picker_opts)
+    previewer = conf.values.grep_previewer(picker_opts)
+    -- Get theme to use.
+    if conf.pickers then
+      for _, picker_name in ipairs { "grep_string", "live_grep", "find_files" } do
+        local picker_conf = conf.pickers[picker_name]
+        if picker_conf and picker_conf.theme then
+          picker_opts =
+            vim.tbl_extend("force", picker_opts, require("telescope.themes")["get_" .. picker_conf.theme] {})
+          break
+        end
+      end
+    end
   end
+
+  local make_entry_from_string = make_entry.gen_from_string(picker_opts)
 
   pickers
     .new(picker_opts, {
@@ -266,7 +277,7 @@ TelescopePicker.pick = function(self, values, opts)
           end
         end,
       },
-      sorter = conf.generic_sorter(picker_opts),
+      sorter = conf.values.generic_sorter(picker_opts),
       previewer = previewer,
     })
     :find()

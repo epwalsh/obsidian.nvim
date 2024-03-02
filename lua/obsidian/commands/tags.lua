@@ -6,7 +6,7 @@ local search = require "obsidian.search"
 ---@param picker obsidian.Picker
 ---@param tags string[]
 local function gather_tag_picker_list(client, picker, tags)
-  client:find_tags_async(tags, true, function(tag_locations)
+  client:find_tags_async(tags, function(tag_locations)
     if vim.tbl_isempty(tag_locations) then
       log.warn "Tags not found"
       return
@@ -40,7 +40,7 @@ local function gather_tag_picker_list(client, picker, tags)
         end,
       })
     end)
-  end)
+  end, { search = { sort = true } })
 end
 
 ---@param client obsidian.Client
