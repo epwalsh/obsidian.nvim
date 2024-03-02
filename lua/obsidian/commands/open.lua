@@ -56,9 +56,9 @@ return function(client, data)
   end
 
   uri = vim.fn.shellescape(uri)
-
   ---@type string, string[]
   local cmd, args
+  local run_in_shell = true
   if this_os == util.OSType.Linux or this_os == util.OSType.FreeBSD then
     cmd = "xdg-open"
     args = { uri }
@@ -66,6 +66,7 @@ return function(client, data)
     cmd = "wsl-open"
     args = { uri }
   elseif this_os == util.OSType.Windows then
+    run_in_shell = false
     cmd = "powershell"
     args = { "Start-Process", uri }
   elseif this_os == util.OSType.Darwin then
@@ -83,7 +84,14 @@ return function(client, data)
   assert(cmd)
   assert(args)
 
-  local cmd_with_args = { cmd, unpack(args) }
+  ---@type string|string[]
+  local cmd_with_args
+  if run_in_shell then
+    cmd_with_args = cmd .. " " .. table.concat(args, " ")
+  else
+    cmd_with_args = { cmd, unpack(args) }
+  end
+
   vim.fn.jobstart(cmd_with_args, {
     on_exit = function(_, exit_code)
       if exit_code ~= 0 then
