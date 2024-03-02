@@ -67,7 +67,7 @@ return function(client, data)
     args = { uri }
   elseif this_os == util.OSType.Windows then
     cmd = "powershell"
-    args = { "Start-Process '" .. uri .. "'" }
+    args = { "Start-Process", uri }
   elseif this_os == util.OSType.Darwin then
     cmd = "open"
     if client.opts.open_app_foreground then
@@ -83,7 +83,7 @@ return function(client, data)
   assert(cmd)
   assert(args)
 
-  local cmd_with_args = cmd .. " " .. table.concat(args, " ")
+  local cmd_with_args = {cmd, unpack(args)}
   vim.fn.jobstart(cmd_with_args, {
     detach = true,
     on_exit = function(_, exit_code)
