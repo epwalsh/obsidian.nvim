@@ -301,7 +301,7 @@ Note.from_lines = function(lines, path, opts)
 
   -- Iterate over lines in the file, collecting frontmatter and parsing the title.
   local frontmatter_lines = {}
-  local has_frontmatter, in_frontmatter, at_boundary = false, false, false
+  local has_frontmatter, in_frontmatter, at_boundary = false, false, false -- luacheck: ignore (false positive)
   local frontmatter_end_line = nil
   for line_idx, line in enumerate(lines) do
     if line_idx == 1 and Note._is_frontmatter_boundary(line) then
