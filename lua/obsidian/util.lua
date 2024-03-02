@@ -989,6 +989,29 @@ util.get_icon = function(path)
   return nil
 end
 
+util.ANCHOR_LINK_PATTERN = "#[%a%d%s-_^]+"
+
+--- Strip anchor links from a line.
+---@param line string
+---@return string, string|?
+util.strip_anchor_links = function(line)
+  ---@type string|?
+  local anchor
+
+  while true do
+    local anchor_match = string.match(line, util.ANCHOR_LINK_PATTERN .. "$")
+    if anchor_match then
+      anchor = anchor or ""
+      anchor = anchor_match .. anchor
+      line = string.sub(line, 1, -anchor_match:len() - 1)
+    else
+      break
+    end
+  end
+
+  return line, anchor
+end
+
 --- Check if a line is a markdown header.
 ---@param line string
 ---@return boolean
@@ -1023,7 +1046,7 @@ util.header_to_anchor = function(header)
   -- Replace whitespace with "-".
   anchor = string.gsub(anchor, "%s", "-")
   -- Remove every non-alphanumeric character.
-  anchor = string.gsub(anchor, "[^%w-]", "")
+  anchor = string.gsub(anchor, "[^%w_-]", "")
   return "#" .. anchor
 end
 

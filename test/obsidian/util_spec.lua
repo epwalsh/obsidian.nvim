@@ -183,6 +183,26 @@ describe("util.is_url()", function()
   end)
 end)
 
+describe("util.strip_anchor_links()", function()
+  it("should strip anchor links", function()
+    local line, anchor = util.strip_anchor_links "Foo Bar#hello-world"
+    assert.equals("Foo Bar", line)
+    assert.equals("#hello-world", anchor)
+  end)
+
+  it("should strip multiple anchor links", function()
+    local line, anchor = util.strip_anchor_links "Foo Bar#hello-world#sub-header"
+    assert.equals("Foo Bar", line)
+    assert.equals("#hello-world#sub-header", anchor)
+  end)
+
+  it("should leave line alone when there are no anchor links", function()
+    local line, anchor = util.strip_anchor_links "Foo Bar"
+    assert.equals("Foo Bar", line)
+    assert.equals(nil, anchor)
+  end)
+end)
+
 describe("util.header_to_anchor()", function()
   it("should strip leading '#' and put everything in lowercase", function()
     assert.equals("#hello-world", util.header_to_anchor "## Hello World")
@@ -194,6 +214,10 @@ describe("util.header_to_anchor()", function()
 
   it("should keep numbers", function()
     assert.equals("#hello-world-123", util.header_to_anchor "# Hello, World! 123")
+  end)
+
+  it("should keep underscores", function()
+    assert.equals("#hello_world", util.header_to_anchor "# Hello_World")
   end)
 
   it("should have a '-' for every space", function()

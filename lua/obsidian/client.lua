@@ -667,10 +667,9 @@ Client.resolve_link_async = function(self, link, callback)
   location = util.string_replace(location, "%20", " ")
 
   -- Remove anchor links from the end if there are any.
-  local anchor_link = location:match "#[%a%d%s-_^]+$"
-  if anchor_link ~= nil then
-    location = location:sub(1, -anchor_link:len() - 1)
-  end
+  ---@type string|?
+  local anchor_link
+  location, anchor_link = util.strip_anchor_links(location)
 
   res.location = location
 
@@ -1082,13 +1081,22 @@ Client.find_backlinks_async = function(self, note, callback, opts)
   local search_terms = {}
   for ref in iter { tostring(note.id), note:fname() } do
     if ref ~= nil then
+      -- Wiki links without anchors.
       search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
       search_terms[#search_terms + 1] = string.format("[[%s|", ref)
+      -- Markdown link without anchors.
       search_terms[#search_terms + 1] = string.format("(%s)", ref)
+      -- Wiki links with anchors.
+      search_terms[#search_terms + 1] = string.format("[[%s#", ref)
+      -- Markdown link with anchors.
+      search_terms[#search_terms + 1] = string.format("(%s#", ref)
     end
   end
   for alias in iter(note.aliases) do
+    -- Wiki link without anchors.
     search_terms[#search_terms + 1] = string.format("[[%s]]", alias)
+    -- Wiki link with anchors.
+    search_terms[#search_terms + 1] = string.format("[[%s#", alias)
   end
 
   local function on_match(match)
