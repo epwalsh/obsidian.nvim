@@ -23,7 +23,7 @@ source.complete = function(_, request, callback)
     return callback { isIncomplete = true }
   end
 
-  client:find_tags_async(search, false, function(tag_locs)
+  client:find_tags_async(search, function(tag_locs)
     local tags = {}
     for tag_loc in iter(tag_locs) do
       tags[tag_loc.tag] = true
@@ -49,7 +49,7 @@ source.complete = function(_, request, callback)
       items = items,
       isIncomplete = false,
     }
-  end)
+  end, { search = { sort = false } })
 end
 
 source.execute = function(_, item, callback)

@@ -14,13 +14,24 @@ end)
 
 describe("Note.from_file()", function()
   it("should work from a file", function()
-    local note = Note.from_file "test_fixtures/notes/foo.md"
+    local note = Note.from_file "test/fixtures/notes/foo.md"
     assert.equals(note.id, "foo")
     assert.equals(note.aliases[1], "foo")
     assert.equals(note.aliases[2], "Foo")
     assert.equals(note:fname(), "foo.md")
     assert.is_true(note.has_frontmatter)
     assert(#note.tags == 0)
+  end)
+
+  it("should be able to collect anchor links", function()
+    local note = Note.from_file("test/fixtures/notes/note_with_a_bunch_of_headers.md", { collect_anchor_links = true })
+    assert.equals(note.id, "note_with_a_bunch_of_headers")
+    assert.is_not(note.anchor_links, nil)
+    assert.equals(5, note.anchor_links["#header-1"])
+    assert.equals(7, note.anchor_links["#sub-header-1-a"])
+    assert.equals(9, note.anchor_links["#header-2"])
+    assert.equals(11, note.anchor_links["#sub-header-2-a"])
+    assert.equals(5, note:resolve_anchor_link "#header-1")
   end)
 
   it("should work from a README", function()
@@ -32,7 +43,7 @@ describe("Note.from_file()", function()
   end)
 
   it("should work from a file w/o frontmatter", function()
-    local note = Note.from_file "test_fixtures/notes/note_without_frontmatter.md"
+    local note = Note.from_file "test/fixtures/notes/note_without_frontmatter.md"
     assert.equals(note.id, "note_without_frontmatter")
     assert.equals(note.title, "Hey there")
     assert.equals(#note.aliases, 0)
@@ -43,7 +54,7 @@ describe("Note.from_file()", function()
   end)
 
   it("should collect additional frontmatter metadata", function()
-    local note = Note.from_file "test_fixtures/notes/note_with_additional_metadata.md"
+    local note = Note.from_file "test/fixtures/notes/note_with_additional_metadata.md"
     assert.equals(note.id, "note_with_additional_metadata")
     assert.is_not(note.metadata, nil)
     assert.equals(note.metadata.foo, "bar")
@@ -58,11 +69,11 @@ describe("Note.from_file()", function()
         "---",
       }, "\n")
     )
-    note:save { path = "./test_fixtures/notes/note_with_additional_metadata_saved.md" }
+    note:save { path = "./test/fixtures/notes/note_with_additional_metadata_saved.md" }
   end)
 
   it("should be able to be read frontmatter that's formatted differently", function()
-    local note = Note.from_file "test_fixtures/notes/note_with_different_frontmatter_format.md"
+    local note = Note.from_file "test/fixtures/notes/note_with_different_frontmatter_format.md"
     assert.equals(note.id, "note_with_different_frontmatter_format")
     assert.is_not(note.metadata, nil)
     assert.equals(#note.aliases, 3)
@@ -73,10 +84,24 @@ describe("Note.from_file()", function()
   end)
 end)
 
+describe("Note.from_file_async()", function()
+  it("should work from a file", function()
+    async.util.block_on(function()
+      local note = Note.from_file_async "test/fixtures/notes/foo.md"
+      assert.equals(note.id, "foo")
+      assert.equals(note.aliases[1], "foo")
+      assert.equals(note.aliases[2], "Foo")
+      assert.equals(note:fname(), "foo.md")
+      assert.is_true(note.has_frontmatter)
+      assert(#note.tags == 0)
+    end, 1000)
+  end)
+end)
+
 describe("Note.from_file_with_contents_async()", function()
   it("should work from a file", function()
     async.util.block_on(function()
-      local note, contents = Note.from_file_with_contents_async "test_fixtures/notes/foo.md"
+      local note, contents = Note.from_file_with_contents_async "test/fixtures/notes/foo.md"
       assert.equals(note.id, "foo")
       assert.equals(note.aliases[1], "foo")
       assert.equals(note.aliases[2], "Foo")
@@ -90,7 +115,7 @@ end)
 
 describe("Note:add_alias()", function()
   it("should be able to add an alias", function()
-    local note = Note.from_file "test_fixtures/notes/foo.md"
+    local note = Note.from_file "test/fixtures/notes/foo.md"
     assert.equals(#note.aliases, 2)
     note:add_alias "Foo Bar"
     assert.equals(#note.aliases, 3)
@@ -99,14 +124,14 @@ end)
 
 describe("Note.save()", function()
   it("should be able to save to file", function()
-    local note = Note.from_file "test_fixtures/notes/foo.md"
+    local note = Note.from_file "test/fixtures/notes/foo.md"
     note:add_alias "Foo Bar"
-    note:save { path = "./test_fixtures/notes/foo_bar.md" }
+    note:save { path = "./test/fixtures/notes/foo_bar.md" }
   end)
 
   it("should be able to save a note w/o frontmatter", function()
-    local note = Note.from_file "test_fixtures/notes/note_without_frontmatter.md"
-    note:save { path = "./test_fixtures/notes/note_without_frontmatter_saved.md" }
+    local note = Note.from_file "test/fixtures/notes/note_without_frontmatter.md"
+    note:save { path = "./test/fixtures/notes/note_without_frontmatter_saved.md" }
   end)
 
   it("should be able to save a new note", function()
