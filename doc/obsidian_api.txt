@@ -192,70 +192,70 @@ obsidian.SearchOpts
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Client.find_notes()*
-             `Client.find_notes`({self}, {term}, {opts}, {timeout})
+                  `Client.find_notes`({self}, {term}, {opts})
 Find notes matching the given term. Notes are searched based on ID, title, filename, and aliases.
 
 Parameters ~
 {term} `(string)` The term to search for
-{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
-{timeout} `(integer|?)` Timeout to wait in milliseconds
+{opts} { search: obsidian.SearchOpts|?, notes: obsidian.note.LoadOpts|?, timeout: `(integer|?)` }|?
 
 Return ~
 obsidian.Note[]
 
 ------------------------------------------------------------------------------
                                             *obsidian.Client.find_notes_async()*
-         `Client.find_notes_async`({self}, {term}, {opts}, {callback})
+         `Client.find_notes_async`({self}, {term}, {callback}, {opts})
 An async version of `find_notes()` that runs the callback with an array of all matching notes.
 
 Parameters ~
 {term} `(string)` The term to search for
-{opts} `(obsidian.SearchOpts|boolean|?)` search options or a boolean indicating if sorting should be used
 {callback} `(fun(notes: obsidian.Note[]))`
+{opts} { search: obsidian.SearchOpts|?, notes: obsidian.note.LoadOpts|? }|?
 
 ------------------------------------------------------------------------------
                                                   *obsidian.Client.find_files()*
-             `Client.find_files`({self}, {term}, {opts}, {timeout})
+                  `Client.find_files`({self}, {term}, {opts})
 Find non-markdown files in the vault.
 
 Parameters ~
 {term} `(string)` The search term.
-{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
-{timeout} `(integer|?)` Timeout to wait in milliseconds.
+{opts} { search: obsidian.SearchOpts, timeout: `(integer|?)` }|?
 
 Return ~
 obsidian.Path[]
 
 ------------------------------------------------------------------------------
                                             *obsidian.Client.find_files_async()*
-         `Client.find_files_async`({self}, {term}, {opts}, {callback})
+         `Client.find_files_async`({self}, {term}, {callback}, {opts})
 An async version of `find_files`.
 
 Parameters ~
 {term} `(string)` The search term.
-{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be done
 {callback} `(fun(paths: obsidian.Path[]))`
+{opts} { search: obsidian.SearchOpts }|?
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.resolve_note()*
-               `Client.resolve_note`({self}, {query}, {timeout})
+                 `Client.resolve_note`({self}, {query}, {opts})
 Resolve the query to a single note if possible, otherwise `nil` is returned.
 The 'query' can be a path, filename, note ID, alias, title, etc.
 
 Parameters ~
 {query} `(string)`
+{opts} { timeout: `(integer|?,)` notes: obsidian.note.LoadOpts|? }|?
 
 Return ~
 obsidian.Note| `(optional)`
 
 ------------------------------------------------------------------------------
                                           *obsidian.Client.resolve_note_async()*
-            `Client.resolve_note_async`({self}, {query}, {callback})
+        `Client.resolve_note_async`({self}, {query}, {callback}, {opts})
 An async version of `resolve_note()`.
 
 Parameters ~
 {query} `(string)`
 {callback} `(fun(note: obsidian.Note|?))`
+{opts} { notes: obsidian.note.LoadOpts|? }|?
 
 Return ~
 obsidian.Note| `(optional)`
@@ -327,26 +327,25 @@ Fields ~
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Client.find_tags()*
-             `Client.find_tags`({self}, {term}, {opts}, {timeout})
+                   `Client.find_tags`({self}, {term}, {opts})
 Find all tags starting with the given search term(s).
 
 Parameters ~
 {term} `(string|string[])` The search term.
-{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
-{timeout} `(integer|?)` Timeout in milliseconds.
+{opts} { search: obsidian.SearchOpts|?, timeout: `(integer|?)` }|?
 
 Return ~
 obsidian.TagLocation[]
 
 ------------------------------------------------------------------------------
                                              *obsidian.Client.find_tags_async()*
-          `Client.find_tags_async`({self}, {term}, {opts}, {callback})
+          `Client.find_tags_async`({self}, {term}, {callback}, {opts})
 An async version of 'find_tags()'.
 
 Parameters ~
 {term} `(string|string[])` The search term.
-{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
 {callback} `(fun(tags: obsidian.TagLocation[]))`
+{opts} { search: obsidian.SearchOpts }|?
 
 ------------------------------------------------------------------------------
 Class ~
@@ -367,26 +366,25 @@ Fields ~
 
 ------------------------------------------------------------------------------
                                               *obsidian.Client.find_backlinks()*
-           `Client.find_backlinks`({self}, {note}, {opts}, {timeout})
+                `Client.find_backlinks`({self}, {note}, {opts})
 Find all backlinks to a note.
 
 Parameters ~
 {note} obsidian.Note The note to find backlinks for.
-{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
-{timeout} `(integer|?)` Timeout in milliseconds.
+{opts} { search: obsidian.SearchOpts|?, timeout: `(integer|?)` }|?
 
 Return ~
 obsidian.BacklinkMatches[]
 
 ------------------------------------------------------------------------------
                                         *obsidian.Client.find_backlinks_async()*
-       `Client.find_backlinks_async`({self}, {note}, {opts}, {callback})
+       `Client.find_backlinks_async`({self}, {note}, {callback}, {opts})
 An async version of 'find_backlinks()'.
 
 Parameters ~
 {note} obsidian.Note The note to find backlinks for.
-{opts} `(obsidian.SearchOpts|boolean|?)` Search options or a boolean indicating if sorting should be used.
 {callback} `(fun(backlinks: obsidian.BacklinkMatches[]))`
+{opts} { search: obsidian.SearchOpts }|?
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Client.list_tags()*
@@ -633,6 +631,8 @@ Fields ~
 {metadata} `(table|?)`
 {has_frontmatter} `(boolean|?)`
 {frontmatter_end_line} `(integer|?)`
+{contents} `(string[]|?)`
+{anchor_links} `(table<string, integer>|?)`
 
 ------------------------------------------------------------------------------
                                                            *obsidian.Note.new()*
@@ -742,45 +742,57 @@ Return ~
 `(any)` result
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.note.LoadOpts}
+Fields ~
+{max_lines} `(integer|?)`
+{load_contents} `(boolean|?)`
+{collect_anchor_links} `(boolean|?)`
+
+------------------------------------------------------------------------------
                                                      *obsidian.Note.from_file()*
-                            `Note.from_file`({path})
+                        `Note.from_file`({path}, {opts})
 Initialize a note from a file.
 
 Parameters ~
 {path} `(string|obsidian.Path)`
+{opts} obsidian.note.LoadOpts|?
 
 Return ~
 obsidian.Note
 
 ------------------------------------------------------------------------------
                                                *obsidian.Note.from_file_async()*
-                         `Note.from_file_async`({path})
+                     `Note.from_file_async`({path}, {opts})
 An async version of `.from_file()`, i.e. it needs to be called in an async context.
 
 Parameters ~
 {path} `(string|obsidian.Path)`
+{opts} obsidian.note.LoadOpts|?
 
 Return ~
 obsidian.Note
 
 ------------------------------------------------------------------------------
                                  *obsidian.Note.from_file_with_contents_async()*
-                  `Note.from_file_with_contents_async`({path})
+              `Note.from_file_with_contents_async`({path}, {opts})
 Like `.from_file_async()` but also returns the contents of the file as a list of lines.
 
 Parameters ~
 {path} `(string|obsidian.Path)`
+{opts} obsidian.note.LoadOpts|?
 
 Return ~
 `(obsidian.Note,string[])`
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Note.from_buffer()*
-                          `Note.from_buffer`({bufnr})
+                      `Note.from_buffer`({bufnr}, {opts})
 Initialize a note from a buffer.
 
 Parameters ~
 {bufnr} `(integer|?)`
+{opts} obsidian.note.LoadOpts|?
 
 Return ~
 obsidian.Note
@@ -795,12 +807,13 @@ Return ~
 
 ------------------------------------------------------------------------------
                                                     *obsidian.Note.from_lines()*
-                       `Note.from_lines`({lines}, {path})
+                   `Note.from_lines`({lines}, {path}, {opts})
 Initialize a note from an iterator of lines.
 
 Parameters ~
 {lines} `(fun(): string|?)`
 {path} `(string|obsidian.Path)`
+{opts} obsidian.note.LoadOpts|?
 
 Return ~
 obsidian.Note
