@@ -598,7 +598,7 @@ Create a formatted markdown / wiki link for a note.
 
 Parameters ~
 {note} `(obsidian.Note|obsidian.Path|string)` The note/path to link to.
-{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|integer|? }|? Options.
+{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: string|?, header: string|? }|? Options.
 
 Return ~
 `(string)`
@@ -632,7 +632,7 @@ Fields ~
 {has_frontmatter} `(boolean|?)`
 {frontmatter_end_line} `(integer|?)`
 {contents} `(string[]|?)`
-{anchor_links} `(table<string, integer>|?)`
+{anchor_links} `(table<string, { line: integer, header: string }>|?)`
 
 ------------------------------------------------------------------------------
                                                            *obsidian.Note.new()*
@@ -887,7 +887,7 @@ Try to resolve an anchor link to a line number in the note's file.
 Parameters ~
 {anchor_link} `(string)`
 Return ~
-`(integer|)` `(optional)` line_number
+{ line: `(integer,)` header: string}|?
 
 ------------------------------------------------------------------------------
 Class ~
