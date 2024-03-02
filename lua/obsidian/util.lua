@@ -1063,6 +1063,21 @@ util.header_level = function(line)
   end
 end
 
+--- Standardize a header anchor link.
+---
+---@param anchor string
+---
+---@return string
+util.standardize_anchor = function(anchor)
+  -- Lowercase everything.
+  anchor = string.lower(anchor)
+  -- Replace whitespace with "-".
+  anchor = string.gsub(anchor, "%s", "-")
+  -- Remove every non-alphanumeric character.
+  anchor = string.gsub(anchor, "[^#%w_-]", "")
+  return anchor
+end
+
 --- Transform a markdown header into an link, e.g. "# Hello World" -> "#hello-world".
 ---
 ---@param header string
@@ -1070,12 +1085,8 @@ end
 ---@return string
 util.header_to_anchor = function(header)
   -- Remove leading '#' and strip whitespace.
-  local anchor = string.lower(util.strip_whitespace(string.gsub(header, [[^#+%s+]], "")))
-  -- Replace whitespace with "-".
-  anchor = string.gsub(anchor, "%s", "-")
-  -- Remove every non-alphanumeric character.
-  anchor = string.gsub(anchor, "[^%w_-]", "")
-  return "#" .. anchor
+  local anchor = util.strip_whitespace(string.gsub(header, [[^#+%s+]], ""))
+  return util.standardize_anchor("#" .. anchor)
 end
 
 return util

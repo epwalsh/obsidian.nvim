@@ -634,6 +634,8 @@ end
 ---@param anchor_link string
 ---@return { line: integer, header: string}|?
 Note.resolve_anchor_link = function(self, anchor_link)
+  anchor_link = util.standardize_anchor(anchor_link)
+
   if self.anchor_links ~= nil then
     return self.anchor_links[anchor_link]
   end

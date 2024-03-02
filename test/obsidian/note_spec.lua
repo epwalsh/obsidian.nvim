@@ -32,6 +32,7 @@ describe("Note.from_file()", function()
     assert.are_same({ line = 9, header = "Header 2" }, note.anchor_links["#header-2"])
     assert.are_same({ line = 11, header = "Sub header 2 A" }, note.anchor_links["#sub-header-2-a"])
     assert.are_same({ line = 5, header = "Header 1" }, note:resolve_anchor_link "#header-1")
+    assert.are_same({ line = 5, header = "Header 1" }, note:resolve_anchor_link "#Header 1")
   end)
 
   it("should be able to resolve anchor links after the fact", function()

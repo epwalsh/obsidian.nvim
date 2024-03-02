@@ -206,6 +206,12 @@ describe("util.strip_anchor_links()", function()
     assert.equals("#hello-world", anchor)
   end)
 
+  it("should strip non-standard anchor links", function()
+    local line, anchor = util.strip_anchor_links "Foo Bar#Hello World"
+    assert.equals("Foo Bar", line)
+    assert.equals("#Hello World", anchor)
+  end)
+
   it("should strip multiple anchor links", function()
     local line, anchor = util.strip_anchor_links "Foo Bar#hello-world#sub-header"
     assert.equals("Foo Bar", line)
