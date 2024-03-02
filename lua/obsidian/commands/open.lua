@@ -83,7 +83,7 @@ return function(client, data)
   assert(cmd)
   assert(args)
 
-  local cmd_with_args = {cmd, unpack(args)}
+  local cmd_with_args = { cmd, unpack(args) }
   vim.fn.jobstart(cmd_with_args, {
     on_exit = function(_, exit_code)
       if exit_code ~= 0 then
