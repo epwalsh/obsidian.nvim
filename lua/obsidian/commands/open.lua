@@ -85,7 +85,6 @@ return function(client, data)
 
   local cmd_with_args = {cmd, unpack(args)}
   vim.fn.jobstart(cmd_with_args, {
-    detach = true,
     on_exit = function(_, exit_code)
       if exit_code ~= 0 then
         log.err("open command failed with exit code '%s': %s", exit_code, cmd_with_args)
