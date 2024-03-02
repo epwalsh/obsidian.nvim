@@ -313,30 +313,18 @@ This is a complete list of all of the options that can be passed to `require("ob
     return path:with_suffix(".md")
   end,
 
-  -- Optional, customize how wiki links are formatted.
-  ---@param opts { path: string, label: string, id: string|?, anchor: string|?, header: string|? }
-  ---@return string
+  -- Optional, customize how wiki links are formatted. You can set this to one of:
+  --  * "prepend_note_id"
+  --  * "prepend_note_path"
+  --  * "use_path_only"
+  -- Or you can set it to a function that takes a table of options and returns a string, like this:
   wiki_link_func = function(opts)
-    local anchor = opts.anchor or ""
-    local header = opts.header and string.format(" ❯ %s", opts.header) or ""
-    if opts.id == nil then
-      return string.format("[[%s%s]]", opts.label, anchor)
-    elseif opts.label ~= opts.id then
-      return string.format("[[%s%s|%s%s]]", opts.id, anchor, opts.label, header)
-    else
-      return string.format("[[%s%s]]", opts.id, anchor)
-    end
+    return require("obsidian.util").wiki_link_id_prefix(opts)
   end,
 
   -- Optional, customize how markdown links are formatted.
-  ---@param opts { path: string, label: string, id: string|?, anchor: string|?, header: string|? }
-  ---@return string
   markdown_link_func = function(opts)
-    local util = require "obsidian.util"
-    local anchor = opts.anchor or ""
-    local header = opts.header and string.format(" ❯ %s", opts.header) or ""
-    local path = util.urlencode(opts.path, { keep_path_sep = true })
-    return string.format("[%s%s](%s%s)", opts.label, header, path, anchor)
+    return require("obsidian.util").markdown_link(opts)
   end,
 
   -- Either 'wiki' or 'markdown'.

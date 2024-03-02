@@ -39,18 +39,22 @@ source.complete = function(_, request, callback)
       assert(note.anchor_links)
 
       -- Collect matching anchor links.
-      ---@type { anchor: string, header: string|? }[]|?
+      ---@type obsidian.note.HeaderAnchor[]|?
       local matching_anchors
       if anchor_link then
         matching_anchors = {}
         for anchor, anchor_data in pairs(note.anchor_links) do
           if vim.startswith(anchor, anchor_link) then
-            table.insert(matching_anchors, { anchor = anchor, header = anchor_data.header })
+            table.insert(matching_anchors, anchor_data)
           end
         end
 
         if #matching_anchors == 0 then
-          table.insert(matching_anchors, { anchor = anchor_link })
+          -- Unmatched, create a mock one.
+          table.insert(
+            matching_anchors,
+            { anchor = anchor_link, header = string.sub(anchor_link, 2), level = 1, line = 1 }
+          )
         end
       end
 
@@ -61,21 +65,21 @@ source.complete = function(_, request, callback)
       end
 
       -- Transform aliases into completion options.
-      ---@type { label: string, anchor: string|?, header: string|? }[]
+      ---@type { label: string, anchor: obsidian.note.HeaderAnchor|? }[]
       local completion_options = {}
 
       ---@param option string
       local function update_completion_options(option)
         if matching_anchors ~= nil then
           for anchor in iter(matching_anchors) do
-            table.insert(completion_options, { label = option, anchor = anchor.anchor, header = anchor.header })
+            table.insert(completion_options, { label = option, anchor = anchor })
           end
         else
           table.insert(completion_options, { label = option })
 
           -- Add all anchors, let cmp sort it out.
-          for anchor, anchor_data in pairs(note.anchor_links) do
-            table.insert(completion_options, { label = option, anchor = anchor, header = anchor_data.header })
+          for _, anchor_data in pairs(note.anchor_links) do
+            table.insert(completion_options, { label = option, anchor = anchor_data })
           end
         end
       end
@@ -107,10 +111,8 @@ source.complete = function(_, request, callback)
           error "not implemented"
         end
 
-        local label = client:format_link(
-          note,
-          { label = option.label, link_style = link_style, anchor = option.anchor, header = option.header }
-        )
+        local label =
+          client:format_link(note, { label = option.label, link_style = link_style, anchor = option.anchor })
 
         if not labels_seen[label] then
           labels_seen[label] = true

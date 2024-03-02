@@ -1658,7 +1658,7 @@ end
 --- Create a formatted markdown / wiki link for a note.
 ---
 ---@param note obsidian.Note|obsidian.Path|string The note/path to link to.
----@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: string|?, header: string|? }|? Options.
+---@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }|? Options.
 ---
 ---@return string
 Client.format_link = function(self, note, opts)
@@ -1683,7 +1683,7 @@ Client.format_link = function(self, note, opts)
     link_style = self.opts.preferred_link_style
   end
 
-  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor, header = opts.header }
+  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor }
 
   if link_style == config.LinkStyle.markdown then
     return self.opts.markdown_link_func(new_opts)
