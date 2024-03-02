@@ -1284,6 +1284,9 @@ end
 Client.new_note_id = function(self, title)
   if self.opts.note_id_func ~= nil then
     local new_id = self.opts.note_id_func(title)
+    if new_id == nil or string.len(new_id) == 0 then
+      error(string.format("Your 'note_id_func' must return a non-empty string, got '%s'!", tostring(new_id)))
+    end
     -- Remote '.md' suffix if it's there (we add that later).
     new_id = new_id:gsub("%.md$", "", 1)
     return new_id

@@ -271,6 +271,8 @@ Fields ~
 {path} obsidian.Path|?
 {note} obsidian.Note|?
 {url} `(string|?)`
+{line} `(integer|?)`
+{col} `(integer|?)`
 
 ------------------------------------------------------------------------------
                                           *obsidian.Client.resolve_link_async()*
@@ -863,6 +865,16 @@ Parameters ~
 
 Return ~
 `(boolean)` updated True if the buffer lines were updated, false otherwise.
+
+------------------------------------------------------------------------------
+                                           *obsidian.Note.resolve_anchor_link()*
+               `Note.resolve_anchor_link`({self}, {anchor_link})
+Try to resolve an anchor link to a line number in the note's file.
+
+Parameters ~
+{anchor_link} `(string)`
+Return ~
+`(integer|)` `(optional)` line_number
 
 ------------------------------------------------------------------------------
 Class ~
