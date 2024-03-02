@@ -112,14 +112,24 @@ local char_to_hex = function(c)
   return string.format("%%%02X", string.byte(c))
 end
 
----Encode a string into URL-safe version.
+local hex_to_char = function(hex)
+  return string.char(tonumber(hex, 16))
+end
+
+--- Encode a string into URL-safe version.
 ---
 ---@param str string
+---@param opts { keep_path_sep: boolean|? }|?
+---
 ---@return string
-util.urlencode = function(str)
+util.urlencode = function(str, opts)
+  opts = opts or {}
   local url = str
   url = url:gsub("\n", "\r\n")
-  url = url:gsub("([^%w _%%%-%.~])", char_to_hex)
+  url = url:gsub("([^/%w _%%%-%.~])", char_to_hex)
+  if not opts.keep_path_sep then
+    url = url:gsub("/", char_to_hex)
+  end
 
   -- Spaces in URLs are always safely encoded with `%20`, but not always safe
   -- with `+`. For example, `+` in a query param's value will be interpreted
@@ -127,6 +137,16 @@ util.urlencode = function(str)
   -- function.
   url = url:gsub(" ", "%%20")
   return url
+end
+
+--- Decode a URL-encoded string.
+---
+---@param str string
+---
+---@return string
+util.urldecode = function(str)
+  str = str:gsub("%%(%x%x)", hex_to_char)
+  return str
 end
 
 ---Match the case of 'key' to the given 'prefix' of the key.
@@ -905,38 +925,46 @@ util.get_visual_selection = function()
   }
 end
 
----@param opts {path: string, label: string, id: string|integer|?}
+---@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
 ---@return string
 util.wiki_link_path_only = function(opts)
-  return string.format("[[%s]]", opts.path)
+  local anchor = opts.anchor or ""
+  return string.format("[[%s%s]]", opts.path, anchor)
 end
 
----@param opts {path: string, label: string, id: string|integer|?}
+---@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
 ---@return string
 util.wiki_link_path_prefix = function(opts)
+  local anchor = opts.anchor or ""
+  local header = opts.header and string.format(" ❯ %s", opts.header) or ""
   if opts.label ~= opts.path then
-    return string.format("[[%s|%s]]", opts.path, opts.label)
+    return string.format("[[%s%s|%s%s]]", opts.path, anchor, opts.label, header)
   else
-    return string.format("[[%s]]", opts.path)
+    return string.format("[[%s%s]]", opts.path, anchor)
   end
 end
 
----@param opts {path: string, label: string, id: string|integer|?}
+---@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
 ---@return string
 util.wiki_link_id_prefix = function(opts)
+  local anchor = opts.anchor or ""
+  local header = opts.header and string.format(" ❯ %s", opts.header) or ""
   if opts.id == nil then
-    return string.format("[[%s]]", opts.label)
+    return string.format("[[%s%s]]", opts.label, anchor)
   elseif opts.label ~= opts.id then
-    return string.format("[[%s|%s]]", opts.id, opts.label)
+    return string.format("[[%s%s|%s%s]]", opts.id, anchor, opts.label, header)
   else
-    return string.format("[[%s]]", opts.id)
+    return string.format("[[%s%s]]", opts.id, anchor)
   end
 end
 
----@param opts {path: string, label: string, id: string|integer|?}
+---@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
 ---@return string
 util.markdown_link = function(opts)
-  return string.format("[%s](%s)", opts.label, opts.path)
+  local anchor = opts.anchor or ""
+  local header = opts.header and string.format(" ❯ %s", opts.header) or ""
+  local path = util.urlencode(opts.path, { keep_path_sep = true })
+  return string.format("[%s%s](%s%s)", opts.label, header, path, anchor)
 end
 
 --- Open a buffer for the corresponding path.

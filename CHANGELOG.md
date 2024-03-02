@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added config option `picker.tag_mappings`, analogous to `picker.note_mappings`.
 - Added `log` field to `obsidian.Client` for easier access to the logger.
 - Added ability to follow basic anchor links. Nested anchor links are not yet supported.
+- Added completion support for header anchor links. Note that this requires you to update your `wiki_link_func` and `markdown_link_func` in your config to handle anchors. See the configuration example in the README.
 
 ### Changed
 
