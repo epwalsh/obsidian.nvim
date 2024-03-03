@@ -303,11 +303,12 @@ Parameters ~
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.current_note()*
-                     `Client.current_note`({self}, {bufnr})
+                 `Client.current_note`({self}, {bufnr}, {opts})
 Get the current note from a buffer.
 
 Parameters ~
 {bufnr} `(integer|?)`
+{opts} obsidian.note.LoadOpts|?
 
 Return ~
 obsidian.Note| `(optional)`
@@ -598,7 +599,7 @@ Create a formatted markdown / wiki link for a note.
 
 Parameters ~
 {note} `(obsidian.Note|obsidian.Path|string)` The note/path to link to.
-{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: string|?, header: string|? }|? Options.
+{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }|? Options.
 
 Return ~
 `(string)`
@@ -613,6 +614,17 @@ Parameters ~
 
 Return ~
 obsidian.Picker| `(optional)`
+
+------------------------------------------------------------------------------
+Class ~
+{obsidian.note.HeaderAnchor}
+
+Fields ~
+{anchor} `(string)`
+{header} `(string)`
+{level} `(integer)`
+{line} `(integer)`
+{parent} obsidian.note.HeaderAnchor|?
 
 ------------------------------------------------------------------------------
                                                                  *obsidian.Note*
@@ -632,7 +644,7 @@ Fields ~
 {has_frontmatter} `(boolean|?)`
 {frontmatter_end_line} `(integer|?)`
 {contents} `(string[]|?)`
-{anchor_links} `(table<string, { line: integer, header: string }>|?)`
+{anchor_links} `(table<string, obsidian.note.HeaderAnchor>|?)`
 
 ------------------------------------------------------------------------------
                                                            *obsidian.Note.new()*
@@ -887,7 +899,7 @@ Try to resolve an anchor link to a line number in the note's file.
 Parameters ~
 {anchor_link} `(string)`
 Return ~
-{ line: `(integer,)` header: string}|?
+obsidian.note.HeaderAnchor| `(optional)`
 
 ------------------------------------------------------------------------------
 Class ~
