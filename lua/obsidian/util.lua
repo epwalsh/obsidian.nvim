@@ -1031,7 +1031,7 @@ util.get_icon = function(path)
 end
 
 -- We are very loose here because obsidian allows pretty much anything
-util.ANCHOR_LINK_PATTERN = "#[%w%d][^#]+"
+util.ANCHOR_LINK_PATTERN = "#[%w%d][^#]*"
 
 --- Strip anchor links from a line.
 ---@param line string

@@ -200,10 +200,16 @@ describe("util.is_url()", function()
 end)
 
 describe("util.strip_anchor_links()", function()
-  it("should strip anchor links", function()
+  it("should strip basic anchor links", function()
     local line, anchor = util.strip_anchor_links "Foo Bar#hello-world"
     assert.equals("Foo Bar", line)
     assert.equals("#hello-world", anchor)
+  end)
+
+  it("should strip even a single letter anchor link (for completion)", function()
+    local line, anchor = util.strip_anchor_links "Foo Bar#H"
+    assert.equals("Foo Bar", line)
+    assert.equals("#h", anchor)
   end)
 
   it("should strip non-standard anchor links", function()
