@@ -831,17 +831,6 @@ Return ~
 obsidian.Note
 
 ------------------------------------------------------------------------------
-                                                 *obsidian.Note._parse_header()*
-                          `Note._parse_header`({line})
-Try parsing a header from a line.
-
-Parameters ~
-{line} `(string)`
-
-Return ~
-`(string|)` `(optional)`
-
-------------------------------------------------------------------------------
                                                    *obsidian.Note.frontmatter()*
                            `Note.frontmatter`({self})
 Get the frontmatter table to save.
