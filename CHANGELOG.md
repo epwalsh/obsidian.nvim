@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+There's a lot of new features and improvements here that I'm really excited about 🥳 They've improved my workflow a ton and I hope they do for you too. To highlight the 3 biggest additions:
+1. 🔗 Full support for header anchor links! That means both for following links and completion of links. Various forms of header anchor links are support. Here are a few examples:
+    - Typical Obsidian-style wiki links, e.g. `[[My note#Heading 1]]`, `[[My note#Heading 1#Sub heading]]`.
+    - Wiki links with a label, e.g. `[[my-note#heading-1|Heading 1 in My Note]]`.
+    - Markdown links, e.g. `[Heading 1 in My Note](my-note.md#heading-1)`.
+
+    We also support links to headers within the same note, like for a table of contents, e.g. `[[#Heading 1]]`, `[[#heading-1|Heading]]`.
+
+    Note that due to the way `nvim-cmp` works, completion of note references with header links (e.g. you start typing `[[My note#He`) works best when using the typical "alias only" wiki links. To use that style for completion, just set `wiki_link_func = "use_alias_only"` in your config.
+2. 📲 A basic callback system to let you easily customize obisidian.nvim's behavior even more. There are currently 4 events: `post_setup`, `enter_note`, `pre_write_note`, and `post_set_workspace`. You can define a function for each of these in your config.
+3. 🔭 Improved picker integrations (especially for telescope), particular for the `:ObsidianTags` command. See https://github.com/epwalsh/obsidian.nvim/discussions/450 for a demo.
+
+Full changelog below 👇
+
 ### Added
 
 - Added a configurable callback system to further customize obsidian.nvim's behavior. Callbacks are defined through the `callbacks` field in the config:
@@ -63,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed issue with `:ObsidianOpen` on windows.
 - Respect telescope.nvim themes configured by user.
+- Make tags completion more efficient (less CPU time!).
 
 ## [v3.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.1) - 2024-02-28
 
