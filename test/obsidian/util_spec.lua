@@ -209,7 +209,7 @@ describe("util.strip_anchor_links()", function()
   it("should strip non-standard anchor links", function()
     local line, anchor = util.strip_anchor_links "Foo Bar#Hello World"
     assert.equals("Foo Bar", line)
-    assert.equals("#Hello World", anchor)
+    assert.equals("#hello-world", anchor)
   end)
 
   it("should strip multiple anchor links", function()

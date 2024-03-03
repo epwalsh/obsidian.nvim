@@ -986,7 +986,7 @@ util.open_buffer = function(path, opts)
 
   -- Check for existing buffer and use 'drop' command if one is found.
   for _, bufname in util.get_named_buffers() do
-    if bufname == path then
+    if bufname == tostring(path) then
       cmd = "drop"
       break
     end
@@ -1023,7 +1023,8 @@ util.get_icon = function(path)
   return nil
 end
 
-util.ANCHOR_LINK_PATTERN = "#[%a%d%s-_^]+"
+-- We are very loose here because obsidian allows pretty much anything
+util.ANCHOR_LINK_PATTERN = "#[%a%d][^#]+"
 
 --- Strip anchor links from a line.
 ---@param line string
@@ -1043,7 +1044,7 @@ util.strip_anchor_links = function(line)
     end
   end
 
-  return line, anchor
+  return line, anchor and util.standardize_anchor(anchor)
 end
 
 --- Check if a line is a markdown header.

@@ -788,16 +788,17 @@ end
 --- Get the current note from a buffer.
 ---
 ---@param bufnr integer|?
+---@param opts obsidian.note.LoadOpts|?
 ---
 ---@return obsidian.Note|?
 ---@diagnostic disable-next-line: unused-local
-Client.current_note = function(self, bufnr)
+Client.current_note = function(self, bufnr, opts)
   bufnr = bufnr or 0
   if not self:path_is_note(vim.api.nvim_buf_get_name(bufnr)) then
     return nil
   end
 
-  return Note.from_buffer(bufnr)
+  return Note.from_buffer(bufnr, opts)
 end
 
 ---@class obsidian.TagLocation
