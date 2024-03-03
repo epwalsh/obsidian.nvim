@@ -366,35 +366,36 @@ Note.from_lines = function(lines, path, opts)
       table.insert(frontmatter_lines, line)
     elseif not in_frontmatter and not at_boundary then
       -- Check for title/header and collect anchor link.
-      local header_level = util.header_level(line)
-      if header_level > 0 then
-        local header = Note._parse_header(line)
-        if not title and header and header_level == 1 then
-          title = header
+      local header_match = util.parse_header(line)
+      if header_match then
+        if not title and header_match.level == 1 then
+          title = header_match.header
         end
 
         -- Collect anchor link.
-        if header and opts.collect_anchor_links then
+        if opts.collect_anchor_links then
           assert(anchor_links)
           assert(anchor_stack)
-          local anchor = util.header_to_anchor(line)
-          if anchor then
-            -- We collect up to two anchor for each header. One standalone, e.g. '#header1', and
-            -- one with the parents, e.g. '#header1#header2'.
-            -- This is our standalone one:
-            ---@type obsidian.note.HeaderAnchor
-            local data = { anchor = anchor, line = line_idx, header = header, level = header_level }
-            data.parent = get_parent_anchor(data)
+          -- We collect up to two anchor for each header. One standalone, e.g. '#header1', and
+          -- one with the parents, e.g. '#header1#header2'.
+          -- This is our standalone one:
+          ---@type obsidian.note.HeaderAnchor
+          local data = {
+            anchor = header_match.anchor,
+            line = line_idx,
+            header = header_match.header,
+            level = header_match.level,
+          }
+          data.parent = get_parent_anchor(data)
 
-            anchor_links[anchor] = data
-            table.insert(anchor_stack, data)
+          anchor_links[header_match.anchor] = data
+          table.insert(anchor_stack, data)
 
-            -- Now if there's a parent we collect the nested version. All of the data will be the same
-            -- except the anchor key.
-            if data.parent ~= nil then
-              local nested_anchor = format_nested_anchor(anchor, data)
-              anchor_links[nested_anchor] = vim.tbl_extend("force", data, { anchor = nested_anchor })
-            end
+          -- Now if there's a parent we collect the nested version. All of the data will be the same
+          -- except the anchor key.
+          if data.parent ~= nil then
+            local nested_anchor = format_nested_anchor(header_match.anchor, data)
+            anchor_links[nested_anchor] = vim.tbl_extend("force", data, { anchor = nested_anchor })
           end
         end
       end
@@ -508,20 +509,6 @@ end
 ---@private
 Note._is_frontmatter_boundary = function(line)
   return line:match "^---+$" ~= nil
-end
-
---- Try parsing a header from a line.
----
----@param line string
----
----@return string|?
-Note._parse_header = function(line)
-  local header = line:match "^#+ (.+)$"
-  if header then
-    return util.strip_whitespace(header)
-  else
-    return nil
-  end
 end
 
 --- Get the frontmatter table to save.

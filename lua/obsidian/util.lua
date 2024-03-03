@@ -1077,6 +1077,22 @@ util.header_level = function(line)
   end
 end
 
+---@param line string
+---@return { header: string, level: integer, anchor: string }|?
+util.parse_header = function(line)
+  local header_start, header = string.match(line, "^(#+)%s+([^%s]+.*)$")
+  if header_start and header then
+    header = util.strip_whitespace(header)
+    return {
+      header = util.strip_whitespace(header),
+      level = string.len(header_start),
+      anchor = util.header_to_anchor(header),
+    }
+  else
+    return nil
+  end
+end
+
 --- Standardize a header anchor link.
 ---
 ---@param anchor string

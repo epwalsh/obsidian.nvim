@@ -205,12 +205,6 @@ describe("Note.save()", function()
   end)
 end)
 
-describe("Note._parser_header()", function()
-  it("should be able to parse a markdown header", function()
-    assert.equals(Note._parse_header "## Hey there", "Hey there")
-  end)
-end)
-
 describe("Note._is_frontmatter_boundary()", function()
   it("should be able to find a frontmatter boundary", function()
     assert.is_true(Note._is_frontmatter_boundary "---")

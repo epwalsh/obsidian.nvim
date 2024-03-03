@@ -247,6 +247,21 @@ describe("util.header_to_anchor()", function()
   end)
 end)
 
+describe("util.parse_header()", function()
+  it("should include spaces", function()
+    assert.are_same({ header = "Hello World", level = 2, anchor = "#hello-world" }, util.parse_header "## Hello World")
+    assert.are_same({ header = "Hello World", level = 1, anchor = "#hello-world" }, util.parse_header "# Hello World")
+  end)
+
+  it("should include extra spaces at the beginning", function()
+    assert.are_same({ header = "Hello World", level = 2, anchor = "#hello-world" }, util.parse_header "##  Hello World")
+  end)
+
+  it("should strip white space at the end", function()
+    assert.are_same({ header = "Hello World", level = 2, anchor = "#hello-world" }, util.parse_header "## Hello World ")
+  end)
+end)
+
 describe("util.header_level()", function()
   it("should return 0 when the line is not a header", function()
     assert.equals(0, util.header_level "Hello World")
