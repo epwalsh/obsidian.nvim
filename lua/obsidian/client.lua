@@ -670,6 +670,11 @@ Client.resolve_link_async = function(self, link, callback)
   local anchor_link
   location, anchor_link = util.strip_anchor_links(location)
 
+  -- Assume 'location' is current buffer path if empty, like for TOCs.
+  if string.len(location) == 0 then
+    location = vim.api.nvim_buf_get_name(0)
+  end
+
   res.location = location
 
   self:resolve_note_async(location, function(note)
