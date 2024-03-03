@@ -31,14 +31,13 @@ source.complete = function(_, request, callback)
   local anchor_link
   search, anchor_link = util.strip_anchor_links(search)
 
-  -- If anchor link is incomplete, do nothing.
+  -- If anchor link is incomplete, we'll match against all anchor links.
   if not anchor_link and vim.endswith(search, "#") then
-    callback { isIncomplete = true }
-    return
+    anchor_link = "#"
   end
 
   if anchor_link and string.len(search) == 0 then
-    -- Search over headers in current buffer.
+    -- Search over headers in current buffer only.
     in_buffer_only = true
   end
 
