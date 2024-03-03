@@ -931,6 +931,8 @@ util.format_anchor_label = function(anchor)
   return string.format(" ❯ %s", anchor.header)
 end
 
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
+---@return string
 util.wiki_link_alias_only = function(opts)
   local header = opts.anchor and string.format("#%s", opts.anchor.header) or ""
   return string.format("[[%s%s]]", opts.label, header)

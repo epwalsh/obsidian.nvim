@@ -19,6 +19,10 @@ source.complete = function(_, request, callback)
   local client = assert(obsidian.get_client())
   local can_complete, search, insert_start, insert_end, ref_type = completion.can_complete(request)
 
+  if search ~= nil then
+    search = util.lstrip_whitespace(search)
+  end
+
   if not (can_complete and search ~= nil and #search >= client.opts.completion.min_chars) then
     callback { isIncomplete = true }
     return

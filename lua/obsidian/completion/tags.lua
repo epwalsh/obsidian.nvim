@@ -4,7 +4,10 @@ local find_tags_start = function(input)
   for i = string.len(input), 1, -1 do
     local substr = string.sub(input, i)
     if vim.startswith(substr, "#") then
-      return substr, string.sub(substr, 2)
+      local char_before = string.sub(input, i - 1, i - 1)
+      if string.len(char_before) == 0 or string.match(char_before, "[%s%(]") then
+        return substr, string.sub(substr, 2)
+      end
     end
   end
   return nil

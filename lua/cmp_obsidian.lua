@@ -146,6 +146,8 @@ source.complete = function(_, request, callback)
           end
           documentation = { kind = "markdown", value = note:display_info { label = label } }
         elseif option.anchor then
+          -- In buffer anchor link.
+          -- TODO: allow users to customize this?
           if ref_type == completion.RefType.Wiki then
             label = "[[#" .. option.anchor.header .. "]]"
           elseif ref_type == completion.RefType.Markdown then
