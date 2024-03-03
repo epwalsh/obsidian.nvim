@@ -931,6 +931,11 @@ util.format_anchor_label = function(anchor)
   return string.format(" ❯ %s", anchor.header)
 end
 
+util.wiki_link_alias_only = function(opts)
+  local header = opts.anchor and string.format("#%s", opts.anchor.header) or ""
+  return string.format("[[%s%s]]", opts.label, header)
+end
+
 ---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
 ---@return string
 util.wiki_link_path_only = function(opts)
@@ -1024,7 +1029,7 @@ util.get_icon = function(path)
 end
 
 -- We are very loose here because obsidian allows pretty much anything
-util.ANCHOR_LINK_PATTERN = "#[%a%d][^#]+"
+util.ANCHOR_LINK_PATTERN = "#[%w%d][^#]+"
 
 --- Strip anchor links from a line.
 ---@param line string

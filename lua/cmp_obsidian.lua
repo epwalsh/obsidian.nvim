@@ -31,6 +31,12 @@ source.complete = function(_, request, callback)
   local anchor_link
   search, anchor_link = util.strip_anchor_links(search)
 
+  -- If anchor link is incomplete, do nothing.
+  if not anchor_link and vim.endswith(search, "#") then
+    callback { isIncomplete = true }
+    return
+  end
+
   if anchor_link and string.len(search) == 0 then
     -- Search over headers in current buffer.
     in_buffer_only = true
@@ -136,7 +142,10 @@ source.complete = function(_, request, callback)
         if option.label then
           label = client:format_link(note, { label = option.label, link_style = link_style, anchor = option.anchor })
           sort_label = option.label
-          documentation = { kind = "markdown", value = note:display_info { label = option.label } }
+          if option.anchor then
+            sort_label = sort_label .. option.anchor.anchor
+          end
+          documentation = { kind = "markdown", value = note:display_info { label = label } }
         elseif option.anchor then
           if ref_type == completion.RefType.Wiki then
             label = "[[#" .. option.anchor.header .. "]]"
