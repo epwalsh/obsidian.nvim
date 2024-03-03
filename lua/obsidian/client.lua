@@ -670,6 +670,11 @@ Client.resolve_link_async = function(self, link, callback)
   local anchor_link
   location, anchor_link = util.strip_anchor_links(location)
 
+  -- Assume 'location' is current buffer path if empty, like for TOCs.
+  if string.len(location) == 0 then
+    location = vim.api.nvim_buf_get_name(0)
+  end
+
   res.location = location
 
   self:resolve_note_async(location, function(note)
@@ -783,16 +788,17 @@ end
 --- Get the current note from a buffer.
 ---
 ---@param bufnr integer|?
+---@param opts obsidian.note.LoadOpts|?
 ---
 ---@return obsidian.Note|?
 ---@diagnostic disable-next-line: unused-local
-Client.current_note = function(self, bufnr)
+Client.current_note = function(self, bufnr, opts)
   bufnr = bufnr or 0
   if not self:path_is_note(vim.api.nvim_buf_get_name(bufnr)) then
     return nil
   end
 
-  return Note.from_buffer(bufnr)
+  return Note.from_buffer(bufnr, opts)
 end
 
 ---@class obsidian.TagLocation
@@ -1658,7 +1664,7 @@ end
 --- Create a formatted markdown / wiki link for a note.
 ---
 ---@param note obsidian.Note|obsidian.Path|string The note/path to link to.
----@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: string|?, header: string|? }|? Options.
+---@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }|? Options.
 ---
 ---@return string
 Client.format_link = function(self, note, opts)
@@ -1683,7 +1689,7 @@ Client.format_link = function(self, note, opts)
     link_style = self.opts.preferred_link_style
   end
 
-  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor, header = opts.header }
+  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor }
 
   if link_style == config.LinkStyle.markdown then
     return self.opts.markdown_link_func(new_opts)

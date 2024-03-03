@@ -14,6 +14,14 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 
 local DEFAULT_MAX_LINES = 500
 
+---@class obsidian.note.HeaderAnchor
+---
+---@field anchor string
+---@field header string
+---@field level integer
+---@field line integer
+---@field parent obsidian.note.HeaderAnchor|?
+
 --- A class that represents a note within a vault.
 ---
 ---@toc_entry obsidian.Note
@@ -29,7 +37,7 @@ local DEFAULT_MAX_LINES = 500
 ---@field has_frontmatter boolean|?
 ---@field frontmatter_end_line integer|?
 ---@field contents string[]|?
----@field anchor_links table<string, { line: integer, header: string }>|?
+---@field anchor_links table<string, obsidian.note.HeaderAnchor>|?
 local Note = abc.new_class {
   __tostring = function(self)
     return string.format("Note('%s')", self.id)
@@ -293,10 +301,48 @@ Note.from_lines = function(lines, path, opts)
     contents = {}
   end
 
-  ---@type table<string, { line: integer, header: string }>|?
+  ---@type table<string, obsidian.note.HeaderAnchor>|?
   local anchor_links
+  ---@type obsidian.note.HeaderAnchor[]|?
+  local anchor_stack
   if opts.collect_anchor_links then
     anchor_links = {}
+    anchor_stack = {}
+  end
+
+  ---@param anchor_data obsidian.note.HeaderAnchor
+  ---@return obsidian.note.HeaderAnchor|?
+  local function get_parent_anchor(anchor_data)
+    assert(anchor_links)
+    assert(anchor_stack)
+    for i = #anchor_stack, 1, -1 do
+      local parent = anchor_stack[i]
+      if parent.level < anchor_data.level then
+        return parent
+      end
+    end
+  end
+
+  ---@param anchor string
+  ---@param data obsidian.note.HeaderAnchor|?
+  local function format_nested_anchor(anchor, data)
+    local out = anchor
+    if not data then
+      return out
+    end
+
+    local parent = data.parent
+    while parent ~= nil do
+      out = parent.anchor .. out
+      data = get_parent_anchor(parent)
+      if data then
+        parent = data.parent
+      else
+        parent = nil
+      end
+    end
+
+    return out
   end
 
   -- Iterate over lines in the file, collecting frontmatter and parsing the title.
@@ -330,9 +376,25 @@ Note.from_lines = function(lines, path, opts)
         -- Collect anchor link.
         if header and opts.collect_anchor_links then
           assert(anchor_links)
+          assert(anchor_stack)
           local anchor = util.header_to_anchor(line)
-          if anchor and not anchor_links[anchor] then
-            anchor_links[anchor] = { line = line_idx, header = header }
+          if anchor then
+            -- We collect up to two anchor for each header. One standalone, e.g. '#header1', and
+            -- one with the parents, e.g. '#header1#header2'.
+            -- This is our standalone one:
+            ---@type obsidian.note.HeaderAnchor
+            local data = { anchor = anchor, line = line_idx, header = header, level = header_level }
+            data.parent = get_parent_anchor(data)
+
+            anchor_links[anchor] = data
+            table.insert(anchor_stack, data)
+
+            -- Now if there's a parent we collect the nested version. All of the data will be the same
+            -- except the anchor key.
+            if data.parent ~= nil then
+              local nested_anchor = format_nested_anchor(anchor, data)
+              anchor_links[nested_anchor] = vim.tbl_extend("force", data, { anchor = nested_anchor })
+            end
           end
         end
       end
@@ -632,7 +694,7 @@ end
 --- Try to resolve an anchor link to a line number in the note's file.
 ---
 ---@param anchor_link string
----@return { line: integer, header: string}|?
+---@return obsidian.note.HeaderAnchor|?
 Note.resolve_anchor_link = function(self, anchor_link)
   anchor_link = util.standardize_anchor(anchor_link)
 
@@ -641,22 +703,8 @@ Note.resolve_anchor_link = function(self, anchor_link)
   end
 
   assert(self.path, "'note.path' is not set")
-  ---@type integer
-  local lnum
-  local header
-  with(open(tostring(self.path)), function(reader)
-    for i, line in enumerate(reader:lines()) do
-      if util.is_header(line) and util.header_to_anchor(line) == anchor_link then
-        lnum = i
-        header = Note._parse_header(line)
-        break
-      end
-    end
-  end)
-
-  if lnum and header then
-    return { line = lnum, header = header }
-  end
+  local n = Note.from_file(self.path, { collect_anchor_links = true })
+  return n:resolve_anchor_link(anchor_link)
 end
 
 return Note

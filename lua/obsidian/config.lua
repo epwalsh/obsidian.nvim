@@ -138,6 +138,18 @@ config.ClientOpts.normalize = function(opts, defaults)
     end
   end
 
+  if opts.wiki_link_func == "prepend_note_id" then
+    opts.wiki_link_func = util.wiki_link_id_prefix
+  elseif opts.wiki_link_func == "prepend_note_path" then
+    opts.wiki_link_func = util.wiki_link_path_prefix
+  elseif opts.wiki_link_func == "use_path_only" then
+    opts.wiki_link_func = util.wiki_link_path_only
+  elseif opts.wiki_link_func == "use_alias_only" then
+    opts.wiki_link_func = util.wiki_link_alias_only
+  elseif type(opts.wiki_link_func) == "string" then
+    error(string.format("invalid option '%s' for 'wiki_link_func'", opts.wiki_link_func))
+  end
+
   if opts.completion ~= nil and opts.completion.preferred_link_style ~= nil then
     opts.preferred_link_style = opts.completion.preferred_link_style
     opts.completion.preferred_link_style = nil

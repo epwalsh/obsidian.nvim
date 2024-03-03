@@ -925,18 +925,29 @@ util.get_visual_selection = function()
   }
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
+---@param anchor obsidian.note.HeaderAnchor
+---@return string
+util.format_anchor_label = function(anchor)
+  return string.format(" ❯ %s", anchor.header)
+end
+
+util.wiki_link_alias_only = function(opts)
+  local header = opts.anchor and string.format("#%s", opts.anchor.header) or ""
+  return string.format("[[%s%s]]", opts.label, header)
+end
+
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
 ---@return string
 util.wiki_link_path_only = function(opts)
-  local anchor = opts.anchor or ""
+  local anchor = opts.anchor and opts.anchor.anchor or ""
   return string.format("[[%s%s]]", opts.path, anchor)
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
 ---@return string
 util.wiki_link_path_prefix = function(opts)
-  local anchor = opts.anchor or ""
-  local header = opts.header and string.format(" ❯ %s", opts.header) or ""
+  local anchor = opts.anchor and opts.anchor.anchor or ""
+  local header = opts.anchor and util.format_anchor_label(opts.anchor) or ""
   if opts.label ~= opts.path then
     return string.format("[[%s%s|%s%s]]", opts.path, anchor, opts.label, header)
   else
@@ -944,11 +955,11 @@ util.wiki_link_path_prefix = function(opts)
   end
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
 ---@return string
 util.wiki_link_id_prefix = function(opts)
-  local anchor = opts.anchor or ""
-  local header = opts.header and string.format(" ❯ %s", opts.header) or ""
+  local anchor = opts.anchor and opts.anchor.anchor or ""
+  local header = opts.anchor and util.format_anchor_label(opts.anchor) or ""
   if opts.id == nil then
     return string.format("[[%s%s]]", opts.label, anchor)
   elseif opts.label ~= opts.id then
@@ -958,11 +969,11 @@ util.wiki_link_id_prefix = function(opts)
   end
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: string|?, header: string|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
 ---@return string
 util.markdown_link = function(opts)
-  local anchor = opts.anchor or ""
-  local header = opts.header and string.format(" ❯ %s", opts.header) or ""
+  local anchor = opts.anchor and opts.anchor.anchor or ""
+  local header = opts.anchor and util.format_anchor_label(opts.anchor) or ""
   local path = util.urlencode(opts.path, { keep_path_sep = true })
   return string.format("[%s%s](%s%s)", opts.label, header, path, anchor)
 end
@@ -980,7 +991,7 @@ util.open_buffer = function(path, opts)
 
   -- Check for existing buffer and use 'drop' command if one is found.
   for _, bufname in util.get_named_buffers() do
-    if bufname == path then
+    if bufname == tostring(path) then
       cmd = "drop"
       break
     end
@@ -1017,7 +1028,8 @@ util.get_icon = function(path)
   return nil
 end
 
-util.ANCHOR_LINK_PATTERN = "#[%a%d%s-_^]+"
+-- We are very loose here because obsidian allows pretty much anything
+util.ANCHOR_LINK_PATTERN = "#[%w%d][^#]+"
 
 --- Strip anchor links from a line.
 ---@param line string
@@ -1037,7 +1049,7 @@ util.strip_anchor_links = function(line)
     end
   end
 
-  return line, anchor
+  return line, anchor and util.standardize_anchor(anchor)
 end
 
 --- Check if a line is a markdown header.

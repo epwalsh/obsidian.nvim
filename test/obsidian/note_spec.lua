@@ -27,19 +27,76 @@ describe("Note.from_file()", function()
     local note = Note.from_file("test/fixtures/notes/note_with_a_bunch_of_headers.md", { collect_anchor_links = true })
     assert.equals(note.id, "note_with_a_bunch_of_headers")
     assert.is_not(note.anchor_links, nil)
-    assert.are_same({ line = 5, header = "Header 1" }, note.anchor_links["#header-1"])
-    assert.are_same({ line = 7, header = "Sub header 1 A" }, note.anchor_links["#sub-header-1-a"])
-    assert.are_same({ line = 9, header = "Header 2" }, note.anchor_links["#header-2"])
-    assert.are_same({ line = 11, header = "Sub header 2 A" }, note.anchor_links["#sub-header-2-a"])
-    assert.are_same({ line = 5, header = "Header 1" }, note:resolve_anchor_link "#header-1")
-    assert.are_same({ line = 5, header = "Header 1" }, note:resolve_anchor_link "#Header 1")
+
+    assert.are_same({
+      anchor = "#header-1",
+      line = 5,
+      header = "Header 1",
+      level = 1,
+    }, note.anchor_links["#header-1"])
+
+    assert.are_same({
+      anchor = "#sub-header-1-a",
+      line = 7,
+      header = "Sub header 1 A",
+      level = 2,
+      parent = note.anchor_links["#header-1"],
+    }, note.anchor_links["#sub-header-1-a"])
+
+    assert.are_same({
+      anchor = "#header-2",
+      line = 9,
+      header = "Header 2",
+      level = 1,
+    }, note.anchor_links["#header-2"])
+
+    assert.are_same({
+      anchor = "#sub-header-2-a",
+      line = 11,
+      header = "Sub header 2 A",
+      level = 2,
+      parent = note.anchor_links["#header-2"],
+    }, note.anchor_links["#sub-header-2-a"])
+
+    assert.are_same({
+      anchor = "#sub-header-3-a",
+      line = 13,
+      header = "Sub header 3 A",
+      level = 2,
+      parent = note.anchor_links["#header-2"],
+    }, note.anchor_links["#sub-header-3-a"])
+
+    assert.are_same({
+      anchor = "#header-2#sub-header-3-a",
+      line = 13,
+      header = "Sub header 3 A",
+      level = 2,
+      parent = note.anchor_links["#header-2"],
+    }, note.anchor_links["#header-2#sub-header-3-a"])
+
+    assert.are_same({
+      anchor = "#header-1",
+      line = 5,
+      header = "Header 1",
+      level = 1,
+    }, note:resolve_anchor_link "#header-1")
+
+    assert.are_same({
+      anchor = "#header-1",
+      line = 5,
+      header = "Header 1",
+      level = 1,
+    }, note:resolve_anchor_link "#Header 1")
   end)
 
   it("should be able to resolve anchor links after the fact", function()
     local note = Note.from_file("test/fixtures/notes/note_with_a_bunch_of_headers.md", { collect_anchor_links = false })
     assert.equals(note.id, "note_with_a_bunch_of_headers")
     assert.equals(nil, note.anchor_links)
-    assert.are_same({ line = 5, header = "Header 1" }, note:resolve_anchor_link "#header-1")
+    assert.are_same(
+      { anchor = "#header-1", line = 5, header = "Header 1", level = 1 },
+      note:resolve_anchor_link "#header-1"
+    )
   end)
 
   it("should work from a README", function()

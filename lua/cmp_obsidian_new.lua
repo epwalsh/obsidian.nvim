@@ -28,10 +28,16 @@ source.complete = function(_, request, callback)
   local anchor_link
   search, anchor_link = util.strip_anchor_links(search)
 
-  -- Anchor link might be incomplete, in which case we should strip the '#' off the end of 'search'.
+  -- If anchor link is incomplete, do nothing.
   if not anchor_link and vim.endswith(search, "#") then
-    search = string.sub(search, 1, -2)
-    anchor_link = "#"
+    callback { isIncomplete = true }
+    return
+  end
+
+  ---@type obsidian.note.HeaderAnchor|?
+  local anchor
+  if anchor_link then
+    anchor = { anchor = anchor_link, header = string.sub(anchor_link, 2), level = 1, line = 1 }
   end
 
   local new_note = client:create_note { title = search, no_write = true }
@@ -54,7 +60,7 @@ source.complete = function(_, request, callback)
     error "not implemented"
   end
 
-  local new_text = client:format_link(new_note, { link_style = link_style, anchor = anchor_link })
+  local new_text = client:format_link(new_note, { link_style = link_style, anchor = anchor })
   local label = "Create: " .. new_text
 
   local items = {

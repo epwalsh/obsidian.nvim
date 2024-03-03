@@ -209,7 +209,7 @@ describe("util.strip_anchor_links()", function()
   it("should strip non-standard anchor links", function()
     local line, anchor = util.strip_anchor_links "Foo Bar#Hello World"
     assert.equals("Foo Bar", line)
-    assert.equals("#Hello World", anchor)
+    assert.equals("#hello-world", anchor)
   end)
 
   it("should strip multiple anchor links", function()
@@ -269,20 +269,12 @@ describe("util.wiki_link_id_prefix()", function()
 
   it("should work with an anchor link", function()
     assert.equals(
-      "[[123-foo#heading|Foo]]",
-      util.wiki_link_id_prefix { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
-    )
-  end)
-
-  it("should work with an anchor link and header", function()
-    assert.equals(
       "[[123-foo#heading|Foo ❯ Heading]]",
       util.wiki_link_id_prefix {
         path = "123-foo.md",
         id = "123-foo",
         label = "Foo",
-        anchor = "#heading",
-        header = "Heading",
+        anchor = { anchor = "#heading", header = "Heading", level = 1, line = 1 },
       }
     )
   end)
@@ -296,13 +288,6 @@ describe("util.wiki_link_path_prefix()", function()
     )
   end)
 
-  it("should work with an anchor link", function()
-    assert.equals(
-      "[[123-foo.md#heading|Foo]]",
-      util.wiki_link_path_prefix { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
-    )
-  end)
-
   it("should work with an anchor link and header", function()
     assert.equals(
       "[[123-foo.md#heading|Foo ❯ Heading]]",
@@ -310,8 +295,7 @@ describe("util.wiki_link_path_prefix()", function()
         path = "123-foo.md",
         id = "123-foo",
         label = "Foo",
-        anchor = "#heading",
-        header = "Heading",
+        anchor = { anchor = "#heading", header = "Heading", level = 1, line = 1 },
       }
     )
   end)
@@ -325,7 +309,12 @@ describe("util.wiki_link_path_only()", function()
   it("should work with an anchor link", function()
     assert.equals(
       "[[123-foo.md#heading]]",
-      util.wiki_link_path_only { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
+      util.wiki_link_path_only {
+        path = "123-foo.md",
+        id = "123-foo",
+        label = "Foo",
+        anchor = { anchor = "#heading", header = "Heading", level = 1, line = 1 },
+      }
     )
   end)
 end)
@@ -337,15 +326,13 @@ describe("util.markdown_link()", function()
 
   it("should work with an anchor link", function()
     assert.equals(
-      "[Foo](123-foo.md#heading)",
-      util.markdown_link { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading" }
-    )
-  end)
-
-  it("should work with an anchor link and header", function()
-    assert.equals(
       "[Foo ❯ Heading](123-foo.md#heading)",
-      util.markdown_link { path = "123-foo.md", id = "123-foo", label = "Foo", anchor = "#heading", header = "Heading" }
+      util.markdown_link {
+        path = "123-foo.md",
+        id = "123-foo",
+        label = "Foo",
+        anchor = { anchor = "#heading", header = "Heading", level = 1, line = 1 },
+      }
     )
   end)
 
