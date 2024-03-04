@@ -48,6 +48,8 @@ return function(client)
             filename = res.path and tostring(res.path) or nil,
             icon = icon,
             icon_hl = icon_hl,
+            lnum = res.line,
+            col = res.col,
           })
         end
 
