@@ -2,6 +2,7 @@ local AsyncExecutor = require("obsidian.async").AsyncExecutor
 local log = require "obsidian.log"
 local search = require "obsidian.search"
 local iter = require("obsidian.itertools").iter
+local enumerate = require("obsidian.itertools").enumerate
 local util = require "obsidian.util"
 local channel = require("plenary.async.control").channel
 
@@ -14,13 +15,15 @@ return function(client)
   end
 
   -- Gather all unique raw links (strings) from the buffer.
-  ---@type table<string, boolean>
+  ---@type table<string, integer>
   local links = {}
-  for line in iter(vim.api.nvim_buf_get_lines(0, 0, -1, true)) do
+  for lnum, line in enumerate(vim.api.nvim_buf_get_lines(0, 0, -1, true)) do
     for match in iter(search.find_refs(line, { include_naked_urls = true, include_file_urls = true })) do
       local m_start, m_end = unpack(match)
       local link = string.sub(line, m_start, m_end)
-      links[link] = true
+      if not links[link] then
+        links[link] = lnum
+      end
     end
   end
 
@@ -66,6 +69,11 @@ return function(client)
         for res in iter(results) do
           entries[#entries + 1] = res[1]
         end
+
+        -- Sort by position within the buffer.
+        table.sort(entries, function(a, b)
+          return links[a.value] < links[b.value]
+        end)
 
         -- Launch picker.
         picker:pick(entries, {
