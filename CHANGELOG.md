@@ -68,6 +68,7 @@ Full changelog below 👇
   - `"prepend_note_id"`, e.g. `[[foo-bar|Foo Bar]]`
   - `"prepend_note_path"`, e.g. `[[foo-bar.md|Foo Bar]]`
   - `"use_path_only"`, e.g. `[[foo-bar.md]]`
+- Added command `:ObsidianDailies` for opening a picker list of daily notes.
 
 ### Changed
 

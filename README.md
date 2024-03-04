@@ -62,6 +62,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianTomorrow` to open/create the daily note for the next working day.
 
+- `:ObsidianDailies [OFFSET ...]` to open a picker list of daily notes. For example, `:ObsidianDailies -2 1` to list daily notes from 2 days ago until tomorrow.
+
 - `:ObsidianTemplate [NAME]` to insert a template from the templates folder, selecting from a list using your preferred picker. See ["using templates"](#using-templates) for more information.
 
 - `:ObsidianSearch [QUERY]` to search for (or create) notes in your vault using `ripgrep` with your preferred picker.
