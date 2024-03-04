@@ -1153,7 +1153,7 @@ Client.find_backlinks_async = function(self, note, callback, opts)
   search.search_async(
     self.dir,
     util.tbl_unique(search_terms),
-    self:_prepare_search_opts(opts.search, { fixed_strings = true }),
+    self:_prepare_search_opts(opts.search, { fixed_strings = true, ignore_case = true }),
     on_match,
     function()
       tx()
