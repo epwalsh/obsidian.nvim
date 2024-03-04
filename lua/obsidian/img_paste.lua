@@ -108,7 +108,7 @@ M.paste_img = function(opts)
     if opts.default_name ~= nil and not opts.should_confirm then
       fname = opts.default_name
     else
-      fname = vim.fn.input { prompt = "Enter file name: ", default = opts.default_name }
+      fname = vim.fn.input { prompt = "Enter file name: ", default = opts.default_name, completion = "file" }
     end
 
     fname = util.strip_whitespace(fname)
