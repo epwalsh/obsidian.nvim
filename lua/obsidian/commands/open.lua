@@ -88,32 +88,11 @@ return function(client, data)
 
   if search_term then
     -- Try to resolve search term to a single note.
-    client:resolve_note_async(search_term, function(...)
-      local notes = { ... }
-      if #notes == 0 then
-        log.err("Could not resolve '%s' to a note ID, path, or alias", search_term)
-        return
-      elseif #notes == 1 then
-        return vim.schedule(function()
-          open_in_app(client, notes[1].path)
-        end)
-      end
-
+    client:resolve_note_async_with_picker_fallback(search_term, function(note)
       vim.schedule(function()
-        local picker = client:picker()
-        if not picker then
-          log.err("Failed to resolve '%s' to a single note and no picker is configured", search_term)
-          return
-        end
-
-        picker:pick_note(notes, {
-          prompt_title = "Select note to open",
-          callback = function(note)
-            open_in_app(client, note.path)
-          end,
-        })
+        open_in_app(client, note.path)
       end)
-    end)
+    end, { prompt_title = "Select note to open" })
   else
     -- Otherwise use the path of the current buffer.
     local bufname = vim.api.nvim_buf_get_name(0)

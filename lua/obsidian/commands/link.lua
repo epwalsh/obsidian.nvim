@@ -31,33 +31,9 @@ return function(client, data)
     client:update_ui()
   end
 
-  -- Try to resolve the search term to a single note.
-  client:resolve_note_async(search_term, function(...)
-    local notes = { ... }
-
-    if #notes == 0 then
-      log.err("No notes matching '%s'", search_term)
-      return
-    elseif #notes == 1 then
-      return vim.schedule(function()
-        insert_ref(notes[1])
-      end)
-    end
-
-    return vim.schedule(function()
-      -- Otherwise run the preferred picker to search for notes.
-      local picker = client:picker()
-      if not picker then
-        log.err("Found multiple notes matches '%s', but no picker is configured", search_term)
-        return
-      end
-
-      picker:pick_note(notes, {
-        prompt_title = "Select note to link",
-        callback = function(note)
-          insert_ref(note)
-        end,
-      })
+  client:resolve_note_async_with_picker_fallback(search_term, function(note)
+    vim.schedule(function()
+      insert_ref(note)
     end)
-  end)
+  end, { prompt_title = "Select note to link" })
 end

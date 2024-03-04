@@ -632,7 +632,45 @@ Client.resolve_note_async = function(self, query, callback, opts)
     end
 
     return callback(unpack(maybe_matches))
-  end, { search = { ignore_case = true }, notes = opts.notes })
+  end, { search = { sort = true, ignore_case = true }, notes = opts.notes })
+end
+
+--- Same as `resolve_note_async` but opens a picker to choose a single note when
+--- there are multiple matches.
+---
+---@param query string
+---@param callback fun(obsidian.Note)
+---@param opts { notes: obsidian.note.LoadOpts|?, prompt_title: string|? }|?
+---
+---@return obsidian.Note|?
+Client.resolve_note_async_with_picker_fallback = function(self, query, callback, opts)
+  opts = opts or {}
+
+  self:resolve_note_async(query, function(...)
+    local notes = { ... }
+
+    if #notes == 0 then
+      log.err("No notes matching '%s'", query)
+      return
+    elseif #notes == 1 then
+      return callback(notes[1])
+    end
+
+    -- Fall back to picker.
+    vim.schedule(function()
+      -- Otherwise run the preferred picker to search for notes.
+      local picker = self:picker()
+      if not picker then
+        log.err("Found multiple notes matching '%s', but no picker is configured", query)
+        return
+      end
+
+      picker:pick_note(notes, {
+        prompt_title = opts.prompt_title,
+        callback = callback,
+      })
+    end)
+  end, { notes = opts.notes })
 end
 
 ---@class obsidian.ResolveLinkResult
