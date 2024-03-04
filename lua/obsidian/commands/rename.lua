@@ -50,8 +50,18 @@ return function(client, data)
     cur_note = Note.from_file(cur_note_path)
     cur_note_id = tostring(cur_note.id)
   else
+    local notes = { client:resolve_note(cur_note_id) }
+    if #notes == 0 then
+      log.err("Failed to resolve '%s' to a note", cur_note_id)
+      return
+    elseif #notes > 1 then
+      log.err("Failed to resolve '%s' to a single note, found %d matches", cur_note_id, #notes)
+      return
+    else
+      cur_note = notes[1]
+    end
+
     is_current_buf = false
-    cur_note = assert(client:resolve_note(cur_note_id), string.format("failed to resolve note '%s'", cur_note_id))
     cur_note_id = tostring(cur_note.id)
     cur_note_path = cur_note.path
     for bufnr, bufpath in util.get_named_buffers() do

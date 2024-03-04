@@ -32,34 +32,30 @@ return function(client)
   executor:map(
     function(link)
       local tx, rx = channel.oneshot()
-      local entry
 
-      client:resolve_link_async(link, function(res)
-        local icon, icon_hl
-        if res.url ~= nil then
-          icon, icon_hl = util.get_icon(res.url)
-        end
+      ---@type obsidian.PickerEntry[]
+      local entries = {}
 
-        if res ~= nil then
-          entry = {
+      client:resolve_link_async(link, function(...)
+        for res in iter { ... } do
+          local icon, icon_hl
+          if res.url ~= nil then
+            icon, icon_hl = util.get_icon(res.url)
+          end
+          table.insert(entries, {
             value = link,
             display = res.name,
             filename = res.path and tostring(res.path) or nil,
             icon = icon,
             icon_hl = icon_hl,
-          }
-        else
-          entry = {
-            value = link,
-            valid = false,
-          }
+          })
         end
 
         tx()
       end)
 
       rx()
-      return entry
+      return unpack(entries)
     end,
     vim.tbl_keys(links),
     function(results)
@@ -67,7 +63,9 @@ return function(client)
         -- Flatten entries.
         local entries = {}
         for res in iter(results) do
-          entries[#entries + 1] = res[1]
+          for r in iter(res) do
+            entries[#entries + 1] = r
+          end
         end
 
         -- Sort by position within the buffer.

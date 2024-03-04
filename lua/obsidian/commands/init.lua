@@ -166,7 +166,7 @@ M.register("ObsidianSearch", { opts = { nargs = "?", desc = "Search vault" } })
 
 M.register("ObsidianTemplate", { opts = { nargs = "?", desc = "Insert a template" } })
 
-M.register("ObsidianQuickSwitch", { opts = { nargs = 0, desc = "Switch notes" } })
+M.register("ObsidianQuickSwitch", { opts = { nargs = "?", desc = "Switch notes" } })
 
 M.register("ObsidianLinkNew", { opts = { nargs = "?", range = true, desc = "Link selected text to a new note" } })
 

@@ -44,6 +44,14 @@ local Note = abc.new_class {
   end,
 }
 
+Note.is_note_obj = function(note)
+  if getmetatable(note) == Note.mt then
+    return true
+  else
+    return false
+  end
+end
+
 --- Create new note object.
 ---
 --- Keep in mind that you have to call `note:save(...)` to create/update the note on disk.

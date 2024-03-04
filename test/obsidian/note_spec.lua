@@ -9,6 +9,7 @@ describe("Note.new()", function()
     local note = Note.new("FOO", { "foo", "foos" }, { "bar" })
     assert.equals(note.id, "FOO")
     assert.equals(note.aliases[1], "foo")
+    assert.is_true(Note.is_note_obj(note))
   end)
 end)
 

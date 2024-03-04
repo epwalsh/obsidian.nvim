@@ -1,4 +1,3 @@
-local Note = require "obsidian.note"
 local util = require "obsidian.util"
 local log = require "obsidian.log"
 
@@ -29,29 +28,36 @@ return function(client, data)
       .. client:format_link(note, { label = viz.selection })
       .. string.sub(line, viz.cecol + 1)
     vim.api.nvim_buf_set_lines(0, viz.csrow - 1, viz.csrow, false, { new_line })
+    client:update_ui()
   end
 
   -- Try to resolve the search term to a single note.
-  local note = client:resolve_note(search_term)
+  client:resolve_note_async(search_term, function(...)
+    local notes = { ... }
 
-  if note ~= nil then
-    return insert_ref(note)
-  end
+    if #notes == 0 then
+      log.err("No notes matching '%s'", search_term)
+      return
+    elseif #notes == 1 then
+      return vim.schedule(function()
+        insert_ref(notes[1])
+      end)
+    end
 
-  -- Otherwise run the preferred picker to search for notes.
-  local picker = client:picker()
-  if not picker then
-    log.err "No picker configured"
-    return
-  end
+    return vim.schedule(function()
+      -- Otherwise run the preferred picker to search for notes.
+      local picker = client:picker()
+      if not picker then
+        log.err("Found multiple notes matches '%s', but no picker is configured", search_term)
+        return
+      end
 
-  picker:grep_notes {
-    prompt_title = "Link note",
-    query = search_term,
-    no_default_mappings = true,
-    callback = function(path)
-      insert_ref(Note.from_file(path))
-      client:update_ui()
-    end,
-  }
+      picker:pick_note(notes, {
+        prompt_title = "Select note to link",
+        callback = function(note)
+          insert_ref(note)
+        end,
+      })
+    end)
+  end)
 end

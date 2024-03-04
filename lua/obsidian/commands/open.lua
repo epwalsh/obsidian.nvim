@@ -3,41 +3,11 @@ local log = require "obsidian.log"
 local RefTypes = require("obsidian.search").RefTypes
 
 ---@param client obsidian.Client
-return function(client, data)
+---@param path string|obsidian.Path
+local function open_in_app(client, path)
+  path = tostring(client:vault_relative_path(path, { strict = true }))
   local vault_name = client:vault_name()
   local this_os = util.get_os()
-
-  -- Resolve path of note to open.
-  ---@type string|?
-  local path
-  if data.args:len() > 0 then
-    local note = client:resolve_note(data.args)
-    if note ~= nil then
-      path = tostring(client:vault_relative_path(note.path, { strict = true }))
-    else
-      log.err "Could not resolve arguments to a note ID, path, or alias"
-      return
-    end
-  else
-    local cursor_link, _, ref_type = util.parse_cursor_link()
-    if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl and ref_type ~= RefTypes.FileUrl then
-      local note = client:resolve_note(cursor_link)
-      if note ~= nil then
-        path = tostring(client:vault_relative_path(note.path, { strict = true }))
-      else
-        log.err "Could not resolve link under cursor to a note ID, path, or alias"
-        return
-      end
-    else
-      -- bufname is an absolute path to the buffer.
-      local bufname = vim.api.nvim_buf_get_name(0)
-      path = tostring(client:vault_relative_path(bufname, { strict = true }))
-      if path == nil then
-        log.err("Current buffer '" .. bufname .. "' does not appear to be inside the vault")
-        return
-      end
-    end
-  end
 
   -- Normalize path for windows.
   if this_os == util.OSType.Windows then
@@ -99,4 +69,60 @@ return function(client, data)
       end
     end,
   })
+end
+
+---@param client obsidian.Client
+return function(client, data)
+  ---@type string|?
+  local search_term
+
+  if data.args and data.args:len() > 0 then
+    search_term = data.args
+  else
+    -- Check for a note reference under the cursor.
+    local cursor_link, _, ref_type = util.parse_cursor_link()
+    if cursor_link ~= nil and ref_type ~= RefTypes.NakedUrl and ref_type ~= RefTypes.FileUrl then
+      search_term = cursor_link
+    end
+  end
+
+  if search_term then
+    -- Try to resolve search term to a single note.
+    client:resolve_note_async(search_term, function(...)
+      local notes = { ... }
+      if #notes == 0 then
+        log.err("Could not resolve '%s' to a note ID, path, or alias", search_term)
+        return
+      elseif #notes == 1 then
+        return vim.schedule(function()
+          open_in_app(client, notes[1].path)
+        end)
+      end
+
+      vim.schedule(function()
+        local picker = client:picker()
+        if not picker then
+          log.err("Failed to resolve '%s' to a single note and no picker is configured", search_term)
+          return
+        end
+
+        picker:pick_note(notes, {
+          prompt_title = "Select note to open",
+          callback = function(note)
+            open_in_app(client, note.path)
+          end,
+        })
+      end)
+    end)
+  else
+    -- Otherwise use the path of the current buffer.
+    local bufname = vim.api.nvim_buf_get_name(0)
+    local path = client:vault_relative_path(bufname, { strict = true })
+    if path == nil then
+      log.err("Current buffer '%s' does not appear to be inside the vault", bufname)
+      return
+    else
+      return open_in_app(client, path)
+    end
+  end
 end

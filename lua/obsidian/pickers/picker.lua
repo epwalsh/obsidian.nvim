@@ -214,6 +214,53 @@ Picker.grep_notes = function(self, opts)
   }
 end
 
+--- Open picker with a list of notes.
+---
+---@param notes obsidian.Note[]
+---@param opts { prompt_title: string|?, callback: fun(note: obsidian.Note, ...: obsidian.Note), allow_multiple: boolean|?, no_default_mappings: boolean|? }|? Options.
+---
+--- Options:
+---  `prompt_title`: Title for the prompt window.
+---  `callback`: Callback to run with the selected note(s).
+---  `allow_multiple`: Allow multiple selections to pass to the callback.
+---  `no_default_mappings`: Don't apply picker's default mappings.
+Picker.pick_note = function(self, notes, opts)
+  self.calling_bufnr = vim.api.nvim_get_current_buf()
+
+  opts = opts or {}
+
+  local query_mappings
+  local selection_mappings
+  if not opts.no_default_mappings then
+    query_mappings = self:_note_query_mappings()
+    selection_mappings = self:_note_selection_mappings()
+  end
+
+  -- Launch picker with results.
+  ---@type obsidian.PickerEntry[]
+  local entries = {}
+  for _, note in ipairs(notes) do
+    assert(note.path)
+    local rel_path = tostring(assert(self.client:vault_relative_path(note.path, { strict = true })))
+    local display_name = note:display_name()
+    entries[#entries + 1] = {
+      value = note,
+      display = display_name,
+      ordinal = rel_path .. " " .. display_name,
+      filename = tostring(note.path),
+    }
+  end
+
+  self:pick(entries, {
+    prompt_title = opts.prompt_title or "Notes",
+    callback = opts.callback,
+    allow_multiple = opts.allow_multiple,
+    no_default_mappings = opts.no_default_mappings,
+    query_mappings = query_mappings,
+    selection_mappings = selection_mappings,
+  })
+end
+
 --- Open picker with a list of tags.
 ---
 ---@param tags string[]
@@ -284,10 +331,17 @@ Picker._note_selection_mappings = function(self)
   if self.client.opts.picker.note_mappings and key_is_set(self.client.opts.picker.note_mappings.insert_link) then
     mappings[self.client.opts.picker.note_mappings.insert_link] = {
       desc = "insert link",
-      callback = function(path)
-        local note = Note.from_file(path)
+      callback = function(note_or_path)
+        ---@type obsidian.Note
+        local note
+        if Note.is_note_obj(note_or_path) then
+          note = note_or_path
+        else
+          Note.from_file(note_or_path)
+        end
         local link = self.client:format_link(note, {})
         vim.api.nvim_put({ link }, "", false, true)
+        self.client:update_ui()
       end,
     }
   end

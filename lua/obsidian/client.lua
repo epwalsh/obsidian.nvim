@@ -451,13 +451,22 @@ Client.find_notes_async = function(self, term, callback, opts)
   local next_path = self:_search_iter_async(term, opts.search)
   local executor = AsyncExecutor.new()
 
+  ---@type table<string, integer>
+  local paths = {}
+  local num_results = 0
   local err_count = 0
   local first_err
   local first_err_path
 
   local function task_fn(path)
+    if paths[tostring(path)] then
+      return nil
+    end
+
     local ok, res = pcall(Note.from_file_async, path, opts.notes)
     if ok then
+      num_results = num_results + 1
+      paths[tostring(path)] = num_results
       return res
     else
       err_count = err_count + 1
@@ -488,6 +497,11 @@ Client.find_notes_async = function(self, term, callback, opts)
           results_[#results_ + 1] = res[1]
         end
       end
+
+      -- Then sort by original order.
+      table.sort(results_, function(a, b)
+        return paths[tostring(a.path)] < paths[tostring(b.path)]
+      end)
 
       -- Execute callback.
       callback(results_)
@@ -538,13 +552,13 @@ Client.find_files_async = function(self, term, callback, opts)
   end, callback)
 end
 
---- Resolve the query to a single note if possible, otherwise `nil` is returned.
+--- Resolve the query to a single note if possible, otherwise all close matches are returned.
 --- The 'query' can be a path, filename, note ID, alias, title, etc.
 ---
 ---@param query string
 ---@param opts { timeout: integer|?, notes: obsidian.note.LoadOpts|? }|?
 ---
----@return obsidian.Note|?
+---@return obsidian.Note ...
 Client.resolve_note = function(self, query, opts)
   opts = opts or {}
   return block_on(function(cb)
@@ -555,7 +569,7 @@ end
 --- An async version of `resolve_note()`.
 ---
 ---@param query string
----@param callback fun(note: obsidian.Note|?)
+---@param callback fun(...: obsidian.Note)
 ---@param opts { notes: obsidian.note.LoadOpts|? }|?
 ---
 ---@return obsidian.Note|?
@@ -605,25 +619,19 @@ Client.resolve_note_async = function(self, query, callback, opts)
     local query_lwr = string.lower(query)
     local maybe_matches = {}
     for note in iter(results) do
-      if query == note.id or query == note:display_name() or util.tbl_contains(note.aliases, query) then
-        -- Exact match! We're done!
-        return callback(note)
-      end
-
-      for alias in iter(note.aliases) do
-        if query_lwr == string.lower(alias) then
-          -- Lower case match, save this one for later.
-          table.insert(maybe_matches, note)
-          break
+      if query_lwr == string.lower(tostring(note.id)) or query_lwr == string.lower(note:display_name()) then
+        table.insert(maybe_matches, note)
+      else
+        for alias in iter(note.aliases) do
+          if query_lwr == string.lower(alias) then
+            table.insert(maybe_matches, note)
+            break
+          end
         end
       end
     end
 
-    if #maybe_matches > 0 then
-      return callback(maybe_matches[1])
-    else
-      return callback(nil)
-    end
+    return callback(unpack(maybe_matches))
   end, { search = { ignore_case = true }, notes = opts.notes })
 end
 
@@ -641,7 +649,7 @@ end
 --- Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
 ---
 ---@param link string|?
----@param callback fun(res: obsidian.ResolveLinkResult|?)
+---@param callback fun(...: obsidian.ResolveLinkResult)
 Client.resolve_link_async = function(self, link, callback)
   local location, name, link_type
   if link then
@@ -651,7 +659,7 @@ Client.resolve_link_async = function(self, link, callback)
   end
 
   if location == nil or name == nil or link_type == nil then
-    return callback(nil)
+    return callback()
   end
 
   ---@type obsidian.ResolveLinkResult
@@ -677,27 +685,34 @@ Client.resolve_link_async = function(self, link, callback)
 
   res.location = location
 
-  self:resolve_note_async(location, function(note)
-    if note ~= nil then
-      res.path = note.path
-      res.note = note
+  self:resolve_note_async(location, function(...)
+    local notes = { ... }
+
+    if #notes == 0 then
+      local path = Path.new(location)
+      if path:exists() then
+        res.path = path
+        return callback(res)
+      else
+        return callback(res)
+      end
+    end
+
+    local matches = {}
+    for _, note in ipairs(notes) do
       -- Resolve anchor link to line.
+      local line
       if anchor_link ~= nil then
         local anchor_match = note:resolve_anchor_link(anchor_link)
         if anchor_match then
-          res.line = anchor_match.line
+          line = anchor_match.line
         end
       end
-      return callback(res)
+
+      table.insert(matches, vim.tbl_extend("force", res, { path = note.path, note = note, line = line }))
     end
 
-    local path = Path.new(location)
-    if path:exists() then
-      res.path = path
-      return callback(res)
-    end
-
-    return callback(res)
+    return callback(unpack(matches))
   end, { notes = { collect_anchor_links = anchor_link and true or false } })
 end
 
@@ -707,30 +722,32 @@ end
 ---@param opts { open_strategy: obsidian.config.OpenStrategy|? }|?
 Client.follow_link_async = function(self, link, opts)
   opts = opts and opts or {}
-  self:resolve_link_async(link, function(res)
-    if res == nil then
+
+  self:resolve_link_async(link, function(...)
+    local results = { ... }
+
+    if #results == 0 then
       return
     end
 
-    if res.url ~= nil then
-      if self.opts.follow_url_func ~= nil then
-        self.opts.follow_url_func(res.url)
-      else
-        log.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+    ---@param res obsidian.ResolveLinkResult
+    local function follow_link(res)
+      if res.url ~= nil then
+        if self.opts.follow_url_func ~= nil then
+          self.opts.follow_url_func(res.url)
+        else
+          log.warn "This looks like a URL. You can customize the behavior of URLs with the 'follow_url_func' option."
+        end
+        return
       end
-      return
-    end
 
-    if res.note ~= nil then
-      -- Go to resolved note.
-      return vim.schedule(function()
-        self:open_note(res.note, { line = res.line, col = res.col, open_strategy = opts.open_strategy })
-      end)
-    end
+      if res.note ~= nil then
+        -- Go to resolved note.
+        return self:open_note(res.note, { line = res.line, col = res.col, open_strategy = opts.open_strategy })
+      end
 
-    if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
-      -- Prompt to create a new note.
-      return vim.schedule(function()
+      if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
+        -- Prompt to create a new note.
         local confirmation = string.lower(vim.fn.input {
           prompt = "Create new note '" .. res.location .. "'? [Y/n] ",
         })
@@ -750,10 +767,47 @@ Client.follow_link_async = function(self, link, opts)
         else
           log.warn "Aborting"
         end
-      end)
+      end
+
+      return log.err("Failed to resolve file '" .. res.location .. "'")
     end
 
-    return log.err("Failed to resolve file '" .. res.location .. "'")
+    if #results == 1 then
+      return vim.schedule(function()
+        follow_link(results[1])
+      end)
+    else
+      return vim.schedule(function()
+        local picker = self:picker()
+        if not picker then
+          log.err("Found multiple matches to '%s', but no picker is configured", link)
+          return
+        end
+
+        ---@type obsidian.PickerEntry[]
+        local entries = {}
+        for _, res in ipairs(results) do
+          local icon, icon_hl
+          if res.url ~= nil then
+            icon, icon_hl = util.get_icon(res.url)
+          end
+          table.insert(entries, {
+            value = res,
+            display = res.name,
+            filename = res.path and tostring(res.path) or nil,
+            icon = icon,
+            icon_hl = icon_hl,
+          })
+        end
+
+        picker:pick(entries, {
+          prompt_title = "Follow link",
+          callback = function(res)
+            follow_link(res)
+          end,
+        })
+      end)
+    end
   end)
 end
 
@@ -780,9 +834,11 @@ Client.open_note = function(self, note_or_path, opts)
     error "invalid 'note_or_path' argument"
   end
 
-  local open_cmd = util.get_open_strategy(opts.open_strategy and opts.open_strategy or self.opts.open_notes_in)
-  ---@cast path obsidian.Path
-  util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
+  vim.schedule(function()
+    local open_cmd = util.get_open_strategy(opts.open_strategy and opts.open_strategy or self.opts.open_notes_in)
+    ---@cast path obsidian.Path
+    util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
+  end)
 end
 
 --- Get the current note from a buffer.

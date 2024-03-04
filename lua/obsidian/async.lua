@@ -448,8 +448,8 @@ M.block_on = function(async_fn_with_callback, timeout)
   local result
   timeout = timeout and timeout or 2000
 
-  local function collect_result(res)
-    result = res
+  local function collect_result(...)
+    result = { ... }
     done = true
   end
 
@@ -459,7 +459,7 @@ M.block_on = function(async_fn_with_callback, timeout)
     return done
   end, 20, false)
 
-  return result
+  return unpack(result)
 end
 
 return M
