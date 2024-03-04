@@ -1600,6 +1600,8 @@ Client._daily = function(self, datetime)
 
   -- Create Note object and save if it doesn't already exist.
   local note = Note.new(id, { alias }, { "daily-notes" }, path)
+  note.title = alias
+
   if not note:exists() then
     local write_frontmatter = true
     if self.opts.daily_notes.template then
