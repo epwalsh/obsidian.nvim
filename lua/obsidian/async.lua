@@ -116,7 +116,6 @@ end
 ---@param timeout integer|?
 ---@param pause_fn function(integer)
 Executor._join = function(self, timeout, pause_fn)
-  ---@diagnostic disable-next-line: undefined-field
   local start_time = uv.hrtime() / 1000000 -- ns -> ms
   local pause_for = 100
   if timeout ~= nil then
@@ -124,7 +123,6 @@ Executor._join = function(self, timeout, pause_fn)
   end
   while self.tasks_pending > 0 or self.tasks_running > 0 do
     pause_fn(pause_for)
-    ---@diagnostic disable-next-line: undefined-field
     if timeout ~= nil and (uv.hrtime() / 1000000) - start_time > timeout then
       error "Timeout error from Executor.join()"
     end
@@ -243,7 +241,6 @@ end
 ---@diagnostic disable-next-line: unused-local
 ThreadPoolExecutor.submit = function(self, fn, callback, ...)
   self.tasks_running = self.tasks_running + 1
-  ---@diagnostic disable-next-line: undefined-field
   local ctx = uv.new_work(fn, function(...)
     self.tasks_running = self.tasks_running - 1
     if callback ~= nil then
@@ -400,7 +397,9 @@ end
 ---@param fn function
 ---@param timeout integer (milliseconds)
 M.throttle = function(fn, timeout)
+  ---@type integer
   local last_call = 0
+  ---@type uv_timer_t|?
   local timer = nil
 
   return function(...)
@@ -408,16 +407,15 @@ M.throttle = function(fn, timeout)
       timer:stop()
     end
 
-    ---@diagnostic disable-next-line undefined-field
     local ms_remaining = timeout - (vim.loop.now() - last_call)
 
     if ms_remaining > 0 then
       if timer == nil then
-        ---@diagnostic disable-next-line: undefined-field
-        timer = vim.loop.new_timer()
+        timer = assert(vim.loop.new_timer())
       end
+
       local args = { ... }
-      assert(timer)
+
       timer:start(
         ms_remaining,
         0,
@@ -427,13 +425,12 @@ M.throttle = function(fn, timeout)
             timer:close()
             timer = nil
           end
-          ---@diagnostic disable-next-line: undefined-field
+
           last_call = vim.loop.now()
           fn(unpack(args))
         end)
       )
     else
-      ---@diagnostic disable-next-line: undefined-field
       last_call = vim.loop.now()
       fn(...)
     end

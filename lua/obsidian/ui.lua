@@ -474,7 +474,6 @@ end
 ---@param bufnr integer
 ---@param ui_opts obsidian.config.UIOpts
 local function update_extmarks(bufnr, ns_id, ui_opts)
-  ---@diagnostic disable-next-line: undefined-field
   local start_time = vim.loop.hrtime()
   local n_marks_added = 0
   local n_marks_cleared = 0
@@ -537,7 +536,6 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
     end
   end
 
-  ---@diagnostic disable-next-line: undefined-field
   local runtime = math.floor((vim.loop.hrtime() - start_time) / 1000000)
   log.debug("Added %d new marks, cleared %d old marks in %dms", n_marks_added, n_marks_cleared, runtime)
 end

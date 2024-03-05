@@ -13,7 +13,7 @@ describe("AsyncExecutor.map()", function()
     executor:map(
       function(id)
         local uv = vim.loop
-        uv.sleep(100) ---@diagnostic disable-line: undefined-field
+        uv.sleep(100)
         return id
       end,
       task_args,
@@ -37,7 +37,7 @@ describe("AsyncExecutor.map()", function()
     executor:map(
       function(id)
         local uv = vim.loop
-        uv.sleep(100) ---@diagnostic disable-line: undefined-field
+        uv.sleep(100)
         return id
       end,
       task_args_gen,
@@ -58,7 +58,7 @@ describe("ThreadPoolExecutor.map()", function()
     executor:map(
       function(id)
         local uv = vim.loop
-        uv.sleep(100) ---@diagnostic disable-line: undefined-field
+        uv.sleep(100)
         return id
       end,
       task_args,
@@ -82,7 +82,7 @@ describe("ThreadPoolExecutor.map()", function()
     executor:map(
       function(id)
         local uv = vim.loop
-        uv.sleep(100) ---@diagnostic disable-line: undefined-field
+        uv.sleep(100)
         return id
       end,
       task_args_gen,

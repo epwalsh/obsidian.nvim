@@ -11,7 +11,6 @@ return function(client, _)
   local opts = {
     timeout = 5000,
     on_done = function()
-      ---@diagnostic disable-next-line: undefined-field
       local runtime = math.floor((vim.loop.hrtime() - start_time) / 1000000)
       local messages = { "Checked " .. tostring(count) .. " notes in " .. runtime .. "ms" }
       local log_level = vim.log.levels.INFO
