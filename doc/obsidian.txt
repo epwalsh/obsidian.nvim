@@ -83,6 +83,9 @@ COMMANDS                                                   *obsidian-commands*
 - `:ObsidianYesterday` to open/create the daily note for the previous working
     day.
 - `:ObsidianTomorrow` to open/create the daily note for the next working day.
+- `:ObsidianDailies [OFFSET ...]` to open a picker list of daily notes. For
+    example, `:ObsidianDailies -2 1` to list daily notes from 2 days ago until
+    tomorrow.
 - `:ObsidianTemplate [NAME]` to insert a template from the templates folder,
     selecting from a list using your preferred picker. See
     |obsidian-"using-templates"| for more information.

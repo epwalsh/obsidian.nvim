@@ -237,7 +237,7 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.resolve_note()*
                  `Client.resolve_note`({self}, {query}, {opts})
-Resolve the query to a single note if possible, otherwise `nil` is returned.
+Resolve the query to a single note if possible, otherwise all close matches are returned.
 The 'query' can be a path, filename, note ID, alias, title, etc.
 
 Parameters ~
@@ -245,7 +245,7 @@ Parameters ~
 {opts} { timeout: `(integer|?,)` notes: obsidian.note.LoadOpts|? }|?
 
 Return ~
-obsidian.Note| `(optional)`
+obsidian.Note `(...)`
 
 ------------------------------------------------------------------------------
                                           *obsidian.Client.resolve_note_async()*
@@ -254,8 +254,22 @@ An async version of `resolve_note()`.
 
 Parameters ~
 {query} `(string)`
-{callback} `(fun(note: obsidian.Note|?))`
+{callback} `(fun(...: obsidian.Note))`
 {opts} { notes: obsidian.note.LoadOpts|? }|?
+
+Return ~
+obsidian.Note| `(optional)`
+
+------------------------------------------------------------------------------
+                     *obsidian.Client.resolve_note_async_with_picker_fallback()*
+`Client.resolve_note_async_with_picker_fallback`({self}, {query}, {callback}, {opts})
+Same as `resolve_note_async` but opens a picker to choose a single note when
+there are multiple matches.
+
+Parameters ~
+{query} `(string)`
+{callback} `(fun(obsidian.Note))`
+{opts} { notes: obsidian.note.LoadOpts|?, prompt_title: `(string|?)` }|?
 
 Return ~
 obsidian.Note| `(optional)`
@@ -281,7 +295,7 @@ Resolve a link. If the link argument is `nil` we attempt to resolve a link under
 
 Parameters ~
 {link} `(string|?)`
-{callback} `(fun(res: obsidian.ResolveLinkResult|?))`
+{callback} `(fun(...: obsidian.ResolveLinkResult))`
 
 ------------------------------------------------------------------------------
                                            *obsidian.Client.follow_link_async()*
