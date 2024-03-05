@@ -231,6 +231,14 @@ describe("util.strip_anchor_links()", function()
   end)
 end)
 
+describe("util.strip_block_links()", function()
+  it("should strip basic block links", function()
+    local line, block = util.strip_block_links "Foo Bar#^hello-world"
+    assert.equals("Foo Bar", line)
+    assert.equals("#^hello-world", block)
+  end)
+end)
+
 describe("util.header_to_anchor()", function()
   it("should strip leading '#' and put everything in lowercase", function()
     assert.equals("#hello-world", util.header_to_anchor "## Hello World")

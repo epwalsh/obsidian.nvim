@@ -206,7 +206,14 @@ return function(client, data)
   ---@param ref_link string
   ---@return string[]
   local function get_ref_forms(ref_link)
-    return { "[[" .. ref_link .. "]]", "[[" .. ref_link .. "|", "[[" .. ref_link .. "\\|", "](" .. ref_link .. ")" }
+    return {
+      "[[" .. ref_link .. "]]",
+      "[[" .. ref_link .. "|",
+      "[[" .. ref_link .. "\\|",
+      "[[" .. ref_link .. "#",
+      "](" .. ref_link .. ")",
+      "](" .. ref_link .. "#",
+    }
   end
 
   local reference_forms = vim.tbl_flatten {

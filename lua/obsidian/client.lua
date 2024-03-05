@@ -716,6 +716,10 @@ Client.resolve_link_async = function(self, link, callback)
   local anchor_link
   location, anchor_link = util.strip_anchor_links(location)
 
+  -- Remove block links from the end if there are any.
+  -- TODO: handle block links.
+  location, _ = util.strip_block_links(location)
+
   -- Assume 'location' is current buffer path if empty, like for TOCs.
   if string.len(location) == 0 then
     location = vim.api.nvim_buf_get_name(0)
@@ -1188,16 +1192,16 @@ Client.find_backlinks_async = function(self, note, callback, opts)
       search_terms[#search_terms + 1] = string.format("[[%s|", ref)
       -- Markdown link without anchors.
       search_terms[#search_terms + 1] = string.format("(%s)", ref)
-      -- Wiki links with anchors.
+      -- Wiki links with anchors/blocks.
       search_terms[#search_terms + 1] = string.format("[[%s#", ref)
-      -- Markdown link with anchors.
+      -- Markdown link with anchors/blocks.
       search_terms[#search_terms + 1] = string.format("(%s#", ref)
     end
   end
   for alias in iter(note.aliases) do
     -- Wiki link without anchors.
     search_terms[#search_terms + 1] = string.format("[[%s]]", alias)
-    -- Wiki link with anchors.
+    -- Wiki link with anchors/blocks.
     search_terms[#search_terms + 1] = string.format("[[%s#", alias)
   end
 

@@ -1033,6 +1033,8 @@ end
 -- We are very loose here because obsidian allows pretty much anything
 util.ANCHOR_LINK_PATTERN = "#[%w%d][^#]*"
 
+util.BLOCK_LINK_PATTERN = "#%^[%w%d][%w%d-]*"
+
 --- Strip anchor links from a line.
 ---@param line string
 ---@return string, string|?
@@ -1052,6 +1054,17 @@ util.strip_anchor_links = function(line)
   end
 
   return line, anchor and util.standardize_anchor(anchor)
+end
+
+--- Strip block links from a line.
+---@param line string
+---@return string, string|?
+util.strip_block_links = function(line)
+  local block_match = string.match(line, util.BLOCK_LINK_PATTERN .. "$")
+  if block_match then
+    line = string.sub(line, 1, -block_match:len() - 1)
+  end
+  return line, block_match
 end
 
 --- Check if a line is a markdown header.
