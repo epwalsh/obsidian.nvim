@@ -718,7 +718,7 @@ Client.resolve_link_async = function(self, link, callback)
 
   -- Remove block links from the end if there are any.
   -- TODO: handle block links.
-  location, _ = util.strip_block_links(location)
+  location = util.strip_block_links(location)
 
   -- Assume 'location' is current buffer path if empty, like for TOCs.
   if string.len(location) == 0 then
