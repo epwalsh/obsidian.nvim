@@ -422,9 +422,11 @@ M.throttle = function(fn, timeout)
         ms_remaining,
         0,
         vim.schedule_wrap(function()
-          timer:stop()
-          timer:close()
-          timer = nil
+          if timer ~= nil then
+            timer:stop()
+            timer:close()
+            timer = nil
+          end
           ---@diagnostic disable-next-line: undefined-field
           last_call = vim.loop.now()
           fn(unpack(args))
