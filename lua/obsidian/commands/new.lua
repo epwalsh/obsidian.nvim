@@ -1,3 +1,6 @@
+local util = require "obsidian.util"
+local log = require "obsidian.log"
+
 ---@param client obsidian.Client
 return function(client, data)
   ---@type obsidian.Note
@@ -5,10 +8,11 @@ return function(client, data)
   if data.args:len() > 0 then
     note = client:create_note { title = data.args }
   else
-    local title = vim.fn.input {
-      prompt = "Enter title (optional): ",
-    }
-    if string.len(title) == 0 then
+    local title = util.input "Enter title (optional): "
+    if not title then
+      log.warn "Aborted"
+      return
+    elseif title == "" then
       title = nil
     end
     note = client:create_note { title = title }

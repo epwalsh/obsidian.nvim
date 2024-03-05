@@ -108,11 +108,16 @@ M.paste_img = function(opts)
     if opts.default_name ~= nil and not opts.should_confirm then
       fname = opts.default_name
     else
-      fname = vim.fn.input { prompt = "Enter file name: ", default = opts.default_name, completion = "file" }
+      fname = util.input("Enter file name: ", { default = opts.default_name, completion = "file" })
+      if not fname then
+        log.warn "Paste aborted"
+        return
+      end
     end
-
-    fname = util.strip_whitespace(fname)
   end
+
+  assert(fname)
+  fname = util.strip_whitespace(fname)
 
   if fname == "" then
     log.err "Invalid file name"
@@ -142,11 +147,8 @@ M.paste_img = function(opts)
 
   if opts.should_confirm then
     -- Get confirmation from user.
-    local confirmation = string.lower(vim.fn.input {
-      prompt = "Saving image to '" .. tostring(path) .. "'. Do you want to continue? [Y/n] ",
-    })
-    if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
-      log.warn "Paste canceled"
+    if not util.confirm("Saving image to '" .. tostring(path) .. "'. Do you want to continue?") then
+      log.warn "Paste aborted"
       return
     end
   end

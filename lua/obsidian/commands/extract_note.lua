@@ -19,11 +19,13 @@ return function(client, data)
   if data.args ~= nil and string.len(data.args) > 0 then
     title = util.strip_whitespace(data.args)
   else
-    title = util.strip_whitespace(vim.fn.input { prompt = "Enter title (optional): " })
-  end
-
-  if string.len(title) == 0 then
-    title = nil
+    title = util.input "Enter title (optional): "
+    if not title then
+      log.warn "Aborted"
+      return
+    elseif title == "" then
+      title = nil
+    end
   end
 
   -- create the new note.

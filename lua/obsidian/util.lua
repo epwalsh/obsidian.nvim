@@ -1132,4 +1132,54 @@ util.header_to_anchor = function(header)
   return util.standardize_anchor("#" .. anchor)
 end
 
+local INPUT_CANCELLED = "~~~INPUT-CANCELLED~~~"
+
+--- Prompt user for an input. Returns nil if canceled, otherwise a string (possibly empty).
+---
+---@param prompt string
+---@param opts { completion: string|?, default: string|? }|?
+---
+---@return string|?
+util.input = function(prompt, opts)
+  opts = opts or {}
+
+  if not vim.endswith(prompt, " ") then
+    prompt = prompt .. " "
+  end
+
+  local input = util.strip_whitespace(
+    vim.fn.input { prompt = prompt, completion = opts.completion, default = opts.default, cancelreturn = INPUT_CANCELLED }
+  )
+
+  if input ~= INPUT_CANCELLED then
+    return input
+  else
+    return nil
+  end
+end
+
+--- Prompt user for a confirmation.
+---
+---@param prompt string
+---
+---@return boolean
+util.confirm = function(prompt)
+  if not vim.endswith(util.rstrip_whitespace(prompt), "[Y/n]") then
+    prompt = util.rstrip_whitespace(prompt) .. " [Y/n] "
+  end
+
+  local confirmation = util.input(prompt)
+  if confirmation == nil then
+    return false
+  end
+
+  confirmation = string.lower(confirmation)
+
+  if confirmation == "" or confirmation == "y" or confirmation == "yes" then
+    return true
+  else
+    return false
+  end
+end
+
 return util

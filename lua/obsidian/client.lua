@@ -790,10 +790,7 @@ Client.follow_link_async = function(self, link, opts)
 
       if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
         -- Prompt to create a new note.
-        local confirmation = string.lower(vim.fn.input {
-          prompt = "Create new note '" .. res.location .. "'? [Y/n] ",
-        })
-        if confirmation == "" or confirmation == "y" or confirmation == "yes" then
+        if util.confirm("Create new note '" .. res.location .. "'?") then
           -- Create a new note.
           ---@type string|?, string[]
           local id, aliases
@@ -805,9 +802,10 @@ Client.follow_link_async = function(self, link, opts)
           end
 
           local note = self:create_note { title = res.name, id = id, aliases = aliases }
-          self:open_note(note, { open_strategy = opts.open_strategy })
+          return self:open_note(note, { open_strategy = opts.open_strategy })
         else
-          log.warn "Aborting"
+          log.warn "Aborted"
+          return
         end
       end
 

@@ -26,6 +26,10 @@ return function(client, data)
     arg = vim.fn.input {
       prompt = "Enter new note ID/name/path: ",
     }
+    if not arg or string.len(arg) == 0 then
+      log.warn "Rename aborted"
+      return
+    end
   end
 
   if vim.endswith(arg, " --dry-run") then
@@ -103,8 +107,8 @@ return function(client, data)
   -- Get confirmation before continuing.
   local confirmation
   if not dry_run then
-    confirmation = string.lower(vim.fn.input {
-      prompt = "Renaming '"
+    confirmation = util.confirm(
+      "Renaming '"
         .. cur_note_id
         .. "' to '"
         .. new_note_id
@@ -114,20 +118,16 @@ return function(client, data)
         .. "You can also do a dry run of this by running ':ObsidianRename "
         .. arg
         .. " --dry-run'.\n"
-        .. "Do you want to continue? [Y/n] ",
-    })
+        .. "Do you want to continue?"
+    )
   else
-    confirmation = string.lower(vim.fn.input {
-      prompt = "Dry run: renaming '"
-        .. cur_note_id
-        .. "' to '"
-        .. new_note_id
-        .. "'...\n"
-        .. "Do you want to continue? [Y/n] ",
-    })
+    confirmation = util.confirm(
+      "Dry run: renaming '" .. cur_note_id .. "' to '" .. new_note_id .. "'...\n" .. "Do you want to continue?"
+    )
   end
-  if not (confirmation == "" or confirmation == "y" or confirmation == "yes") then
-    log.warn "Rename canceled, doing nothing"
+
+  if not confirmation then
+    log.warn "Rename aborted"
     return
   end
 

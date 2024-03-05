@@ -80,6 +80,7 @@ Full changelog below 👇
 - Respect telescope.nvim themes configured by user.
 - Make tags completion more efficient (less CPU time!).
 - Added file/directory completion to image name prompt from `:ObsidianPasteImg`.
+- Handle prompt cancellation gracefully.
 
 ## [v3.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.1) - 2024-02-28
 
