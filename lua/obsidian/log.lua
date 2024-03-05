@@ -113,11 +113,11 @@ end
 
 ---Log a message only once.
 ---
----@param msg any
+---@param msg string
 ---@param level integer|?
 log.log_once = function(msg, level, ...)
   if level == nil or log._log_level == nil or level >= log._log_level then
-    msg = string.format(tostring(msg), unpack(message_args(...)))
+    msg = string.format(tostring(msg), unpack(message_args(msg, ...)))
     if vim.in_fast_event() then
       vim.schedule(function()
         vim.notify_once(msg, level, { title = "Obsidian.nvim" })
