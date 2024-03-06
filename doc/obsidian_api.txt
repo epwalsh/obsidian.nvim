@@ -647,6 +647,7 @@ Class ~
 Fields ~
 {id} `(string)`
 {line} `(integer)`
+{block} `(string)`
 
 ------------------------------------------------------------------------------
                                                                  *obsidian.Note*
@@ -691,7 +692,7 @@ obsidian.Note
 Get markdown display info about the note.
 
 Parameters ~
-{opts} { label: `(string|?)` }|?
+{opts} { label: `(string|?,)` anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }|?
 
 Return ~
 `(string)`
