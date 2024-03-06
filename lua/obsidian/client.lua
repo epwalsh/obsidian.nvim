@@ -1716,6 +1716,9 @@ Client._daily = function(self, datetime)
       note = Note.from_file(path)
       if note.has_frontmatter then
         write_frontmatter = false
+      else
+        note.aliases = { alias }
+        note.tags = { "daily-notes" }
       end
     end
 
