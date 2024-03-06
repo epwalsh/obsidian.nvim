@@ -711,14 +711,16 @@ Client.resolve_link_async = function(self, link, callback)
   -- The Obsidian app will follow URL-encoded links, so we should to.
   location = util.urldecode(location)
 
+  -- Remove block links from the end if there are any.
+  -- TODO: handle block links.
+  ---@type string|?
+  local block_link
+  location, block_link = util.strip_block_links(location)
+
   -- Remove anchor links from the end if there are any.
   ---@type string|?
   local anchor_link
   location, anchor_link = util.strip_anchor_links(location)
-
-  -- Remove block links from the end if there are any.
-  -- TODO: handle block links.
-  location = util.strip_block_links(location)
 
   -- Assume 'location' is current buffer path if empty, like for TOCs.
   if string.len(location) == 0 then
@@ -727,35 +729,44 @@ Client.resolve_link_async = function(self, link, callback)
 
   res.location = location
 
-  self:resolve_note_async(location, function(...)
-    local notes = { ... }
+  self:resolve_note_async(
+    location,
+    function(...)
+      local notes = { ... }
 
-    if #notes == 0 then
-      local path = Path.new(location)
-      if path:exists() then
-        res.path = path
-        return callback(res)
-      else
-        return callback(res)
-      end
-    end
-
-    local matches = {}
-    for _, note in ipairs(notes) do
-      -- Resolve anchor link to line.
-      local line
-      if anchor_link ~= nil then
-        local anchor_match = note:resolve_anchor_link(anchor_link)
-        if anchor_match then
-          line = anchor_match.line
+      if #notes == 0 then
+        local path = Path.new(location)
+        if path:exists() then
+          res.path = path
+          return callback(res)
+        else
+          return callback(res)
         end
       end
 
-      table.insert(matches, vim.tbl_extend("force", res, { path = note.path, note = note, line = line }))
-    end
+      local matches = {}
+      for _, note in ipairs(notes) do
+        -- Resolve block or anchor link to line.
+        local line
+        if block_link ~= nil then
+          local block_match = note:resolve_block(block_link)
+          if block_match then
+            line = block_match.line
+          end
+        elseif anchor_link ~= nil then
+          local anchor_match = note:resolve_anchor_link(anchor_link)
+          if anchor_match then
+            line = anchor_match.line
+          end
+        end
 
-    return callback(unpack(matches))
-  end, { notes = { collect_anchor_links = anchor_link and true or false } })
+        table.insert(matches, vim.tbl_extend("force", res, { path = note.path, note = note, line = line }))
+      end
+
+      return callback(unpack(matches))
+    end,
+    { notes = { collect_anchor_links = anchor_link and true or false, collect_blocks = block_link and true or false } }
+  )
 end
 
 --- Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
@@ -1762,7 +1773,7 @@ end
 --- Create a formatted markdown / wiki link for a note.
 ---
 ---@param note obsidian.Note|obsidian.Path|string The note/path to link to.
----@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }|? Options.
+---@param opts { label: string|?, link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }|? Options.
 ---
 ---@return string
 Client.format_link = function(self, note, opts)
@@ -1787,7 +1798,7 @@ Client.format_link = function(self, note, opts)
     link_style = self.opts.preferred_link_style
   end
 
-  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor }
+  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor, block = opts.block }
 
   if link_style == config.LinkStyle.markdown then
     return self.opts.markdown_link_func(new_opts)

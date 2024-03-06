@@ -29,12 +29,28 @@ source.complete = function(_, request, callback)
   end
 
   ---@type string|?
+  local block_link
+  search, block_link = util.strip_block_links(search)
+
+  ---@type string|?
   local anchor_link
   search, anchor_link = util.strip_anchor_links(search)
+
+  -- If block link is incomplete, do nothing.
+  if not block_link and vim.endswith(search, "#^") then
+    callback { isIncomplete = true }
+    return
+  end
 
   -- If anchor link is incomplete, do nothing.
   if not anchor_link and vim.endswith(search, "#") then
     callback { isIncomplete = true }
+    return
+  end
+
+  -- Probably just a block/anchor link within current note.
+  if string.len(search) == 0 then
+    callback { isIncomplete = false }
     return
   end
 

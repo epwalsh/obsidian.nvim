@@ -28,16 +28,27 @@ source.complete = function(_, request, callback)
   local in_buffer_only = false
 
   ---@type string|?
+  local block_link
+  search, block_link = util.strip_block_links(search)
+
+  ---@type string|?
   local anchor_link
   search, anchor_link = util.strip_anchor_links(search)
+
+  -- If block link is incomplete, we'll match against all block links.
+  if not block_link and vim.endswith(search, "#^") then
+    block_link = "#^"
+    search = string.sub(search, 1, -3)
+  end
 
   -- If anchor link is incomplete, we'll match against all anchor links.
   if not anchor_link and vim.endswith(search, "#") then
     anchor_link = "#"
+    search = string.sub(search, 1, -2)
   end
 
-  if anchor_link and string.len(search) == 0 then
-    -- Search over headers in current buffer only.
+  if (anchor_link or block_link) and string.len(search) == 0 then
+    -- Search over headers/blocks in current buffer only.
     in_buffer_only = true
   end
 
@@ -49,6 +60,24 @@ source.complete = function(_, request, callback)
     for note in iter(results) do
       ---@cast note obsidian.Note
       assert(note.anchor_links)
+      assert(note.blocks)
+
+      -- Collect matching block links.
+      ---@type obsidian.note.Block[]|?
+      local matching_blocks
+      if block_link then
+        matching_blocks = {}
+        for block_id, block_data in pairs(note.blocks) do
+          if vim.startswith("#" .. block_id, block_link) then
+            table.insert(matching_blocks, block_data)
+          end
+        end
+
+        if #matching_blocks == 0 then
+          -- Unmatched, create a mock one.
+          table.insert(matching_blocks, { id = util.standardize_block(block_link), line = 1 })
+        end
+      end
 
       -- Collect matching anchor links.
       ---@type obsidian.note.HeaderAnchor[]|?
@@ -81,7 +110,7 @@ source.complete = function(_, request, callback)
       end
 
       -- Transform aliases into completion options.
-      ---@type { label: string|?, anchor: obsidian.note.HeaderAnchor|? }[]
+      ---@type { label: string|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }[]
       local completion_options = {}
 
       ---@param option string|?
@@ -90,14 +119,21 @@ source.complete = function(_, request, callback)
           for anchor in iter(matching_anchors) do
             table.insert(completion_options, { label = option, anchor = anchor })
           end
+        elseif matching_blocks ~= nil then
+          for block in iter(matching_blocks) do
+            table.insert(completion_options, { label = option, block = block })
+          end
         else
           if option then
             table.insert(completion_options, { label = option })
           end
 
-          -- Add all anchors, let cmp sort it out.
+          -- Add all blocks and anchors, let cmp sort it out.
           for _, anchor_data in pairs(note.anchor_links) do
             table.insert(completion_options, { label = option, anchor = anchor_data })
+          end
+          for _, block_data in pairs(note.blocks) do
+            table.insert(completion_options, { label = option, block = block_data })
           end
         end
       end
@@ -139,10 +175,15 @@ source.complete = function(_, request, callback)
         local documentation = nil
 
         if option.label then
-          label = client:format_link(note, { label = option.label, link_style = link_style, anchor = option.anchor })
+          label = client:format_link(
+            note,
+            { label = option.label, link_style = link_style, anchor = option.anchor, block = option.block }
+          )
           sort_label = option.label
           if option.anchor then
             sort_label = sort_label .. option.anchor.anchor
+          elseif option.block then
+            sort_label = sort_label .. option.block.id
           end
           documentation = { kind = "markdown", value = note:display_info { label = label } }
         elseif option.anchor then
@@ -156,6 +197,17 @@ source.complete = function(_, request, callback)
             error "not implemented"
           end
           sort_label = option.anchor.anchor
+        elseif option.block then
+          -- In buffer block link.
+          -- TODO: allow users to customize this?
+          if ref_type == completion.RefType.Wiki then
+            label = "[[#" .. option.block.id .. "]]"
+          elseif ref_type == completion.RefType.Markdown then
+            label = "[#" .. option.block.id .. "](" .. option.block.id .. ")"
+          else
+            error "not implemented"
+          end
+          sort_label = option.block.id
         else
           error "should not happen"
         end
@@ -203,7 +255,7 @@ source.complete = function(_, request, callback)
   end
 
   if in_buffer_only then
-    local note = client:current_note(0, { collect_anchor_links = true })
+    local note = client:current_note(0, { collect_anchor_links = true, collect_blocks = true })
     if note then
       search_callback { note }
     else
@@ -213,7 +265,7 @@ source.complete = function(_, request, callback)
     client:find_notes_async(
       search,
       search_callback,
-      { search = { ignore_case = true }, notes = { collect_anchor_links = true } }
+      { search = { ignore_case = true }, notes = { collect_anchor_links = true, collect_blocks = true } }
     )
   end
 end

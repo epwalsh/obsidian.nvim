@@ -931,25 +931,45 @@ util.format_anchor_label = function(anchor)
   return string.format(" ❯ %s", anchor.header)
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }
 ---@return string
 util.wiki_link_alias_only = function(opts)
-  local header = opts.anchor and string.format("#%s", opts.anchor.header) or ""
-  return string.format("[[%s%s]]", opts.label, header)
+  ---@type string
+  local header_or_block = ""
+  if opts.anchor then
+    header_or_block = string.format("#%s", opts.anchor.header)
+  elseif opts.block then
+    header_or_block = string.format("#%s", opts.block.id)
+  end
+  return string.format("[[%s%s]]", opts.label, header_or_block)
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }
 ---@return string
 util.wiki_link_path_only = function(opts)
-  local anchor = opts.anchor and opts.anchor.anchor or ""
-  return string.format("[[%s%s]]", opts.path, anchor)
+  ---@type string
+  local header_or_block = ""
+  if opts.anchor then
+    header_or_block = opts.anchor.anchor
+  elseif opts.block then
+    header_or_block = string.format("#%s", opts.block.id)
+  end
+  return string.format("[[%s%s]]", opts.path, header_or_block)
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }
 ---@return string
 util.wiki_link_path_prefix = function(opts)
-  local anchor = opts.anchor and opts.anchor.anchor or ""
-  local header = opts.anchor and util.format_anchor_label(opts.anchor) or ""
+  local anchor = ""
+  local header = ""
+  if opts.anchor then
+    anchor = opts.anchor.anchor
+    header = util.format_anchor_label(opts.anchor)
+  elseif opts.block then
+    anchor = "#" .. opts.block.id
+    header = "#" .. opts.block.id
+  end
+
   if opts.label ~= opts.path then
     return string.format("[[%s%s|%s%s]]", opts.path, anchor, opts.label, header)
   else
@@ -957,11 +977,19 @@ util.wiki_link_path_prefix = function(opts)
   end
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }
 ---@return string
 util.wiki_link_id_prefix = function(opts)
-  local anchor = opts.anchor and opts.anchor.anchor or ""
-  local header = opts.anchor and util.format_anchor_label(opts.anchor) or ""
+  local anchor = ""
+  local header = ""
+  if opts.anchor then
+    anchor = opts.anchor.anchor
+    header = util.format_anchor_label(opts.anchor)
+  elseif opts.block then
+    anchor = "#" .. opts.block.id
+    header = "#" .. opts.block.id
+  end
+
   if opts.id == nil then
     return string.format("[[%s%s]]", opts.label, anchor)
   elseif opts.label ~= opts.id then
@@ -971,11 +999,19 @@ util.wiki_link_id_prefix = function(opts)
   end
 end
 
----@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }
 ---@return string
 util.markdown_link = function(opts)
-  local anchor = opts.anchor and opts.anchor.anchor or ""
-  local header = opts.anchor and util.format_anchor_label(opts.anchor) or ""
+  local anchor = ""
+  local header = ""
+  if opts.anchor then
+    anchor = opts.anchor.anchor
+    header = util.format_anchor_label(opts.anchor)
+  elseif opts.block then
+    anchor = "#" .. opts.block.id
+    header = "#" .. opts.block.id
+  end
+
   local path = util.urlencode(opts.path, { keep_path_sep = true })
   return string.format("[%s%s](%s%s)", opts.label, header, path, anchor)
 end
@@ -1033,7 +1069,9 @@ end
 -- We are very loose here because obsidian allows pretty much anything
 util.ANCHOR_LINK_PATTERN = "#[%w%d][^#]*"
 
-util.BLOCK_LINK_PATTERN = "#%^[%w%d][%w%d-]*"
+util.BLOCK_PATTERN = "%^[%w%d][%w%d-]*"
+
+util.BLOCK_LINK_PATTERN = "#" .. util.BLOCK_PATTERN
 
 --- Strip anchor links from a line.
 ---@param line string
@@ -1056,6 +1094,16 @@ util.strip_anchor_links = function(line)
   return line, anchor and util.standardize_anchor(anchor)
 end
 
+--- Parse a block line from a line.
+---
+---@param line string
+---
+---@return string|?
+util.parse_block = function(line)
+  local block_match = string.match(line, util.BLOCK_PATTERN .. "$")
+  return block_match
+end
+
 --- Strip block links from a line.
 ---@param line string
 ---@return string, string|?
@@ -1065,6 +1113,21 @@ util.strip_block_links = function(line)
     line = string.sub(line, 1, -block_match:len() - 1)
   end
   return line, block_match
+end
+
+--- Standardize a block identifier.
+---@param block_id string
+---@return string
+util.standardize_block = function(block_id)
+  if vim.startswith(block_id, "#") then
+    block_id = string.sub(block_id, 2)
+  end
+
+  if not vim.startswith(block_id, "^") then
+    block_id = "^" .. block_id
+  end
+
+  return block_id
 end
 
 --- Check if a line is a markdown header.

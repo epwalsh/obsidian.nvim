@@ -100,6 +100,36 @@ describe("Note.from_file()", function()
     )
   end)
 
+  it("should be able to collect blocks", function()
+    local note = Note.from_file("test/fixtures/notes/note_with_a_bunch_of_blocks.md", { collect_blocks = true })
+    assert.is_not(nil, note.blocks)
+
+    assert.are_same({
+      id = "^1234",
+      line = 5,
+    }, note.blocks["^1234"])
+
+    assert.are_same({
+      id = "^hello-world",
+      line = 7,
+    }, note.blocks["^hello-world"])
+  end)
+
+  it("should be able to collect blocks after the fact", function()
+    local note = Note.from_file("test/fixtures/notes/note_with_a_bunch_of_blocks.md", { collect_blocks = false })
+    assert.equals(nil, note.blocks)
+
+    assert.are_same({
+      id = "^1234",
+      line = 5,
+    }, note:resolve_block "^1234")
+
+    assert.are_same({
+      id = "^1234",
+      line = 5,
+    }, note:resolve_block "#^1234")
+  end)
+
   it("should work from a README", function()
     local note = Note.from_file "README.md"
     assert.equals(note.id, "README")

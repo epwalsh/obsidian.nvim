@@ -8,14 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 There's a lot of new features and improvements here that I'm really excited about 🥳 They've improved my workflow a ton and I hope they do for you too. To highlight the 3 biggest additions:
-1. 🔗 Full support for header anchor links! That means both for following links and completion of links. Various forms of header anchor links are support. Here are a few examples:
-    - Typical Obsidian-style wiki links, e.g. `[[My note#Heading 1]]`, `[[My note#Heading 1#Sub heading]]`.
+1. 🔗 Full support for header anchor links and block links! That means both for following links and completion of links. Various forms of anchor/block links are support. Here are a few examples:
+    - Typical Obsidian-style wiki links, e.g. `[[My note#Heading 1]]`, `[[My note#Heading 1#Sub heading]]`, `[[My note#^block-123]]`.
     - Wiki links with a label, e.g. `[[my-note#heading-1|Heading 1 in My Note]]`.
     - Markdown links, e.g. `[Heading 1 in My Note](my-note.md#heading-1)`.
 
-    We also support links to headers within the same note, like for a table of contents, e.g. `[[#Heading 1]]`, `[[#heading-1|Heading]]`.
+    We also support links to headers within the same note, like for a table of contents, e.g. `[[#Heading 1]]`, `[[#heading-1|Heading]]`, `[[#^block-1]]`.
 
-    Note that due to the way `nvim-cmp` works, completion of note references with header links (e.g. you start typing `[[My note#He`) works best when using the typical "alias only" wiki links. To use that style for completion, just set `wiki_link_func = "use_alias_only"` in your config.
+    Note that due to the way `nvim-cmp` works, completion of note references with anchor/block links (e.g. you start typing `[[My note#He`) works best when using the typical "alias only" wiki links. To use that style for completion, just set `wiki_link_func = "use_alias_only"` in your config.
 2. 📲 A basic callback system to let you easily customize obisidian.nvim's behavior even more. There are currently 4 events: `post_setup`, `enter_note`, `pre_write_note`, and `post_set_workspace`. You can define a function for each of these in your config.
 3. 🔭 Improved picker integrations (especially for telescope), particular for the `:ObsidianTags` command. See https://github.com/epwalsh/obsidian.nvim/discussions/450 for a demo.
 
@@ -61,8 +61,8 @@ Full changelog below 👇
 
 - Added config option `picker.tag_mappings`, analogous to `picker.note_mappings`.
 - Added `log` field to `obsidian.Client` for easier access to the logger.
-- Added ability to follow anchor links.
-- Added completion support for header anchor links. Note that this requires you to update your `wiki_link_func` and `markdown_link_func` in your config to handle anchors. See the configuration example in the README.
+- Added ability to follow anchor and block links.
+- Added completion support for anchor and block links. Note that this requires you to update your `wiki_link_func` and `markdown_link_func` in your config to handle anchors and blocks. See the configuration example in the README.
 - You can set `wiki_link_func` to a one of the following strings to use a builtin function:
   - `"use_alias_only"`, e.g. `[[Foo Bar]]`
   - `"prepend_note_id"`, e.g. `[[foo-bar|Foo Bar]]`

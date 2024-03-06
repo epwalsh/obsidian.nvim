@@ -237,6 +237,19 @@ describe("util.strip_block_links()", function()
     assert.equals("Foo Bar", line)
     assert.equals("#^hello-world", block)
   end)
+
+  it("should strip block links from an otherwise empty input", function()
+    local line, block = util.strip_block_links "#^hello-world"
+    assert.equals("", line)
+    assert.equals("#^hello-world", block)
+  end)
+end)
+
+describe("util.parse_block()", function()
+  it("should parse basic block identifiers", function()
+    local block = util.parse_block "Foo Bar ^hello-world"
+    assert.equals("^hello-world", block)
+  end)
 end)
 
 describe("util.header_to_anchor()", function()

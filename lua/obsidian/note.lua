@@ -22,6 +22,11 @@ local DEFAULT_MAX_LINES = 500
 ---@field line integer
 ---@field parent obsidian.note.HeaderAnchor|?
 
+---@class obsidian.note.Block
+---
+---@field id string
+---@field line integer
+
 --- A class that represents a note within a vault.
 ---
 ---@toc_entry obsidian.Note
@@ -38,6 +43,7 @@ local DEFAULT_MAX_LINES = 500
 ---@field frontmatter_end_line integer|?
 ---@field contents string[]|?
 ---@field anchor_links table<string, obsidian.note.HeaderAnchor>|?
+---@field blocks table<string, obsidian.note.Block>?
 local Note = abc.new_class {
   __tostring = function(self)
     return string.format("Note('%s')", self.id)
@@ -212,6 +218,7 @@ end
 ---@field max_lines integer|?
 ---@field load_contents boolean|?
 ---@field collect_anchor_links boolean|?
+---@field collect_blocks boolean|?
 
 --- Initialize a note from a file.
 ---
@@ -318,6 +325,12 @@ Note.from_lines = function(lines, path, opts)
     anchor_stack = {}
   end
 
+  ---@type table<string, obsidian.note.Block>|?
+  local blocks
+  if opts.collect_blocks then
+    blocks = {}
+  end
+
   ---@param anchor_data obsidian.note.HeaderAnchor
   ---@return obsidian.note.HeaderAnchor|?
   local function get_parent_anchor(anchor_data)
@@ -358,6 +371,8 @@ Note.from_lines = function(lines, path, opts)
   local has_frontmatter, in_frontmatter, at_boundary = false, false, false -- luacheck: ignore (false positive)
   local frontmatter_end_line = nil
   for line_idx, line in enumerate(lines) do
+    line = util.rstrip_whitespace(line)
+
     if line_idx == 1 and Note._is_frontmatter_boundary(line) then
       has_frontmatter = true
       at_boundary = true
@@ -407,6 +422,14 @@ Note.from_lines = function(lines, path, opts)
           end
         end
       end
+
+      -- Check for block.
+      if opts.collect_blocks then
+        local block = util.parse_block(line)
+        if block then
+          blocks[block] = { id = block, line = line_idx }
+        end
+      end
     end
 
     -- Collect contents.
@@ -415,7 +438,10 @@ Note.from_lines = function(lines, path, opts)
     end
 
     -- Check if we can stop reading lines now.
-    if line_idx > max_lines or (title and not opts.load_contents and not opts.collect_anchor_links) then
+    if
+      line_idx > max_lines
+      or (title and not opts.load_contents and not opts.collect_anchor_links and not opts.collect_blocks)
+    then
       break
     end
   end
@@ -505,6 +531,7 @@ Note.from_lines = function(lines, path, opts)
   n.frontmatter_end_line = frontmatter_end_line
   n.contents = contents
   n.anchor_links = anchor_links
+  n.blocks = blocks
   return n
 end
 
@@ -700,6 +727,23 @@ Note.resolve_anchor_link = function(self, anchor_link)
   assert(self.path, "'note.path' is not set")
   local n = Note.from_file(self.path, { collect_anchor_links = true })
   return n:resolve_anchor_link(anchor_link)
+end
+
+--- Try to resolve a block identifier.
+---
+---@param block_id string
+---
+---@return obsidian.note.Block|?
+Note.resolve_block = function(self, block_id)
+  block_id = util.standardize_block(block_id)
+
+  if self.blocks ~= nil then
+    return self.blocks[block_id]
+  end
+
+  assert(self.path, "'note.path' is not set")
+  local n = Note.from_file(self.path, { collect_blocks = true })
+  return n:resolve_block(block_id)
 end
 
 return Note
