@@ -681,10 +681,80 @@ templates = {
   substitutions = {
     yesterday = function()
       return os.date("%Y-%m-%d", os.time() - 86400)
-    end
+    end,
+    -- Additional template substitutions
+    time24 = function()
+      return os.date('%H:%M:%S')
+    end,
+    time12 = function()
+      -- Conversion to 12-hour format with AM/PM
+      local hour = tonumber(os.date('%H'))
+      local ampm = hour >= 12 and 'PM' or 'AM'
+      hour = hour % 12
+      hour = hour == 0 and 12 or hour
+      return string.format('%02d:%s %s', hour, os.date('%M:%S'), ampm)
+    end,
+    year = function()
+      return os.date('%Y', os.time())
+    end,
+    month = function()
+      return os.date('%B', os.time())
+    end,
+    nextday = function()
+      return os.date('%Y-%m-%d', os.time() + 86400)
+    end,
+    hdate = function()
+      return os.date('%A, %B %d, %Y')
+    end,
+    rfc3339 = function()
+      return os.date('!%Y-%m-%dT%H:%M:%SZ')
+    end,
+    week = function()
+      return os.date('%V', os.time())
+    end,
+    isoweek = function()
+      return os.date('%G-W%V', os.time())
+    end,
+    isoprevweek = function()
+      local adjustment = -7 * 24 * 60 * 60 -- One week in seconds
+      return os.date('%G-W%V', os.time() + adjustment)
+    end,
+    isonextweek = function()
+      local adjustment = 7 * 24 * 60 * 60 -- One week in seconds
+      return os.date('%G-W%V', os.time() + adjustment)
+    end,
+    day_of_month = function()
+      return os.date('%d', os.time())
+    end,
+    month_numeric = function()
+      return os.date('%m', os.time())
+    end,
+    weekday = function()
+      return os.date('%A', os.time())
+    end,
   }
 }
 ```
+
+Below is a detailed table of custom variables available for template substitutions.
+
+| Specifier           | Expands to                                  | Example                               |
+|---------------------|---------------------------------------------|---------------------------------------|
+| `{{time24}}`        | Current time in 24-hour format              | "14:45:00"                            |
+| `{{time12}}`        | Current time in 12-hour format with AM/PM   | "2:45:00 PM"                          |
+| `{{year}}`          | Current year                                | "2024"                                |
+| `{{month}}`         | Month name                                  | "March"                               |
+| `{{yesterday}}`     | Yesterday’s date in ISO format              | "2024-03-05"                          |
+| `{{nextday}}`       | Tomorrow’s date in ISO format               | "2024-03-07"                          |
+| `{{hdate}}`         | Current date in a human-readable format     | "Wednesday, March 6, 2024"            |
+| `{{rfc3339}}`       | Current date and time in RFC3339 format     | "2024-03-06T14:45:00+00:00"           |
+| `{{week}}`          | Week number of the year                     | "10"                                  |
+| `{{isoweek}}`       | ISO week number of the current week         | "2024-W10"                            |
+| `{{isoprevweek}}`   | ISO week number of the previous week        | "2024-W09"                            |
+| `{{isonextweek}}`   | ISO week number of the next week            | "2024-W11"                            |
+| `{{day_of_month}}`  | Day of the month                            | "06"                                  |
+| `{{month_numeric}}` | Month as a numeric value                    | "03"                                  |
+| `{{weekday}}`       | Name of the weekday                         | "Wednesday"                           |
 
 ### Usage outside of a workspace or vault
 
