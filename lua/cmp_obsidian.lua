@@ -99,16 +99,6 @@ source.complete = function(_, request, callback)
         end
       end
 
-      -- Collect all valid aliases for the note, including ID, title, and filename.
-      ---@type string[]|?
-      local aliases
-      if not in_buffer_only then
-        aliases = util.tbl_unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
-        if note.title ~= nil then
-          table.insert(aliases, note.title)
-        end
-      end
-
       -- Transform aliases into completion options.
       ---@type { label: string|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }[]
       local completion_options = {}
@@ -141,7 +131,16 @@ source.complete = function(_, request, callback)
       if in_buffer_only then
         update_completion_options()
       else
-        assert(aliases)
+        -- Collect all valid aliases for the note, including ID, title, and filename.
+        ---@type string[]
+        local aliases
+        if not in_buffer_only then
+          aliases = util.tbl_unique { tostring(note.id), note:display_name(), unpack(note.aliases) }
+          if note.title ~= nil then
+            table.insert(aliases, note.title)
+          end
+        end
+
         for alias in iter(aliases) do
           update_completion_options(alias)
           local alias_case_matched = util.match_case(search, alias)
@@ -185,7 +184,10 @@ source.complete = function(_, request, callback)
           elseif option.block then
             sort_label = sort_label .. option.block.id
           end
-          documentation = { kind = "markdown", value = note:display_info { label = label } }
+          documentation = {
+            kind = "markdown",
+            value = note:display_info { label = label, anchor = option.anchor, block = option.block },
+          }
         elseif option.anchor then
           -- In buffer anchor link.
           -- TODO: allow users to customize this?

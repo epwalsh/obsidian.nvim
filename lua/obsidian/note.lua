@@ -26,6 +26,7 @@ local DEFAULT_MAX_LINES = 500
 ---
 ---@field id string
 ---@field line integer
+---@field block string
 
 --- A class that represents a note within a vault.
 ---
@@ -82,7 +83,7 @@ end
 
 --- Get markdown display info about the note.
 ---
----@param opts { label: string|? }|?
+---@param opts { label: string|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }|?
 ---
 ---@return string
 Note.display_info = function(self, opts)
@@ -106,6 +107,16 @@ Note.display_info = function(self, opts)
 
   if #self.tags > 0 then
     info[#info + 1] = ("**tags:** `#%s`"):format(table.concat(self.tags, "`, `#"))
+  end
+
+  if opts.anchor or opts.block then
+    info[#info + 1] = "--------"
+
+    if opts.anchor then
+      info[#info + 1] = ("...\n%s %s\n..."):format(string.rep("#", opts.anchor.level), opts.anchor.header)
+    elseif opts.block then
+      info[#info + 1] = ("...\n%s\n..."):format(opts.block.block)
+    end
   end
 
   return table.concat(info, "\n")
@@ -427,7 +438,7 @@ Note.from_lines = function(lines, path, opts)
       if opts.collect_blocks then
         local block = util.parse_block(line)
         if block then
-          blocks[block] = { id = block, line = line_idx }
+          blocks[block] = { id = block, line = line_idx, block = line }
         end
       end
     end

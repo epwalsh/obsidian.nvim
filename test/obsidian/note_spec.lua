@@ -107,11 +107,13 @@ describe("Note.from_file()", function()
     assert.are_same({
       id = "^1234",
       line = 5,
+      block = "This is a block ^1234",
     }, note.blocks["^1234"])
 
     assert.are_same({
       id = "^hello-world",
       line = 7,
+      block = "And another block ^hello-world",
     }, note.blocks["^hello-world"])
   end)
 
@@ -122,11 +124,13 @@ describe("Note.from_file()", function()
     assert.are_same({
       id = "^1234",
       line = 5,
+      block = "This is a block ^1234",
     }, note:resolve_block "^1234")
 
     assert.are_same({
       id = "^1234",
       line = 5,
+      block = "This is a block ^1234",
     }, note:resolve_block "#^1234")
   end)
 
