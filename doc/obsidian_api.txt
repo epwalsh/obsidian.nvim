@@ -613,7 +613,7 @@ Create a formatted markdown / wiki link for a note.
 
 Parameters ~
 {note} `(obsidian.Note|obsidian.Path|string)` The note/path to link to.
-{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|? }|? Options.
+{opts} { label: `(string|?,)` link_style: obsidian.config.LinkStyle|?, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }|? Options.
 
 Return ~
 `(string)`
@@ -641,6 +641,14 @@ Fields ~
 {parent} obsidian.note.HeaderAnchor|?
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.note.Block}
+
+Fields ~
+{id} `(string)`
+{line} `(integer)`
+
+------------------------------------------------------------------------------
                                                                  *obsidian.Note*
                                      `Note`
 A class that represents a note within a vault.
@@ -659,6 +667,7 @@ Fields ~
 {frontmatter_end_line} `(integer|?)`
 {contents} `(string[]|?)`
 {anchor_links} `(table<string, obsidian.note.HeaderAnchor>|?)`
+{blocks} `(table<string, obsidian.note.Block>?)`
 
 ------------------------------------------------------------------------------
                                                            *obsidian.Note.new()*
@@ -774,6 +783,7 @@ Fields ~
 {max_lines} `(integer|?)`
 {load_contents} `(boolean|?)`
 {collect_anchor_links} `(boolean|?)`
+{collect_blocks} `(boolean|?)`
 
 ------------------------------------------------------------------------------
                                                      *obsidian.Note.from_file()*
@@ -903,6 +913,17 @@ Parameters ~
 {anchor_link} `(string)`
 Return ~
 obsidian.note.HeaderAnchor| `(optional)`
+
+------------------------------------------------------------------------------
+                                                 *obsidian.Note.resolve_block()*
+                    `Note.resolve_block`({self}, {block_id})
+Try to resolve a block identifier.
+
+Parameters ~
+{block_id} `(string)`
+
+Return ~
+obsidian.note.Block| `(optional)`
 
 ------------------------------------------------------------------------------
 Class ~
