@@ -463,6 +463,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     reference_text = { hl_group = "ObsidianRefText" },
     highlight_text = { hl_group = "ObsidianHighlightText" },
     tags = { hl_group = "ObsidianTag" },
+    block_ids = { hl_group = "ObsidianBlockID" },
     hl_groups = {
       -- The options are passed directly to `vim.api.nvim_set_hl()`. See `:help nvim_set_hl`.
       ObsidianTodo = { bold = true, fg = "#f78c6c" },
@@ -473,6 +474,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
       ObsidianTag = { italic = true, fg = "#89ddff" },
+      ObsidianBlockID = { italic = true, fg = "#89ddff" },
       ObsidianHighlightText = { bg = "#75662e" },
     },
   },

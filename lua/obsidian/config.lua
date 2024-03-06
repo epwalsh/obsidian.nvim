@@ -387,6 +387,7 @@ end
 ---@field reference_text obsidian.config.UIStyleSpec
 ---@field highlight_text obsidian.config.UIStyleSpec
 ---@field tags obsidian.config.UIStyleSpec
+---@field block_ids obsidian.config.UIStyleSpec
 ---@field hl_groups table{string, table}
 config.UIOpts = {}
 
@@ -415,6 +416,7 @@ config.UIOpts.default = function()
     reference_text = { hl_group = "ObsidianRefText" },
     highlight_text = { hl_group = "ObsidianHighlightText" },
     tags = { hl_group = "ObsidianTag" },
+    block_ids = { hl_group = "ObsidianBlockID" },
     hl_groups = {
       ObsidianTodo = { bold = true, fg = "#f78c6c" },
       ObsidianDone = { bold = true, fg = "#89ddff" },
@@ -424,6 +426,7 @@ config.UIOpts.default = function()
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
       ObsidianTag = { italic = true, fg = "#89ddff" },
+      ObsidianBlockID = { italic = true, fg = "#89ddff" },
       ObsidianHighlightText = { bg = "#75662e" },
     },
   }

@@ -21,6 +21,7 @@ M.RefTypes = {
   NakedUrl = "NakedUrl",
   FileUrl = "FileUrl",
   Tag = "Tag",
+  BlockID = "BlockID",
   Highlight = "Highlight",
 }
 
@@ -40,6 +41,7 @@ M.Patterns = {
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:%%-]+[a-zA-Z0-9/]", -- https://xyz.com
   FileUrl = "file:/[/{2}]?.*", -- file:///
+  BlockID = util.BLOCK_PATTERN .. "$", -- ^hello-world
 }
 
 ---@type table<obsidian.search.RefTypes, { ignore_if_escape_prefix: boolean|? }>
@@ -141,6 +143,7 @@ end
 ---@field include_naked_urls boolean|?
 ---@field include_tags boolean|?
 ---@field include_file_urls boolean|?
+---@field include_block_ids boolean|?
 
 --- Find refs and URLs.
 ---@param s string the string to search
@@ -159,6 +162,9 @@ M.find_refs = function(s, opts)
   end
   if opts.include_file_urls then
     pattern_names[#pattern_names + 1] = M.RefTypes.FileUrl
+  end
+  if opts.include_block_ids then
+    pattern_names[#pattern_names + 1] = M.RefTypes.BlockID
   end
 
   return M.find_matches(s, pattern_names)
