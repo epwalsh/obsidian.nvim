@@ -480,17 +480,8 @@ Client.find_notes_async = function(self, term, callback, opts)
 
   async.run(function()
     executor:map(task_fn, next_path, function(results)
-      -- Check for errors.
-      if first_err ~= nil and first_err_path ~= nil then
-        log.err(
-          "%d error(s) occurred during search. First error from note at '%s':\n%s",
-          err_count,
-          first_err_path,
-          first_err
-        )
-      end
-
       -- Filter out error results (nils), and unpack the ok results.
+      ---@type obsidian.Note[]
       local results_ = {}
       for res in iter(results) do
         if res[1] ~= nil then
@@ -502,6 +493,31 @@ Client.find_notes_async = function(self, term, callback, opts)
       table.sort(results_, function(a, b)
         return paths[tostring(a.path)] < paths[tostring(b.path)]
       end)
+
+      -- At this point if there aren't any results, check for datetime macros.
+      if #results_ == 0 and string.len(term) > 0 then
+        for _, dt_offset in ipairs(util.resolve_date_macro(term)) do
+          if dt_offset.cadence == "daily" then
+            local path = self:daily_note_path(os.time() + dt_offset.offset)
+            if path:is_file() then
+              local note = task_fn(path)
+              if note ~= nil then
+                results_[#results_ + 1] = note
+              end
+            end
+          end
+        end
+      end
+
+      -- Check for errors.
+      if first_err ~= nil and first_err_path ~= nil then
+        log.err(
+          "%d error(s) occurred during search. First error from note at '%s':\n%s",
+          err_count,
+          first_err_path,
+          first_err
+        )
+      end
 
       -- Execute callback.
       callback(results_)

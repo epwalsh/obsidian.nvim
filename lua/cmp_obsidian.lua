@@ -156,7 +156,7 @@ source.complete = function(_, request, callback)
       end
 
       ---@type table<string, boolean>
-      local labels_seen = {}
+      local new_text_seen = {}
       for option in iter(completion_options) do
         ---@type obsidian.config.LinkStyle
         local link_style
@@ -169,60 +169,78 @@ source.complete = function(_, request, callback)
         end
 
         ---@type string, string
-        local label, sort_label
+        local sort_text, new_text
         ---@type table|?
         local documentation = nil
 
         if option.label then
-          label = client:format_link(
+          new_text = client:format_link(
             note,
             { label = option.label, link_style = link_style, anchor = option.anchor, block = option.block }
           )
-          sort_label = option.label
+
+          sort_text = option.label
           if option.anchor then
-            sort_label = sort_label .. option.anchor.anchor
+            sort_text = sort_text .. option.anchor.anchor
           elseif option.block then
-            sort_label = sort_label .. option.block.id
+            sort_text = sort_text .. "#" .. option.block.id
           end
+
           documentation = {
             kind = "markdown",
-            value = note:display_info { label = label, anchor = option.anchor, block = option.block },
+            value = note:display_info {
+              label = new_text,
+              anchor = option.anchor,
+              block = option.block,
+            },
           }
         elseif option.anchor then
           -- In buffer anchor link.
           -- TODO: allow users to customize this?
           if ref_type == completion.RefType.Wiki then
-            label = "[[#" .. option.anchor.header .. "]]"
+            new_text = "[[#" .. option.anchor.header .. "]]"
           elseif ref_type == completion.RefType.Markdown then
-            label = "[#" .. option.anchor.header .. "](" .. option.anchor.anchor .. ")"
+            new_text = "[#" .. option.anchor.header .. "](" .. option.anchor.anchor .. ")"
           else
             error "not implemented"
           end
-          sort_label = option.anchor.anchor
+
+          sort_text = option.anchor.anchor
+
+          documentation = {
+            kind = "markdown",
+            value = string.format("`%s`", new_text),
+          }
         elseif option.block then
           -- In buffer block link.
           -- TODO: allow users to customize this?
           if ref_type == completion.RefType.Wiki then
-            label = "[[#" .. option.block.id .. "]]"
+            new_text = "[[#" .. option.block.id .. "]]"
           elseif ref_type == completion.RefType.Markdown then
-            label = "[#" .. option.block.id .. "](" .. option.block.id .. ")"
+            new_text = "[#" .. option.block.id .. "](#" .. option.block.id .. ")"
           else
             error "not implemented"
           end
-          sort_label = option.block.id
+
+          sort_text = "#" .. option.block.id
+
+          documentation = {
+            kind = "markdown",
+            value = string.format("`%s`", new_text),
+          }
         else
           error "should not happen"
         end
 
-        if not labels_seen[label] then
-          labels_seen[label] = true
+        if not new_text_seen[new_text] then
+          new_text_seen[new_text] = true
 
           ---@type string
-          local sort_text
+          local label
           if ref_type == completion.RefType.Wiki then
-            sort_text = "[[" .. sort_label
+            label = string.format("[[%s]]", sort_text)
           elseif ref_type == completion.RefType.Markdown then
-            sort_text = "[" .. sort_label
+            label = string.format("[%s](…)", sort_text)
           else
             error "not implemented"
           end
@@ -233,7 +251,7 @@ source.complete = function(_, request, callback)
             label = label,
             kind = 18, -- "Reference"
             textEdit = {
-              newText = label,
+              newText = new_text,
               range = {
                 start = {
                   line = request.context.cursor.row - 1,

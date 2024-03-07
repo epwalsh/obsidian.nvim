@@ -54,6 +54,14 @@ source.complete = function(_, request, callback)
     return
   end
 
+  -- Create a mock block.
+  ---@type obsidian.note.Block|?
+  local block
+  if block_link then
+    block = { block = "", id = util.standardize_block(block_link), line = 1 }
+  end
+
+  -- Create a mock anchor.
   ---@type obsidian.note.HeaderAnchor|?
   local anchor
   if anchor_link then
@@ -68,7 +76,7 @@ source.complete = function(_, request, callback)
 
   assert(new_note.path)
 
-  ---@type obsidian.config.LinkStyle, string, string
+  ---@type obsidian.config.LinkStyle, string
   local link_style, sort_text
   if ref_type == completion.RefType.Wiki then
     link_style = LinkStyle.wiki
@@ -80,11 +88,18 @@ source.complete = function(_, request, callback)
     error "not implemented"
   end
 
-  local new_text = client:format_link(new_note, { link_style = link_style, anchor = anchor })
+  local new_text = client:format_link(new_note, { link_style = link_style, anchor = anchor, block = block })
   local label = "Create: " .. new_text
+  local documentation = {
+    kind = "markdown",
+    value = new_note:display_info {
+      label = new_text,
+    },
+  }
 
   local items = {
     {
+      documentation = documentation,
       sortText = sort_text,
       label = label,
       kind = 18,

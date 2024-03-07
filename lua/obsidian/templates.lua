@@ -1,5 +1,4 @@
 local Path = require "obsidian.path"
-local log = require "obsidian.log"
 local util = require "obsidian.util"
 
 local M = {}
