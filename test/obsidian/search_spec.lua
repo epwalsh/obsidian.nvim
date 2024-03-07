@@ -52,6 +52,13 @@ describe("search.find_refs()", function()
       .. "just `[` for markdown links), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep)"
     assert.are_same({ { 1, 47, RefTypes.Markdown }, { 134, 183, RefTypes.Markdown } }, search.find_refs(s))
   end)
+
+  it("should find block IDs at the end of a line", function()
+    assert.are_same(
+      { { 14, 25, RefTypes.BlockID } },
+      search.find_refs("Hello World! ^hello-world", { include_block_ids = true })
+    )
+  end)
 end)
 
 describe("search.find_tags()", function()

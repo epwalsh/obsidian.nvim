@@ -1705,19 +1705,26 @@ Client._daily = function(self, datetime)
     alias = tostring(os.date("%B %-d, %Y", datetime))
   end
 
-  -- Create Note object and save if it doesn't already exist.
-  local note = Note.new(id, { alias }, { "daily-notes" }, path)
-  note.title = alias
-
-  if not note:exists() then
+  ---@type obsidian.Note
+  local note
+  if path:exists() then
+    note = Note.from_file(path)
+  else
     local write_frontmatter = true
+
     if self.opts.daily_notes.template then
-      templates.clone_template(self.opts.daily_notes.template, path, self, note:display_name())
+      templates.clone_template(self.opts.daily_notes.template, path, self, alias)
       note = Note.from_file(path)
       if note.has_frontmatter then
         write_frontmatter = false
       end
+    else
+      note = Note.new(id, {}, {}, path)
     end
+
+    note.aliases = { alias }
+    note.tags = { "daily-notes" }
+    note.title = alias
 
     if write_frontmatter then
       local frontmatter = nil

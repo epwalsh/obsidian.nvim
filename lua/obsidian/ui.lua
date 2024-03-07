@@ -229,7 +229,7 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
 local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
-  local matches = search.find_refs(line, { include_naked_urls = true, include_tags = true })
+  local matches = search.find_refs(line, { include_naked_urls = true, include_tags = true, include_block_ids = true })
   for match in iter(matches) do
     local m_start, m_end, m_type = unpack(match)
     if m_type == search.RefTypes.WikiWithAlias then
@@ -406,6 +406,19 @@ local function get_line_ref_extmarks(marks, line, lnum, ui_opts)
           end_row = lnum,
           end_col = m_end,
           hl_group = ui_opts.tags.hl_group,
+          spell = false,
+        }
+      )
+    elseif m_type == search.RefTypes.BlockID then
+      -- A block ID, like '^hello-world'
+      marks[#marks + 1] = ExtMark.new(
+        nil,
+        lnum,
+        m_start - 1,
+        ExtMarkOpts.from_tbl {
+          end_row = lnum,
+          end_col = m_end,
+          hl_group = ui_opts.block_ids.hl_group,
           spell = false,
         }
       )

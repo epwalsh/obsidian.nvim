@@ -76,6 +76,7 @@ Full changelog below 👇
 
 ### Fixed
 
+- Fixed consistency in frontmatter between opening daily notes with or without a template
 - Fixed issue with `:ObsidianOpen` on windows.
 - Respect telescope.nvim themes configured by user.
 - Make tags completion more efficient (less CPU time!).
