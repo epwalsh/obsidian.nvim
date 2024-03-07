@@ -532,10 +532,11 @@ Write the note to disk.
 
 Parameters ~
 {note} obsidian.Note
-{opts} { path: `(string|obsidian.Path,)` update_content: (fun(lines: string[]): string[])|? }|? Options.
+{opts} { path: `(string|obsidian.Path,)` template: string|?, update_content: (fun(lines: string[]): string[])|? }|? Options.
 
 Options:
  - `path`: Override the path to write to.
+ - `template`: The name of a template to use if the note file doesn't already exist.
  - `update_content`: A function to update the contents of the note. This takes a list of lines
    representing the text to be written excluding frontmatter, and returns the lines that will
    actually be written (again excluding frontmatter).
@@ -589,11 +590,12 @@ obsidian.Note
 
 ------------------------------------------------------------------------------
                                                        *obsidian.Client.daily()*
-                     `Client.daily`({self}, {offset_days})
+                 `Client.daily`({self}, {offset_days}, {opts})
 Open (or create) the daily note for today + `offset_days`.
 
 Parameters ~
 {offset_days} `(integer|?)`
+{opts} { no_write: `(boolean|?,)` load: obsidian.note.LoadOpts|? }|?
 
 Return ~
 obsidian.Note
@@ -669,6 +671,7 @@ Fields ~
 {contents} `(string[]|?)`
 {anchor_links} `(table<string, obsidian.note.HeaderAnchor>|?)`
 {blocks} `(table<string, obsidian.note.Block>?)`
+{alt_alias} `(string|?)`
 
 ------------------------------------------------------------------------------
                                                            *obsidian.Note.new()*
