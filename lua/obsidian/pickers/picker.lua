@@ -337,7 +337,7 @@ Picker._note_selection_mappings = function(self)
         if Note.is_note_obj(note_or_path) then
           note = note_or_path
         else
-          Note.from_file(note_or_path)
+          note = Note.from_file(note_or_path)
         end
         local link = self.client:format_link(note, {})
         vim.api.nvim_put({ link }, "", false, true)
