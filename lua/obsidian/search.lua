@@ -395,8 +395,10 @@ M.build_find_cmd = function(path, term, opts)
   if term ~= nil then
     if opts.include_non_markdown then
       term = "*" .. term .. "*"
-    else
+    elseif not vim.endswith(term, ".md") then
       term = "*" .. term .. "*.md"
+    else
+      term = "*" .. term
     end
     additional_opts[#additional_opts + 1] = "-g"
     additional_opts[#additional_opts + 1] = term

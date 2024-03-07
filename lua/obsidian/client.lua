@@ -619,7 +619,11 @@ Client.resolve_note_async = function(self, query, callback, opts)
     local query_lwr = string.lower(query)
     local maybe_matches = {}
     for note in iter(results) do
-      if query_lwr == string.lower(tostring(note.id)) or query_lwr == string.lower(note:display_name()) then
+      if
+        query_lwr == string.lower(tostring(note.id))
+        or query_lwr == string.lower(note:display_name())
+        or query == note.path.name
+      then
         table.insert(maybe_matches, note)
       else
         for alias in iter(note.aliases) do

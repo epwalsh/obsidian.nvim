@@ -82,7 +82,8 @@ Full changelog below 👇
 - Make tags completion more efficient (less CPU time!).
 - Added file/directory completion to image name prompt from `:ObsidianPasteImg`.
 - Handle prompt cancellation gracefully.
-- Fix lua diagnostic warnings about missing fields in the configuration
+- Fix lua diagnostic warnings about missing fields in the configuration.
+- Made `Client:resolve_note()` more robust to when the search term is a file name.
 
 ## [v3.6.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.6.1) - 2024-02-28
 
