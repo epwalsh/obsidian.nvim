@@ -458,12 +458,14 @@ Client.find_notes_async = function(self, term, callback, opts)
   local first_err
   local first_err_path
 
+  ---@param path obsidian.Path
   local function task_fn(path)
     if paths[tostring(path)] then
       return nil
     end
 
     local ok, res = pcall(Note.from_file_async, path, opts.notes)
+
     if ok then
       num_results = num_results + 1
       paths[tostring(path)] = num_results
@@ -494,16 +496,14 @@ Client.find_notes_async = function(self, term, callback, opts)
         return paths[tostring(a.path)] < paths[tostring(b.path)]
       end)
 
-      -- At this point if there aren't any results, check for datetime macros.
-      if #results_ == 0 and string.len(term) > 0 then
+      -- Check for datetime macros.
+      if string.len(term) > 0 then
         for _, dt_offset in ipairs(util.resolve_date_macro(term)) do
           if dt_offset.cadence == "daily" then
-            local path = self:daily_note_path(os.time() + dt_offset.offset)
-            if path:is_file() then
-              local note = task_fn(path)
-              if note ~= nil then
-                results_[#results_ + 1] = note
-              end
+            local note = self:daily(dt_offset.offset, { no_write = true, load = opts.notes })
+            if not paths[tostring(note.path)] and note.path:is_file() then
+              note.alt_alias = dt_offset.macro
+              results_[#results_ + 1] = note
             end
           end
         end
@@ -1629,24 +1629,35 @@ end
 --- Write the note to disk.
 ---
 ---@param note obsidian.Note
----@param opts { path: string|obsidian.Path, update_content: (fun(lines: string[]): string[])|? }|? Options.
+---@param opts { path: string|obsidian.Path, template: string|?, update_content: (fun(lines: string[]): string[])|? }|? Options.
 ---
 --- Options:
 ---  - `path`: Override the path to write to.
+---  - `template`: The name of a template to use if the note file doesn't already exist.
 ---  - `update_content`: A function to update the contents of the note. This takes a list of lines
 ---    representing the text to be written excluding frontmatter, and returns the lines that will
 ---    actually be written (again excluding frontmatter).
 Client.write_note = function(self, note, opts)
   opts = opts or {}
+
   local path = assert(opts.path or note.path, "A path must be provided")
   path = Path.new(path)
+
+  ---@type string
+  local verb
+  if path:is_file() then
+    verb = "Updated"
+  else
+    verb = "Created"
+    if opts.template ~= nil then
+      require("obsidian.templates").clone_template(opts.template, path, self, note.title or note:display_name())
+    end
+  end
 
   local frontmatter = nil
   if self.opts.note_frontmatter_func ~= nil then
     frontmatter = self.opts.note_frontmatter_func(note)
   end
-
-  local verb = path:is_file() and "Updated" or "Created"
 
   note:save {
     path = path,
@@ -1709,12 +1720,13 @@ end
 ---
 ---@param self obsidian.Client
 ---@param datetime integer
+---@param opts { no_write: boolean|?, load: obsidian.note.LoadOpts|? }|?
 ---
 ---@return obsidian.Note
 ---
 ---@private
-Client._daily = function(self, datetime)
-  local templates = require "obsidian.templates"
+Client._daily = function(self, datetime, opts)
+  opts = opts or {}
 
   local path, id = self:daily_note_path(datetime)
 
@@ -1728,33 +1740,13 @@ Client._daily = function(self, datetime)
   ---@type obsidian.Note
   local note
   if path:exists() then
-    note = Note.from_file(path)
+    note = Note.from_file(path, opts.load)
   else
-    local write_frontmatter = true
-
-    if self.opts.daily_notes.template then
-      templates.clone_template(self.opts.daily_notes.template, path, self, alias)
-      note = Note.from_file(path)
-      if note.has_frontmatter then
-        write_frontmatter = false
-      end
-    else
-      note = Note.new(id, {}, {}, path)
-    end
-
-    note.aliases = { alias }
-    note.tags = { "daily-notes" }
+    note = Note.new(id, { alias }, { "daily-notes" }, path)
     note.title = alias
-
-    if write_frontmatter then
-      local frontmatter = nil
-      if self.opts.note_frontmatter_func ~= nil then
-        frontmatter = self.opts.note_frontmatter_func(note)
-      end
-      note:save { insert_frontmatter = self:should_save_frontmatter(note), frontmatter = frontmatter }
+    if not opts.no_write then
+      self:write_note(note, { template = self.opts.daily_notes.template })
     end
-
-    log.info("Created daily note '%s' at '%s'", note.id, self:vault_relative_path(note.path) or note.path)
   end
 
   return note
@@ -1784,10 +1776,11 @@ end
 --- Open (or create) the daily note for today + `offset_days`.
 ---
 ---@param offset_days integer|?
+---@param opts { no_write: boolean|?, load: obsidian.note.LoadOpts|? }|?
 ---
 ---@return obsidian.Note
-Client.daily = function(self, offset_days)
-  return self:_daily(os.time() + (offset_days * 3600 * 24))
+Client.daily = function(self, offset_days, opts)
+  return self:_daily(os.time() + (offset_days * 3600 * 24), opts)
 end
 
 --- Manually update extmarks in a buffer.

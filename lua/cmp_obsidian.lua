@@ -100,30 +100,31 @@ source.complete = function(_, request, callback)
       end
 
       -- Transform aliases into completion options.
-      ---@type { label: string|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }[]
+      ---@type { label: string|?, alt_label: string|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }[]
       local completion_options = {}
 
-      ---@param option string|?
-      local function update_completion_options(option)
+      ---@param label string|?
+      ---@param alt_label string|?
+      local function update_completion_options(label, alt_label)
         if matching_anchors ~= nil then
           for anchor in iter(matching_anchors) do
-            table.insert(completion_options, { label = option, anchor = anchor })
+            table.insert(completion_options, { label = label, alt_label = alt_label, anchor = anchor })
           end
         elseif matching_blocks ~= nil then
           for block in iter(matching_blocks) do
-            table.insert(completion_options, { label = option, block = block })
+            table.insert(completion_options, { label = label, alt_label = alt_label, block = block })
           end
         else
-          if option then
-            table.insert(completion_options, { label = option })
+          if label then
+            table.insert(completion_options, { label = label, alt_label = alt_label })
           end
 
           -- Add all blocks and anchors, let cmp sort it out.
           for _, anchor_data in pairs(note.anchor_links) do
-            table.insert(completion_options, { label = option, anchor = anchor_data })
+            table.insert(completion_options, { label = label, alt_label = alt_label, anchor = anchor_data })
           end
           for _, block_data in pairs(note.blocks) do
-            table.insert(completion_options, { label = option, block = block_data })
+            table.insert(completion_options, { label = label, alt_label = alt_label, block = block_data })
           end
         end
       end
@@ -153,10 +154,18 @@ source.complete = function(_, request, callback)
             update_completion_options(alias_case_matched)
           end
         end
+
+        if note.alt_alias ~= nil then
+          update_completion_options(note:display_name(), note.alt_alias)
+        end
       end
 
+      -- Keep track of completion entries we've added so we don't have duplicates.
       ---@type table<string, boolean>
       local new_text_seen = {}
+      ---@type table<string, boolean>
+      local sort_text_seen = {}
+
       for option in iter(completion_options) do
         ---@type obsidian.config.LinkStyle
         local link_style
@@ -179,7 +188,7 @@ source.complete = function(_, request, callback)
             { label = option.label, link_style = link_style, anchor = option.anchor, block = option.block }
           )
 
-          sort_text = option.label
+          sort_text = option.alt_label or option.label
           if option.anchor then
             sort_text = sort_text .. option.anchor.anchor
           elseif option.block then
@@ -232,8 +241,9 @@ source.complete = function(_, request, callback)
           error "should not happen"
         end
 
-        if not new_text_seen[new_text] then
+        if not new_text_seen[new_text] or not sort_text_seen[sort_text] then
           new_text_seen[new_text] = true
+          sort_text_seen[sort_text] = true
 
           ---@type string
           local label

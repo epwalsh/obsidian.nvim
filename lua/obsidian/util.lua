@@ -1247,17 +1247,18 @@ end
 
 ---@alias datetime_cadence "daily"
 
---- Parse a relative date macro like '@tomorrow'.
+--- Parse possible relative date macros like '@tomorrow'.
 ---
 ---@param macro string
 ---
----@return { offset: integer, cadence: datetime_cadence }[]
+---@return { macro: string, offset: integer, cadence: datetime_cadence }[]
 util.resolve_date_macro = function(macro)
-  ---@type { offset: integer, cadence: datetime_cadence }[]
+  ---@type { macro: string, offset: integer, cadence: datetime_cadence }[]
   local out = {}
   for m, offset_days in pairs { today = 0, tomorrow = 1, yesterday = -1 } do
-    if vim.startswith("@" .. m, macro) then
-      out[#out + 1] = { offset = offset_days * 3600 * 24, cadence = "daily" }
+    m = "@" .. m
+    if vim.startswith(m, macro) then
+      out[#out + 1] = { macro = m, offset = offset_days, cadence = "daily" }
     end
   end
   return out

@@ -45,6 +45,7 @@ local DEFAULT_MAX_LINES = 500
 ---@field contents string[]|?
 ---@field anchor_links table<string, obsidian.note.HeaderAnchor>|?
 ---@field blocks table<string, obsidian.note.Block>?
+---@field alt_alias string|?
 local Note = abc.new_class {
   __tostring = function(self)
     return string.format("Note('%s')", self.id)
@@ -643,6 +644,9 @@ Note.save = function(self, opts)
     error "a path is required"
   end
 
+  local save_path = Path.new(assert(opts.path or self.path)):resolve()
+  assert(save_path:parent()):mkdir { parents = true, exist_ok = true }
+
   -- Read contents from existing file, if there is one, skipping frontmatter.
   -- TODO: check for open buffer?
   ---@type string[]
@@ -684,9 +688,6 @@ Note.save = function(self, opts)
   else
     new_lines = content
   end
-
-  local save_path = Path.new(assert(opts.path or self.path)):resolve()
-  assert(save_path:parent()):mkdir { parents = true, exist_ok = true }
 
   -- Write new lines.
   with(open(tostring(save_path), "w"), function(writer)

@@ -68,39 +68,56 @@ source.complete = function(_, request, callback)
     anchor = { anchor = anchor_link, header = string.sub(anchor_link, 2), level = 1, line = 1 }
   end
 
-  local new_note = client:create_note { title = search, no_write = true }
+  ---@type { label: string, note: obsidian.Note, template: string|? }[]
+  local new_notes_opts = {}
 
-  if not new_note.title or string.len(new_note.title) == 0 then
-    return
+  local note = client:create_note { title = search, no_write = true }
+  if note.title and string.len(note.title) > 0 then
+    new_notes_opts[#new_notes_opts + 1] = { label = search, note = note }
   end
 
-  assert(new_note.path)
-
-  ---@type obsidian.config.LinkStyle, string
-  local link_style, sort_text
-  if ref_type == completion.RefType.Wiki then
-    link_style = LinkStyle.wiki
-    sort_text = "[[" .. search
-  elseif ref_type == completion.RefType.Markdown then
-    link_style = LinkStyle.markdown
-    sort_text = "[" .. search
-  else
-    error "not implemented"
+  -- Check for datetime macros.
+  for _, dt_offset in ipairs(util.resolve_date_macro(search)) do
+    if dt_offset.cadence == "daily" then
+      note = client:daily(dt_offset.offset, { no_write = true })
+      if not note:exists() then
+        new_notes_opts[#new_notes_opts + 1] =
+          { label = dt_offset.macro, note = note, template = client.opts.daily_notes.template }
+      end
+    end
   end
 
-  local new_text = client:format_link(new_note, { link_style = link_style, anchor = anchor, block = block })
-  local label = "Create: " .. new_text
-  local documentation = {
-    kind = "markdown",
-    value = new_note:display_info {
-      label = new_text,
-    },
-  }
+  -- Completion items.
+  local items = {}
 
-  local items = {
-    {
+  for _, new_note_opts in ipairs(new_notes_opts) do
+    local new_note = new_note_opts.note
+
+    assert(new_note.path)
+
+    ---@type obsidian.config.LinkStyle, string
+    local link_style, label
+    if ref_type == completion.RefType.Wiki then
+      link_style = LinkStyle.wiki
+      label = string.format("[[%s]] (create)", new_note_opts.label)
+    elseif ref_type == completion.RefType.Markdown then
+      link_style = LinkStyle.markdown
+      label = string.format("[%s](…) (create)", new_note_opts.label)
+    else
+      error "not implemented"
+    end
+
+    local new_text = client:format_link(new_note, { link_style = link_style, anchor = anchor, block = block })
+    local documentation = {
+      kind = "markdown",
+      value = new_note:display_info {
+        label = "Create: " .. new_text,
+      },
+    }
+
+    items[#items + 1] = {
       documentation = documentation,
-      sortText = sort_text,
+      sortText = new_note_opts.label,
       label = label,
       kind = 18,
       textEdit = {
@@ -118,9 +135,10 @@ source.complete = function(_, request, callback)
       },
       data = {
         note = new_note,
+        template = new_note_opts.template,
       },
-    },
-  }
+    }
+  end
 
   return callback {
     items = items,
@@ -131,7 +149,7 @@ end
 source.execute = function(_, item, callback)
   local client = assert(obsidian.get_client())
   local data = item.data
-  client:write_note(data.note)
+  client:write_note(data.note, { template = data.template })
   return callback {}
 end
 
