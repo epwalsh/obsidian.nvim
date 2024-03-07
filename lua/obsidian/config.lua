@@ -28,7 +28,7 @@ local config = {}
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
 ---@field open_notes_in obsidian.config.OpenStrategy
----@field ui obsidian.config.UIOpts
+---@field ui obsidian.config.UIOpts | table<string, any>
 ---@field attachments obsidian.config.AttachmentsOpts
 ---@field callbacks obsidian.config.CallbackConfig
 config.ClientOpts = {}
@@ -381,14 +381,14 @@ end
 ---
 ---@field enable boolean
 ---@field update_debounce integer
----@field checkboxes table{string, obsidian.config.UICharSpec}
+---@field checkboxes table<string, obsidian.config.UICharSpec>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
 ---@field reference_text obsidian.config.UIStyleSpec
 ---@field highlight_text obsidian.config.UIStyleSpec
 ---@field tags obsidian.config.UIStyleSpec
 ---@field block_ids obsidian.config.UIStyleSpec
----@field hl_groups table{string, table}
+---@field hl_groups table<string, table>
 config.UIOpts = {}
 
 ---@class obsidian.config.UICharSpec
