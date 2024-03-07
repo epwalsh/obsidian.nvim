@@ -87,7 +87,7 @@ end
 
 --- Setup a new Obsidian client. This should only be called once from an Nvim session.
 ---
----@param opts obsidian.config.ClientOpts
+---@param opts obsidian.config.ClientOpts | table<string, any>
 ---
 ---@return obsidian.Client
 obsidian.setup = function(opts)
