@@ -58,8 +58,7 @@ end
 M.clone_template = function(template_name, note_path, client, title)
   local templates_dir = client:templates_dir()
   if templates_dir == nil then
-    log.err "Templates folder is not defined or does not exist"
-    return
+    error "Templates folder is not defined or does not exist"
   end
 
   assert(note_path:parent()):mkdir { parents = true, exist_ok = true }
@@ -67,12 +66,12 @@ M.clone_template = function(template_name, note_path, client, title)
   local template_path = Path:new(templates_dir) / template_name
   local template_file = io.open(tostring(template_path), "r")
   if not template_file then
-    return log.error("Unable to read template at '%s'", template_path)
+    error(string.format("Unable to read template at '%s'", template_path))
   end
 
   local note_file = io.open(tostring(note_path), "wb")
   if not note_file then
-    return log.error("Unable to write note at '%s'", note_path)
+    error(string.format("Unable to write note at '%s'", note_path))
   end
 
   for line in template_file:lines "L" do
@@ -91,9 +90,9 @@ end
 M.insert_template = function(name, client, location)
   local templates_dir = client:templates_dir()
   if templates_dir == nil then
-    log.err "Templates folder is not defined or does not exist"
-    return
+    error "Templates folder is not defined or does not exist"
   end
+
   local buf, win, row, _ = unpack(location)
   local title = require("obsidian.note").from_buffer(buf):display_name()
 
@@ -114,8 +113,7 @@ M.insert_template = function(name, client, location)
   end
 
   if template_path == nil then
-    log.err("Template '%s' not found", name)
-    return
+    error(string.format("Template '%s' not found", name))
   end
 
   local insert_lines = {}
@@ -141,8 +139,7 @@ M.insert_template = function(name, client, location)
     end
     template_file:close()
   else
-    log.err("Template file '%s' not found", template_path)
-    return
+    error(string.format("Template file '%s' not found", template_path))
   end
 
   vim.api.nvim_buf_set_lines(buf, row, row, false, insert_lines)
