@@ -688,6 +688,7 @@ Fields ~
 {anchor_links} `(table<string, obsidian.note.HeaderAnchor>|?)`
 {blocks} `(table<string, obsidian.note.Block>?)`
 {alt_alias} `(string|?)`
+{bufnr} `(integer|?)`
 
 ------------------------------------------------------------------------------
                                                            *obsidian.Note.new()*
