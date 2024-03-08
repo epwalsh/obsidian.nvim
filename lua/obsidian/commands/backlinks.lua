@@ -11,7 +11,13 @@ local function collect_backlinks(client, picker, note, opts)
 
   client:find_backlinks_async(note, function(backlinks)
     if vim.tbl_isempty(backlinks) then
-      log.info "No backlinks found"
+      if opts.anchor then
+        log.info("No backlinks found for anchor '%s' in note '%s'", opts.anchor, note.id)
+      elseif opts.block then
+        log.info("No backlinks found for block '%s' in note '%s'", opts.block, note.id)
+      else
+        log.info("No backlinks found for note '%s'", note.id)
+      end
       return
     end
 
@@ -92,12 +98,25 @@ return function(client)
       end
     end)
   else
+    ---@type { anchor: string|?, block: string|? }
     local opts = {}
+    ---@type obsidian.note.LoadOpts
+    local load_opts = {}
+
     if ref_type == RefTypes.BlockID then
       opts.block = location
+    else
+      load_opts.collect_anchor_links = true
     end
 
-    local note = client:current_note()
+    local note = client:current_note(0, load_opts)
+
+    -- Check if cursor is on a header, if so, use that anchor.
+    local header_match = util.parse_header(vim.api.nvim_get_current_line())
+    if header_match then
+      opts.anchor = header_match.anchor
+    end
+
     if note == nil then
       log.err "Current buffer does not appear to be a note inside the vault"
     else
