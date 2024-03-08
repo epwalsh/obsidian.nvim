@@ -419,6 +419,10 @@ Picker._build_prompt = function(self, opts)
 
   ---@type string
   local prompt = opts.prompt_title or "Find"
+  if string.len(prompt) > 50 then
+    prompt = string.sub(prompt, 1, 50) .. "…"
+  end
+
   prompt = prompt .. " | <CR> confirm"
 
   if opts.query_mappings then

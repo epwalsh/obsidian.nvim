@@ -32,9 +32,19 @@ local function collect_backlinks(client, picker, note, opts)
       end
     end
 
+    ---@type string
+    local prompt_title
+    if opts.anchor then
+      prompt_title = string.format("Backlinks to '%s%s'", note.id, opts.anchor)
+    elseif opts.block then
+      prompt_title = string.format("Backlinks to '%s#%s'", note.id, util.standardize_block(opts.block))
+    else
+      prompt_title = string.format("Backlinks to '%s'", note.id)
+    end
+
     vim.schedule(function()
       picker:pick(entries, {
-        prompt_title = "Backlinks",
+        prompt_title = prompt_title,
         callback = function(value)
           util.open_buffer(value.path, { line = value.line })
         end,

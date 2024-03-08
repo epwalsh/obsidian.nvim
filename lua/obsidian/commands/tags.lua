@@ -34,7 +34,7 @@ local function gather_tag_picker_list(client, picker, tags)
 
     vim.schedule(function()
       picker:pick(entries, {
-        prompt_title = "Tag Locations",
+        prompt_title = "#" .. table.concat(tags, ", #"),
         callback = function(value)
           util.open_buffer(value.path, { line = value.line, col = value.col })
         end,
