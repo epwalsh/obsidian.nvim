@@ -45,9 +45,14 @@ return function(client)
     return
   end
 
-  local location, _, ref_type = util.parse_cursor_link()
+  local location, _, ref_type = util.parse_cursor_link { include_block_ids = true }
 
-  if location ~= nil and ref_type ~= RefTypes.NakedUrl and ref_type ~= RefTypes.FileUrl then
+  if
+    location ~= nil
+    and ref_type ~= RefTypes.NakedUrl
+    and ref_type ~= RefTypes.FileUrl
+    and ref_type ~= RefTypes.BlockID
+  then
     -- Remove block links from the end if there are any.
     -- TODO: handle block links.
     ---@type string|?
@@ -87,11 +92,16 @@ return function(client)
       end
     end)
   else
+    local opts = {}
+    if ref_type == RefTypes.BlockID then
+      opts.block = location
+    end
+
     local note = client:current_note()
     if note == nil then
       log.err "Current buffer does not appear to be a note inside the vault"
     else
-      collect_backlinks(client, picker, note)
+      collect_backlinks(client, picker, note, opts)
     end
   end
 end

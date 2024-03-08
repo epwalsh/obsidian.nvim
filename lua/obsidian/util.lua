@@ -572,8 +572,9 @@ end
 ---@param col  integer|nil - column to check or current column if nil (1-indexed)
 ---@param include_naked_urls boolean|?
 ---@param include_file_urls boolean|?
+---@param include_block_ids boolean|?
 ---@return integer|nil, integer|nil, obsidian.search.RefTypes|? - start and end column of link (1-indexed)
-util.cursor_on_markdown_link = function(line, col, include_naked_urls, include_file_urls)
+util.cursor_on_markdown_link = function(line, col, include_naked_urls, include_file_urls, include_block_ids)
   local search = require "obsidian.search"
 
   local current_line = line and line or vim.api.nvim_get_current_line()
@@ -581,9 +582,11 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls, include_f
   cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
   for match in
-    iter(
-      search.find_refs(current_line, { include_naked_urls = include_naked_urls, include_file_urls = include_file_urls })
-    )
+    iter(search.find_refs(current_line, {
+      include_naked_urls = include_naked_urls,
+      include_file_urls = include_file_urls,
+      include_block_ids = include_block_ids,
+    }))
   do
     local open, close, m_type = unpack(match)
     if open <= cur_col and cur_col <= close then
@@ -613,25 +616,35 @@ end
 
 --- Get the link location and name of the link under the cursor, if there is one.
 ---
----@param opts { line: string|?, col: integer|?, include_naked_urls: boolean|?, include_file_urls: boolean|? }|?
+---@param opts { line: string|?, col: integer|?, include_naked_urls: boolean|?, include_file_urls: boolean|?, include_block_ids: boolean|? }|?
 ---
 ---@return string|?, string|?, obsidian.search.RefTypes|?
 util.parse_cursor_link = function(opts)
   opts = opts and opts or {}
 
   local current_line = opts.line and opts.line or vim.api.nvim_get_current_line()
-  local open, close, link_type =
-    util.cursor_on_markdown_link(current_line, opts.col, opts.include_naked_urls, opts.include_file_urls)
+  local open, close, link_type = util.cursor_on_markdown_link(
+    current_line,
+    opts.col,
+    opts.include_naked_urls,
+    opts.include_file_urls,
+    opts.include_block_ids
+  )
   if open == nil or close == nil then
     return
   end
 
   local link = current_line:sub(open, close)
-  return util.parse_link(link, { link_type = link_type, include_naked_urls = opts.include_naked_urls })
+  return util.parse_link(link, {
+    link_type = link_type,
+    include_naked_urls = opts.include_naked_urls,
+    include_file_urls = opts.include_file_urls,
+    include_block_ids = opts.include_block_ids,
+  })
 end
 
 ---@param link string
----@param opts { include_naked_urls: boolean|?, include_file_urls: boolean|?, link_type: obsidian.search.RefTypes|? }|?
+---@param opts { include_naked_urls: boolean|?, include_file_urls: boolean|?, include_block_ids: boolean|?, link_type: obsidian.search.RefTypes|? }|?
 ---
 ---@return string|?, string|?, obsidian.search.RefTypes|?
 util.parse_link = function(link, opts)
@@ -642,12 +655,11 @@ util.parse_link = function(link, opts)
   local link_type = opts.link_type
   if link_type == nil then
     for match in
-      iter(
-        search.find_refs(
-          link,
-          { include_naked_urls = opts.include_naked_urls, include_file_urls = opts.include_file_urls }
-        )
-      )
+      iter(search.find_refs(link, {
+        include_naked_urls = opts.include_naked_urls,
+        include_file_urls = opts.include_file_urls,
+        include_block_ids = opts.include_block_ids,
+      }))
     do
       local _, _, m_type = unpack(match)
       if m_type then
@@ -683,6 +695,9 @@ util.parse_link = function(link, opts)
     -- remove boundary brackets, e.g. '[[YYY]]' -> 'YYY'
     link = link:sub(3, #link - 2)
     link_location = link
+    link_name = link
+  elseif link_type == search.RefTypes.BlockID then
+    link_location = util.standardize_block(link)
     link_name = link
   else
     error("not implemented for " .. link_type)
