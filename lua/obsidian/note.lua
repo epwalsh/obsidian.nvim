@@ -740,6 +740,7 @@ Note.resolve_anchor_link = function(self, anchor_link)
 
   assert(self.path, "'note.path' is not set")
   local n = Note.from_file(self.path, { collect_anchor_links = true })
+  self.anchor_links = n.anchor_links
   return n:resolve_anchor_link(anchor_link)
 end
 

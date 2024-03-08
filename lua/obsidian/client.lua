@@ -703,6 +703,8 @@ end
 ---@field url string|?
 ---@field line integer|?
 ---@field col integer|?
+---@field anchor obsidian.note.HeaderAnchor|?
+---@field block obsidian.note.Block|?
 
 --- Resolve a link. If the link argument is `nil` we attempt to resolve a link under the cursor.
 ---
@@ -767,20 +769,28 @@ Client.resolve_link_async = function(self, link, callback)
       local matches = {}
       for _, note in ipairs(notes) do
         -- Resolve block or anchor link to line.
-        local line
+        ---@type integer|?, obsidian.note.Block|?, obsidian.note.HeaderAnchor|?
+        local line, block_match, anchor_match
         if block_link ~= nil then
-          local block_match = note:resolve_block(block_link)
+          block_match = note:resolve_block(block_link)
           if block_match then
             line = block_match.line
           end
         elseif anchor_link ~= nil then
-          local anchor_match = note:resolve_anchor_link(anchor_link)
+          anchor_match = note:resolve_anchor_link(anchor_link)
           if anchor_match then
             line = anchor_match.line
           end
         end
 
-        table.insert(matches, vim.tbl_extend("force", res, { path = note.path, note = note, line = line }))
+        table.insert(
+          matches,
+          vim.tbl_extend(
+            "force",
+            res,
+            { path = note.path, note = note, line = line, block = block_match, anchor = anchor_match }
+          )
+        )
       end
 
       return callback(unpack(matches))
@@ -1180,13 +1190,13 @@ end
 --- Find all backlinks to a note.
 ---
 ---@param note obsidian.Note The note to find backlinks for.
----@param opts { search: obsidian.SearchOpts|?, timeout: integer|? }|?
+---@param opts { search: obsidian.SearchOpts|?, timeout: integer|?, anchor: string|?, block: string|? }|?
 ---
 ---@return obsidian.BacklinkMatches[]
 Client.find_backlinks = function(self, note, opts)
   opts = opts or {}
   return block_on(function(cb)
-    return self:find_backlinks_async(note, cb, { search = opts.search })
+    return self:find_backlinks_async(note, cb, { search = opts.search, anchor = opts.anchor, block = opts.block })
   end, opts.timeout)
 end
 
@@ -1194,9 +1204,19 @@ end
 ---
 ---@param note obsidian.Note The note to find backlinks for.
 ---@param callback fun(backlinks: obsidian.BacklinkMatches[])
----@param opts { search: obsidian.SearchOpts }|?
+---@param opts { search: obsidian.SearchOpts, anchor: string|?, block: string|? }|?
 Client.find_backlinks_async = function(self, note, callback, opts)
   opts = opts or {}
+
+  ---@type string|?
+  local block = opts.block and util.standardize_block(opts.block) or nil
+  local anchor = opts.anchor and util.standardize_anchor(opts.anchor) or nil
+  ---@type obsidian.note.HeaderAnchor|?
+  local anchor_obj
+  if anchor then
+    anchor_obj = note:resolve_anchor_link(anchor)
+  end
+
   -- Maps paths (string) to note object and a list of matches.
   ---@type table<string, obsidian.BacklinkMatch[]>
   local backlink_matches = {}
@@ -1216,24 +1236,50 @@ Client.find_backlinks_async = function(self, note, callback, opts)
   local search_terms = {}
   for ref in iter { tostring(note.id), note:fname(), self:vault_relative_path(note.path) } do
     if ref ~= nil then
-      -- Wiki links without anchors.
-      search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
-      search_terms[#search_terms + 1] = string.format("[[%s|", ref)
-      -- Markdown link without anchors.
-      search_terms[#search_terms + 1] = string.format("(%s)", ref)
-      -- Wiki links with anchors/blocks.
-      search_terms[#search_terms + 1] = string.format("[[%s#", ref)
-      -- Markdown link with anchors/blocks.
-      search_terms[#search_terms + 1] = string.format("(%s#", ref)
+      if anchor == nil and block == nil then
+        -- Wiki links without anchor/block.
+        search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
+        search_terms[#search_terms + 1] = string.format("[[%s|", ref)
+        -- Markdown link without anchor/block.
+        search_terms[#search_terms + 1] = string.format("(%s)", ref)
+        -- Wiki links with anchor/block.
+        search_terms[#search_terms + 1] = string.format("[[%s#", ref)
+        -- Markdown link with anchor/block.
+        search_terms[#search_terms + 1] = string.format("(%s#", ref)
+      elseif anchor then
+        -- Note: Obsidian allow a lot of different forms of anchor links, so we can't assume
+        -- it's the standardized form here.
+        -- Wiki links with anchor.
+        search_terms[#search_terms + 1] = string.format("[[%s#", ref)
+        -- Markdown link with anchor.
+        search_terms[#search_terms + 1] = string.format("(%s#", ref)
+      elseif block then
+        -- Wiki links with block.
+        search_terms[#search_terms + 1] = string.format("[[%s#%s", ref, block)
+        -- Markdown link with block.
+        search_terms[#search_terms + 1] = string.format("(%s#%s", ref, block)
+      end
     end
   end
   for alias in iter(note.aliases) do
-    -- Wiki link without anchors.
-    search_terms[#search_terms + 1] = string.format("[[%s]]", alias)
-    -- Wiki link with anchors/blocks.
-    search_terms[#search_terms + 1] = string.format("[[%s#", alias)
+    if anchor == nil and block == nil then
+      -- Wiki link without anchor/block.
+      search_terms[#search_terms + 1] = string.format("[[%s]]", alias)
+      -- Wiki link with anchor/block.
+      search_terms[#search_terms + 1] = string.format("[[%s#", alias)
+    elseif anchor then
+      -- Wiki link with anchor.
+      search_terms[#search_terms + 1] = string.format("[[%s#", alias)
+    elseif block then
+      -- Wiki link with block.
+      search_terms[#search_terms + 1] = string.format("[[%s#%s", alias, block)
+    end
   end
 
+  ---@type obsidian.note.LoadOpts
+  local load_opts = { collect_anchor_links = opts.anchor ~= nil, collect_blocks = opts.block ~= nil }
+
+  ---@param match MatchData
   local function on_match(match)
     local path = Path.new(match.path.text):resolve { strict = true }
 
@@ -1246,7 +1292,7 @@ Client.find_backlinks_async = function(self, note, callback, opts)
       -- Load note.
       local n = path_to_note[path]
       if not n then
-        local ok, res = pcall(Note.from_file_async, path)
+        local ok, res = pcall(Note.from_file_async, path, load_opts)
         if ok then
           n = res
           path_to_note[path] = n
@@ -1257,6 +1303,29 @@ Client.find_backlinks_async = function(self, note, callback, opts)
             first_err_path = path
           end
           return
+        end
+      end
+
+      if anchor then
+        -- Check for a match with the anchor.
+        -- NOTE: no need to do this with blocks, since blocks are standardized.
+        local match_text = string.sub(match.lines.text, match.submatches[1].start)
+        local link_location = util.parse_link(match_text)
+        if not link_location then
+          log.error("Failed to parse reference from '%s' ('%s')", match_text, match)
+          return
+        end
+
+        local anchor_link = select(2, util.strip_anchor_links(link_location))
+        if not anchor_link then
+          return
+        end
+
+        if anchor_link ~= anchor and anchor_obj ~= nil then
+          local resolved_anchor = note:resolve_anchor_link(anchor_link)
+          if resolved_anchor == nil or resolved_anchor.header ~= anchor_obj.header then
+            return
+          end
         end
       end
 
@@ -1315,7 +1384,9 @@ Client.find_backlinks_async = function(self, note, callback, opts)
       )
     end
 
-    return results
+    return vim.tbl_filter(function(bl)
+      return bl.matches ~= nil
+    end, results)
   end, callback)
 end
 
