@@ -287,6 +287,8 @@ Fields ~
 {url} `(string|?)`
 {line} `(integer|?)`
 {col} `(integer|?)`
+{anchor} obsidian.note.HeaderAnchor|?
+{block} obsidian.note.Block|?
 
 ------------------------------------------------------------------------------
                                           *obsidian.Client.resolve_link_async()*
@@ -386,7 +388,7 @@ Find all backlinks to a note.
 
 Parameters ~
 {note} obsidian.Note The note to find backlinks for.
-{opts} { search: obsidian.SearchOpts|?, timeout: `(integer|?)` }|?
+{opts} { search: obsidian.SearchOpts|?, timeout: `(integer|?,)` anchor: string|?, block: string|? }|?
 
 Return ~
 obsidian.BacklinkMatches[]
@@ -399,7 +401,7 @@ An async version of 'find_backlinks()'.
 Parameters ~
 {note} obsidian.Note The note to find backlinks for.
 {callback} `(fun(backlinks: obsidian.BacklinkMatches[]))`
-{opts} { search: obsidian.SearchOpts }|?
+{opts} { search: obsidian.SearchOpts, anchor: `(string|?,)` block: string|? }|?
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Client.list_tags()*
