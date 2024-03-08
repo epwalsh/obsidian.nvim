@@ -1656,9 +1656,19 @@ Client.new_note = function(self, title, id, dir, aliases)
   return self:create_note { title = title, id = id, dir = dir, aliases = aliases }
 end
 
+---@class obsidian.CreateNoteOpts
+---
+---@field title string|?
+---@field id string|?
+---@field dir string|obsidian.Path|?
+---@field aliases string[]|?
+---@field tags string[]|?
+---@field no_write boolean|?
+---@field template string|?
+
 --- Create a new note with the following options.
 ---
----@param opts { title: string|?, id: string|?, dir: string|obsidian.Path|?, aliases: string[]|?, tags: string[]|?, no_write: boolean|? }|? Options.
+---@param opts obsidian.CreateNoteOpts|? Options.
 ---
 --- Options:
 ---  - `title`: A title to assign the note.
@@ -1668,6 +1678,7 @@ end
 ---  - `aliases`: Additional aliases to assign to the note.
 ---  - `tags`: Additional tags to assign to the note.
 ---  - `no_write`: Don't write the note to disk.
+---  - `template`: The name of a template to apply when writing the note to disk.
 ---
 ---@return obsidian.Note
 Client.create_note = function(self, opts)
@@ -1691,7 +1702,7 @@ Client.create_note = function(self, opts)
 
   -- Write to disk.
   if not opts.no_write then
-    self:write_note(note)
+    self:write_note(note, { template = opts.template })
   end
 
   return note
