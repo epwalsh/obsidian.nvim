@@ -46,6 +46,7 @@ local DEFAULT_MAX_LINES = 500
 ---@field anchor_links table<string, obsidian.note.HeaderAnchor>|?
 ---@field blocks table<string, obsidian.note.Block>?
 ---@field alt_alias string|?
+---@field bufnr integer|?
 local Note = abc.new_class {
   __tostring = function(self)
     return string.format("Note('%s')", self.id)
@@ -291,7 +292,9 @@ Note.from_buffer = function(bufnr, opts)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local path = vim.api.nvim_buf_get_name(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  return Note.from_lines(iter(lines), path, opts)
+  local note = Note.from_lines(iter(lines), path, opts)
+  note.bufnr = bufnr
+  return note
 end
 
 --- Get the display name for note.
@@ -704,7 +707,9 @@ end
 ---
 ---@return boolean updated True if the buffer lines were updated, false otherwise.
 Note.save_to_buffer = function(self, bufnr, frontmatter)
-  bufnr = bufnr and bufnr or 0
+  if not bufnr then
+    bufnr = self.bufnr or 0
+  end
 
   local cur_buf_note = Note.from_buffer(bufnr)
   local new_lines = self:frontmatter_lines(nil, frontmatter)

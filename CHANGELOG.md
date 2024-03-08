@@ -35,6 +35,11 @@ Full changelog below 👇
       ---@param note obsidian.Note
       enter_note = function(client, note) end,
 
+      -- Runs anytime you leave the buffer for a note.
+      ---@param client obsidian.Client
+      ---@param note obsidian.Note
+      leave_note = function(client, note) end,
+
       -- Runs right before writing the buffer for a note.
       ---@param client obsidian.Client
       ---@param note obsidian.Note

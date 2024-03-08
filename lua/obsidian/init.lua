@@ -158,8 +158,31 @@ obsidian.setup = function(opts)
       end
 
       -- Run enter-note callback.
-      local note = obsidian.Note.from_buffer(ev.bufnr)
-      client.callback_manager:enter_note(note)
+      client.callback_manager:enter_note(function()
+        return obsidian.Note.from_buffer(ev.bufnr)
+      end)
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "BufLeave" }, {
+    group = group,
+    pattern = "*.md",
+    callback = function(ev)
+      -- Check if we're in *any* workspace.
+      local workspace = obsidian.Workspace.get_workspace_for_dir(vim.fs.dirname(ev.match), client.opts.workspaces)
+      if not workspace then
+        return
+      end
+
+      -- Check if current buffer is actually a note within the workspace.
+      if not client:path_is_note(ev.match, workspace) then
+        return
+      end
+
+      -- Run leave-note callback.
+      client.callback_manager:leave_note(function()
+        return obsidian.Note.from_buffer(ev.bufnr)
+      end)
     end,
   })
 

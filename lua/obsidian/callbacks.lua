@@ -40,18 +40,35 @@ CallbackManager.post_setup = function(self)
   end
 end
 
----@param note obsidian.Note
+---@param note obsidian.Note|fun(): obsidian.Note
 ---@return boolean|? success
 CallbackManager.enter_note = function(self, note)
   if self.callbacks.enter_note then
+    if type(note) == "function" then
+      note = note()
+    end
     return fire_callback("enter_note", self.callbacks.enter_note, self.client, note)
   end
 end
 
----@param note obsidian.Note
+---@param note obsidian.Note|fun(): obsidian.Note
+---@return boolean|? success
+CallbackManager.leave_note = function(self, note)
+  if self.callbacks.leave_note then
+    if type(note) == "function" then
+      note = note()
+    end
+    return fire_callback("leave_note", self.callbacks.leave_note, self.client, note)
+  end
+end
+
+---@param note obsidian.Note|fun(): obsidian.Note
 ---@return boolean|? success
 CallbackManager.pre_write_note = function(self, note)
   if self.callbacks.pre_write_note then
+    if type(note) == "function" then
+      note = note()
+    end
     return fire_callback("pre_write_note", self.callbacks.pre_write_note, self.client, note)
   end
 end
