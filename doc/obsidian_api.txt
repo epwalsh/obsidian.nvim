@@ -508,12 +508,25 @@ obsidian.Note
 
 
 ------------------------------------------------------------------------------
+Class ~
+{obsidian.CreateNoteOpts}
+
+Fields ~
+{title} `(string|?)`
+{id} `(string|?)`
+{dir} `(string|obsidian.Path|?)`
+{aliases} `(string[]|?)`
+{tags} `(string[]|?)`
+{no_write} `(boolean|?)`
+{template} `(string|?)`
+
+------------------------------------------------------------------------------
                                                  *obsidian.Client.create_note()*
                       `Client.create_note`({self}, {opts})
 Create a new note with the following options.
 
 Parameters ~
-{opts} { title: `(string|?,)` id: string|?, dir: string|obsidian.Path|?, aliases: string[]|?, tags: string[]|?, no_write: boolean|? }|? Options.
+{opts} obsidian.CreateNoteOpts|? Options.
 
 Options:
  - `title`: A title to assign the note.
@@ -523,6 +536,7 @@ Options:
  - `aliases`: Additional aliases to assign to the note.
  - `tags`: Additional tags to assign to the note.
  - `no_write`: Don't write the note to disk.
+ - `template`: The name of a template to apply when writing the note to disk.
 
 Return ~
 obsidian.Note
