@@ -586,6 +586,10 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
   local new_lines = { "---" }
 
   local frontmatter_ = frontmatter and frontmatter or self:frontmatter()
+  if vim.tbl_isempty(frontmatter_) then
+    return {}
+  end
+
   for line in
     iter(yaml.dumps_lines(frontmatter_, function(a, b)
       local a_idx = nil
