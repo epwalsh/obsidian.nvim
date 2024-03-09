@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.7.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.1) - 2024-03-09
+
 ### Fixed
 
 - Fixed regression with `:ObsidianExtractNote`.
