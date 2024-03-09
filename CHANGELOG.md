@@ -1,4 +1,4 @@
-# Changelog
+ Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed regression with `:ObsidianExtractNote`.
+- Fixed regression of edge case when paths are passed to `:ObsidianNew`.
+- Don't write frontmatter when frontmatter table is empty.
 
 ## [v3.7.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.0) - 2024-03-08
 
