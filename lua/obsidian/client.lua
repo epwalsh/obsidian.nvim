@@ -1702,8 +1702,8 @@ Client.create_note = function(self, opts)
 
   -- Create `Note` object.
   local note = Note.new(new_id, aliases, opts.tags or {}, path)
-  if opts.title then
-    note.title = opts.title
+  if new_title then
+    note.title = new_title
   end
 
   -- Write to disk.

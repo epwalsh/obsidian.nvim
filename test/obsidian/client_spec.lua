@@ -65,9 +65,14 @@ describe("Client:parse_title_id_path()", function()
   it("should parse a title that's a partial path and generate new ID", function()
     with_tmp_client(function(client)
       local title, id, path = client:parse_title_id_path "notes/Foo"
-      assert.equals(title, "Foo")
-      assert.equals(id, "foo")
-      assert.equals(path, Path:new(client.dir) / "notes" / "foo.md")
+      assert.equals("Foo", title)
+      assert.equals("foo", id)
+      assert.equals(Path:new(client.dir) / "notes" / "foo.md", path)
+
+      title, id, path = client:parse_title_id_path "notes/New Title"
+      assert.equals("New Title", title)
+      assert.equals("new-title", id)
+      assert.equals(Path:new(client.dir) / "notes" / "new-title.md", path)
     end)
   end)
 
