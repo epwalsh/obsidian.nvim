@@ -37,6 +37,6 @@ return function(client, data)
   client:update_ui(0)
 
   -- add the selected text to the end of the new note
-  client:open_note(note)
+  client:open_note(note, { sync = true })
   vim.api.nvim_buf_set_lines(0, -1, -1, false, content)
 end

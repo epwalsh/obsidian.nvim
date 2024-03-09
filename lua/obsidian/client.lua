@@ -895,9 +895,9 @@ end
 --- Open a note in a buffer.
 ---
 ---@param note_or_path string|obsidian.Path|obsidian.Note
----@param opts { line: integer|?, col: integer|?, open_strategy: obsidian.config.OpenStrategy|? }|?
+---@param opts { line: integer|?, col: integer|?, open_strategy: obsidian.config.OpenStrategy|?, sync: boolean|? }|?
 Client.open_note = function(self, note_or_path, opts)
-  opts = opts and opts or {}
+  opts = opts or {}
 
   ---@type obsidian.Path
   local path
@@ -915,11 +915,17 @@ Client.open_note = function(self, note_or_path, opts)
     error "invalid 'note_or_path' argument"
   end
 
-  vim.schedule(function()
+  local function open_it()
     local open_cmd = util.get_open_strategy(opts.open_strategy and opts.open_strategy or self.opts.open_notes_in)
     ---@cast path obsidian.Path
     util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
-  end)
+  end
+
+  if opts.sync then
+    open_it()
+  else
+    vim.schedule(open_it)
+  end
 end
 
 --- Get the current note from a buffer.
