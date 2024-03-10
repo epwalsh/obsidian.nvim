@@ -93,8 +93,7 @@ return function(client, data)
   local new_note_path
   if #parts > 1 then
     parts[#parts] = nil
-    new_note_path =
-      client.dir.joinpath(unpack(vim.tbl_flatten { tostring(client.dir), parts, new_note_id })):with_suffix ".md"
+    new_note_path = client.dir.joinpath(client.dir, unpack(vim.tbl_flatten { parts, new_note_id })):with_suffix ".md"
   else
     new_note_path = (dirname / new_note_id):with_suffix ".md"
   end
