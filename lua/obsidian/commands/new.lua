@@ -6,7 +6,7 @@ return function(client, data)
   ---@type obsidian.Note
   local note
   if data.args:len() > 0 then
-    note = client:create_note { title = data.args }
+    note = client:create_note { title = data.args, no_write = true }
   else
     local title = util.input "Enter title (optional): "
     if not title then
@@ -15,7 +15,10 @@ return function(client, data)
     elseif title == "" then
       title = nil
     end
-    note = client:create_note { title = title }
+    note = client:create_note { title = title, no_write = true }
   end
-  client:open_note(note)
+
+  -- Open the note in a new buffer.
+  client:open_note(note, { sync = true })
+  client:write_note_to_buffer(note)
 end

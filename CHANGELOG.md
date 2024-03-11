@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- `:ObsidianNew` won't write the new note to disk, it will only populate the buffer.
+
 ### Fixed
 
 - Fixed renaming when passing file path

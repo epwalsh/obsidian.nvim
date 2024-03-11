@@ -1279,4 +1279,23 @@ util.resolve_date_macro = function(macro)
   return out
 end
 
+--- Check if a buffer is empty.
+---
+---@param bufnr integer|?
+---
+---@return boolean
+util.buffer_is_empty = function(bufnr)
+  bufnr = bufnr or 0
+  if vim.api.nvim_buf_line_count(bufnr) > 1 then
+    return false
+  else
+    local first_text = vim.api.nvim_buf_get_text(bufnr, 0, 0, 0, 0, {})
+    if vim.tbl_isempty(first_text) or first_text[1] == "" then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 return util
