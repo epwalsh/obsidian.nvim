@@ -676,7 +676,7 @@ Note.save = function(self, opts)
   local save_path = Path.new(assert(opts.path or self.path)):resolve()
   assert(save_path:parent()):mkdir { parents = true, exist_ok = true }
 
-  -- Read contents from existing file, if there is one, skipping frontmatter.
+  -- Read contents from existing file or buffer, if there is one, skipping frontmatter.
   -- TODO: check for open buffer?
   ---@type string[]
   local content = {}
@@ -728,18 +728,33 @@ end
 
 --- Save frontmatter to the given buffer.
 ---
----@param bufnr integer|?
----@param frontmatter table|?
+---@param opts { bufnr: integer|?, insert_frontmatter: boolean|?, frontmatter: table|? }|? Options.
 ---
 ---@return boolean updated True if the buffer lines were updated, false otherwise.
-Note.save_to_buffer = function(self, bufnr, frontmatter)
+Note.save_to_buffer = function(self, opts)
+  opts = opts or {}
+
+  local bufnr = opts.bufnr
   if not bufnr then
     bufnr = self.bufnr or 0
   end
 
   local cur_buf_note = Note.from_buffer(bufnr)
-  local new_lines = self:frontmatter_lines(nil, frontmatter)
-  local cur_lines
+
+  ---@type string[]
+  local new_lines
+  if opts.insert_frontmatter ~= false then
+    new_lines = self:frontmatter_lines(nil, opts.frontmatter)
+  else
+    new_lines = {}
+  end
+
+  if util.buffer_is_empty(bufnr) and self.title ~= nil then
+    table.insert(new_lines, "# " .. self.title)
+  end
+
+  ---@type string[]
+  local cur_lines = {}
   if cur_buf_note.frontmatter_end_line ~= nil then
     cur_lines = vim.api.nvim_buf_get_lines(bufnr, 0, cur_buf_note.frontmatter_end_line, false)
   end

@@ -211,10 +211,6 @@ obsidian.setup = function(opts)
       -- Run pre-write-note callback.
       client.callback_manager:pre_write_note(note)
 
-      if not client:should_save_frontmatter(note) then
-        return
-      end
-
       -- Update buffer with new frontmatter.
       if client:update_frontmatter(note, bufnr) then
         log.info "Updated frontmatter"

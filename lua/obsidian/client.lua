@@ -1771,6 +1771,36 @@ Client.write_note = function(self, note, opts)
   log.info("%s note '%s' at '%s'", verb, note.id, self:vault_relative_path(note.path) or note.path)
 end
 
+--- Write the note to a buffer.
+---
+---@param note obsidian.Note
+---@param opts { bufnr: integer|?, template: string|? }|? Options.
+---
+--- Options:
+---  - `bufnr`: Override the buffer to write to. Defaults to current buffer.
+---  - `template`: The name of a template to use if the buffer is empty.
+---
+---@return boolean updated If the buffer was updated.
+Client.write_note_to_buffer = function(self, note, opts)
+  opts = opts or {}
+
+  if opts.template and util.buffer_is_empty(opts.bufnr) then
+    require("obsidian.templates").insert_template(opts.template, self, util.get_active_window_cursor_location())
+  end
+
+  local frontmatter = nil
+  local should_save_frontmatter = self:should_save_frontmatter(note)
+  if should_save_frontmatter and self.opts.note_frontmatter_func ~= nil then
+    frontmatter = self.opts.note_frontmatter_func(note)
+  end
+
+  return note:save_to_buffer {
+    bufnr = opts.bufnr,
+    insert_frontmatter = should_save_frontmatter,
+    frontmatter = frontmatter,
+  }
+end
+
 --- Update the frontmatter in a buffer for the note.
 ---
 ---@param note obsidian.Note
@@ -1778,11 +1808,15 @@ end
 ---
 ---@return boolean updated If the the frontmatter was updated.
 Client.update_frontmatter = function(self, note, bufnr)
+  if not self:should_save_frontmatter(note) then
+    return false
+  end
+
   local frontmatter = nil
   if self.opts.note_frontmatter_func ~= nil then
     frontmatter = self.opts.note_frontmatter_func(note)
   end
-  return note:save_to_buffer(bufnr, frontmatter)
+  return note:save_to_buffer { bufnr = bufnr, frontmatter = frontmatter }
 end
 
 --- Get the path to a daily note.
