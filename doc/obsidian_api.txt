@@ -558,6 +558,22 @@ Options:
    actually be written (again excluding frontmatter).
 
 ------------------------------------------------------------------------------
+                                        *obsidian.Client.write_note_to_buffer()*
+             `Client.write_note_to_buffer`({self}, {note}, {opts})
+Write the note to a buffer.
+
+Parameters ~
+{note} obsidian.Note
+{opts} { bufnr: `(integer|?,)` template: string|? }|? Options.
+
+Options:
+ - `bufnr`: Override the buffer to write to. Defaults to current buffer.
+ - `template`: The name of a template to use if the buffer is empty.
+
+Return ~
+`(boolean)` updated If the buffer was updated.
+
+------------------------------------------------------------------------------
                                           *obsidian.Client.update_frontmatter()*
               `Client.update_frontmatter`({self}, {note}, {bufnr})
 Update the frontmatter in a buffer for the note.
@@ -925,12 +941,11 @@ Options:
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Note.save_to_buffer()*
-             `Note.save_to_buffer`({self}, {bufnr}, {frontmatter})
+                     `Note.save_to_buffer`({self}, {opts})
 Save frontmatter to the given buffer.
 
 Parameters ~
-{bufnr} `(integer|?)`
-{frontmatter} `(table|?)`
+{opts} { bufnr: `(integer|?,)` insert_frontmatter: boolean|?, frontmatter: table|? }|? Options.
 
 Return ~
 `(boolean)` updated True if the buffer lines were updated, false otherwise.
