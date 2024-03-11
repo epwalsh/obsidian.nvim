@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed renaming when passing file path
+- Make `Client:resolve_note` fall back to fuzzy matching when there are no exact matches.
 
 ## [v3.7.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.1) - 2024-03-09
 

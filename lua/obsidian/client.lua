@@ -633,25 +633,39 @@ Client.resolve_note_async = function(self, query, callback, opts)
 
   self:find_notes_async(query, function(results)
     local query_lwr = string.lower(query)
-    local maybe_matches = {}
+
+    -- We'll gather both exact matches (of ID, filename, and aliases) and fuzzy matches.
+    -- If we end up with any exact matches, we'll return those. Otherwise we fall back to fuzzy
+    -- matches.
+    ---@type obsidian.Note[]
+    local exact_matches = {}
+    ---@type obsidian.Note[]
+    local fuzzy_matches = {}
+
     for note in iter(results) do
-      if
-        query_lwr == string.lower(tostring(note.id))
-        or query_lwr == string.lower(note:display_name())
-        or query == note.path.name
-      then
-        table.insert(maybe_matches, note)
+      ---@cast note obsidian.Note
+
+      local reference_ids = note:reference_ids { lowercase = true }
+
+      -- Check for exact match.
+      if util.tbl_contains(reference_ids, query_lwr) then
+        table.insert(exact_matches, note)
       else
-        for alias in iter(note.aliases) do
-          if query_lwr == string.lower(alias) then
-            table.insert(maybe_matches, note)
+        -- Fall back to fuzzy match.
+        for ref_id in iter(reference_ids) do
+          if util.string_contains(ref_id, query_lwr) then
+            table.insert(fuzzy_matches, note)
             break
           end
         end
       end
     end
 
-    return callback(unpack(maybe_matches))
+    if #exact_matches > 0 then
+      return callback(unpack(exact_matches))
+    else
+      return callback(unpack(fuzzy_matches))
+    end
   end, { search = { sort = true, ignore_case = true }, notes = opts.notes })
 end
 

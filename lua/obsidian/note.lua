@@ -145,6 +145,28 @@ Note.fname = function(self)
   end
 end
 
+--- Get a list of all of the different string that can identify this note via references,
+--- including the ID, aliases, and filename.
+---@param opts { lowercase: boolean|? }|?
+---@return string[]
+Note.reference_ids = function(self, opts)
+  opts = opts or {}
+  ---@type string[]
+  local ref_ids = { tostring(self.id), self:display_name() }
+  if self.path then
+    table.insert(ref_ids, self.path.name)
+    table.insert(ref_ids, self.path.stem)
+  end
+
+  vim.list_extend(ref_ids, self.aliases)
+
+  if opts.lowercase then
+    ref_ids = vim.tbl_map(string.lower, ref_ids)
+  end
+
+  return util.tbl_unique(ref_ids)
+end
+
 Note.should_save_frontmatter = function(self)
   local fname = self:fname()
   return (fname ~= nil and not util.tbl_contains(SKIP_UPDATING_FRONTMATTER, fname))
