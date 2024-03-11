@@ -734,6 +734,16 @@ Return ~
 `(string|)` `(optional)`
 
 ------------------------------------------------------------------------------
+                                                 *obsidian.Note.reference_ids()*
+                      `Note.reference_ids`({self}, {opts})
+Get a list of all of the different string that can identify this note via references,
+including the ID, aliases, and filename.
+Parameters ~
+{opts} { lowercase: `(boolean|?)` }|?
+Return ~
+`(string[])`
+
+------------------------------------------------------------------------------
                                                      *obsidian.Note.has_alias()*
                        `Note.has_alias`({self}, {alias})
 Check if a note has a given alias.
