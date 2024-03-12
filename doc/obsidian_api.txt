@@ -315,7 +315,7 @@ Open a note in a buffer.
 
 Parameters ~
 {note_or_path} `(string|obsidian.Path|obsidian.Note)`
-{opts} { line: `(integer|?,)` col: integer|?, open_strategy: obsidian.config.OpenStrategy|?, sync: boolean|? }|?
+{opts} { line: `(integer|?,)` col: integer|?, open_strategy: obsidian.config.OpenStrategy|?, sync: boolean|?, callback: fun(bufnr: integer)|? }|?
 
 ------------------------------------------------------------------------------
                                                 *obsidian.Client.current_note()*
