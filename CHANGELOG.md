@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.7.2](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.2) - 2024-03-12
+
 ### Changed
 
 - `:ObsidianNew` won't write the new note to disk, it will only populate the buffer.
