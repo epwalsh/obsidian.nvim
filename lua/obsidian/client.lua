@@ -1831,7 +1831,7 @@ end
 ---
 ---@param datetime integer|?
 ---
----@return obsidian.Path, string
+---@return obsidian.Path, string (Path, ID) The path and ID of the note.
 Client.daily_note_path = function(self, datetime)
   datetime = datetime and datetime or os.time()
 

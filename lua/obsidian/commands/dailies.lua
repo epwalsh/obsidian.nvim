@@ -54,6 +54,9 @@ return function(client, data)
     elseif offset == 1 then
       daily_note_alias = daily_note_alias .. " @tomorrow"
     end
+    if not daily_note_path:is_file() then
+      daily_note_alias = daily_note_alias .. " ➡️ create"
+    end
     dailies[#dailies + 1] = {
       value = offset,
       display = daily_note_alias,

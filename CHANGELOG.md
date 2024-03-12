@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Add indicator to entries that don't exist yet in `:ObsidianDailies` picker list.
+
 ## [v3.7.2](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.2) - 2024-03-12
 
 ### Changed
