@@ -856,8 +856,13 @@ Client.follow_link_async = function(self, link, opts)
             id = res.location
           end
 
-          local note = self:create_note { title = res.name, id = id, aliases = aliases }
-          return self:open_note(note, { open_strategy = opts.open_strategy })
+          local note = self:create_note { title = res.name, id = id, aliases = aliases, no_write = true }
+          return self:open_note(note, {
+            open_strategy = opts.open_strategy,
+            callback = function(bufnr)
+              self:write_note_to_buffer(note, { bufnr = bufnr })
+            end,
+          })
         else
           log.warn "Aborted"
           return
@@ -909,7 +914,7 @@ end
 --- Open a note in a buffer.
 ---
 ---@param note_or_path string|obsidian.Path|obsidian.Note
----@param opts { line: integer|?, col: integer|?, open_strategy: obsidian.config.OpenStrategy|?, sync: boolean|? }|?
+---@param opts { line: integer|?, col: integer|?, open_strategy: obsidian.config.OpenStrategy|?, sync: boolean|?, callback: fun(bufnr: integer)|? }|?
 Client.open_note = function(self, note_or_path, opts)
   opts = opts or {}
 
@@ -932,7 +937,10 @@ Client.open_note = function(self, note_or_path, opts)
   local function open_it()
     local open_cmd = util.get_open_strategy(opts.open_strategy and opts.open_strategy or self.opts.open_notes_in)
     ---@cast path obsidian.Path
-    util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
+    local bufnr = util.open_buffer(path, { line = opts.line, col = opts.col, cmd = open_cmd })
+    if opts.callback then
+      opts.callback(bufnr)
+    end
   end
 
   if opts.sync then

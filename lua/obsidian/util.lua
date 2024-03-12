@@ -1035,6 +1035,7 @@ end
 ---
 ---@param path string|obsidian.Path
 ---@param opts { line: integer|?, col: integer|?, cmd: string|? }|?
+---@return integer bufnr
 util.open_buffer = function(path, opts)
   local Path = require "obsidian.path"
 
@@ -1042,10 +1043,14 @@ util.open_buffer = function(path, opts)
   opts = opts and opts or {}
   local cmd = util.strip_whitespace(opts.cmd and opts.cmd or "e")
 
+  ---@type integer|?
+  local result_bufnr
+
   -- Check for existing buffer and use 'drop' command if one is found.
-  for _, bufname in util.get_named_buffers() do
+  for bufnr, bufname in util.get_named_buffers() do
     if bufname == tostring(path) then
       cmd = "drop"
+      result_bufnr = bufnr
       break
     end
   end
@@ -1054,6 +1059,12 @@ util.open_buffer = function(path, opts)
   if opts.line then
     vim.api.nvim_win_set_cursor(0, { tonumber(opts.line), opts.col and opts.col or 0 })
   end
+
+  if not result_bufnr then
+    result_bufnr = vim.api.nvim_get_current_buf()
+  end
+
+  return result_bufnr
 end
 
 --- Get a nice icon for a file or URL, if possible.
