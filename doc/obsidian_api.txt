@@ -594,7 +594,7 @@ Parameters ~
 {datetime} `(integer|?)`
 
 Return ~
-obsidian.Path, `(string)`
+obsidian.Path, `(string)` (Path, ID) The path and ID of the note.
 
 ------------------------------------------------------------------------------
                                                        *obsidian.Client.today()*
