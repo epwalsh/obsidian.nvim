@@ -14,6 +14,8 @@ local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.m
 
 local DEFAULT_MAX_LINES = 500
 
+local CODE_BLOCK_PATTERN = "^%s*```[%w_-]*$"
+
 ---@class obsidian.note.HeaderAnchor
 ---
 ---@field anchor string
@@ -409,6 +411,7 @@ Note.from_lines = function(lines, path, opts)
   local frontmatter_lines = {}
   local has_frontmatter, in_frontmatter, at_boundary = false, false, false -- luacheck: ignore (false positive)
   local frontmatter_end_line = nil
+  local in_code_block = false
   for line_idx, line in enumerate(lines) do
     line = util.rstrip_whitespace(line)
 
@@ -424,9 +427,13 @@ Note.from_lines = function(lines, path, opts)
       at_boundary = false
     end
 
+    if string.match(line, CODE_BLOCK_PATTERN) then
+      in_code_block = not in_code_block
+    end
+
     if in_frontmatter and not at_boundary then
       table.insert(frontmatter_lines, line)
-    elseif not in_frontmatter and not at_boundary then
+    elseif not in_frontmatter and not at_boundary and not in_code_block then
       -- Check for title/header and collect anchor link.
       local header_match = util.parse_header(line)
       if header_match then
