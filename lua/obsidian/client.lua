@@ -758,59 +758,67 @@ Client.resolve_link_async = function(self, link, callback)
   local anchor_link
   location, anchor_link = util.strip_anchor_links(location)
 
+  --- Finalize the `obsidian.ResolveLinkResult` for a note while resolving block or anchor link to line.
+  ---
+  ---@param note obsidian.Note
+  ---@return obsidian.ResolveLinkResult
+  local function finalize_result(note)
+    ---@type integer|?, obsidian.note.Block|?, obsidian.note.HeaderAnchor|?
+    local line, block_match, anchor_match
+    if block_link ~= nil then
+      block_match = note:resolve_block(block_link)
+      if block_match then
+        line = block_match.line
+      end
+    elseif anchor_link ~= nil then
+      anchor_match = note:resolve_anchor_link(anchor_link)
+      if anchor_match then
+        line = anchor_match.line
+      end
+    end
+
+    return vim.tbl_extend(
+      "force",
+      res,
+      { path = note.path, note = note, line = line, block = block_match, anchor = anchor_match }
+    )
+  end
+
+  ---@type obsidian.note.LoadOpts
+  local load_opts = {
+    collect_anchor_links = anchor_link and true or false,
+    collect_blocks = block_link and true or false,
+  }
+
   -- Assume 'location' is current buffer path if empty, like for TOCs.
   if string.len(location) == 0 then
-    location = vim.api.nvim_buf_get_name(0)
+    res.location = vim.api.nvim_buf_get_name(0)
+    local note = Note.from_buffer(0, load_opts)
+    return callback(finalize_result(note))
   end
 
   res.location = location
 
-  self:resolve_note_async(
-    location,
-    function(...)
-      local notes = { ... }
+  self:resolve_note_async(location, function(...)
+    local notes = { ... }
 
-      if #notes == 0 then
-        local path = Path.new(location)
-        if path:exists() then
-          res.path = path
-          return callback(res)
-        else
-          return callback(res)
-        end
+    if #notes == 0 then
+      local path = Path.new(location)
+      if path:exists() then
+        res.path = path
+        return callback(res)
+      else
+        return callback(res)
       end
+    end
 
-      local matches = {}
-      for _, note in ipairs(notes) do
-        -- Resolve block or anchor link to line.
-        ---@type integer|?, obsidian.note.Block|?, obsidian.note.HeaderAnchor|?
-        local line, block_match, anchor_match
-        if block_link ~= nil then
-          block_match = note:resolve_block(block_link)
-          if block_match then
-            line = block_match.line
-          end
-        elseif anchor_link ~= nil then
-          anchor_match = note:resolve_anchor_link(anchor_link)
-          if anchor_match then
-            line = anchor_match.line
-          end
-        end
+    local matches = {}
+    for _, note in ipairs(notes) do
+      table.insert(matches, finalize_result(note))
+    end
 
-        table.insert(
-          matches,
-          vim.tbl_extend(
-            "force",
-            res,
-            { path = note.path, note = note, line = line, block = block_match, anchor = anchor_match }
-          )
-        )
-      end
-
-      return callback(unpack(matches))
-    end,
-    { notes = { collect_anchor_links = anchor_link and true or false, collect_blocks = block_link and true or false } }
-  )
+    return callback(unpack(matches))
+  end, { notes = load_opts })
 end
 
 --- Follow a link. If the link argument is `nil` we attempt to follow a link under the cursor.
