@@ -497,17 +497,8 @@ This is a complete list of all of the options that can be passed to `require("ob
     ---@param path obsidian.Path the absolute path to the image file
     ---@return string
     img_text_func = function(client, path)
-      local link_path
-      local vault_relative_path = client:vault_relative_path(path)
-      if vault_relative_path ~= nil then
-        -- Use relative path if the image is saved in the vault dir.
-        link_path = vault_relative_path
-      else
-        -- Otherwise use the absolute path.
-        link_path = tostring(path)
-      end
-      local display_name = vim.fs.basename(link_path)
-      return string.format("![%s](%s)", display_name, link_path)
+      path = client:vault_relative_path(path) or path
+      return string.format("![%s](%s)", path.name, path)
     end,
   },
 }
