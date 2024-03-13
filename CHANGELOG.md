@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.7.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.3) - 2024-03-13
+
 ### Changed
 
 - Add indicator to entries that don't exist yet in `:ObsidianDailies` picker list.
@@ -14,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed `img_text_func` example in README.
-- When following inter-note links, such as with a table of contents, load the note from the buffer to resolve anchor/block links instead of from file.
+- When following intra-note links, such as with a table of contents, load the note from the buffer to resolve anchor/block links instead of from file.
 
 ## [v3.7.2](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.2) - 2024-03-12
 
