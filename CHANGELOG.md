@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Don't open picker for tags when there aren't any matches.
+
 ## [v3.7.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.3) - 2024-03-13
 
 ### Changed

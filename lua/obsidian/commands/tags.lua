@@ -7,11 +7,6 @@ local search = require "obsidian.search"
 ---@param tags string[]
 local function gather_tag_picker_list(client, picker, tags)
   client:find_tags_async(tags, function(tag_locations)
-    if vim.tbl_isempty(tag_locations) then
-      log.warn "Tags not found"
-      return
-    end
-
     -- Format results into picker entries, filtering out results that aren't exact matches or sub-tags.
     ---@type obsidian.PickerEntry[]
     local entries = {}
@@ -30,6 +25,15 @@ local function gather_tag_picker_list(client, picker, tags)
           break
         end
       end
+    end
+
+    if vim.tbl_isempty(entries) then
+      if #tags == 1 then
+        log.warn "Tag not found"
+      else
+        log.warn "Tags not found"
+      end
+      return
     end
 
     vim.schedule(function()
