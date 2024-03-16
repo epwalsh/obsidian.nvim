@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- New command `:ObsidianCreate [PATH] [TITLE]` for creating notes at a specified path with an optional title, enhancing flexibility in note placement within the vault.
+
 ### Fixed
 
 - Don't open picker for tags when there aren't any matches.
