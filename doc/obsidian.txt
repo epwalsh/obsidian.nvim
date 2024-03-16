@@ -66,6 +66,8 @@ COMMANDS                                                   *obsidian-commands*
     alias. If not given, the note corresponding to the current buffer is opened.
 - `:ObsidianNew [TITLE]` to create a new note. This command has one optional
     argument: the title of the new note.
+- `:ObsidianNew [PATH] [TITLE]` to create a new note. This command has two
+   arguments; the desired path to put the note on and an optional title.
 - `:ObsidianQuickSwitch` to quickly switch to (or open) another note in your
     vault, searching by its name using ripgrep
     <https://github.com/BurntSushi/ripgrep> with your preferred picker (see
