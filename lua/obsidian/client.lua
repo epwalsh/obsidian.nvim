@@ -1895,7 +1895,7 @@ Client._daily = function(self, datetime, opts)
     note = Note.from_file(path, opts.load)
   else
     note = Note.new(id, { alias }, { "daily-notes" }, path)
-    note.title = alias
+    note.title = id
     if not opts.no_write then
       self:write_note(note, { template = self.opts.daily_notes.template })
     end
