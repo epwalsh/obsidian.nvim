@@ -151,7 +151,7 @@ M.register("ObsidianTomorrow", { opts = { nargs = 0, desc = "Open the daily note
 
 M.register("ObsidianDailies", { opts = { nargs = "*", desc = "Open a picker with daily notes" } })
 
-M.register("ObsidianNew", { opts = { nargs = "?", desc = "Create a new note" } })
+M.register("ObsidianNew", { opts = { nargs = "?", complete = "file", desc = "Create a new note" } })
 
 M.register(
   "ObsidianOpen",
