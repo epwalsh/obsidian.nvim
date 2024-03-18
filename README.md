@@ -636,7 +636,7 @@ mappings = {
 
 ### Using templates
 
-To insert a template, run the command `:ObsidianTemplate`. This will open a list of available templates in your templates folder with your preferred picker. Select a template and hit `<CR>` to insert. Substitution of `{{date}}`, `{{time}}`, and `{{title}}` is supported.
+To insert a template, run the command `:ObsidianTemplate`. This will open a list of available templates in your templates folder with your preferred picker. Select a template and hit `<CR>` to insert. Substitutions for `{{id}}`, `{{title}}`, `{{path}}`, `{{date}}`, and `{{time}}` are supported out-of-the-box.
 
 For example, with the following configuration
 

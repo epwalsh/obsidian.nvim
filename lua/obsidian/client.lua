@@ -1756,6 +1756,7 @@ end
 ---    representing the text to be written excluding frontmatter, and returns the lines that will
 ---    actually be written (again excluding frontmatter).
 Client.write_note = function(self, note, opts)
+  local clone_template = require("obsidian.templates").clone_template
   opts = opts or {}
 
   local path = assert(opts.path or note.path, "A path must be provided")
@@ -1768,10 +1769,7 @@ Client.write_note = function(self, note, opts)
   else
     verb = "Created"
     if opts.template ~= nil then
-      require("obsidian.templates").clone_template(opts.template, path, self, note.title or note:display_name())
-
-      -- Reload note.
-      note = Note.from_file(path)
+      note = clone_template { template_name = opts.template, path = path, client = self, note = note }
     end
   end
 
@@ -1801,10 +1799,15 @@ end
 ---
 ---@return boolean updated If the buffer was updated.
 Client.write_note_to_buffer = function(self, note, opts)
+  local insert_template = require("obsidian.templates").insert_template
   opts = opts or {}
 
   if opts.template and util.buffer_is_empty(opts.bufnr) then
-    require("obsidian.templates").insert_template(opts.template, self, util.get_active_window_cursor_location())
+    note = insert_template {
+      template_name = opts.template,
+      client = self,
+      location = util.get_active_window_cursor_location(),
+    }
   end
 
   local frontmatter = nil
