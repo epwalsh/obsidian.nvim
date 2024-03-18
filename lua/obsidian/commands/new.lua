@@ -8,7 +8,7 @@ return function(client, data)
   if data.args:len() > 0 then
     note = client:create_note { title = data.args, no_write = true }
   else
-    local title = util.input "Enter title (optional): "
+    local title = util.input "Enter title or path (optional): "
     if not title then
       log.warn "Aborted"
       return
