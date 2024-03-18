@@ -1,5 +1,6 @@
 local obsidian = require "obsidian"
 local Path = require "obsidian.path"
+local Note = require "obsidian.note"
 local templates = require "obsidian.templates"
 
 ---Get a client in a temporary directory.
@@ -23,7 +24,7 @@ describe("templates.substitute_template_variables()", function()
     local text = "today is {{date}} and the title of the note is {{title}}"
     assert.equal(
       string.format("today is %s and the title of the note is %s", os.date "%Y-%m-%d", "FOO"),
-      templates.substitute_template_variables(text, client, "FOO")
+      templates.substitute_template_variables(text, client, Note.new("FOO", { "FOO" }, {}))
     )
   end)
 
@@ -35,7 +36,7 @@ describe("templates.substitute_template_variables()", function()
       end,
     }
     local text = "today is {{weekday}}"
-    assert.equal("today is Monday", templates.substitute_template_variables(text, client))
+    assert.equal("today is Monday", templates.substitute_template_variables(text, client, Note.new("foo", {}, {})))
 
     -- Make sure the client opts has not been modified.
     assert.equal(1, vim.tbl_count(client.opts.templates.substitutions))
