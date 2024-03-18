@@ -557,6 +557,9 @@ Options:
    representing the text to be written excluding frontmatter, and returns the lines that will
    actually be written (again excluding frontmatter).
 
+Return ~
+obsidian.Note
+
 ------------------------------------------------------------------------------
                                         *obsidian.Client.write_note_to_buffer()*
              `Client.write_note_to_buffer`({self}, {note}, {opts})
