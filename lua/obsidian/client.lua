@@ -1738,7 +1738,7 @@ Client.create_note = function(self, opts)
 
   -- Write to disk.
   if not opts.no_write then
-    self:write_note(note, { template = opts.template })
+    note = self:write_note(note, { template = opts.template })
   end
 
   return note
@@ -1755,6 +1755,8 @@ end
 ---  - `update_content`: A function to update the contents of the note. This takes a list of lines
 ---    representing the text to be written excluding frontmatter, and returns the lines that will
 ---    actually be written (again excluding frontmatter).
+---
+---@return obsidian.Note
 Client.write_note = function(self, note, opts)
   local clone_template = require("obsidian.templates").clone_template
   opts = opts or {}
@@ -1786,6 +1788,8 @@ Client.write_note = function(self, note, opts)
   }
 
   log.info("%s note '%s' at '%s'", verb, note.id, self:vault_relative_path(note.path) or note.path)
+
+  return note
 end
 
 --- Write the note to a buffer.
