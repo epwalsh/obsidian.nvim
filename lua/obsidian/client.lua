@@ -1769,6 +1769,9 @@ Client.write_note = function(self, note, opts)
     verb = "Created"
     if opts.template ~= nil then
       require("obsidian.templates").clone_template(opts.template, path, self, note.title or note:display_name())
+
+      -- Reload note.
+      note = Note.from_file(path)
     end
   end
 
