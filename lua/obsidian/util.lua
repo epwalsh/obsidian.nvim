@@ -799,20 +799,18 @@ end
 ---
 ---@return function () -> (integer, string)|?
 util.get_named_buffers = function()
-  local bufnr = 0
-  local max_bufnr = vim.fn.bufnr "$"
+  local idx = 0
+  local buffers = vim.api.nvim_list_bufs()
 
   ---@return integer|?
   ---@return string|?
   return function()
-    bufnr = bufnr + 1
-    while bufnr <= max_bufnr and (vim.fn.bufexists(bufnr) == 0 or vim.fn.bufname(bufnr) == "") do
-      bufnr = bufnr + 1
-    end
-    if bufnr > max_bufnr then
-      return nil
-    else
-      return bufnr, vim.api.nvim_buf_get_name(bufnr)
+    while idx < #buffers do
+      idx = idx + 1
+      local bufnr = buffers[idx]
+      if vim.api.nvim_buf_is_loaded(bufnr) then
+        return bufnr, vim.api.nvim_buf_get_name(bufnr)
+      end
     end
   end
 end
@@ -1046,8 +1044,10 @@ util.open_buffer = function(path, opts)
   ---@type integer|?
   local result_bufnr
 
-  -- Check for existing buffer and use 'drop' command if one is found.
-  for bufnr, bufname in util.get_named_buffers() do
+  -- Check for buffer in windows and use 'drop' command if one is found.
+  for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr)
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
     if bufname == tostring(path) then
       cmd = "drop"
       result_bufnr = bufnr
