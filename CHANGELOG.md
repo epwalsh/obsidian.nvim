@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Don't open picker for tags when there aren't any matches.
+- Fix incorrect initialization of the daily note alias to a timestamp.
 - Correctly replace the `{{title}}` template parameter with filename in daily notes.
 
 ## [v3.7.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.3) - 2024-03-13

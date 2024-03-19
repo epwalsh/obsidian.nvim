@@ -1886,7 +1886,7 @@ Client._daily = function(self, datetime, opts)
   if self.opts.daily_notes.alias_format ~= nil then
     alias = tostring(os.date(self.opts.daily_notes.alias_format, datetime))
   else
-    alias = tostring(os.date("%B %-d, %Y", datetime))
+    alias = tostring(os.date("%B %d, %Y", datetime))
   end
 
   ---@type obsidian.Note
