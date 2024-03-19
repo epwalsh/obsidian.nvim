@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Don't open picker for tags when there aren't any matches.
 - Fixed overwriting frontmatter when creating daily note with template.
+- Fixed default date format for the alias of daily notes.
 
 ## [v3.7.3](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.3) - 2024-03-13
 
