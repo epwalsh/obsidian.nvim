@@ -4,6 +4,32 @@ local log = require "obsidian.log"
 local util = require "obsidian.util"
 local VERSION = require "obsidian.version"
 
+---@return { available: boolean, refs: boolean|?, tags: boolean|?, new: boolean|?, sources: string[]|? }
+local function check_completion()
+  local ok, cmp = pcall(require, "cmp")
+  if not ok then
+    return { available = false }
+  end
+
+  local cmp_refs = false
+  local cmp_tags = false
+  local cmp_new = false
+
+  ---@type string[]
+  local sources = vim.tbl_map(function(source)
+    if source.name == "obsidian" then
+      cmp_refs = true
+    elseif source.name == "obsidian_tags" then
+      cmp_tags = true
+    elseif source.name == "obsidian_new" then
+      cmp_new = true
+    end
+    return source.name
+  end, cmp.get_config().sources)
+
+  return { available = true, refs = cmp_refs, tags = cmp_tags, new = cmp_new, sources = sources }
+end
+
 ---@param client obsidian.Client
 return function(client, data)
   data = data or {}
@@ -34,7 +60,29 @@ return function(client, data)
 
   log.lazy_info "Integrations:"
   log.lazy_info("  ✓ picker: %s", client:picker())
-  log.lazy_info("  ✓ completion: %s", client.opts.completion.nvim_cmp and "enabled (nvim-cmp)" or "disabled")
+
+  if client.opts.completion.nvim_cmp then
+    local cmp_status = check_completion()
+    if cmp_status.available then
+      log.lazy_info(
+        "  ✓ completion: enabled (nvim-cmp) %s refs, %s tags, %s new",
+        cmp_status.refs and "✓" or "✗",
+        cmp_status.tags and "✓" or "✗",
+        cmp_status.new and "✓" or "✗"
+      )
+
+      if cmp_status.sources then
+        log.lazy_info "    all sources:"
+        for _, source in ipairs(cmp_status.sources) do
+          log.lazy_info("      • %s", source)
+        end
+      end
+    else
+      log.lazy_info "  ✓ completion: unavailable"
+    end
+  else
+    log.lazy_info "  ✗ completion: disabled"
+  end
 
   log.lazy_info "Tools:"
   log.lazy_info("  ✓ rg: %s", util.get_external_dependency_info "rg" or "not found")
