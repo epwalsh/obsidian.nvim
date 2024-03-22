@@ -1776,6 +1776,8 @@ Client.write_note = function(self, note, opts)
     frontmatter = self.opts.note_frontmatter_func(note)
   end
 
+  vim.print(note)
+
   note:save {
     path = path,
     insert_frontmatter = self:should_save_frontmatter(note),
