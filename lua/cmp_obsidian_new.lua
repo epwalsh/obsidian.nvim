@@ -148,6 +148,7 @@ end
 
 source.execute = function(_, item, callback)
   local Note = require "obsidian.note"
+  local Path = require "obsidian.path"
 
   local client = assert(obsidian.get_client())
   local data = item.data
@@ -156,6 +157,7 @@ source.execute = function(_, item, callback)
   -- point (seems to happen on Linux), it will lose its metatable.
   if not Note.is_note_obj(data.note) then
     data.note = setmetatable(data.note, Note.mt)
+    data.note.path = setmetatable(data.note.path, Path.mt)
   end
 
   client:write_note(data.note, { template = data.template })
