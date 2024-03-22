@@ -282,17 +282,13 @@ end
 Client.should_save_frontmatter = function(self, note)
   if not note:should_save_frontmatter() then
     return false
-  end
-  if self.opts.disable_frontmatter == nil then
+  elseif type(self.opts.disable_frontmatter) == "boolean" then
+    return not self.opts.disable_frontmatter
+  elseif type(self.opts.disable_frontmatter) == "function" then
+    return not self.opts.disable_frontmatter(tostring(self:vault_relative_path(note.path, { strict = true })))
+  else
     return true
   end
-  if type(self.opts.disable_frontmatter) == "boolean" then
-    return not self.opts.disable_frontmatter
-  end
-  if type(self.opts.disable_frontmatter) == "function" then
-    return not self.opts.disable_frontmatter(tostring(self:vault_relative_path(note.path, { strict = true })))
-  end
-  return true
 end
 
 --- Run an obsidian command directly.
