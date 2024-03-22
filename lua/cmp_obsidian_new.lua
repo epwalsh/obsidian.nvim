@@ -147,8 +147,17 @@ source.complete = function(_, request, callback)
 end
 
 source.execute = function(_, item, callback)
+  local Note = require "obsidian.note"
+
   local client = assert(obsidian.get_client())
   local data = item.data
+
+  -- Make sure `data.note` is actually an `obsidian.Note` object. If it gets serialized at some
+  -- point (seems to happen on Linux), it will lose its metatable.
+  if not Note.is_note_obj(data.note) then
+    data.note = setmetatable(data.note, Note.mt)
+  end
+
   client:write_note(data.note, { template = data.template })
   return callback {}
 end

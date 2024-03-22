@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed bug with created new notes from `nvim-cmp` on Linux.
+
 ## [v3.7.4](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.4) - 2024-03-19
 
 ### Fixed
