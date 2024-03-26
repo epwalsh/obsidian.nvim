@@ -7,6 +7,10 @@ local M = {}
 ---@field opts table
 
 ---@return obsidian.mappings.MappingConfig
+M.smart_action = function()
+  return { action = util.smart_action, opts = { noremap = false, expr = true, buffer = true } }
+end
+
 M.gf_passthrough = function()
   return { action = util.gf_passthrough, opts = { noremap = false, expr = true, buffer = true } }
 end
