@@ -381,7 +381,7 @@ end
 ---
 ---@field enable boolean
 ---@field update_debounce integer
----@field checkboxes table<string, obsidian.config.UICharSpec>
+---@field checkboxes table<string, table>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
 ---@field reference_text obsidian.config.UIStyleSpec
@@ -406,10 +406,10 @@ config.UIOpts.default = function()
     enable = true,
     update_debounce = 200,
     checkboxes = {
-      [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
-      ["x"] = { char = "", hl_group = "ObsidianDone" },
-      [">"] = { char = "", hl_group = "ObsidianRightArrow" },
-      ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
+      [" "] = { order = 1, char = "󰄱", hl_group = "ObsidianTodo" },
+      ["~"] = { order = 2, char = "󰰱", hl_group = "ObsidianTilde" },
+      [">"] = { order = 3, char = "", hl_group = "ObsidianRightArrow" },
+      ["x"] = { order = 4, char = "", hl_group = "ObsidianDone" },
     },
     bullets = { char = "•", hl_group = "ObsidianBullet" },
     external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
