@@ -498,7 +498,7 @@ util.toggle_checkbox = function(opts)
   local line = vim.api.nvim_get_current_line()
 
   local checkbox_pattern = "^%s*- %[.] "
-  local checkboxes = opts and opts or { " ", "~", ">", "x" }
+  local checkboxes = opts or { " ", "x" }
 
   if not string.match(line, checkbox_pattern) then
     local unordered_list_pattern = "^(%s*)[-*+] (.*)"
