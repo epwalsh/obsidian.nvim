@@ -103,24 +103,41 @@ M.clone_template = function(opts)
   assert(note_path:parent()):mkdir { parents = true, exist_ok = true }
 
   local template_path = resolve_template(opts.template_name, opts.client)
-  local template_file = io.open(tostring(template_path), "r")
+
+  local template_file, read_err = io.open(tostring(template_path), "r")
   if not template_file then
-    error(string.format("Unable to read template at '%s'", template_path))
+    error(string.format("Unable to read template at '%s': %s", template_path, tostring(read_err)))
   end
 
-  local note_file = io.open(tostring(note_path), "wb")
+  local note_file, write_err = io.open(tostring(note_path), "w")
   if not note_file then
-    error(string.format("Unable to write note at '%s'", note_path))
+    error(string.format("Unable to write note at '%s': %s", note_path, tostring(write_err)))
   end
 
   for line in template_file:lines "L" do
-    note_file:write(M.substitute_template_variables(line, opts.client, opts.note))
+    line = M.substitute_template_variables(line, opts.client, opts.note)
+    note_file:write(line)
   end
 
-  template_file:close()
-  note_file:close()
+  assert(template_file:close())
+  assert(note_file:close())
 
-  return Note.from_file(note_path)
+  local new_note = Note.from_file(note_path)
+  vim.print(new_note)
+
+  -- Transfer fields from `opts.note`.
+  new_note.id = opts.note.id
+  if new_note.title == nil then
+    new_note.title = opts.note.title
+  end
+  for _, alias in ipairs(opts.note.aliases) do
+    new_note:add_alias(alias)
+  end
+  for _, tag in ipairs(opts.note.tags) do
+    new_note:add_tag(tag)
+  end
+
+  return new_note
 end
 
 ---Insert a template at the given location.

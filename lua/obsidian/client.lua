@@ -1638,7 +1638,7 @@ Client.parse_title_id_path = function(self, title, id, dir)
     if not base_dir:is_absolute() then
       base_dir = self.dir / base_dir
     else
-      base_dir = base_dir:resolve { strict = true }
+      base_dir = base_dir:resolve()
     end
   else
     local bufpath = Path.buffer(0):resolve()
