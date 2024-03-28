@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensure fields transferred to new note when cloning from template.
 - Fixed bug with YAML parser where it would fail to parse field names with spaces in them.
 
+### Added
+
+- Added a smart action to perform depending on the context (textobject the cursor is on).
+
+### Changed
+
+* Added custom UI opts for toggle checkbox utils, and changed its behavior to cycle through checkboxes
+
 ## [v3.7.5](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.5) - 2024-03-22
 
 ### Fixed
