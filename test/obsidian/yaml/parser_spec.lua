@@ -92,6 +92,17 @@ describe("Parser class", function()
     }, result)
   end)
 
+  it("should parse mappings with spaces for keys", function()
+    local result = parser:parse(table.concat({
+      "bar: 2",
+      "modification date: Tuesday 26th March 2024 18:01:42",
+    }, "\n"))
+    assert.are_same({
+      bar = 2,
+      ["modification date"] = "Tuesday 26th March 2024 18:01:42",
+    }, result)
+  end)
+
   it("should ignore comments", function()
     local result = parser:parse(table.concat({
       "foo: 1  # this is a comment",
