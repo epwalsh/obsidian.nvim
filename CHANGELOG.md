@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.7.6](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.6) - 2024-04-01
+
 ### Fixed
 
 - Ensure fields transferred to new note when cloning from template.
