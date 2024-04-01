@@ -4,7 +4,7 @@ local iter = require("obsidian.itertools").iter
 
 local command_lookups = {
   ObsidianCheck = "obsidian.commands.check",
-  ObsidianToggleCheckbox = "obsidian.commands.checkbox",
+  ObsidianToggleCheckbox = "obsidian.commands.toggle_checkbox",
   ObsidianToday = "obsidian.commands.today",
   ObsidianYesterday = "obsidian.commands.yesterday",
   ObsidianTomorrow = "obsidian.commands.tomorrow",

@@ -191,6 +191,15 @@ config.ClientOpts.normalize = function(opts, defaults)
     opts.tags = nil
   end
 
+  if opts.ui and opts.ui.checkboxes then
+    -- Add a default 'order' for backwards compat.
+    for i, char in ipairs { " ", "x" } do
+      if opts.ui.checkboxes[char] and not opts.ui.checkboxes[char].order then
+        opts.ui.checkboxes[char].order = i
+      end
+    end
+  end
+
   --------------------------
   -- Merge with defaults. --
   --------------------------
@@ -281,6 +290,7 @@ config.MappingOpts.default = function()
   return {
     ["gf"] = mappings.gf_passthrough(),
     ["<leader>ch"] = mappings.toggle_checkbox(),
+    ["<cr>"] = mappings.smart_action(),
   }
 end
 
@@ -381,7 +391,7 @@ end
 ---
 ---@field enable boolean
 ---@field update_debounce integer
----@field checkboxes table<string, table>
+---@field checkboxes table<string, obsidian.config.CheckboxSpec>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
 ---@field reference_text obsidian.config.UIStyleSpec
@@ -395,6 +405,12 @@ config.UIOpts = {}
 ---
 ---@field char string
 ---@field hl_group string
+
+---@class obsidian.config.CheckboxSpec : obsidian.config.UICharSpec
+---
+---@field char string
+---@field hl_group string
+---@field order integer
 
 ---@class obsidian.config.UIStyleSpec
 ---

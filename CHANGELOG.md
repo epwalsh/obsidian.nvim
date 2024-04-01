@@ -14,11 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added a smart action to perform depending on the context (textobject the cursor is on).
+- Added a smart action mapping on `<CR>`, that depends on the context. It will follow links or toggle checkboxes.
 
 ### Changed
 
-* Added custom UI opts for toggle checkbox utils, and changed its behavior to cycle through checkboxes
+- Added `order` field to `ui.checkboxes` config fields that determines the order in which the different checkbox characters are cycled through via `:ObsidianToggleCheckbox` and the smart action.
 
 ## [v3.7.5](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.5) - 2024-03-22
 

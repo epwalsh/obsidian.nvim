@@ -84,6 +84,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianRename [NEWNAME] [--dry-run]` to rename the note of the current buffer or reference under the cursor, updating all backlinks across the vault. Since this command is still relatively new and could potentially write a lot of changes to your vault, I highly recommend committing the current state of your vault (if you're using version control) before running it, or doing a dry-run first by appending "--dry-run" to the command, e.g. `:ObsidianRename new-id --dry-run`.
 
+- `:ObsidianToggleCheckbox` to cycle through checkbox options.
+
 ### Demo
 
 [![2024-01-31 14 22 52](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2986e1d2-13e8-40e2-9c9e-75691a3b662e)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2986e1d2-13e8-40e2-9c9e-75691a3b662e)
@@ -279,6 +281,13 @@ This is a complete list of all of the options that can be passed to `require("ob
       end,
       opts = { buffer = true },
     },
+    -- Smart action depending on context, either follow link or toggle checkbox.
+    ["<cr>"] = {
+      action = function()
+        return require("obsidian").util.smart_action()
+      end,
+      opts = { buffer = true },
+    }
   },
 
   -- Where to put new notes. Valid options are
