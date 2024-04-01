@@ -217,4 +217,12 @@ describe("Parser class", function()
     }, "\n"))
     assert.are_same({ aliases = { "Research project: staged training" }, sources = { "https://example.com" } }, result)
   end)
+
+  it("should parse array item strings with '#' in them", function()
+    local result = parser:parse(table.concat({
+      "tags:",
+      " - #demo",
+    }, "\n"))
+    assert.are_same({ tags = { "#demo" } }, result)
+  end)
 end)

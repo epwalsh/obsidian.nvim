@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ensure fields transferred to new note when cloning from template.
 - Fixed bug with YAML parser where it would fail to parse field names with spaces in them.
+- Fixed bug with YAML parser where it would incorrectly identity comments.
 
 ### Added
 
