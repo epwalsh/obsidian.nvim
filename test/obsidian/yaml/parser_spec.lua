@@ -225,4 +225,12 @@ describe("Parser class", function()
     }, "\n"))
     assert.are_same({ tags = { "#demo" } }, result)
   end)
+
+  it("should parse array item strings that look like markdown links", function()
+    local result = parser:parse(table.concat({
+      "links:",
+      " - [Foo](bar)",
+    }, "\n"))
+    assert.are_same({ links = { "[Foo](bar)" } }, result)
+  end)
 end)

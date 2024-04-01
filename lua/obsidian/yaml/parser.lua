@@ -437,7 +437,7 @@ Parser._parse_inline_array = function(self, i, text)
   if vim.endswith(str, "]") then
     str = string.sub(str, 1, -2)
   else
-    return false, self:_error_msg("invalid inline array", i, text), nil
+    return false, nil, nil
   end
 
   local out = {}
