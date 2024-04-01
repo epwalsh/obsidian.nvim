@@ -114,6 +114,7 @@ COMMANDS                                                   *obsidian-commands*
     vault (if you’re using version control) before running it, or doing a dry-run
     first by appending "–dry-run" to the command, e.g. `:ObsidianRename new-id
     --dry-run`.
+- `:ObsidianToggleCheckbox` to cycle through checkbox options.
 
 
 DEMO                                                           *obsidian-demo*
@@ -336,6 +337,13 @@ carefully and customize it to your needs:
           end,
           opts = { buffer = true },
         },
+        -- Smart action depending on context, either follow link or toggle checkbox.
+        ["<cr>"] = {
+          action = function()
+            return require("obsidian").util.smart_action()
+          end,
+          opts = { buffer = true },
+        }
       },
     
       -- Where to put new notes. Valid options are
