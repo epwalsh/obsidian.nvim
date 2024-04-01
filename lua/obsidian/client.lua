@@ -383,8 +383,8 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
   ---@param content_match MatchData
   local function on_search_match(content_match)
     local path = Path.new(content_match.path.text):resolve { strict = true }
-    if not found[path] then
-      found[path] = true
+    if not found[path.filename] then
+      found[path.filename] = true
       tx.send(path)
     end
   end
@@ -392,8 +392,8 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
   ---@param path_match string
   local function on_find_match(path_match)
     local path = Path.new(path_match):resolve { strict = true }
-    if not found[path] then
-      found[path] = true
+    if not found[path.filename] then
+      found[path.filename] = true
       tx.send(path)
     end
   end
