@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug with YAML parser where it would fail to parse field names with spaces in them.
 - Fixed bug with YAML parser where it would incorrectly identity comments.
 
+### Added
+
+- Added a smart action mapping on `<CR>`, that depends on the context. It will follow links or toggle checkboxes.
+
+### Changed
+
+- Added `order` field to `ui.checkboxes` config fields that determines the order in which the different checkbox characters are cycled through via `:ObsidianToggleCheckbox` and the smart action.
+
 ## [v3.7.5](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.5) - 2024-03-22
 
 ### Fixed

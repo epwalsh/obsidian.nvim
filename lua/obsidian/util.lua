@@ -1,4 +1,5 @@
 local iter = require("obsidian.itertools").iter
+local enumerate = require("obsidian.itertools").enumerate
 local log = require "obsidian.log"
 
 local util = {}
@@ -492,11 +493,12 @@ util.zettel_id = function()
 end
 
 ---Toggle the checkbox on the line that the cursor is on.
-util.toggle_checkbox = function()
+util.toggle_checkbox = function(opts)
   local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
   local line = vim.api.nvim_get_current_line()
 
   local checkbox_pattern = "^%s*- %[.] "
+  local checkboxes = opts or { " ", "x" }
 
   if not string.match(line, checkbox_pattern) then
     local unordered_list_pattern = "^(%s*)[-*+] (.*)"
@@ -504,14 +506,15 @@ util.toggle_checkbox = function()
     if string.match(line, unordered_list_pattern) then
       line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")
     else
-      line = string.gsub(line, "^(%s*)", "%1- [ ] ")
+      return
     end
-  elseif string.match(line, "^%s*- %[ %].*") then
-    line = util.string_replace(line, "- [ ]", "- [x]", 1)
   else
-    for check_char in iter { "x", "~", ">", "-" } do
+    for i, check_char in enumerate(checkboxes) do
       if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
-        line = util.string_replace(line, "- [" .. check_char .. "]", "- [ ]", 1)
+        if i == #checkboxes then
+          i = 0
+        end
+        line = util.string_replace(line, "- [" .. check_char .. "]", "- [" .. checkboxes[i + 1] .. "]", 1)
         break
       end
     end
@@ -735,6 +738,17 @@ util.gf_passthrough = function()
   else
     return "gf"
   end
+end
+
+util.smart_action = function()
+  -- follow link if possible
+  if util.cursor_on_markdown_link(nil, nil, true) then
+    return "<cmd>ObsidianFollowLink<CR>"
+  end
+
+  -- toggle task if possible
+  -- cycles through your custom UI checkboxes, default: [ ] [~] [>] [x]
+  return "<cmd>ObsidianToggleCheckbox<CR>"
 end
 
 ---Get the path to where a plugin is installed.
