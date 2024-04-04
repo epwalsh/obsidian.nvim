@@ -123,7 +123,6 @@ M.clone_template = function(opts)
   assert(note_file:close())
 
   local new_note = Note.from_file(note_path)
-  vim.print(new_note)
 
   -- Transfer fields from `opts.note`.
   new_note.id = opts.note.id
