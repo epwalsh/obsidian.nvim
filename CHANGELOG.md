@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Removed excessive logging when running `:ObsidianToday` command with a defined template, resulting in cleaner output and a more streamlined user experience.
+
 ## [v3.7.6](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.6) - 2024-04-01
 
 ### Fixed
