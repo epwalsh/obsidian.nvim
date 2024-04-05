@@ -286,7 +286,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       action = function()
         return require("obsidian").util.smart_action()
       end,
-      opts = { buffer = true },
+      opts = { buffer = true, expr = true },
     }
   },
 
