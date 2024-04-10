@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed regression with toggle checkbox util/mapping.
+
 ## [v3.7.7](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.7) - 2024-04-05
 
 ### Fixed
