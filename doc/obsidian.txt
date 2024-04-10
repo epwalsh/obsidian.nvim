@@ -342,7 +342,7 @@ carefully and customize it to your needs:
           action = function()
             return require("obsidian").util.smart_action()
           end,
-          opts = { buffer = true },
+          opts = { buffer = true, expr = true },
         }
       },
     
