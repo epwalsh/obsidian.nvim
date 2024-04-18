@@ -1871,6 +1871,9 @@ Client.daily_note_path = function(self, datetime)
 
   path = path / (id .. ".md")
 
+  -- ID may contain additional path components, so make sure we use the stem.
+  id = path.stem
+
   return path, id
 end
 
@@ -1888,11 +1891,10 @@ Client._daily = function(self, datetime, opts)
 
   local path, id = self:daily_note_path(datetime)
 
+  ---@type string|?
   local alias
   if self.opts.daily_notes.alias_format ~= nil then
     alias = tostring(os.date(self.opts.daily_notes.alias_format, datetime))
-  else
-    alias = tostring(os.date("%B %d, %Y", datetime))
   end
 
   ---@type obsidian.Note
@@ -1900,8 +1902,13 @@ Client._daily = function(self, datetime, opts)
   if path:exists() then
     note = Note.from_file(path, opts.load)
   else
-    note = Note.new(id, { alias }, { "daily-notes" }, path)
-    note.title = alias
+    note = Note.new(id, {}, { "daily-notes" }, path)
+
+    if alias then
+      note:add_alias(alias)
+      note.title = alias
+    end
+
     if not opts.no_write then
       self:write_note(note, { template = self.opts.daily_notes.template })
     end
