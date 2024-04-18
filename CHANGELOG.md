@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed an issue where template insertion occurred below the intended line, it now correctly inserts at the current line.
+- Fixed `:ObsidianOpen` issue on WSL OS name identifier check with different release name case.
 
 ## [v3.7.8](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.8) - 2024-04-09
 
