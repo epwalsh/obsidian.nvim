@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed an issue where template insertion occurred below the intended line, it now correctly inserts at the current line.
 - Fixed `:ObsidianOpen` issue on WSL OS name identifier check with different release name case.
+- Ensure ID of daily notes is always equal to the stem of the path.
+
+### Changed
+
+- Don't insert a default alias for daily notes when `daily_notes.alias_format` is `nil`.
 
 ## [v3.7.8](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.8) - 2024-04-09
 
