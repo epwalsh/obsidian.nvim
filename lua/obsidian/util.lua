@@ -501,9 +501,6 @@ util.toggle_checkbox = function(opts)
   local checkboxes = opts or { " ", "x" }
 
   if not string.match(line, checkbox_pattern) then
-    if opts then -- not create new checkbox with command
-      return
-    end
     local unordered_list_pattern = "^(%s*)[-*+] (.*)"
     if string.match(line, unordered_list_pattern) then
       line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")

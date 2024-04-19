@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Ensure toggle checkbox mapping uses checkbox configuration.
+
 ## [v3.7.10](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.10) - 2024-04-19
 
 ### Fixed
