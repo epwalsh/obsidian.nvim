@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed bug with OS detection introduced by 6ffd1964500d24c1adde3c88705b146d9c415207.
+
 ## [v3.7.9](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.9) - 2024-04-18
 
 ### Fixed
