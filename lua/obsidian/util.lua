@@ -493,8 +493,9 @@ util.zettel_id = function()
 end
 
 ---Toggle the checkbox on the line that the cursor is on.
-util.toggle_checkbox = function(opts)
-  local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
+util.toggle_checkbox = function(opts, line_num)
+  -- Allow line_num to be optional, defaulting to the current line if not provided
+  line_num = line_num or unpack(vim.api.nvim_win_get_cursor(0))
   local line = vim.api.nvim_get_current_line()
 
   local checkbox_pattern = "^%s*- %[.] "
