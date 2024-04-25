@@ -438,8 +438,8 @@ util.get_os = function()
     this_os = util.OSType.Windows
   else
     local sysname = vim.loop.os_uname().sysname
-    local release = vim.loop.os_uname().release
-    if sysname == "Linux" and string.find(release, "microsoft") then
+    local release = vim.loop.os_uname().release:lower()
+    if sysname:lower() == "linux" and string.find(release, "microsoft") then
       this_os = util.OSType.Wsl
     else
       this_os = sysname
@@ -502,11 +502,10 @@ util.toggle_checkbox = function(opts)
 
   if not string.match(line, checkbox_pattern) then
     local unordered_list_pattern = "^(%s*)[-*+] (.*)"
-
     if string.match(line, unordered_list_pattern) then
       line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")
     else
-      return
+      line = string.gsub(line, "^(%s*)", "%1- [ ] ")
     end
   else
     for i, check_char in enumerate(checkboxes) do

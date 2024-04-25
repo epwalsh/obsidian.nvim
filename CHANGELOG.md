@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Ensure toggle checkbox mapping uses checkbox configuration.
+
+## [v3.7.10](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.10) - 2024-04-19
+
+### Fixed
+
+- Fixed bug with OS detection introduced by 6ffd1964500d24c1adde3c88705b146d9c415207.
+
+## [v3.7.9](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.9) - 2024-04-18
+
+### Fixed
+
+- Fixed an issue where template insertion occurred below the intended line, it now correctly inserts at the current line.
+- Fixed `:ObsidianOpen` issue on WSL OS name identifier check with different release name case.
+- Ensure ID of daily notes is always equal to the stem of the path.
+
+### Changed
+
+- Don't insert a default alias for daily notes when `daily_notes.alias_format` is `nil`.
+
+## [v3.7.8](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.8) - 2024-04-09
+
+### Fixed
+
+- Fixed regression with toggle checkbox util/mapping.
+
 ## [v3.7.7](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.7) - 2024-04-05
 
 ### Fixed

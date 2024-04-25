@@ -176,7 +176,7 @@ M.insert_template = function(opts)
     error(string.format("Template file '%s' not found", template_path))
   end
 
-  vim.api.nvim_buf_set_lines(buf, row, row, false, insert_lines)
+  vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
   local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
   vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
 
