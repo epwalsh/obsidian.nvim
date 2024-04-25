@@ -17,7 +17,7 @@ local config = {}
 ---@field preferred_link_style obsidian.config.LinkStyle
 ---@field follow_url_func fun(url: string)|?
 ---@field image_name_func (fun(): string)|?
----@field note_frontmatter_func fun(note: obsidian.Note)|?
+---@field note_frontmatter_func (fun(note: obsidian.Note): table)|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
