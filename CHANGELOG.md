@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ensure toggle checkbox mapping uses checkbox configuration.
 
+### Added
+
+- Added new pass_over_todos option to allow for passing any incomplete todos from yesterday to today's DailyNote
+
 ## [v3.7.10](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.10) - 2024-04-19
 
 ### Fixed

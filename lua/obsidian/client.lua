@@ -1910,9 +1910,8 @@ Client._daily = function(self, datetime, opts)
     end
     if not opts.no_write then
       if self.opts.daily_notes.pass_on_todos then
-        --NOTE: potentially use Client.yesterday() with added props? 
-        --
         --@type obsidian.Note
+        --NOTE: potentially use Client.yesterday() with added props?
         local yesterday_note = self:daily(-1, { no_write = true }):read_note()
         local todo_lines = {}
         local TODO_PATTERN = "^%s*-%s%[%s%]%s.*"
