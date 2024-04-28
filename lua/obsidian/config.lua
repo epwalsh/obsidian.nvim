@@ -354,6 +354,7 @@ end
 ---@field date_format string|?
 ---@field alias_format string|?
 ---@field template string|?
+---@field pass_on_todos boolean|?
 config.DailyNotesOpts = {}
 
 --- Get defaults.
