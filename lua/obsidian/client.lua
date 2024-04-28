@@ -1916,9 +1916,9 @@ Client._daily = function(self, datetime, opts)
         local todo_lines = {}
         local TODO_PATTERN = "^%s*-%s%[%s%]%s.*"
         if yesterday_note then
-          for i, v in ipairs(yesterday_note:read_note()) do
-            if v:match(TODO_PATTERN) then
-              table.insert(todo_lines, v)
+          for _, line in ipairs(yesterday_note:read_note()) do
+            if line:match(TODO_PATTERN) then
+              table.insert(todo_lines, line)
             end
           end
           update_content = function(contents)
