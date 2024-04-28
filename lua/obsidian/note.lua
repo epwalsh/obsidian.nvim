@@ -820,7 +820,7 @@ end
 Note.read_note = function(self)
   if self.exists() then
     local contents = {}
-    
+
     with(open(tostring(self.path), "r"), function(reader)
       local line = reader:read()
       while line ~= nil do
