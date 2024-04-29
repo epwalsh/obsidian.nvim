@@ -818,7 +818,7 @@ end
 ---
 ---@return string[]|?
 Note.read_note = function(self)
-  if self.exists() then
+  if self:exists() then
     local contents = {}
 
     with(open(tostring(self.path), "r"), function(reader)
