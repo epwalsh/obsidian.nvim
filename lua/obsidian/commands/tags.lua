@@ -55,7 +55,7 @@ return function(client, data)
     return
   end
 
-  local tags = data.fargs
+  local tags = data.fargs or {}
 
   if vim.tbl_isempty(tags) then
     -- Check for visual selection.
