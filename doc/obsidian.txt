@@ -432,7 +432,7 @@ carefully and customize it to your needs:
     
       -- Optional, for templates (see below).
       templates = {
-        subdir = "templates",
+        folder = "templates",
         date_format = "%Y-%m-%d",
         time_format = "%H:%M",
         -- A map for custom variables, the key should be the variable and the value a function
@@ -750,7 +750,7 @@ For example, with the following configuration
       -- other fields ...
     
       templates = {
-          subdir = "my-templates-folder",
+          folder = "my-templates-folder",
           date_format = "%Y-%m-%d-%a",
           time_format = "%H:%M",
       },
@@ -825,7 +825,7 @@ For example, to extend the configuration above this way:
     +        notes_subdir = vim.NIL,  -- have to use 'vim.NIL' instead of 'nil'
     +        new_notes_location = "current_dir",
     +        templates = {
-    +          subdir = vim.NIL,
+    +          folder = vim.NIL,
     +        },
     +        disable_frontmatter = true,
     +      },
