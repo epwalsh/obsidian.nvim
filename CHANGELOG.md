@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Renamed config field `templates.subdir` to `templates.folder` (`subdir` still supported for backwards compat).
+- You can now use a templates folder outside of your vault.
+
 ## [v3.7.11](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.11) - 2024-04-30
 
 ### Added

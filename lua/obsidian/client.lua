@@ -261,17 +261,19 @@ Client.templates_dir = function(self, workspace)
     opts = self:opts_for_workspace(workspace)
   end
 
-  if opts.templates ~= nil and opts.templates.subdir ~= nil then
-    local templates_dir = self:vault_root(workspace) / opts.templates.subdir
-    if not templates_dir:is_dir() then
-      log.err("'%s' is not a valid directory for templates", templates_dir)
-      return nil
-    else
-      return templates_dir
-    end
-  else
+  if opts.templates == nil or opts.templates.folder == nil then
     return nil
   end
+
+  local paths_to_check = { Path.new(opts.templates.folder), self:vault_root(workspace) / opts.templates.folder }
+  for _, path in ipairs(paths_to_check) do
+    if path:is_dir() then
+      return path
+    end
+  end
+
+  log.err("'%s' is not a valid templates directory", opts.templates.folder)
+  return nil
 end
 
 --- Determines whether a note's frontmatter is managed by obsidian.nvim.
@@ -350,8 +352,8 @@ Client._prepare_search_opts = function(self, opts, additional_opts)
     search_opts.sort_reversed = self.opts.sort_reversed
   end
 
-  if not opts.include_templates and self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
-    search_opts:add_exclude(self.opts.templates.subdir)
+  if not opts.include_templates and self.opts.templates ~= nil and self.opts.templates.folder ~= nil then
+    search_opts:add_exclude(tostring(self.opts.templates.folder))
   end
 
   if opts.ignore_case then

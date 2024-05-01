@@ -200,6 +200,11 @@ config.ClientOpts.normalize = function(opts, defaults)
     end
   end
 
+  if opts.templates and opts.templates.subdir then
+    opts.templates.folder = opts.templates.subdir
+    opts.templates.subdir = nil
+  end
+
   --------------------------
   -- Merge with defaults. --
   --------------------------
@@ -369,7 +374,7 @@ end
 
 ---@class obsidian.config.TemplateOpts
 ---
----@field subdir string
+---@field folder string|obsidian.Path|?
 ---@field date_format string|?
 ---@field time_format string|?
 ---@field substitutions table<string, function|string>|?
@@ -380,7 +385,7 @@ config.TemplateOpts = {}
 ---@return obsidian.config.TemplateOpts
 config.TemplateOpts.default = function()
   return {
-    subdir = nil,
+    folder = nil,
     date_format = nil,
     time_format = nil,
     substitutions = {},
