@@ -127,21 +127,6 @@ M.complete_args_search = function(client, _, cmd_line, _)
   return completions
 end
 
-M.complete_args_id = function(_, _, cmd_line, _)
-  local cmd_arg, _ = util.lstrip_whitespace(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
-  if string.len(cmd_arg) > 0 then
-    return {}
-  else
-    local note_id = util.parse_cursor_link()
-    if note_id == nil then
-      local bufpath = vim.api.nvim_buf_get_name(assert(vim.fn.bufnr()))
-      local note = Note.from_file(bufpath)
-      note_id = tostring(note.id)
-    end
-    return { note_id }
-  end
-end
-
 M.register("ObsidianCheck", { opts = { nargs = 0, desc = "Check for issues in your vault" } })
 
 M.register("ObsidianToday", { opts = { nargs = "?", desc = "Open today's daily note" } })
@@ -186,7 +171,7 @@ M.register("ObsidianWorkspace", { opts = { nargs = "?", desc = "Check or switch 
 
 M.register(
   "ObsidianRename",
-  { opts = { nargs = "?", desc = "Rename note and update all references to it" }, complete = M.complete_args_id }
+  { opts = { nargs = "?", complete = "file", desc = "Rename note and update all references to it" } }
 )
 
 M.register(

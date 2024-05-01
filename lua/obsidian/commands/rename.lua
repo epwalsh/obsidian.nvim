@@ -25,6 +25,7 @@ return function(client, data)
   else
     arg = vim.fn.input {
       prompt = "Enter new note ID/name/path: ",
+      completion = "file",
     }
     if not arg or string.len(arg) == 0 then
       log.warn "Rename aborted"
