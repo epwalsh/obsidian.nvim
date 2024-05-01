@@ -877,14 +877,21 @@ end
 
 --- Get the current visual selection of text and exit visual mode.
 ---
+---@param opts { strict: boolean|? }|?
+---
 ---@return { lines: string[], selection: string, csrow: integer, cscol: integer, cerow: integer, cecol: integer }|?
-util.get_visual_selection = function()
+util.get_visual_selection = function(opts)
+  opts = opts or {}
   -- Adapted from fzf-lua:
   -- https://github.com/ibhagwan/fzf-lua/blob/6ee73fdf2a79bbd74ec56d980262e29993b46f2b/lua/fzf-lua/utils.lua#L434-L466
   -- this will exit visual mode
   -- use 'gv' to reselect the text
   local _, csrow, cscol, cerow, cecol
   local mode = vim.fn.mode()
+  if opts.strict and not vim.endswith(string.lower(mode), "v") then
+    return
+  end
+
   if mode == "v" or mode == "V" or mode == "" then
     -- if we are in visual mode use the live position
     _, csrow, cscol, _ = unpack(vim.fn.getpos ".")

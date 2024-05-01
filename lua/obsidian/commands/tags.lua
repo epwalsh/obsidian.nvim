@@ -59,7 +59,7 @@ return function(client, data)
 
   if vim.tbl_isempty(tags) then
     -- Check for visual selection.
-    local viz = util.get_visual_selection()
+    local viz = util.get_visual_selection { strict = true }
     if viz and #viz.lines == 1 and string.match(viz.selection, "^#?" .. search.Patterns.TagCharsRequired .. "$") then
       local tag = viz.selection
 
