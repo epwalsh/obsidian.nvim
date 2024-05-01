@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.7.11](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.11) - 2024-04-30
+
 ### Added
 
 - Added an optional line number argument for `util.toggle_checkbox()`, that defaults to the current line.
