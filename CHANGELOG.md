@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ensure toggle checkbox mapping uses checkbox configuration.
 - Don't use last visual selection when in normal mode with `:ObsidianTags`.
+- Fixed a normalization issue with windows paths.
 
 ## [v3.7.10](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.10) - 2024-04-19
 

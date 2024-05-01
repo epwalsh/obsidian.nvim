@@ -30,6 +30,13 @@ describe("Path.new()", function()
       Path.new(1, "bar")
     end)
   end)
+
+  if util.get_os() == util.OSType.Windows then
+    it("should normalize lowercase c drives on windows correctly", function()
+      local path = Path:new "c:/foo/bar"
+      assert.equal(path.filename, "C:/foo/bar")
+    end)
+  end
 end)
 
 describe("Path.is_path_obj()", function()
