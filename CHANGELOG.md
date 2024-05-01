@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added an optional line number argument for `util.toggle_checkbox()`, that defaults to the current line.
+
 ### Fixed
 
 - Ensure toggle checkbox mapping uses checkbox configuration.
