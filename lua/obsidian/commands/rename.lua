@@ -12,7 +12,7 @@ local zip = require("obsidian.itertools").zip
 return function(client, data)
   -- Validate args.
   local dry_run = false
-  ---@type string
+  ---@type string|?
   local arg
 
   if data.args == "--dry-run" then
@@ -23,10 +23,7 @@ return function(client, data)
   if data.args ~= nil and string.len(data.args) > 0 then
     arg = util.strip_whitespace(data.args)
   else
-    arg = vim.fn.input {
-      prompt = "Enter new note ID/name/path: ",
-      completion = "file",
-    }
+    arg = util.input("Enter new note ID/name/path: ", { completion = "file" })
     if not arg or string.len(arg) == 0 then
       log.warn "Rename aborted"
       return
