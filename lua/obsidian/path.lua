@@ -158,10 +158,11 @@ end
 ---
 ---@return obsidian.Path
 Path.new = function(...)
-  local args = { ... }
+  local util = require "obsidian.util"
 
   local self = Path.init()
 
+  local args = { ... }
   local arg
   if #args == 1 then
     arg = tostring(args[1])
@@ -177,6 +178,13 @@ Path.new = function(...)
   end
 
   self.filename = vim.fs.normalize(tostring(arg))
+  -- On Windows, normalize 'c:/' to 'C:/'
+  if
+    (util.get_os() == util.OSType.Windows or util.get_os() == util.OSType.Wsl)
+    and string.match(self.filename, "^[%a]:/.*$")
+  then
+    self.filename = string.upper(string.sub(self.filename, 1, 1)) .. string.sub(self.filename, 2)
+  end
 
   return self
 end
