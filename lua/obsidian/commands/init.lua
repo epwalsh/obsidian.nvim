@@ -1,4 +1,3 @@
-local Note = require "obsidian.note"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 
