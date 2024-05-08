@@ -156,7 +156,15 @@ end
 ---
 ---@return obsidian.Workspace|?
 Workspace.get_workspace_for_dir = function(cur_dir, workspaces)
-  cur_dir = Path.new(cur_dir):resolve { strict = true }
+  local ok
+  ok, cur_dir = pcall(function()
+    return Path.new(cur_dir):resolve { strict = true }
+  end)
+
+  if not ok then
+    return
+  end
+
   for _, spec in ipairs(workspaces) do
     local w = Workspace.new_from_spec(spec)
     if w.path == cur_dir or w.path:is_parent_of(cur_dir) then
