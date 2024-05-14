@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Made workspace detection more robust.
+
 ## [v3.7.12](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.12) - 2024-05-02
 
 ### Changed
