@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Made workspace detection more robust.
 - Fixed regression where frontmatter is updated in template files.
+- Fixed finding backlinks with URL-encoded path references.
 
 ## [v3.7.12](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.12) - 2024-05-02
 

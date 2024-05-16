@@ -1279,30 +1279,38 @@ Client.find_backlinks_async = function(self, note, callback, opts)
 
   -- Prepare search terms.
   local search_terms = {}
-  for ref in iter { tostring(note.id), note:fname(), self:vault_relative_path(note.path) } do
-    if ref ~= nil then
-      if anchor == nil and block == nil then
-        -- Wiki links without anchor/block.
-        search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
-        search_terms[#search_terms + 1] = string.format("[[%s|", ref)
-        -- Markdown link without anchor/block.
-        search_terms[#search_terms + 1] = string.format("(%s)", ref)
-        -- Wiki links with anchor/block.
-        search_terms[#search_terms + 1] = string.format("[[%s#", ref)
-        -- Markdown link with anchor/block.
-        search_terms[#search_terms + 1] = string.format("(%s#", ref)
-      elseif anchor then
-        -- Note: Obsidian allow a lot of different forms of anchor links, so we can't assume
-        -- it's the standardized form here.
-        -- Wiki links with anchor.
-        search_terms[#search_terms + 1] = string.format("[[%s#", ref)
-        -- Markdown link with anchor.
-        search_terms[#search_terms + 1] = string.format("(%s#", ref)
-      elseif block then
-        -- Wiki links with block.
-        search_terms[#search_terms + 1] = string.format("[[%s#%s", ref, block)
-        -- Markdown link with block.
-        search_terms[#search_terms + 1] = string.format("(%s#%s", ref, block)
+  for raw_ref in iter { tostring(note.id), note:fname(), self:vault_relative_path(note.path) } do
+    for ref in
+      iter(util.tbl_unique {
+        raw_ref,
+        util.urlencode(tostring(raw_ref)),
+        util.urlencode(tostring(raw_ref), { keep_path_sep = true }),
+      })
+    do
+      if ref ~= nil then
+        if anchor == nil and block == nil then
+          -- Wiki links without anchor/block.
+          search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
+          search_terms[#search_terms + 1] = string.format("[[%s|", ref)
+          -- Markdown link without anchor/block.
+          search_terms[#search_terms + 1] = string.format("(%s)", ref)
+          -- Wiki links with anchor/block.
+          search_terms[#search_terms + 1] = string.format("[[%s#", ref)
+          -- Markdown link with anchor/block.
+          search_terms[#search_terms + 1] = string.format("(%s#", ref)
+        elseif anchor then
+          -- Note: Obsidian allow a lot of different forms of anchor links, so we can't assume
+          -- it's the standardized form here.
+          -- Wiki links with anchor.
+          search_terms[#search_terms + 1] = string.format("[[%s#", ref)
+          -- Markdown link with anchor.
+          search_terms[#search_terms + 1] = string.format("(%s#", ref)
+        elseif block then
+          -- Wiki links with block.
+          search_terms[#search_terms + 1] = string.format("[[%s#%s", ref, block)
+          -- Markdown link with block.
+          search_terms[#search_terms + 1] = string.format("(%s#%s", ref, block)
+        end
       end
     end
   end
