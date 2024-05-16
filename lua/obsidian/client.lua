@@ -282,6 +282,17 @@ end
 ---
 ---@return boolean
 Client.should_save_frontmatter = function(self, note)
+  -- Check if the note is a template.
+  local templates_dir = self:templates_dir()
+  if templates_dir ~= nil then
+    templates_dir = templates_dir:resolve()
+    for _, parent in ipairs(note.path:parents()) do
+      if parent == templates_dir then
+        return false
+      end
+    end
+  end
+
   if not note:should_save_frontmatter() then
     return false
   elseif type(self.opts.disable_frontmatter) == "boolean" then
