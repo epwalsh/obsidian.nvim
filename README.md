@@ -485,6 +485,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       ObsidianDone = { bold = true, fg = "#89ddff" },
       ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
       ObsidianTilde = { bold = true, fg = "#ff5370" },
+      ObsidianImportant = { bold = true, fg = "#d73128" },
       ObsidianBullet = { bold = true, fg = "#89ddff" },
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
