@@ -683,10 +683,12 @@ Note.save = function(self, opts)
   local save_path = Path.new(assert(opts.path or self.path)):resolve()
   assert(save_path:parent()):mkdir { parents = true, exist_ok = true }
 
-  -- Read contents from existing file or buffer, if there is one, skipping frontmatter.
+  -- Read contents from existing file or buffer, if there is one.
   -- TODO: check for open buffer?
   ---@type string[]
   local content = {}
+  ---@type string[]
+  local existing_frontmatter = {}
   if self.path ~= nil and self.path:is_file() then
     with(open(tostring(self.path)), function(reader)
       local in_frontmatter, at_boundary = false, false -- luacheck: ignore (false positive)
@@ -703,6 +705,8 @@ Note.save = function(self, opts)
 
         if not in_frontmatter and not at_boundary then
           table.insert(content, line)
+        else
+          table.insert(existing_frontmatter, line)
         end
       end
     end)
@@ -722,7 +726,8 @@ Note.save = function(self, opts)
     -- Replace frontmatter.
     new_lines = vim.tbl_flatten { self:frontmatter_lines(false, opts.frontmatter), content }
   else
-    new_lines = content
+    -- Use existing frontmatter.
+    new_lines = vim.tbl_flatten { existing_frontmatter, content }
   end
 
   -- Write new lines.

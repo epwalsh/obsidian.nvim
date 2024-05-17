@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made workspace detection more robust.
 - Fixed regression where frontmatter is updated in template files.
 - Fixed finding backlinks with URL-encoded path references.
+- Fixed using templates with frontmatter when `disable_frontmatter` is set to true. Previously the frontmatter would be removed when the template was inserted, now it will be kept unchanged.
 
 ## [v3.7.12](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.12) - 2024-05-02
 
