@@ -591,7 +591,7 @@ M.find_notes_async = function(dir, note_file_name, callback)
   -- skip it, but Obsidian does allow root-level notes.
   visit_dir(root_dir)
 
-  scan.scan_dir_async(root_dir, {
+  scan.scan_dir_async(root_dir.filename, {
     hidden = false,
     add_dirs = false,
     only_dirs = true,
