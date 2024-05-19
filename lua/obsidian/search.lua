@@ -6,12 +6,13 @@ local abc = require "obsidian.abc"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 local run_job_async = require("obsidian.async").run_job_async
+local compat = require "obsidian.compat"
 
 local M = {}
 
 M._BASE_CMD = { "rg", "--no-config", "--type=md" }
-M._SEARCH_CMD = vim.tbl_flatten { M._BASE_CMD, "--json" }
-M._FIND_CMD = vim.tbl_flatten { M._BASE_CMD, "--files" }
+M._SEARCH_CMD = compat.flatten { M._BASE_CMD, "--json" }
+M._FIND_CMD = compat.flatten { M._BASE_CMD, "--files" }
 
 ---@enum obsidian.search.RefTypes
 M.RefTypes = {
@@ -36,12 +37,12 @@ M.Patterns = {
   Highlight = "==[^=]+==", -- ==text==
 
   -- References
-  WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
-  Wiki = "%[%[[^][%|]+%]%]", -- [[xxx]]
-  Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
+  WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]",                                -- [[xxx|yyy]]
+  Wiki = "%[%[[^][%|]+%]%]",                                                 -- [[xxx]]
+  Markdown = "%[[^][]+%]%([^%)]+%)",                                         -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:+%%-]+[a-zA-Z0-9/]", -- https://xyz.com
-  FileUrl = "file:/[/{2}]?.*", -- file:///
-  BlockID = util.BLOCK_PATTERN .. "$", -- ^hello-world
+  FileUrl = "file:/[/{2}]?.*",                                               -- file:///
+  BlockID = util.BLOCK_PATTERN .. "$",                                       -- ^hello-world
 }
 
 ---@type table<obsidian.search.RefTypes, { ignore_if_escape_prefix: boolean|? }>
@@ -93,9 +94,9 @@ M.find_matches = function(s, pattern_names)
           -- Check if we should skip to an escape sequence before the pattern.
           local skip_due_to_escape = false
           if
-            pattern_cfg ~= nil
-            and pattern_cfg.ignore_if_escape_prefix
-            and string.sub(s, m_start - 1, m_start - 1) == [[\]]
+              pattern_cfg ~= nil
+              and pattern_cfg.ignore_if_escape_prefix
+              and string.sub(s, m_start - 1, m_start - 1) == [[\]]
           then
             skip_due_to_escape = true
           end
@@ -372,7 +373,7 @@ M.build_search_cmd = function(dir, term, opts)
     path = assert(vim.fn.fnameescape(path))
   end
 
-  return vim.tbl_flatten {
+  return compat.flatten {
     M._SEARCH_CMD,
     opts:to_ripgrep_opts(),
     search_terms,
@@ -411,7 +412,7 @@ M.build_find_cmd = function(path, term, opts)
     additional_opts[#additional_opts + 1] = path
   end
 
-  return vim.tbl_flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }
+  return compat.flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }
 end
 
 --- Build the 'rg' grep command for pickers.
@@ -422,7 +423,7 @@ end
 M.build_grep_cmd = function(opts)
   opts = SearchOpts.from_tbl(opts and opts or {})
 
-  return vim.tbl_flatten {
+  return compat.flatten {
     M._BASE_CMD,
     opts:to_ripgrep_opts(),
     "--column",

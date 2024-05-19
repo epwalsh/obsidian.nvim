@@ -9,6 +9,7 @@ local util = require "obsidian.util"
 local search = require "obsidian.search"
 local iter = require("obsidian.itertools").iter
 local enumerate = require("obsidian.itertools").enumerate
+local compat = require "obsidian.compat"
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
@@ -485,8 +486,8 @@ Note.from_lines = function(lines, path, opts)
 
     -- Check if we can stop reading lines now.
     if
-      line_idx > max_lines
-      or (title and not opts.load_contents and not opts.collect_anchor_links and not opts.collect_blocks)
+        line_idx > max_lines
+        or (title and not opts.load_contents and not opts.collect_anchor_links and not opts.collect_blocks)
     then
       break
     end
@@ -522,10 +523,10 @@ Note.from_lines = function(lines, path, opts)
               else
                 log.warn(
                   "Invalid alias value found in frontmatter for "
-                    .. path
-                    .. ". Expected string, found "
-                    .. type(alias)
-                    .. "."
+                  .. path
+                  .. ". Expected string, found "
+                  .. type(alias)
+                  .. "."
                 )
               end
             end
@@ -542,10 +543,10 @@ Note.from_lines = function(lines, path, opts)
               else
                 log.warn(
                   "Invalid tag value found in frontmatter for "
-                    .. tostring(path)
-                    .. ". Expected string, found "
-                    .. type(tag)
-                    .. "."
+                  .. tostring(path)
+                  .. ". Expected string, found "
+                  .. type(tag)
+                  .. "."
                 )
               end
             end
@@ -620,27 +621,27 @@ Note.frontmatter_lines = function(self, eol, frontmatter)
   end
 
   for line in
-    iter(yaml.dumps_lines(frontmatter_, function(a, b)
-      local a_idx = nil
-      local b_idx = nil
-      for i, k in ipairs { "id", "aliases", "tags" } do
-        if a == k then
-          a_idx = i
-        end
-        if b == k then
-          b_idx = i
-        end
+  iter(yaml.dumps_lines(frontmatter_, function(a, b)
+    local a_idx = nil
+    local b_idx = nil
+    for i, k in ipairs { "id", "aliases", "tags" } do
+      if a == k then
+        a_idx = i
       end
-      if a_idx ~= nil and b_idx ~= nil then
-        return a_idx < b_idx
-      elseif a_idx ~= nil then
-        return true
-      elseif b_idx ~= nil then
-        return false
-      else
-        return a < b
+      if b == k then
+        b_idx = i
       end
-    end))
+    end
+    if a_idx ~= nil and b_idx ~= nil then
+      return a_idx < b_idx
+    elseif a_idx ~= nil then
+      return true
+    elseif b_idx ~= nil then
+      return false
+    else
+      return a < b
+    end
+  end))
   do
     table.insert(new_lines, line)
   end
@@ -724,10 +725,10 @@ Note.save = function(self, opts)
   local new_lines
   if opts.insert_frontmatter ~= false then
     -- Replace frontmatter.
-    new_lines = vim.tbl_flatten { self:frontmatter_lines(false, opts.frontmatter), content }
+    new_lines = compat.flatten { self:frontmatter_lines(false, opts.frontmatter), content }
   else
     -- Use existing frontmatter.
-    new_lines = vim.tbl_flatten { existing_frontmatter, content }
+    new_lines = compat.flatten { existing_frontmatter, content }
   end
 
   -- Write new lines.
