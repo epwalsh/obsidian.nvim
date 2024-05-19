@@ -37,12 +37,12 @@ M.Patterns = {
   Highlight = "==[^=]+==", -- ==text==
 
   -- References
-  WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]",                                -- [[xxx|yyy]]
-  Wiki = "%[%[[^][%|]+%]%]",                                                 -- [[xxx]]
-  Markdown = "%[[^][]+%]%([^%)]+%)",                                         -- [yyy](xxx)
+  WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]
+  Wiki = "%[%[[^][%|]+%]%]", -- [[xxx]]
+  Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:+%%-]+[a-zA-Z0-9/]", -- https://xyz.com
-  FileUrl = "file:/[/{2}]?.*",                                               -- file:///
-  BlockID = util.BLOCK_PATTERN .. "$",                                       -- ^hello-world
+  FileUrl = "file:/[/{2}]?.*", -- file:///
+  BlockID = util.BLOCK_PATTERN .. "$", -- ^hello-world
 }
 
 ---@type table<obsidian.search.RefTypes, { ignore_if_escape_prefix: boolean|? }>
@@ -94,9 +94,9 @@ M.find_matches = function(s, pattern_names)
           -- Check if we should skip to an escape sequence before the pattern.
           local skip_due_to_escape = false
           if
-              pattern_cfg ~= nil
-              and pattern_cfg.ignore_if_escape_prefix
-              and string.sub(s, m_start - 1, m_start - 1) == [[\]]
+            pattern_cfg ~= nil
+            and pattern_cfg.ignore_if_escape_prefix
+            and string.sub(s, m_start - 1, m_start - 1) == [[\]]
           then
             skip_due_to_escape = true
           end

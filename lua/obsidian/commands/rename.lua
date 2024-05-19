@@ -107,16 +107,16 @@ return function(client, data)
   if not dry_run then
     confirmation = util.confirm(
       "Renaming '"
-      .. cur_note_id
-      .. "' to '"
-      .. new_note_id
-      .. "'...\n"
-      .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
-      .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
-      .. "You can also do a dry run of this by running ':ObsidianRename "
-      .. arg
-      .. " --dry-run'.\n"
-      .. "Do you want to continue?"
+        .. cur_note_id
+        .. "' to '"
+        .. new_note_id
+        .. "'...\n"
+        .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
+        .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
+        .. "You can also do a dry run of this by running ':ObsidianRename "
+        .. arg
+        .. " --dry-run'.\n"
+        .. "Do you want to continue?"
     )
   else
     confirmation = util.confirm(
@@ -245,16 +245,16 @@ return function(client, data)
         if dry_run and n > 0 then
           log.info(
             "Dry run: '"
-            .. tostring(path)
-            .. "':"
-            .. line_num
-            .. " Replacing "
-            .. n
-            .. " occurrence(s) of '"
-            .. ref
-            .. "' with '"
-            .. replacement
-            .. "'"
+              .. tostring(path)
+              .. "':"
+              .. line_num
+              .. " Replacing "
+              .. n
+              .. " occurrence(s) of '"
+              .. ref
+              .. "' with '"
+              .. replacement
+              .. "'"
           )
         end
         count = count + n
