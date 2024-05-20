@@ -26,7 +26,7 @@ M.iter = function(iterable)
       return function()
         return nil
       end
-    elseif vim.tbl_islist(iterable) then
+    elseif vim.islist(iterable) then
       local i = 1
       local n = #iterable
 

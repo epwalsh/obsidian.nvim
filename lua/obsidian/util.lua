@@ -44,7 +44,7 @@ util.tbl_is_array = function(t)
     return false
   end
 
-  return vim.tbl_islist(t)
+  return vim.islist(t)
 end
 
 ---Check if an object is an non-array table.
