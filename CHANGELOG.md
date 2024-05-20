@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Changed `vim.tbl_islist` to `vim.islist` sice it is removed in Nvim 0.12
+- Changed `vim.tbl_islist` to `vim.islist` since it is removed in Nvim 0.12
 
 ### Fixed
 
