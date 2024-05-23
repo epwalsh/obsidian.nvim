@@ -7,6 +7,7 @@ local search = require "obsidian.search"
 local util = require "obsidian.util"
 local enumerate = require("obsidian.itertools").enumerate
 local zip = require("obsidian.itertools").zip
+local compat = require "obsidian.compat"
 
 ---@param client obsidian.Client
 return function(client, data)
@@ -91,7 +92,7 @@ return function(client, data)
   local new_note_path
   if #parts > 1 then
     parts[#parts] = nil
-    new_note_path = client.dir:joinpath(unpack(vim.tbl_flatten { parts, new_note_id })):with_suffix ".md"
+    new_note_path = client.dir:joinpath(unpack(compat.flatten { parts, new_note_id })):with_suffix ".md"
   else
     new_note_path = (dirname / new_note_id):with_suffix ".md"
   end
@@ -213,12 +214,12 @@ return function(client, data)
     }
   end
 
-  local reference_forms = vim.tbl_flatten {
+  local reference_forms = compat.flatten {
     get_ref_forms(cur_note_id),
     get_ref_forms(cur_note_rel_path),
     get_ref_forms(string.sub(cur_note_rel_path, 1, -4)),
   }
-  local replace_with = vim.tbl_flatten {
+  local replace_with = compat.flatten {
     get_ref_forms(new_note_id),
     get_ref_forms(new_note_rel_path),
     get_ref_forms(string.sub(new_note_rel_path, 1, -4)),

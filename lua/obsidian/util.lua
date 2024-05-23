@@ -1,6 +1,7 @@
 local iter = require("obsidian.itertools").iter
 local enumerate = require("obsidian.itertools").enumerate
 local log = require "obsidian.log"
+local compat = require "obsidian.compat"
 
 local util = {}
 
@@ -44,7 +45,7 @@ util.tbl_is_array = function(t)
     return false
   end
 
-  return vim.tbl_islist(t)
+  return compat.is_list(t)
 end
 
 ---Check if an object is an non-array table.
