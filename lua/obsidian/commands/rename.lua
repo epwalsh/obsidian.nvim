@@ -155,7 +155,7 @@ return function(client, data)
         end
         vim.fn.delete(tostring(cur_note_path))
       else
-        log.info("Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file")
+        log.info("Dry run: saving current buffer as '" .. tostring(new_note_path) .. "' and removing old file")
       end
     else
       -- For the non-current buffer the best we can do is delete the buffer (we've already saved it above)
@@ -164,7 +164,13 @@ return function(client, data)
         quietly(vim.cmd.bdelete, cur_note_bufnr)
         cur_note_path:rename(new_note_path)
       else
-        log.info("Dry run: removing buffer '" .. cur_note_path .. "' and renaming file to '" .. new_note_path .. "'")
+        log.info(
+          "Dry run: removing buffer '"
+            .. tostring(cur_note_path)
+            .. "' and renaming file to '"
+            .. tostring(new_note_path)
+            .. "'"
+        )
       end
     end
   else
@@ -172,7 +178,7 @@ return function(client, data)
     if not dry_run then
       cur_note_path:rename(new_note_path)
     else
-      log.info("Dry run: renaming file '" .. cur_note_path .. "' to '" .. new_note_path .. "'")
+      log.info("Dry run: renaming file '" .. tostring(cur_note_path) .. "' to '" .. tostring(new_note_path) .. "'")
     end
   end
 
@@ -184,7 +190,7 @@ return function(client, data)
     if not dry_run then
       cur_note:save()
     else
-      log.info("Dry run: updating frontmatter of '" .. new_note_path .. "'")
+      log.info("Dry run: updating frontmatter of '" .. tostring(new_note_path) .. "'")
     end
   end
 
