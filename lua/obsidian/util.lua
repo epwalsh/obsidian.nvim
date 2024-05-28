@@ -511,7 +511,7 @@ util.toggle_checkbox = function(opts, line_num)
     end
   else
     for i, check_char in enumerate(checkboxes) do
-      if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
+      if string.match(line, "^%s*- %[" .. util.escape_magic_characters(check_char) .. "%].*") then
         if i == #checkboxes then
           i = 0
         end
