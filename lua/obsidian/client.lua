@@ -1058,6 +1058,9 @@ Client.find_tags_async = function(self, term, callback, opts)
   ---@param col_start integer|?
   ---@param col_end integer|?
   local add_match = function(tag, path, note, lnum, text, col_start, col_end)
+    if vim.startswith(tag, "#") then
+      tag = string.sub(tag, 2)
+    end
     if not path_to_tag_loc[path] then
       path_to_tag_loc[path] = {}
     end
