@@ -532,7 +532,8 @@ Options:
  - `title`: A title to assign the note.
  - `id`: An ID to assign the note. If not specified one will be generated.
  - `dir`: An optional directory to place the note in. Relative paths will be interpreted
-   relative to the workspace / vault root.
+   relative to the workspace / vault root. If the directory doesn't exist it will be created,
+   regardless of the value of the `no_write` option.
  - `aliases`: Additional aliases to assign to the note.
  - `tags`: Additional tags to assign to the note.
  - `no_write`: Don't write the note to disk.

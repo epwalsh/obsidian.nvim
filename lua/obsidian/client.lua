@@ -1727,7 +1727,8 @@ end
 ---  - `title`: A title to assign the note.
 ---  - `id`: An ID to assign the note. If not specified one will be generated.
 ---  - `dir`: An optional directory to place the note in. Relative paths will be interpreted
----    relative to the workspace / vault root.
+---    relative to the workspace / vault root. If the directory doesn't exist it will be created,
+---    regardless of the value of the `no_write` option.
 ---  - `aliases`: Additional aliases to assign to the note.
 ---  - `tags`: Additional tags to assign to the note.
 ---  - `no_write`: Don't write the note to disk.
@@ -1752,6 +1753,11 @@ Client.create_note = function(self, opts)
   if new_title then
     note.title = new_title
   end
+
+  -- Ensure the parent directory exists.
+  local parent = path:parent()
+  assert(parent)
+  parent:mkdir { parents = true, exist_ok = true }
 
   -- Write to disk.
   if not opts.no_write then

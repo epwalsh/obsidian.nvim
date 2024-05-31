@@ -6,12 +6,13 @@ local abc = require "obsidian.abc"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 local run_job_async = require("obsidian.async").run_job_async
+local compat = require "obsidian.compat"
 
 local M = {}
 
 M._BASE_CMD = { "rg", "--no-config", "--type=md" }
-M._SEARCH_CMD = vim.tbl_flatten { M._BASE_CMD, "--json" }
-M._FIND_CMD = vim.tbl_flatten { M._BASE_CMD, "--files" }
+M._SEARCH_CMD = compat.flatten { M._BASE_CMD, "--json" }
+M._FIND_CMD = compat.flatten { M._BASE_CMD, "--files" }
 
 ---@enum obsidian.search.RefTypes
 M.RefTypes = {
@@ -20,6 +21,7 @@ M.RefTypes = {
   Markdown = "Markdown",
   NakedUrl = "NakedUrl",
   FileUrl = "FileUrl",
+  MailtoUrl = "MailtoUrl",
   Tag = "Tag",
   BlockID = "BlockID",
   Highlight = "Highlight",
@@ -41,6 +43,7 @@ M.Patterns = {
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:+%%-]+[a-zA-Z0-9/]", -- https://xyz.com
   FileUrl = "file:/[/{2}]?.*", -- file:///
+  MailtoUrl = "mailto:.*", -- mailto:emailaddress
   BlockID = util.BLOCK_PATTERN .. "$", -- ^hello-world
 }
 
@@ -372,7 +375,7 @@ M.build_search_cmd = function(dir, term, opts)
     path = assert(vim.fn.fnameescape(path))
   end
 
-  return vim.tbl_flatten {
+  return compat.flatten {
     M._SEARCH_CMD,
     opts:to_ripgrep_opts(),
     search_terms,
@@ -411,7 +414,7 @@ M.build_find_cmd = function(path, term, opts)
     additional_opts[#additional_opts + 1] = path
   end
 
-  return vim.tbl_flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }
+  return compat.flatten { M._FIND_CMD, opts:to_ripgrep_opts(), additional_opts }
 end
 
 --- Build the 'rg' grep command for pickers.
@@ -422,7 +425,7 @@ end
 M.build_grep_cmd = function(opts)
   opts = SearchOpts.from_tbl(opts and opts or {})
 
-  return vim.tbl_flatten {
+  return compat.flatten {
     M._BASE_CMD,
     opts:to_ripgrep_opts(),
     "--column",
@@ -590,7 +593,7 @@ M.find_notes_async = function(dir, note_file_name, callback)
   -- skip it, but Obsidian does allow root-level notes.
   visit_dir(root_dir)
 
-  scan.scan_dir_async(root_dir, {
+  scan.scan_dir_async(root_dir.filename, {
     hidden = false,
     add_dirs = false,
     only_dirs = true,

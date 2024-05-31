@@ -189,7 +189,7 @@ end
 local function get_line_check_extmarks(marks, line, lnum, ui_opts)
   for char, opts in pairs(ui_opts.checkboxes) do
     -- TODO: escape `char` if needed
-    if string.match(line, "^%s*- %[" .. char .. "%]") then
+    if string.match(line, "^%s*- %[" .. util.escape_magic_characters(char) .. "%]") then
       local indent = util.count_indent(line)
       marks[#marks + 1] = ExtMark.new(
         nil,
