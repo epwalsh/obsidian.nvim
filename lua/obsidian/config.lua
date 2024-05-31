@@ -396,6 +396,7 @@ end
 ---
 ---@field enable boolean
 ---@field update_debounce integer
+---@field max_file_length integer|?
 ---@field checkboxes table<string, obsidian.config.CheckboxSpec>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
@@ -426,6 +427,7 @@ config.UIOpts.default = function()
   return {
     enable = true,
     update_debounce = 200,
+    max_file_length = 5000,
     checkboxes = {
       [" "] = { order = 1, char = "󰄱", hl_group = "ObsidianTodo" },
       ["~"] = { order = 2, char = "󰰱", hl_group = "ObsidianTilde" },
