@@ -27,6 +27,7 @@ local config = {}
 ---@field open_app_foreground boolean|?
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
+---@field search_max_lines integer
 ---@field open_notes_in obsidian.config.OpenStrategy
 ---@field ui obsidian.config.UIOpts | table<string, any>
 ---@field attachments obsidian.config.AttachmentsOpts
@@ -59,6 +60,7 @@ config.ClientOpts.default = function()
     open_app_foreground = false,
     sort_by = "modified",
     sort_reversed = true,
+    search_max_lines = 1000,
     open_notes_in = "current",
     ui = config.UIOpts.default(),
     attachments = config.AttachmentsOpts.default(),

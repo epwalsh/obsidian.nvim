@@ -418,6 +418,9 @@ This is a complete list of all of the options that can be passed to `require("ob
   sort_by = "modified",
   sort_reversed = true,
 
+  -- Set the maximum number of lines to read from notes on disk when performing certain searches.
+  search_max_lines = 1000,
+
   -- Optional, determines how certain commands open notes. The valid options are:
   -- 1. "current" (the default) - to always open in the current window
   -- 2. "vsplit" - to open in a vertical split if there's not already a vertical split
