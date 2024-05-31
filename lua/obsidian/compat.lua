@@ -1,6 +1,12 @@
 local compat = {}
 
-compat.is_list = vim.islist or vim.tbl_islist
+compat.is_list = function(t)
+  if vim.fn.has "nvim-0.11" == 1 then
+    return vim.islist(t)
+  else
+    return vim.tbl_islist(t)
+  end
+end
 
 compat.flatten = function(t)
   if vim.fn.has "nvim-0.11" == 1 then
