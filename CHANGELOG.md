@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed warnings when renaming a note using dry-run.
 - Fixed handling check boxes with characters that have a special meaning in regular expressions (e.g. "?").
 - `Client:create_note()` will always ensure the parent directory exists, even when not writing the note itself to disk, to avoid downstream issues (see #600).
+- Identify `mailto:` links as URLs.
 
 ## [v3.7.12](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.12) - 2024-05-02
 

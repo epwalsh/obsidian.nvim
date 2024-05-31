@@ -185,6 +185,7 @@ util.is_url = function(s)
   if
     string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$")
     or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$")
+    or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.MailtoUrl] .. "$")
   then
     return true
   else

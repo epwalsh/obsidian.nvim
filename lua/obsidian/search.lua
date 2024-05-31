@@ -21,6 +21,7 @@ M.RefTypes = {
   Markdown = "Markdown",
   NakedUrl = "NakedUrl",
   FileUrl = "FileUrl",
+  MailtoUrl = "MailtoUrl",
   Tag = "Tag",
   BlockID = "BlockID",
   Highlight = "Highlight",
@@ -42,6 +43,7 @@ M.Patterns = {
   Markdown = "%[[^][]+%]%([^%)]+%)", -- [yyy](xxx)
   NakedUrl = "https?://[a-zA-Z0-9._-]+[a-zA-Z0-9._#/=&?:+%%-]+[a-zA-Z0-9/]", -- https://xyz.com
   FileUrl = "file:/[/{2}]?.*", -- file:///
+  MailtoUrl = "mailto:.*", -- mailto:emailaddress
   BlockID = util.BLOCK_PATTERN .. "$", -- ^hello-world
 }
 
