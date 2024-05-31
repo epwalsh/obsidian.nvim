@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added config option `ui.max_file_length` to disable the UI for files with more than this many lines. Defaults to 5000.
 - Added config option `search_max_lines` (defaults to 1000) for controlling the max number of lines read from disk from note files during certain searches.
 
+### Changed
+
+- Optimization: only show completions for blocks/anchors when prompted with `#`.
+
 ## [v3.7.13](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.13) - 2024-05-31
 
 ### Fixed

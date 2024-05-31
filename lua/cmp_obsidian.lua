@@ -59,13 +59,12 @@ source.complete = function(_, request, callback)
 
     for note in iter(results) do
       ---@cast note obsidian.Note
-      assert(note.anchor_links)
-      assert(note.blocks)
 
       -- Collect matching block links.
       ---@type obsidian.note.Block[]|?
       local matching_blocks
       if block_link then
+        assert(note.blocks)
         matching_blocks = {}
         for block_id, block_data in pairs(note.blocks) do
           if vim.startswith("#" .. block_id, block_link) then
@@ -83,6 +82,7 @@ source.complete = function(_, request, callback)
       ---@type obsidian.note.HeaderAnchor[]|?
       local matching_anchors
       if anchor_link then
+        assert(note.anchor_links)
         matching_anchors = {}
         for anchor, anchor_data in pairs(note.anchor_links) do
           if vim.startswith(anchor, anchor_link) then
@@ -120,10 +120,10 @@ source.complete = function(_, request, callback)
           end
 
           -- Add all blocks and anchors, let cmp sort it out.
-          for _, anchor_data in pairs(note.anchor_links) do
+          for _, anchor_data in pairs(note.anchor_links or {}) do
             table.insert(completion_options, { label = label, alt_label = alt_label, anchor = anchor_data })
           end
-          for _, block_data in pairs(note.blocks) do
+          for _, block_data in pairs(note.blocks or {}) do
             table.insert(completion_options, { label = label, alt_label = alt_label, block = block_data })
           end
         end
@@ -280,7 +280,7 @@ source.complete = function(_, request, callback)
 
     callback {
       items = items,
-      isIncomplete = false,
+      isIncomplete = true,
     }
   end
 
@@ -292,11 +292,10 @@ source.complete = function(_, request, callback)
       callback { isIncomplete = true }
     end
   else
-    client:find_notes_async(
-      search,
-      search_callback,
-      { search = { ignore_case = true }, notes = { collect_anchor_links = true, collect_blocks = true } }
-    )
+    client:find_notes_async(search, search_callback, {
+      search = { ignore_case = true },
+      notes = { collect_anchor_links = anchor_link ~= nil, collect_blocks = block_link ~= nil },
+    })
   end
 end
 
