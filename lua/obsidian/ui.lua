@@ -189,7 +189,7 @@ end
 local function get_line_check_extmarks(marks, line, lnum, ui_opts)
   for char, opts in pairs(ui_opts.checkboxes) do
     -- TODO: escape `char` if needed
-    if string.match(line, "^%s*- %[" .. char .. "%]") then
+    if string.match(line, "^%s*- %[" .. util.escape_magic_characters(char) .. "%]") then
       local indent = util.count_indent(line)
       marks[#marks + 1] = ExtMark.new(
         nil,
@@ -554,12 +554,36 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 end
 
 ---@param ui_opts obsidian.config.UIOpts
+---@param bufnr integer|?
+---@return boolean
+local function should_update(ui_opts, bufnr)
+  if ui_opts.enable == false then
+    return false
+  end
+
+  bufnr = bufnr or 0
+
+  if not vim.endswith(vim.api.nvim_buf_get_name(bufnr), ".md") then
+    return false
+  end
+
+  if ui_opts.max_file_length ~= nil and vim.fn.line "$" > ui_opts.max_file_length then
+    return false
+  end
+
+  return true
+end
+
+---@param ui_opts obsidian.config.UIOpts
 ---@param throttle boolean
 ---@return function
 local function get_extmarks_autocmd_callback(ui_opts, throttle)
   local ns_id = vim.api.nvim_create_namespace(NAMESPACE)
 
   local callback = function(ev)
+    if not should_update(ui_opts, ev.bufnr) then
+      return
+    end
     update_extmarks(ev.buf, ns_id, ui_opts)
   end
 
@@ -574,16 +598,10 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@param bufnr integer|?
 M.update = function(ui_opts, bufnr)
-  if ui_opts.enable == false then
+  bufnr = bufnr or 0
+  if not should_update(ui_opts, bufnr) then
     return
   end
-
-  bufnr = bufnr and bufnr or 0
-
-  if not vim.endswith(vim.api.nvim_buf_get_name(bufnr), ".md") then
-    return
-  end
-
   local ns_id = vim.api.nvim_create_namespace(NAMESPACE)
   update_extmarks(bufnr, ns_id, ui_opts)
 end

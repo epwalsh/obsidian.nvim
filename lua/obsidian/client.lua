@@ -1058,6 +1058,9 @@ Client.find_tags_async = function(self, term, callback, opts)
   ---@param col_start integer|?
   ---@param col_end integer|?
   local add_match = function(tag, path, note, lnum, text, col_start, col_end)
+    if vim.startswith(tag, "#") then
+      tag = string.sub(tag, 2)
+    end
     if not path_to_tag_loc[path] then
       path_to_tag_loc[path] = {}
     end
@@ -1077,7 +1080,7 @@ Client.find_tags_async = function(self, term, callback, opts)
   ---@param path obsidian.Path
   ---@return { [1]: obsidian.Note, [2]: {[1]: integer, [2]: integer}[] }
   local load_note = function(path)
-    local note, contents = Note.from_file_with_contents_async(path)
+    local note, contents = Note.from_file_with_contents_async(path, { max_lines = self.opts.search_max_lines or 1000 })
     return { note, search.find_code_blocks(contents) }
   end
 
@@ -1727,7 +1730,8 @@ end
 ---  - `title`: A title to assign the note.
 ---  - `id`: An ID to assign the note. If not specified one will be generated.
 ---  - `dir`: An optional directory to place the note in. Relative paths will be interpreted
----    relative to the workspace / vault root.
+---    relative to the workspace / vault root. If the directory doesn't exist it will be created,
+---    regardless of the value of the `no_write` option.
 ---  - `aliases`: Additional aliases to assign to the note.
 ---  - `tags`: Additional tags to assign to the note.
 ---  - `no_write`: Don't write the note to disk.
@@ -1752,6 +1756,11 @@ Client.create_note = function(self, opts)
   if new_title then
     note.title = new_title
   end
+
+  -- Ensure the parent directory exists.
+  local parent = path:parent()
+  assert(parent)
+  parent:mkdir { parents = true, exist_ok = true }
 
   -- Write to disk.
   if not opts.no_write then

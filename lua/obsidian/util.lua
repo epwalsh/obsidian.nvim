@@ -1,6 +1,7 @@
 local iter = require("obsidian.itertools").iter
 local enumerate = require("obsidian.itertools").enumerate
 local log = require "obsidian.log"
+local compat = require "obsidian.compat"
 
 local util = {}
 
@@ -44,7 +45,7 @@ util.tbl_is_array = function(t)
     return false
   end
 
-  return vim.tbl_islist(t)
+  return compat.is_list(t)
 end
 
 ---Check if an object is an non-array table.
@@ -184,6 +185,7 @@ util.is_url = function(s)
   if
     string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$")
     or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$")
+    or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.MailtoUrl] .. "$")
   then
     return true
   else
@@ -510,7 +512,7 @@ util.toggle_checkbox = function(opts, line_num)
     end
   else
     for i, check_char in enumerate(checkboxes) do
-      if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
+      if string.match(line, "^%s*- %[" .. util.escape_magic_characters(check_char) .. "%].*") then
         if i == #checkboxes then
           i = 0
         end

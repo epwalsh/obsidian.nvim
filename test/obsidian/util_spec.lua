@@ -197,6 +197,10 @@ describe("util.is_url()", function()
   it("should identify semantic scholar API URLS", function()
     assert.is_true(util.is_url "https://api.semanticscholar.org/CorpusID:235829052")
   end)
+
+  it("should identify 'mailto' URLS", function()
+    assert.is_true(util.is_url "mailto:mail@domain.com")
+  end)
 end)
 
 describe("util.strip_anchor_links()", function()

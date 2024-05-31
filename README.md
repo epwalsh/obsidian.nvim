@@ -418,6 +418,9 @@ This is a complete list of all of the options that can be passed to `require("ob
   sort_by = "modified",
   sort_reversed = true,
 
+  -- Set the maximum number of lines to read from notes on disk when performing certain searches.
+  search_max_lines = 1000,
+
   -- Optional, determines how certain commands open notes. The valid options are:
   -- 1. "current" (the default) - to always open in the current window
   -- 2. "vsplit" - to open in a vertical split if there's not already a vertical split
@@ -456,6 +459,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   ui = {
     enable = true,  -- set to false to disable all additional syntax features
     update_debounce = 200,  -- update delay after a text change (in milliseconds)
+    max_file_length = 5000,  -- disable UI features for files with more than this many lines
     -- Define how various check-boxes are displayed
     checkboxes = {
       -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
@@ -463,6 +467,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       ["x"] = { char = "", hl_group = "ObsidianDone" },
       [">"] = { char = "", hl_group = "ObsidianRightArrow" },
       ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
+      ["!"] = { char = "", hl_group = "ObsidianImportant" },
       -- Replace the above with this if you don't have a patched font:
       -- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
       -- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
@@ -484,6 +489,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       ObsidianDone = { bold = true, fg = "#89ddff" },
       ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
       ObsidianTilde = { bold = true, fg = "#ff5370" },
+      ObsidianImportant = { bold = true, fg = "#d73128" },
       ObsidianBullet = { bold = true, fg = "#89ddff" },
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },

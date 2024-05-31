@@ -27,6 +27,7 @@ local config = {}
 ---@field open_app_foreground boolean|?
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
+---@field search_max_lines integer
 ---@field open_notes_in obsidian.config.OpenStrategy
 ---@field ui obsidian.config.UIOpts | table<string, any>
 ---@field attachments obsidian.config.AttachmentsOpts
@@ -59,6 +60,7 @@ config.ClientOpts.default = function()
     open_app_foreground = false,
     sort_by = "modified",
     sort_reversed = true,
+    search_max_lines = 1000,
     open_notes_in = "current",
     ui = config.UIOpts.default(),
     attachments = config.AttachmentsOpts.default(),
@@ -396,6 +398,7 @@ end
 ---
 ---@field enable boolean
 ---@field update_debounce integer
+---@field max_file_length integer|?
 ---@field checkboxes table<string, obsidian.config.CheckboxSpec>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
@@ -426,11 +429,13 @@ config.UIOpts.default = function()
   return {
     enable = true,
     update_debounce = 200,
+    max_file_length = 5000,
     checkboxes = {
       [" "] = { order = 1, char = "󰄱", hl_group = "ObsidianTodo" },
       ["~"] = { order = 2, char = "󰰱", hl_group = "ObsidianTilde" },
-      [">"] = { order = 3, char = "", hl_group = "ObsidianRightArrow" },
-      ["x"] = { order = 4, char = "", hl_group = "ObsidianDone" },
+      ["!"] = { order = 3, char = "", hl_group = "ObsidianImportant" },
+      [">"] = { order = 4, char = "", hl_group = "ObsidianRightArrow" },
+      ["x"] = { order = 5, char = "", hl_group = "ObsidianDone" },
     },
     bullets = { char = "•", hl_group = "ObsidianBullet" },
     external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
@@ -443,6 +448,7 @@ config.UIOpts.default = function()
       ObsidianDone = { bold = true, fg = "#89ddff" },
       ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
       ObsidianTilde = { bold = true, fg = "#ff5370" },
+      ObsidianImportant = { bold = true, fg = "#d73128" },
       ObsidianBullet = { bold = true, fg = "#89ddff" },
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },

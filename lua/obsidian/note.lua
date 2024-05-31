@@ -9,6 +9,7 @@ local util = require "obsidian.util"
 local search = require "obsidian.search"
 local iter = require("obsidian.itertools").iter
 local enumerate = require("obsidian.itertools").enumerate
+local compat = require "obsidian.compat"
 
 local SKIP_UPDATING_FRONTMATTER = { "README.md", "CONTRIBUTING.md", "CHANGELOG.md" }
 
@@ -724,10 +725,10 @@ Note.save = function(self, opts)
   local new_lines
   if opts.insert_frontmatter ~= false then
     -- Replace frontmatter.
-    new_lines = vim.tbl_flatten { self:frontmatter_lines(false, opts.frontmatter), content }
+    new_lines = compat.flatten { self:frontmatter_lines(false, opts.frontmatter), content }
   else
     -- Use existing frontmatter.
-    new_lines = vim.tbl_flatten { existing_frontmatter, content }
+    new_lines = compat.flatten { existing_frontmatter, content }
   end
 
   -- Write new lines.
