@@ -1080,7 +1080,7 @@ Client.find_tags_async = function(self, term, callback, opts)
   ---@param path obsidian.Path
   ---@return { [1]: obsidian.Note, [2]: {[1]: integer, [2]: integer}[] }
   local load_note = function(path)
-    local note, contents = Note.from_file_with_contents_async(path)
+    local note, contents = Note.from_file_with_contents_async(path, { max_lines = self.opts.search_max_lines or 1000 })
     return { note, search.find_code_blocks(contents) }
   end
 
