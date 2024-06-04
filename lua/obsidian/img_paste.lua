@@ -11,7 +11,7 @@ local M = {}
 local function get_clip_check_command()
   local check_cmd
   local this_os = util.get_os()
-  if this_os == util.OSType.Linux then
+  if this_os == util.OSType.Linux or this_os == util.OSType.FreeBSD then
     local display_server = os.getenv "XDG_SESSION_TYPE"
     if display_server == "x11" or display_server == "tty" then
       check_cmd = "xclip -selection clipboard -o -t TARGETS"
@@ -39,7 +39,7 @@ local function clipboard_is_img()
 
   -- See: [Data URI scheme](https://en.wikipedia.org/wiki/Data_URI_scheme)
   local this_os = util.get_os()
-  if this_os == util.OSType.Linux then
+  if this_os == util.OSType.Linux or this_os == util.OSType.FreeBSD then
     return vim.tbl_contains(content, "image/png")
   elseif this_os == util.OSType.Darwin then
     return string.sub(content[1], 1, 9) == "iVBORw0KG" -- Magic png number in base64
@@ -57,7 +57,7 @@ end
 local function save_clipboard_image(path)
   local this_os = util.get_os()
 
-  if this_os == util.OSType.Linux then
+  if this_os == util.OSType.Linux or this_os == util.OSType.FreeBSD then
     local cmd
     local display_server = os.getenv "XDG_SESSION_TYPE"
     if display_server == "x11" or display_server == "tty" then
