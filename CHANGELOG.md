@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.7.14](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.14) - 2024-06-04
+
 ### Added
 
 - Added config option `ui.max_file_length` to disable the UI for files with more than this many lines. Defaults to 5000.
 - Added config option `search_max_lines` (defaults to 1000) for controlling the max number of lines read from disk from note files during certain searches.
-- Add FreeBSD support to ObsidianPasteImg command.
+- Added FreeBSD support to `ObsidianPasteImg` command.
 
 ### Changed
 
