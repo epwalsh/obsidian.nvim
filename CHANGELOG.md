@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Searching for notes by file name is case insensitive.
+
 ## [v3.7.14](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.14) - 2024-06-04
 
 ### Added

@@ -407,6 +407,10 @@ M.build_find_cmd = function(path, term, opts)
     additional_opts[#additional_opts + 1] = term
   end
 
+  if opts.ignore_case then
+    additional_opts[#additional_opts + 1] = "--glob-case-insensitive"
+  end
+
   if path ~= nil and path ~= "." then
     if opts.escape_path then
       path = assert(vim.fn.fnameescape(tostring(path)))
