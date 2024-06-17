@@ -421,7 +421,13 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
     on_exit
   )
 
-  search.find_async(self.dir, term, self:_prepare_search_opts(find_opts), on_find_match, on_exit)
+  search.find_async(
+    self.dir,
+    term,
+    self:_prepare_search_opts(find_opts, { ignore_case = true }),
+    on_find_match,
+    on_exit
+  )
 
   return function()
     while cmds_done < 2 do
