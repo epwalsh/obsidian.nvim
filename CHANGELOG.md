@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added relative to root markdown links as search pattern for backlinks.
+
 ### Fixed
 
 - Searching for notes by file name is case insensitive.
