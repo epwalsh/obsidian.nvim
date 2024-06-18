@@ -421,7 +421,13 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
     on_exit
   )
 
-  search.find_async(self.dir, term, self:_prepare_search_opts(find_opts), on_find_match, on_exit)
+  search.find_async(
+    self.dir,
+    term,
+    self:_prepare_search_opts(find_opts, { ignore_case = true }),
+    on_find_match,
+    on_exit
+  )
 
   return function()
     while cmds_done < 2 do
@@ -1297,10 +1303,14 @@ Client.find_backlinks_async = function(self, note, callback, opts)
           search_terms[#search_terms + 1] = string.format("[[%s|", ref)
           -- Markdown link without anchor/block.
           search_terms[#search_terms + 1] = string.format("(%s)", ref)
+          -- Markdown link without anchor/block and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s)", ref)
           -- Wiki links with anchor/block.
           search_terms[#search_terms + 1] = string.format("[[%s#", ref)
           -- Markdown link with anchor/block.
           search_terms[#search_terms + 1] = string.format("(%s#", ref)
+          -- Markdown link with anchor/block and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s#", ref)
         elseif anchor then
           -- Note: Obsidian allow a lot of different forms of anchor links, so we can't assume
           -- it's the standardized form here.
@@ -1308,11 +1318,15 @@ Client.find_backlinks_async = function(self, note, callback, opts)
           search_terms[#search_terms + 1] = string.format("[[%s#", ref)
           -- Markdown link with anchor.
           search_terms[#search_terms + 1] = string.format("(%s#", ref)
+          -- Markdown link with anchor and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s#", ref)
         elseif block then
           -- Wiki links with block.
           search_terms[#search_terms + 1] = string.format("[[%s#%s", ref, block)
           -- Markdown link with block.
           search_terms[#search_terms + 1] = string.format("(%s#%s", ref, block)
+          -- Markdown link with block and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s#%s", ref, block)
         end
       end
     end
