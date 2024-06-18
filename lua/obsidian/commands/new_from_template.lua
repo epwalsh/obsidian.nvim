@@ -7,7 +7,7 @@ return function(client, data)
     log.err "Templates folder is not defined or does not exist"
     return
   end
-  
+
   ---@type obsidian.Note
   local note
   if data.args and data.args:len() > 0 then
