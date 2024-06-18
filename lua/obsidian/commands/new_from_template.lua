@@ -2,15 +2,15 @@ local util = require "obsidian.util"
 local log = require "obsidian.log"
 
 ---@param client obsidian.Client
+---@type obsidian.Note
 return function(client, data)
-  ---@type obsidian.Note
   if not client:templates_dir() then
     log.err "Templates folder is not defined or does not exist"
     return
   end
 
   local note
-  if data.args:len() > 0 then
+  if data.args and data.args:len() > 0 then
     note = client:create_note { title = data.args, no_write = true }
   else
     local title = util.input("Enter title or path (optional): ", { completion = "file" })
