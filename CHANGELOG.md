@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added relative to root markdown links as search pattern for backlinks.
+- Added configuration option `daily_notes.default_tags` for customizing (or removing) the default tags given to new daily notes.
 
 ### Fixed
 
