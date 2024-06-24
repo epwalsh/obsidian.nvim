@@ -361,6 +361,7 @@ end
 ---@field date_format string|?
 ---@field alias_format string|?
 ---@field template string|?
+---@field default_tags string[]|?
 config.DailyNotesOpts = {}
 
 --- Get defaults.
@@ -371,6 +372,7 @@ config.DailyNotesOpts.default = function()
     folder = nil,
     date_format = nil,
     alias_format = nil,
+    default_tags = { "daily-notes" },
   }
 end
 

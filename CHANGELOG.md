@@ -1,4 +1,4 @@
- Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v3.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.8.0) - 2024-06-21
+
 ### Added
 
 - Added relative to root markdown links as search pattern for backlinks.
-- Added `ObsidianNewFromTemplate` command. This command will create a new note from a template.
+- Added configuration option `daily_notes.default_tags` for customizing (or removing) the default tags given to new daily notes.
+- Added `:ObsidianNewFromTemplate` command. This command creates a new note from a template.
 
 ### Fixed
 

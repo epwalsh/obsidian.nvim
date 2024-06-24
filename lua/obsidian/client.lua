@@ -1946,7 +1946,7 @@ Client._daily = function(self, datetime, opts)
   if path:exists() then
     note = Note.from_file(path, opts.load)
   else
-    note = Note.new(id, {}, { "daily-notes" }, path)
+    note = Note.new(id, {}, self.opts.daily_notes.default_tags or {}, path)
 
     if alias then
       note:add_alias(alias)
