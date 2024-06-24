@@ -8,6 +8,12 @@ return function(client, data)
     return
   end
 
+  local picker = client:picker()
+  if not picker then
+    log.err "No picker configured"
+    return
+  end
+
   ---@type obsidian.Note
   local note
   if data.args and data.args:len() > 0 then
@@ -26,20 +32,9 @@ return function(client, data)
   -- Open the note in a new buffer.
   client:open_note(note, { sync = true })
 
-  local function insert_template(name)
-    client:write_note_to_buffer(note, { template = name })
-  end
-
-  local picker = client:picker()
-  if not picker then
-    log.err "No picker configured"
-    return
-  end
-
   picker:find_templates {
-    callback = function(path)
-      insert_template(path)
+    callback = function(name)
+      client:write_note_to_buffer(note, { template = name })
     end,
   }
-  client:write_note_to_buffer(note)
 end
