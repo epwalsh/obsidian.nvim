@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Removed duplicate suggestions in completion of references.
+
 ## [v3.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.8.0) - 2024-06-21
 
 ### Added
