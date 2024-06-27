@@ -43,7 +43,7 @@ make test PLENARY=/path/to/your/plenary
 
 ## Building the Vim documentation
 
-The Vim documentation lives at `docs/obsidian.txt`, which is automatically generated from the README using [panvimdoc](https://github.com/kdheepak/panvimdoc). **So please only commit documentation changes to the README, not `docs/obsidian.txt`.**
+The Vim documentation lives at `doc/obsidian.txt`, which is automatically generated from the README using [panvimdoc](https://github.com/kdheepak/panvimdoc). **So please only commit documentation changes to the README, not `doc/obsidian.txt`.**
 
 However you can test how changes to the README will affect the Vim doc by running panvimdoc locally.
 To do this you'll need install `pandoc` (e.g. `brew install pandoc` on Mac) and clone [panvimdoc](https://github.com/kdheepak/panvimdoc). Then from the panvimdoc repo root, run:
