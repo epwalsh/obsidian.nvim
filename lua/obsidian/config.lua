@@ -432,6 +432,96 @@ config.UIOpts.default = function()
     enable = true,
     update_debounce = 200,
     max_file_length = 5000,
+    callouts = {
+      ["note"] = {
+        aliases = {
+          "Summary",
+          "tldr",
+        },
+        char = "",
+        hl_group = "ObsidianDone",
+      },
+      ["abstract"] = {
+        aliases = {
+          "summary",
+          "tldr",
+        },
+        char = "",
+        hl_group = "ObsidianDone",
+      },
+      ["info"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianDone",
+      },
+      ["todo"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianTodo",
+      },
+      ["tip"] = {
+        aliases = {
+          "hint",
+          "important",
+        },
+        char = "󰈸",
+        hl_group = "ObsidianDone",
+      },
+      ["success"] = {
+        aliases = {
+          "check",
+          "done",
+        },
+        char = "󰄬",
+        hl_group = "ObsidianDone",
+      },
+      ["question"] = {
+        aliases = {
+          "help",
+          "faq",
+        },
+        char = "",
+        hl_group = "ObsidianRightArrow",
+      },
+      ["warning"] = {
+        aliases = {
+          "caution",
+          "attentition",
+        },
+        char = "",
+        hl_group = "ObsidianRightArrow",
+      },
+      ["failure"] = {
+        aliases = {
+          "fail",
+          "missing",
+        },
+        char = "",
+        hl_group = "ObsidianTilde",
+      },
+      ["danger"] = {
+        aliases = {
+          "error",
+        },
+        char = "",
+        hl_group = "ObsidianImportant",
+      },
+      ["bug"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianImportant",
+      },
+      ["example"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianRefText",
+      },
+      ["quote"] = {
+        aliases = {},
+        char = "󱆨",
+        hl_group = "ObsidianQuoteText",
+      },
+    },
     checkboxes = {
       [" "] = { order = 1, char = "󰄱", hl_group = "ObsidianTodo" },
       ["~"] = { order = 2, char = "󰰱", hl_group = "ObsidianTilde" },
@@ -457,6 +547,7 @@ config.UIOpts.default = function()
       ObsidianTag = { italic = true, fg = "#89ddff" },
       ObsidianBlockID = { italic = true, fg = "#89ddff" },
       ObsidianHighlightText = { bg = "#75662e" },
+      ObsidianQuoteText = { bg = "#E9F0FD" },
     },
   }
 end
