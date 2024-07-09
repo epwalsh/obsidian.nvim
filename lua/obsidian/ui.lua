@@ -473,14 +473,24 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 
+---@param marks ExtMark[]
 ---@param lnum integer
 ---@param ui_opts obsidian.config.UIOpts
 ---@return ExtMark[]
+local function get_callout_extmarks(marks, line, lnum, ui_opts)
+  return marks
+end
+
+---@param lnum integer
+---@param ui_opts obsidian.config.UIOpts
+---@return ExtMark[]
+---TODO: Add in marks here for callouts
 local get_line_marks = function(line, lnum, ui_opts)
   local marks = {}
   get_line_check_extmarks(marks, line, lnum, ui_opts)
   get_line_ref_extmarks(marks, line, lnum, ui_opts)
   get_line_highlight_extmarks(marks, line, lnum, ui_opts)
+  get_callout_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 

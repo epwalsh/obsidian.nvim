@@ -401,6 +401,7 @@ end
 ---@field enable boolean
 ---@field update_debounce integer
 ---@field max_file_length integer|?
+---@field callouts table<string, obsidian.config.CalloutSpec>
 ---@field checkboxes table<string, obsidian.config.CheckboxSpec>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
@@ -421,6 +422,12 @@ config.UIOpts = {}
 ---@field char string
 ---@field hl_group string
 ---@field order integer
+
+---@class obsidian.config.CalloutSpec : obsidian.config.UICharSpec
+---
+---@field aliases table<string>
+---@field hl_group string
+---@field char string
 
 ---@class obsidian.config.UIStyleSpec
 ---
