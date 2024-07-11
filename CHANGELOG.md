@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `:ObsidianTOC` command for loading the table of contents of the current note into a picker list.
+- Added `:ObsidianNewFromTemplate` command. This command creates a new note from a template.
 
 ### Fixed
 
@@ -27,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added relative to root markdown links as search pattern for backlinks.
 - Added configuration option `daily_notes.default_tags` for customizing (or removing) the default tags given to new daily notes.
-- Added `:ObsidianNewFromTemplate` command. This command creates a new note from a template.
 
 ### Fixed
 
