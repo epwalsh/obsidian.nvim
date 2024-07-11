@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `:ObsidianTOC` command for loading the table of contents of the current note into a picker list.
+- Added `:ObsidianNewFromTemplate` command. This command creates a new note from a template.
 
 ### Fixed
 
