@@ -16,6 +16,7 @@ env:
   runtime: ~/.local/share/nvim/site/pack/vendor/start
   minidoc-git: https://github.com/echasnovski/mini.doc
   minidoc-path: ~/.local/share/nvim/site/pack/vendor/start/mini.doc
+  nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
 
 jobs:
   docs:
@@ -32,22 +33,11 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/checkout@v4
 
-      - run: date +%F > /tmp/todays-date
-
-      - name: Restore cache for today's nightly
-        uses: actions/cache@v4
-        with:
-          path: |
-            _neovim
-          key: ${{ runner.os }}-${{ hashFiles('/tmp/todays-date') }}
-
       - name: Install neovim and dependencies
         run: |
           mkdir -p ${{ env.runtime }}
-          test -d _neovim || {
-            mkdir -p _neovim
-            curl -sL ${{ matrix.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
-          }
+          mkdir -p _neovim
+          curl -sL ${{ env.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
           git clone --depth 1 ${{ env.minidoc-git }} ${{ env.minidoc-path }}
           ln -s $(pwd) ${{ env.runtime }}
 
