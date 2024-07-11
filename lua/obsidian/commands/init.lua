@@ -25,6 +25,7 @@ local command_lookups = {
   ObsidianPasteImg = "obsidian.commands.paste_img",
   ObsidianExtractNote = "obsidian.commands.extract_note",
   ObsidianDebug = "obsidian.commands.debug",
+  ObsidianTOC = "obsidian.commands.toc",
 }
 
 local M = setmetatable({
@@ -187,5 +188,7 @@ M.register(
 )
 
 M.register("ObsidianDebug", { opts = { nargs = 0, desc = "Log some information for debugging" } })
+
+M.register("ObsidianTOC", { opts = { nargs = 0, desc = "Load the table of contents into a picker" } })
 
 return M
