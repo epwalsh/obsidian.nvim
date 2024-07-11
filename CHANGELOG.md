@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `:ObsidianTOC` command for loading the table of contents of the current note into a picker list.
+
 ## [v3.8.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.8.1) - 2024-06-26
 
 ### Fixed

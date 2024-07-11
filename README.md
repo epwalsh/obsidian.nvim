@@ -86,6 +86,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianToggleCheckbox` to cycle through checkbox options.
 
+- `:ObsidianTOC` to load the table of contents of the current note into a picker list.
+
 ### Demo
 
 [![2024-01-31 14 22 52](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2986e1d2-13e8-40e2-9c9e-75691a3b662e)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2986e1d2-13e8-40e2-9c9e-75691a3b662e)

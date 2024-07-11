@@ -16,7 +16,7 @@ local util = {}
 ---@return boolean
 util.tbl_contains = function(table, val)
   for i = 1, #table do
-    if table[i] == val then
+    if vim.deep_equal(table[i], val) then
       return true
     end
   end
