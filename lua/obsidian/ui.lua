@@ -473,24 +473,88 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 
+local function create_extmark_opts(lnum, indent, opts, set_hl_group)
+  return ExtMarkOpts.from_tbl {
+    end_row = lnum,
+    end_col = indent + 5,
+    conceal = opts.char,
+    hl_group = set_hl_group,
+  }
+end
+
 ---@param marks ExtMark[]
 ---@param lnum integer
+---@param line string
 ---@param ui_opts obsidian.config.UIOpts
+---@param callout_hl_group_stack {}
 ---@return ExtMark[]
-local function get_callout_extmarks(marks, line, lnum, ui_opts)
+local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group_stack)
+-- FIXME: This needs to handle titles and foldable ones
+-- FIXME: We need to calculate the indents properly to handle stacks of callout groups
+  if string.match(line, search.RefTypes.Callout) then
+    for calloutWord, opts in pairs(ui_opts.callouts) do
+      -- Check the main callout word
+      if string.match(line, "%s*>%s*%[%!%" .. calloutWord .. "%]%s*(.+)") then
+        local indent = util.count_indent(line)
+        marks[#marks + 1] = ExtMark.new(nil, lnum, indent, create_extmark_opts(lnum, indent, opts, opts.hl_group))
+        break
+      end
+
+      -- Check the aliases
+      for _, alias in ipairs(opts.aliases) do
+        if string.match(line, "%s*>%s*%[%!%" .. alias .. "%]%s*(.+)") then
+          local indent = util.count_indent(line)
+          marks[#marks + 1] = ExtMark.new(nil, lnum, indent, create_extmark_opts(lnum, indent, opts, opts.hl_group))
+          break
+        end
+      end
+    end
+  end
+
+  -- If we have a current stack, then we're in a callout group and should apply it
+  if string.match(line, "%s*>%s*(%s*>%s*)*") and not util.is_empty(callout_hl_group_stack) then
+    -- FIXME: We need to adjust the stack based off of the count of >
+    local indent = util.count_indent(line)
+    marks[#marks + 1] = ExtMark.new(nil, lnum, indent, create_extmark_opts(lnum, indent, {}, util.peek(callout_hl_group_stack)))
+  end
+
+  -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
+  -- as this inidcates we've exited the existing callout block
+  if not string.match(line, "%s*>(.+)") and not util.is_empty(callout_hl_group_stack) then
+    callout_hl_group_stack = {}
+  end
+
   return marks
+end
+
+---@param line string
+---@param ui_opts obsidian.config.UIOpts
+---@return string
+local function get_callout_hl_group(line, ui_opts)
+  for calloutWord, opts in pairs(ui_opts.callouts) do
+    if string.match(line, "%s*>%s*%[%!%" .. calloutWord .. "%]%s*(.+)") then
+      return opts.hl_group
+    end
+    for _, alias in ipairs(opts.aliases) do
+      if string.match(line, "%s*>%s*%[%!%" .. alias .. "%]%s*(.+)") then
+        return opts.hl_group
+      end
+    end
+  end
+  -- No hl_group was found, so don't apply anything
+  return ""
 end
 
 ---@param lnum integer
 ---@param ui_opts obsidian.config.UIOpts
+---@param callout_hl_group_stack {}
 ---@return ExtMark[]
----TODO: Add in marks here for callouts
-local get_line_marks = function(line, lnum, ui_opts)
+local get_line_marks = function(line, lnum, ui_opts, callout_hl_group_stack)
   local marks = {}
   get_line_check_extmarks(marks, line, lnum, ui_opts)
   get_line_ref_extmarks(marks, line, lnum, ui_opts)
   get_line_highlight_extmarks(marks, line, lnum, ui_opts)
-  get_callout_extmarks(marks, line, lnum, ui_opts)
+  get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group_stack)
   return marks
 end
 
@@ -510,6 +574,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 
   -- Iterate over lines (skipping code blocks) and update marks.
   local inside_code_block = false
+  local callout_block_highlights = util.new_stack()
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   for i, line in ipairs(lines) do
     local lnum = i - 1
@@ -525,14 +590,19 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 
     -- Check if inside a code block or at code block boundary. If not, update marks.
     if string.match(line, "^%s*```[^`]*$") then
-      inside_code_block = not inside_code_block
+      inside_code_block = true
       -- Remove any existing marks here on the boundary of a code block.
       clear_line()
     elseif not inside_code_block then
+      -- Mark that we have a highlight group now
+      if string.match(line, search.RefTypes.Callout) then
+        util.push(callout_block_highlights, get_callout_hl_group(line, ui_opts))
+      end
+
       -- Get all marks that should be materialized.
       -- Some of these might already be materialized, which we'll check below and avoid re-drawing
       -- if that's the case.
-      local new_line_marks = get_line_marks(line, lnum, ui_opts)
+      local new_line_marks = get_line_marks(line, lnum, ui_opts, callout_block_highlights)
       if #new_line_marks > 0 then
         -- Materialize new marks.
         for mark in iter(new_line_marks) do
