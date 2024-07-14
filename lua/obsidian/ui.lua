@@ -473,13 +473,86 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 
-local function create_extmark_opts(lnum, indent, opts, set_hl_group)
-  return ExtMarkOpts.from_tbl {
-    end_row = lnum,
-    end_col = indent + 5,
-    conceal = opts.char,
-    hl_group = set_hl_group,
-  }
+
+---@param marks ExtMark[]
+---@param lnum integer
+---@param line string
+---@param callout_hl_group_stack {}
+---@param callout_mark_start integer|nil
+---@param callout_mark_end integer|nil
+local function generate_callout_extmarks_body(marks, indent, line, lnum, callout_hl_group_stack, callout_mark_start,
+                                              callout_mark_end)
+  local highlight_group_index = 0
+  local search_start = 0
+  callout_mark_start = callout_mark_start or #line
+  callout_mark_end = callout_mark_end or #line
+
+
+  log.debug("Checking line:" .. line .. "\nfor callout generation")
+  while search_start <= #line do
+    if search_start == callout_mark_start then
+      log.debug "Callout mark found for next character, skipping! "
+      break
+    end
+
+    local char_start, char_end = string.find(line, ">", search_start, true)
+    if char_start == nil or char_end == nil then
+      log.debug "No > character found in current line"
+      break
+    end
+
+    highlight_group_index = highlight_group_index + 1
+    local highlight_group = callout_hl_group_stack[highlight_group_index]
+    log.debug("Using highlight group: " .. highlight_group .. " (index: " .. highlight_group_index .. ")")
+
+    local ext_mark_options = ExtMarkOpts.from_tbl {
+      end_row = lnum,
+      end_col = (char_end + 1 <= #line) and (char_end + 1) or #line,
+      conceal = " ",
+      hl_group = highlight_group,
+    }
+    log.debug("Generated callout mark '>' starting at:" .. char_start .. "ending at:" .. char_end + 1)
+
+    marks[#marks + 1] = ExtMark.new(nil, lnum, char_start - 1, ext_mark_options)
+    -- Update start value to just after the current ">"
+    search_start = char_end + 1
+  end
+end
+
+---@param marks ExtMark[]
+---@param lnum integer
+---@param line string
+---@param opts obsidian.config.CalloutSpec
+---@param callout_hl_group_stack {}
+local function generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack)
+  -- Process the > marks leading up to the header
+  local callout_mark_start_pattern = "[%!%[]"
+  local callout_mark_end_pattern = "%]"
+
+  -- Conceal the callout mark
+  local callout_mark_start = string.find(line, callout_mark_start_pattern, indent)
+  local callout_mark_end = string.find(line, callout_mark_end_pattern, indent)
+
+  if not callout_mark_start or not callout_mark_end then
+    log.debug "couldn't find start or end for callout mark"
+  end
+
+  generate_callout_extmarks_body(marks, indent, line, lnum, callout_hl_group_stack, callout_mark_start, callout_mark_end)
+  -- Ensure callout_mark_start and callout_mark_end are not nil
+  if callout_mark_start and callout_mark_end then
+    log.debug("Generating callout header for:" .. line)
+    local callout_mark_header = ExtMark.new(
+      nil,
+      lnum,
+      callout_mark_start - 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = callout_mark_end,
+        conceal = opts.char,
+      }
+    )
+    marks[#marks + 1] = callout_mark_header
+  end
 end
 
 ---@param marks ExtMark[]
@@ -489,41 +562,41 @@ end
 ---@param callout_hl_group_stack {}
 ---@return ExtMark[]
 local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group_stack)
--- FIXME: This needs to handle titles and foldable ones
--- FIXME: We need to calculate the indents properly to handle stacks of callout groups
-  if string.match(line, search.RefTypes.Callout) then
+  local lower_line = string.lower(line)
+  local indent = util.count_indent(line)
+
+  if string.match(line, search.Patterns.Callout) then
+    -- Process if current line is a callout mark
     for calloutWord, opts in pairs(ui_opts.callouts) do
-      -- Check the main callout word
-      if string.match(line, "%s*>%s*%[%!%" .. calloutWord .. "%]%s*(.+)") then
-        local indent = util.count_indent(line)
-        marks[#marks + 1] = ExtMark.new(nil, lnum, indent, create_extmark_opts(lnum, indent, opts, opts.hl_group))
+      local constructed_text = "[!" .. calloutWord .. "]"
+      if string.find(lower_line, constructed_text, 1, true) then
+        log.debug("Generating callout header for" .. calloutWord)
+        generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack)
         break
       end
 
-      -- Check the aliases
       for _, alias in ipairs(opts.aliases) do
-        if string.match(line, "%s*>%s*%[%!%" .. alias .. "%]%s*(.+)") then
-          local indent = util.count_indent(line)
-          marks[#marks + 1] = ExtMark.new(nil, lnum, indent, create_extmark_opts(lnum, indent, opts, opts.hl_group))
+        local alias_constructed_text = "[!" .. alias .. "]"
+        if string.find(lower_line, alias_constructed_text, 1, true) then
+          log.debug("Generating callout header for" .. alias)
+          generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack)
           break
         end
       end
     end
+  elseif string.find(line, ">") and not util.is_empty(callout_hl_group_stack) then
+    log.debug("Callout stack available, generating marks for callout body")
+    -- If we have a current stack, then we're in a callout group and should treat the lone
+    -- > character as part of a callout block
+    generate_callout_extmarks_body(marks, indent, line, lnum, callout_hl_group_stack)
+  elseif not string.match(line, "%s*>(.+)") and not util.is_empty(callout_hl_group_stack) then
+    log.debug("Clearing callout stack")
+    -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
+    -- as this inidcates we've exited the existing callout block
+    for k in pairs(callout_hl_group_stack) do
+      callout_hl_group_stack[k] = nil
+    end
   end
-
-  -- If we have a current stack, then we're in a callout group and should apply it
-  if string.match(line, "%s*>%s*(%s*>%s*)*") and not util.is_empty(callout_hl_group_stack) then
-    -- FIXME: We need to adjust the stack based off of the count of >
-    local indent = util.count_indent(line)
-    marks[#marks + 1] = ExtMark.new(nil, lnum, indent, create_extmark_opts(lnum, indent, {}, util.peek(callout_hl_group_stack)))
-  end
-
-  -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
-  -- as this inidcates we've exited the existing callout block
-  if not string.match(line, "%s*>(.+)") and not util.is_empty(callout_hl_group_stack) then
-    callout_hl_group_stack = {}
-  end
-
   return marks
 end
 
@@ -531,17 +604,21 @@ end
 ---@param ui_opts obsidian.config.UIOpts
 ---@return string
 local function get_callout_hl_group(line, ui_opts)
+  local lower_line = string.lower(line)
+  local function constructed_text(word)
+    return "[!" .. word .. "]"
+  end
+
   for calloutWord, opts in pairs(ui_opts.callouts) do
-    if string.match(line, "%s*>%s*%[%!%" .. calloutWord .. "%]%s*(.+)") then
+    if string.find(lower_line, constructed_text(calloutWord), 1, true) then
       return opts.hl_group
     end
     for _, alias in ipairs(opts.aliases) do
-      if string.match(line, "%s*>%s*%[%!%" .. alias .. "%]%s*(.+)") then
+      if string.find(lower_line, constructed_text(alias), 1, true) then
         return opts.hl_group
       end
     end
   end
-  -- No hl_group was found, so don't apply anything
   return ""
 end
 
@@ -595,7 +672,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
       clear_line()
     elseif not inside_code_block then
       -- Mark that we have a highlight group now
-      if string.match(line, search.RefTypes.Callout) then
+      if string.match(line, search.Patterns.Callout) then
         util.push(callout_block_highlights, get_callout_hl_group(line, ui_opts))
       end
 
@@ -708,10 +785,10 @@ M.setup = function(workspace, ui_opts)
       if conceallevel < 1 or conceallevel > 2 then
         log.warn_once(
           "Obsidian additional syntax features require 'conceallevel' to be set to 1 or 2, "
-            .. "but you have 'conceallevel' set to '%s'.\n"
-            .. "See https://github.com/epwalsh/obsidian.nvim/issues/286 for more details.\n"
-            .. "If you don't want Obsidian's additional UI features, you can disable them and suppress "
-            .. "this warning by setting 'ui.enable = false' in your Obsidian nvim config.",
+          .. "but you have 'conceallevel' set to '%s'.\n"
+          .. "See https://github.com/epwalsh/obsidian.nvim/issues/286 for more details.\n"
+          .. "If you don't want Obsidian's additional UI features, you can disable them and suppress "
+          .. "this warning by setting 'ui.enable = false' in your Obsidian nvim config.",
           conceallevel
         )
       end
