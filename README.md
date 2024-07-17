@@ -397,6 +397,7 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- Open the URL in the default web browser.
     vim.fn.jobstart({"open", url})  -- Mac OS
     -- vim.fn.jobstart({"xdg-open", url})  -- linux
+    -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
   end,
 
   -- Optional, set to true if you use the Obsidian Advanced URI plugin.
