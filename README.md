@@ -411,11 +411,17 @@ This is a complete list of all of the options that can be passed to `require("ob
     name = "telescope.nvim",
     -- Optional, configure key mappings for the picker. These are the defaults.
     -- Not all pickers support all mappings.
-    mappings = {
+    note_mappings = {
       -- Create a new note from your query.
       new = "<C-x>",
       -- Insert a link to the selected note.
       insert_link = "<C-l>",
+    },
+    tag_mappings = {
+      -- Add tag(s) to current note.
+      tag_note = "<C-x>",
+      -- Insert a tag at the current location.
+      insert_tag = "<C-l>",
     },
   },
 
