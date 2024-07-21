@@ -400,6 +400,16 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
   end,
 
+  -- Optional, by default when you use `:ObsidianFollowLink` on a markdown link
+  -- it will be ignored but you can customize this behavior here.
+  ---@param client obsidian.Client
+  ---@param location string
+  follow_markdown_func = function(client, location)
+    -- Preview with quicklook.
+    path = client:vault_root() / location
+    vim.fn.jobstart({"qlmanage", "-p", path.filename})  -- Mac OS
+  end,
+
   -- Optional, set to true if you use the Obsidian Advanced URI plugin.
   -- https://github.com/Vinzent03/obsidian-advanced-uri
   use_advanced_uri = false,

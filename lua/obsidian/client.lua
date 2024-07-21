@@ -901,6 +901,15 @@ Client.follow_link_async = function(self, link, opts)
         end
       end
 
+      if res.link_type == search.RefTypes.Markdown then
+        if self.opts.follow_markdown_func ~= nil then
+          self.opts.follow_markdown_func(self, res.location)
+        else
+          log.warn "This looks like a markdown link. You can customize the behavior with the 'follow_markdown_func' option."
+        end
+        return
+      end
+
       return log.err("Failed to resolve file '" .. res.location .. "'")
     end
 
