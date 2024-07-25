@@ -694,7 +694,18 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
     elseif not inside_code_block then
       -- Mark that we have a highlight group now
       if string.match(line, search.Patterns.Callout) then
-        util.push(callout_block_highlights, get_callout_hl_group(line, ui_opts))
+        local count = 0
+        for c = 1, #line do
+          local char = line:sub(c, c)
+          if char == '>' then
+            count = count + 1
+          elseif char == '[' then
+            if line:sub(c, c + 2) == '[!]' then
+              break
+            end
+          end
+        end
+        callout_block_highlights[count] = get_callout_hl_group(line, ui_opts)
       end
 
       -- Get all marks that should be materialized.
