@@ -134,8 +134,8 @@ config.ClientOpts.normalize = function(opts, defaults)
     if warn then
       log.warn_once(
         "The config options 'completion.prepend_note_id', 'completion.prepend_note_path', and 'completion.use_path_only' "
-          .. "are deprecated. Please use 'wiki_link_func' instead.\n"
-          .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
+        .. "are deprecated. Please use 'wiki_link_func' instead.\n"
+        .. "See https://github.com/epwalsh/obsidian.nvim/pull/406"
       )
     end
   end
@@ -157,7 +157,7 @@ config.ClientOpts.normalize = function(opts, defaults)
     opts.completion.preferred_link_style = nil
     log.warn_once(
       "The config option 'completion.preferred_link_style' is deprecated, please use the top-level "
-        .. "'preferred_link_style' instead."
+      .. "'preferred_link_style' instead."
     )
   end
 
@@ -166,7 +166,7 @@ config.ClientOpts.normalize = function(opts, defaults)
     opts.completion.new_notes_location = nil
     log.warn_once(
       "The config option 'completion.new_notes_location' is deprecated, please use the top-level "
-        .. "'new_notes_location' instead."
+      .. "'new_notes_location' instead."
     )
   end
 
@@ -174,7 +174,7 @@ config.ClientOpts.normalize = function(opts, defaults)
     opts.detect_cwd = nil
     log.warn_once(
       "The 'detect_cwd' field is deprecated and no longer has any affect.\n"
-        .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
+      .. "See https://github.com/epwalsh/obsidian.nvim/pull/366 for more details."
     )
   end
 
@@ -440,87 +440,87 @@ config.UIOpts.default = function()
     update_debounce = 200,
     max_file_length = 5000,
     callouts = {
-      ["note"] = {
+      ["Note"] = {
         aliases = {},
         char = "",
         hl_group = "ObsidianCalloutNote",
       },
-      ["abstract"] = {
+      ["Abstract"] = {
         aliases = {
-          "summary",
-          "tldr",
+          "Summary",
+          "Tldr",
         },
         char = "",
         hl_group = "ObsidianCalloutAbstract",
       },
-      ["info"] = {
+      ["Info"] = {
         aliases = {},
         char = "",
         hl_group = "ObsidianCalloutInfo",
       },
-      ["todo"] = {
+      ["Todo"] = {
         aliases = {},
         char = "",
         hl_group = "ObsidianCalloutTodo",
       },
-      ["tip"] = {
+      ["Tip"] = {
         aliases = {
-          "hint",
-          "important",
+          "Hint",
+          "Important",
         },
         char = "󰈸",
         hl_group = "ObsidianCalloutTip",
       },
-      ["success"] = {
+      ["Success"] = {
         aliases = {
-          "check",
-          "done",
+          "Check",
+          "Done",
         },
         char = "󰄬",
         hl_group = "ObsidianCalloutSuccess",
       },
-      ["question"] = {
+      ["Question"] = {
         aliases = {
-          "help",
-          "faq",
+          "Help",
+          "FAQ",
         },
         char = "",
         hl_group = "ObsidianCalloutQuestion",
       },
-      ["warning"] = {
+      ["Warning"] = {
         aliases = {
-          "caution",
-          "attentition",
+          "Caution",
+          "Attentition",
         },
         char = "",
         hl_group = "ObsidianCalloutWarning",
       },
-      ["failure"] = {
+      ["Failure"] = {
         aliases = {
-          "fail",
-          "missing",
+          "Fail",
+          "Missing",
         },
         char = "",
         hl_group = "ObsidianCalloutFailure",
       },
-      ["danger"] = {
+      ["Danger"] = {
         aliases = {
-          "error",
+          "Error",
         },
         char = "",
         hl_group = "ObsidianCalloutDanger",
       },
-      ["bug"] = {
+      ["Bug"] = {
         aliases = {},
         char = "",
         hl_group = "ObsidianCalloutBug",
       },
-      ["example"] = {
+      ["Example"] = {
         aliases = {},
         char = "",
         hl_group = "ObsidianCalloutExample",
       },
-      ["quote"] = {
+      ["Quote"] = {
         aliases = {},
         char = "󱆨",
         hl_group = "ObsidianCalloutQuote",

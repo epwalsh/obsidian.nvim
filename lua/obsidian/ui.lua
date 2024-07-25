@@ -480,7 +480,7 @@ end
 ---@param callout_hl_group_stack {}
 ---@param callout_mark_start integer|nil
 ---@param callout_mark_end integer|nil
-local function generate_callout_extmarks_body(marks, indent, line, lnum, callout_hl_group_stack, callout_mark_start,
+local function generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack, callout_mark_start,
                                               callout_mark_end)
   local highlight_group_index = 0
   local search_start = 0
@@ -502,7 +502,7 @@ local function generate_callout_extmarks_body(marks, indent, line, lnum, callout
     end
 
     highlight_group_index = highlight_group_index + 1
-    local highlight_group = callout_hl_group_stack[highlight_group_index]
+    local highlight_group = callout_hl_group_stack[math.min(highlight_group_index, #callout_hl_group_stack)]
     log.debug("Using highlight group: " .. highlight_group .. " (index: " .. highlight_group_index .. ")")
 
     local ext_mark_options = ExtMarkOpts.from_tbl {
@@ -524,7 +524,8 @@ end
 ---@param line string
 ---@param opts obsidian.config.CalloutSpec
 ---@param callout_hl_group_stack {}
-local function generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack)
+---@param callout_word string
+local function generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, callout_word)
   -- Process the > marks leading up to the header
   local callout_mark_start_pattern = "[%!%[]"
   local callout_mark_end_pattern = "%]"
@@ -537,9 +538,10 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
     log.debug "couldn't find start or end for callout mark"
   end
 
-  generate_callout_extmarks_body(marks, indent, line, lnum, callout_hl_group_stack, callout_mark_start, callout_mark_end)
+  generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack, callout_mark_start, callout_mark_end)
   -- Ensure callout_mark_start and callout_mark_end are not nil
   if callout_mark_start and callout_mark_end then
+    local end_intro_mark = callout_mark_start + 2
     log.debug("Generating callout header for:" .. line)
     local callout_mark_header = ExtMark.new(
       nil,
@@ -547,11 +549,30 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
       callout_mark_start - 1,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        end_col = callout_mark_end,
+        -- Just past the ! character
+        end_col = end_intro_mark,
         conceal = opts.char,
       }
     )
     marks[#marks + 1] = callout_mark_header
+
+    -- Generate the reset of the word
+    for i = 1, #callout_word do
+      local char = callout_word:sub(i, i)
+      local callout_char_mark = ExtMark.new(
+        nil,
+        lnum,
+        end_intro_mark - 1,
+        ExtMarkOpts.from_tbl {
+          end_row = lnum,
+          end_col = end_intro_mark + 1,
+          conceal = char,
+        }
+      )
+
+      marks[#marks + 1] = callout_char_mark
+      end_intro_mark = end_intro_mark + 1
+    end
   end
 end
 
@@ -568,18 +589,18 @@ local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group
   if string.match(line, search.Patterns.Callout) then
     -- Process if current line is a callout mark
     for calloutWord, opts in pairs(ui_opts.callouts) do
-      local constructed_text = "[!" .. calloutWord .. "]"
+      local constructed_text = "[!" .. string.lower(calloutWord) .. "]"
       if string.find(lower_line, constructed_text, 1, true) then
         log.debug("Generating callout header for" .. calloutWord)
-        generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack)
+        generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, calloutWord)
         break
       end
 
       for _, alias in ipairs(opts.aliases) do
-        local alias_constructed_text = "[!" .. alias .. "]"
+        local alias_constructed_text = "[!" .. string.lower(alias) .. "]"
         if string.find(lower_line, alias_constructed_text, 1, true) then
           log.debug("Generating callout header for" .. alias)
-          generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack)
+          generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, alias)
           break
         end
       end
@@ -588,7 +609,7 @@ local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group
     log.debug("Callout stack available, generating marks for callout body")
     -- If we have a current stack, then we're in a callout group and should treat the lone
     -- > character as part of a callout block
-    generate_callout_extmarks_body(marks, indent, line, lnum, callout_hl_group_stack)
+    generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
   elseif not string.match(line, "%s*>(.+)") and not util.is_empty(callout_hl_group_stack) then
     log.debug("Clearing callout stack")
     -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
@@ -606,7 +627,7 @@ end
 local function get_callout_hl_group(line, ui_opts)
   local lower_line = string.lower(line)
   local function constructed_text(word)
-    return "[!" .. word .. "]"
+    return "[!" .. string.lower(word) .. "]"
   end
 
   for calloutWord, opts in pairs(ui_opts.callouts) do
