@@ -1310,7 +1310,8 @@ Client.find_backlinks_async = function(self, note, callback, opts)
 
   -- Prepare search terms.
   local search_terms = {}
-  for raw_ref in iter { tostring(note.id), note:fname(), self:vault_relative_path(note.path) } do
+  local note_path = Path.new(note.path)
+  for raw_ref in iter { tostring(note.id), note_path.name, note_path.stem, self:vault_relative_path(note.path) } do
     for ref in
       iter(util.tbl_unique {
         raw_ref,
