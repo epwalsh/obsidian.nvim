@@ -875,6 +875,15 @@ Client.follow_link_async = function(self, link, opts)
         return self:open_note(res.note, { line = res.line, col = res.col, open_strategy = opts.open_strategy })
       end
 
+      if util.is_img(res.location) then
+        if self.opts.follow_img_func ~= nil then
+          self.opts.follow_img_func(res.location)
+        else
+          log.warn "This looks like an image path. You can customize the behavior of images with the 'follow_img_func' option."
+        end
+        return
+      end
+
       if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
         -- Prompt to create a new note.
         if util.confirm("Create new note '" .. res.location .. "'?") then

@@ -193,6 +193,15 @@ util.is_url = function(s)
   end
 end
 
+util.is_img = function(s)
+  for _, suffix in ipairs { ".png", ".jpg", ".jpeg", ".heic", ".gif", ".svg", ".ico" } do
+    if vim.endswith(s, suffix) then
+      return true
+    end
+  end
+  return false
+end
+
 -- This function removes a single backslash within double square brackets
 util.unescape_single_backslash = function(text)
   return text:gsub("(%[%[[^\\]+)\\(%|[^\\]+]])", "%1%2")
