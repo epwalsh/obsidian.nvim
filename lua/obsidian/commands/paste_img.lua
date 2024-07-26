@@ -11,8 +11,8 @@ return function(client, data)
 
   ---@type string|?
   local default_name
-  if client.opts.image_name_func then
-    default_name = client.opts.image_name_func()
+  if client.opts.attachments.img_name_func then
+    default_name = client.opts.attachments.img_name_func()
   end
 
   local path = paste_img {

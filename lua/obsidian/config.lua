@@ -17,7 +17,6 @@ local config = {}
 ---@field preferred_link_style obsidian.config.LinkStyle
 ---@field follow_url_func fun(url: string)|?
 ---@field follow_img_func fun(img: string)|?
----@field image_name_func (fun(): string)|?
 ---@field note_frontmatter_func (fun(note: obsidian.Note): table)|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
 ---@field completion obsidian.config.CompletionOpts
@@ -206,6 +205,11 @@ config.ClientOpts.normalize = function(opts, defaults)
   if opts.templates and opts.templates.subdir then
     opts.templates.folder = opts.templates.subdir
     opts.templates.subdir = nil
+  end
+
+  if opts.image_name_func then
+    opts.attachments.img_name_func = opts.image_name_func
+    opts.image_name_func = nil
   end
 
   --------------------------
@@ -465,6 +469,7 @@ end
 ---@class obsidian.config.AttachmentsOpts
 ---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
+---@field img_name_func (fun(): string)|?
 ---@field img_text_func fun(client: obsidian.Client, path: obsidian.Path): string
 ---@field confirm_img_paste boolean Whether to confirm the paste or not. Defaults to true.
 config.AttachmentsOpts = {}

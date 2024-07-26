@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `opts.follow_img_func` option for customizing how to handle image paths.
 
+### Changed
+
+- Renamed `opts.image_name_func` to `opts.attachments.img_name_func`.
+
 ### Fixed
 
 - Fixed an edge case with collecting backlinks.

@@ -349,13 +349,6 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Either 'wiki' or 'markdown'.
   preferred_link_style = "wiki",
 
-  -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
-  ---@return string
-  image_name_func = function()
-    -- Prefix image names with timestamp.
-    return string.format("%s-", os.time())
-  end,
-
   -- Optional, boolean or a function that takes a filename and returns a boolean.
   -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
   disable_frontmatter = false,
@@ -528,6 +521,14 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- If this is a relative path it will be interpreted as relative to the vault root.
     -- You can always override this per image by passing a full path to the command instead of just a filename.
     img_folder = "assets/imgs",  -- This is the default
+
+    -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
+    ---@return string
+    img_name_func = function()
+      -- Prefix image names with timestamp.
+      return string.format("%s-", os.time())
+    end,
+
     -- A function that determines the text to insert in the note when pasting an image.
     -- It takes two arguments, the `obsidian.Client` and an `obsidian.Path` to the image file.
     -- This is the default implementation.
