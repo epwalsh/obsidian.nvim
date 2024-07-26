@@ -474,6 +474,97 @@ This is a complete list of all of the options that can be passed to `require("ob
     enable = true,  -- set to false to disable all additional syntax features
     update_debounce = 200,  -- update delay after a text change (in milliseconds)
     max_file_length = 5000,  -- disable UI features for files with more than this many lines
+
+    -- Define / create custom callouts
+    callouts = {
+      -- This is how the Callout will be rendered after the char
+      -- ex: <char>Note
+      ["Note"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutNote",
+      },
+      ["Abstract"] = {
+        aliases = {
+          "Summary",
+          "Tldr",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutAbstract",
+      },
+      ["Info"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutInfo",
+      },
+      ["Todo"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutTodo",
+      },
+      ["Tip"] = {
+        aliases = {
+          "Hint",
+          "Important",
+        },
+        char = "󰈸",
+        hl_group = "ObsidianCalloutTip",
+      },
+      ["Success"] = {
+        aliases = {
+          "Check",
+          "Done",
+        },
+        char = "󰄬",
+        hl_group = "ObsidianCalloutSuccess",
+      },
+      ["Question"] = {
+        aliases = {
+          "Help",
+          "FAQ",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutQuestion",
+      },
+      ["Warning"] = {
+        aliases = {
+          "Caution",
+          "Attentition",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutWarning",
+      },
+      ["Failure"] = {
+        aliases = {
+          "Fail",
+          "Missing",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutFailure",
+      },
+      ["Danger"] = {
+        aliases = {
+          "Error",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutDanger",
+      },
+      ["Bug"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutBug",
+      },
+      ["Example"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutExample",
+      },
+      ["Quote"] = {
+        aliases = {},
+        char = "󱆨",
+        hl_group = "ObsidianCalloutQuote",
+      },
+    },
     -- Define how various check-boxes are displayed
     checkboxes = {
       -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
@@ -510,6 +601,20 @@ This is a complete list of all of the options that can be passed to `require("ob
       ObsidianTag = { italic = true, fg = "#89ddff" },
       ObsidianBlockID = { italic = true, fg = "#89ddff" },
       ObsidianHighlightText = { bg = "#75662e" },
+      -- Callout highlights
+      ObsidianCalloutNote = { bg = "#1072b8" },
+      ObsidianCalloutAbstract = { bg = "#d7e6fa" },
+      ObsidianCalloutInfo = { bg = "#6a93e5" },
+      ObsidianCalloutTodo = { bg = "#6a93e5" },
+      ObsidianCalloutTip = { bg = "#d7e6fa" },
+      ObsidianCalloutSuccess = { bg = "#9fc360" },
+      ObsidianCalloutQuestion = { bg = "#faebd7" },
+      ObsidianCalloutWarning = { bg = "#faebd7" },
+      ObsidianCalloutFailure = { bg = "#ee5d5c" },
+      ObsidianCalloutDanger = { bg = "#ee5d5c" },
+      ObsidianCalloutBug = { bg = "#ee5d5c" },
+      ObsidianCalloutExample = { bg = "#c792ea" },
+      ObsidianCalloutQuote = { bg = "#E9F0FD" },
     },
   },
 
