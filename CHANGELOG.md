@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- Added: Support for UI highlights on calloutblocks
+- Added: Support for custom callout block defintions
+
 ## [v3.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.9.0) - 2024-07-11
 
 ### Added

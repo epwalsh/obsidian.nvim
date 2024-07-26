@@ -473,19 +473,23 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 
-
 ---@param marks ExtMark[]
 ---@param lnum integer
 ---@param line string
 ---@param callout_hl_group_stack {}
 ---@param callout_mark_start integer|nil
 ---@param callout_mark_end integer|nil
-local function generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack, callout_mark_start,
-                                              callout_mark_end)
+local function generate_callout_extmarks_body(
+  marks,
+  line,
+  lnum,
+  callout_hl_group_stack,
+  callout_mark_start,
+  callout_mark_end
+)
   local highlight_group_index = 0
   local search_start = 0
   callout_mark_start = callout_mark_start or #line
-
 
   log.debug("Checking line:" .. line .. "\nfor callout generation")
   while search_start <= #line do
@@ -605,12 +609,12 @@ local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group
       end
     end
   elseif string.find(line, ">") and not util.is_empty(callout_hl_group_stack) then
-    log.debug("Callout stack available, generating marks for callout body")
+    log.debug "Callout stack available, generating marks for callout body"
     -- If we have a current stack, then we're in a callout group and should treat the lone
     -- > character as part of a callout block
     generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
   elseif not string.match(line, "%s*>(.+)") and not util.is_empty(callout_hl_group_stack) then
-    log.debug("Clearing callout stack")
+    log.debug "Clearing callout stack"
     -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
     -- as this inidcates we've exited the existing callout block
     for k in pairs(callout_hl_group_stack) do
@@ -696,10 +700,10 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
         local count = 0
         for c = 1, #line do
           local char = line:sub(c, c)
-          if char == '>' then
+          if char == ">" then
             count = count + 1
-          elseif char == '[' then
-            if line:sub(c, c + 2) == '[!]' then
+          elseif char == "[" then
+            if line:sub(c, c + 2) == "[!]" then
               break
             end
           end
@@ -816,10 +820,10 @@ M.setup = function(workspace, ui_opts)
       if conceallevel < 1 or conceallevel > 2 then
         log.warn_once(
           "Obsidian additional syntax features require 'conceallevel' to be set to 1 or 2, "
-          .. "but you have 'conceallevel' set to '%s'.\n"
-          .. "See https://github.com/epwalsh/obsidian.nvim/issues/286 for more details.\n"
-          .. "If you don't want Obsidian's additional UI features, you can disable them and suppress "
-          .. "this warning by setting 'ui.enable = false' in your Obsidian nvim config.",
+            .. "but you have 'conceallevel' set to '%s'.\n"
+            .. "See https://github.com/epwalsh/obsidian.nvim/issues/286 for more details.\n"
+            .. "If you don't want Obsidian's additional UI features, you can disable them and suppress "
+            .. "this warning by setting 'ui.enable = false' in your Obsidian nvim config.",
           conceallevel
         )
       end
