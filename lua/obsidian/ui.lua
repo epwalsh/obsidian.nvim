@@ -485,7 +485,6 @@ local function generate_callout_extmarks_body(marks, line, lnum, callout_hl_grou
   local highlight_group_index = 0
   local search_start = 0
   callout_mark_start = callout_mark_start or #line
-  callout_mark_end = callout_mark_end or #line
 
 
   log.debug("Checking line:" .. line .. "\nfor callout generation")
