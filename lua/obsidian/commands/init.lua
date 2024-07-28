@@ -179,7 +179,7 @@ M.register(
 
 M.register(
   "ObsidianPasteImg",
-  { opts = { nargs = "?", complete = "file", desc = "Paste and image from the clipboard" } }
+  { opts = { nargs = "?", complete = "file", desc = "Paste an image from the clipboard" } }
 )
 
 M.register(
