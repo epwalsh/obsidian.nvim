@@ -1,46 +1,18 @@
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 
-local command_lookups = {
-  ObsidianCheck = "obsidian.commands.check",
-  ObsidianToggleCheckbox = "obsidian.commands.toggle_checkbox",
-  ObsidianToday = "obsidian.commands.today",
-  ObsidianYesterday = "obsidian.commands.yesterday",
-  ObsidianTomorrow = "obsidian.commands.tomorrow",
-  ObsidianDailies = "obsidian.commands.dailies",
-  ObsidianNew = "obsidian.commands.new",
-  ObsidianOpen = "obsidian.commands.open",
-  ObsidianBacklinks = "obsidian.commands.backlinks",
-  ObsidianSearch = "obsidian.commands.search",
-  ObsidianTags = "obsidian.commands.tags",
-  ObsidianTemplate = "obsidian.commands.template",
-  ObsidianNewFromTemplate = "obsidian.commands.new_from_template",
-  ObsidianQuickSwitch = "obsidian.commands.quick_switch",
-  ObsidianLinkNew = "obsidian.commands.link_new",
-  ObsidianLink = "obsidian.commands.link",
-  ObsidianLinks = "obsidian.commands.links",
-  ObsidianFollowLink = "obsidian.commands.follow_link",
-  ObsidianWorkspace = "obsidian.commands.workspace",
-  ObsidianRename = "obsidian.commands.rename",
-  ObsidianPasteImg = "obsidian.commands.paste_img",
-  ObsidianExtractNote = "obsidian.commands.extract_note",
-  ObsidianDebug = "obsidian.commands.debug",
-  ObsidianTOC = "obsidian.commands.toc",
-}
-
 local M = setmetatable({
   commands = {},
 }, {
   __index = function(t, k)
-    local require_path = command_lookups[k]
-    if not require_path then
+    local cmd_mod_name = "obsidian.commands." .. util.string_replace(util.to_snake_case(k), "obsidian_", "")
+    local ok, cmd_mod = pcall(require, cmd_mod_name)
+    if not ok then
       return
+    else
+      t[k] = cmd_mod
+      return cmd_mod
     end
-
-    local mod = require(require_path)
-    t[k] = mod
-
-    return mod
   end,
 })
 
@@ -78,6 +50,25 @@ M.install = function(client)
 
     vim.api.nvim_create_user_command(command_name, func, command_config.opts)
   end
+
+  vim.api.nvim_create_user_command("Obsidian", function(data)
+    local command_name = data.fargs[1]
+    data.args = util.string_replace(data.args, command_name .. " ", "")
+    table.remove(data.fargs, 1)
+    M[command_name](client, data)
+  end, {
+    nargs = "+",
+    desc = "Run an obsidian.nvim command",
+    complete = function()
+      -- TODO: handle completion correctly for the remaining arguments of each subcommand
+      local command_list = {}
+      for command_name, _ in pairs(M.commands) do
+        local command_base_name = util.string_replace(util.to_snake_case(command_name), "obsidian_", "")
+        table.insert(command_list, command_base_name)
+      end
+      return command_list
+    end,
+  })
 end
 
 ---@param client obsidian.Client
