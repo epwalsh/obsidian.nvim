@@ -1341,39 +1341,4 @@ util.buffer_is_empty = function(bufnr)
   end
 end
 
--------------------------
---- Stack implementation
--------------------------
-
--- Create new stack
-function util.new_stack()
-  return {}
-end
-
--- Push an item onto the stack
-function util.push(stack, item)
-  table.insert(stack, item)
-end
-
--- Pop an item from the stack
-function util.pop(stack)
-  if #stack == 0 then
-    return nil
-  end
-  return table.remove(stack)
-end
-
--- Check the top item on the stack
-function util.peek(stack)
-  if #stack == 0 then
-    return nil
-  end
-  return stack[#stack]
-end
-
--- Check if the stack is empty
-function util.is_empty(stack)
-  return #stack == 0
-end
-
 return util

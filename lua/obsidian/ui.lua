@@ -3,6 +3,7 @@ local util = require "obsidian.util"
 local log = require "obsidian.log"
 local search = require "obsidian.search"
 local DefaultTbl = require("obsidian.collections").DefaultTbl
+local collections = require "obsidian.collections"
 local iter = require("obsidian.itertools").iter
 
 local M = {}
@@ -608,12 +609,12 @@ local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group
         end
       end
     end
-  elseif string.find(line, ">") and not util.is_empty(callout_hl_group_stack) then
+  elseif string.find(line, ">") and not collections.is_empty(callout_hl_group_stack) then
     log.debug "Callout stack available, generating marks for callout body"
     -- If we have a current stack, then we're in a callout group and should treat the lone
     -- > character as part of a callout block
     generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
-  elseif not string.match(line, "%s*>(.+)") and not util.is_empty(callout_hl_group_stack) then
+  elseif not string.match(line, "%s*>(.+)") and not collections.is_empty(callout_hl_group_stack) then
     log.debug "Clearing callout stack"
     -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
     -- as this inidcates we've exited the existing callout block
@@ -675,7 +676,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 
   -- Iterate over lines (skipping code blocks) and update marks.
   local inside_code_block = false
-  local callout_block_highlights = util.new_stack()
+  local callout_block_highlights = collections.new_stack()
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   for i, line in ipairs(lines) do
     local lnum = i - 1
