@@ -691,7 +691,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 
     -- Check if inside a code block or at code block boundary. If not, update marks.
     if string.match(line, "^%s*```[^`]*$") then
-      inside_code_block = true
+      inside_code_block = not inside_code_block
       -- Remove any existing marks here on the boundary of a code block.
       clear_line()
     elseif not inside_code_block then
