@@ -506,6 +506,14 @@ local function generate_callout_extmarks_body(
       highlight_group_index = highlight_group_index + 1
     end
 
+    if char == " " then
+      -- Don't render spaces before we start other chars since it looks weird
+      local nxt_char = line:sub(i+1, i+1)
+      if nxt_char ~= ">" then
+        break
+      end
+    end
+
     local highlight_group = callout_hl_group_stack[math.min(highlight_group_index, #callout_hl_group_stack)]
     log.debug("Using highlight group: " .. highlight_group .. " (index: " .. highlight_group_index .. ")")
     local ext_mark_options = ExtMarkOpts.from_tbl {
@@ -517,6 +525,7 @@ local function generate_callout_extmarks_body(
     log.debug("Generated callout mark for char: " .. char)
 
     marks[#marks + 1] = ExtMark.new(nil, lnum, i - 1, ext_mark_options)
+      ::continue::
   end
 end
 
