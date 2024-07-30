@@ -508,7 +508,7 @@ local function generate_callout_extmarks_body(
 
     if char == " " then
       -- Don't render spaces before we start other chars since it looks weird
-      local nxt_char = line:sub(i+1, i+1)
+      local nxt_char = line:sub(i + 1, i + 1)
       if nxt_char ~= ">" then
         break
       end
@@ -525,7 +525,6 @@ local function generate_callout_extmarks_body(
     log.debug("Generated callout mark for char: " .. char)
 
     marks[#marks + 1] = ExtMark.new(nil, lnum, i - 1, ext_mark_options)
-      ::continue::
   end
 end
 
