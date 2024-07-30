@@ -36,7 +36,7 @@ M.Patterns = {
 
   -- Miscellaneous
   Highlight = "==[^=]+==", -- ==text==
-  Callout = "%[!.*%]",
+  Callout = ">+ %[!.*%]",
 
   -- References
   WikiWithAlias = "%[%[[^][%|]+%|[^%]]+%]%]", -- [[xxx|yyy]]

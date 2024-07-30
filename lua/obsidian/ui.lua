@@ -489,37 +489,34 @@ local function generate_callout_extmarks_body(
   callout_mark_end
 )
   local highlight_group_index = 0
-  local search_start = 0
   callout_mark_start = callout_mark_start or #line
 
   log.debug("Checking line:" .. line .. "\nfor callout generation")
-  while search_start <= #line do
-    if search_start == callout_mark_start then
-      log.debug "Callout mark found for next character, skipping! "
+  -- Iterate through each character in the line. As long as the next character matches
+  -- either ' ' or '>' create a highlight group
+  for i = 1, #line do
+    local char = line:sub(i, i)
+
+    if char ~= " " and char ~= ">" then
+      log.debug("Char: " .. char .. " is not part of callout group starts")
       break
     end
 
-    local char_start, char_end = string.find(line, ">", search_start, true)
-    if char_start == nil or char_end == nil then
-      log.debug "No > character found in current line"
-      break
+    if char == ">" then
+      highlight_group_index = highlight_group_index + 1
     end
 
-    highlight_group_index = highlight_group_index + 1
     local highlight_group = callout_hl_group_stack[math.min(highlight_group_index, #callout_hl_group_stack)]
     log.debug("Using highlight group: " .. highlight_group .. " (index: " .. highlight_group_index .. ")")
-
     local ext_mark_options = ExtMarkOpts.from_tbl {
       end_row = lnum,
-      end_col = (char_end + 1 <= #line) and (char_end + 1) or #line,
+      end_col = i,
       conceal = " ",
       hl_group = highlight_group,
     }
-    log.debug("Generated callout mark '>' starting at:" .. char_start .. "ending at:" .. char_end + 1)
+    log.debug("Generated callout mark for char: " .. char)
 
-    marks[#marks + 1] = ExtMark.new(nil, lnum, char_start - 1, ext_mark_options)
-    -- Update start value to just after the current ">"
-    search_start = char_end + 1
+    marks[#marks + 1] = ExtMark.new(nil, lnum, i - 1, ext_mark_options)
   end
 end
 
@@ -531,20 +528,26 @@ end
 ---@param callout_word string
 local function generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, callout_word)
   -- Process the > marks leading up to the header
-  local callout_mark_start_pattern = "[%!%[]"
+  local callout_mark_start_pattern = " [!"
   local callout_mark_end_pattern = "%]"
 
   -- Conceal the callout mark
-  local callout_mark_start = string.find(line, callout_mark_start_pattern, indent)
+  local callout_mark_start = string.find(line, callout_mark_start_pattern, indent, true)
   local callout_mark_end = string.find(line, callout_mark_end_pattern, indent)
 
-  if not callout_mark_start or not callout_mark_end then
-    log.debug "couldn't find start or end for callout mark"
+  if not callout_mark_start then
+    log.debug "Could not find callout start for line: "
+    log.debug(line)
+  end
+  if not callout_mark_end then
+    log.debug "Could not find callout end for line: "
+    log.debug(line)
   end
 
   generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack, callout_mark_start, callout_mark_end)
   -- Ensure callout_mark_start and callout_mark_end are not nil
   if callout_mark_start and callout_mark_end then
+    -- Just past the [ character
     local end_intro_mark = callout_mark_start + 2
     log.debug("Generating callout header for:" .. line)
     local callout_mark_header = ExtMark.new(
@@ -553,14 +556,27 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
       callout_mark_start - 1,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        -- Just past the ! character
         end_col = end_intro_mark,
         conceal = opts.char,
       }
     )
     marks[#marks + 1] = callout_mark_header
 
-    -- Generate the reset of the word
+    -- Generate a space
+    local callout_mark_header_space = ExtMark.new(
+      nil,
+      lnum,
+      end_intro_mark,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = end_intro_mark + 1,
+        conceal = " ",
+      }
+    )
+    marks[#marks + 1] = callout_mark_header
+    end_intro_mark = end_intro_mark + 1
+
+    -- Generate the rest of the word
     for i = 1, #callout_word do
       local char = callout_word:sub(i, i)
       local callout_char_mark = ExtMark.new(
@@ -577,6 +593,19 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
       marks[#marks + 1] = callout_char_mark
       end_intro_mark = end_intro_mark + 1
     end
+
+    -- Generate a space
+    local callout_mark_header_space_trail = ExtMark.new(
+      nil,
+      lnum,
+      end_intro_mark,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = end_intro_mark + 1,
+        conceal = " ",
+      }
+    )
+    marks[#marks + 1] = callout_mark_header
   end
 end
 
@@ -593,7 +622,7 @@ local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group
   if string.match(line, search.Patterns.Callout) then
     -- Process if current line is a callout mark
     for calloutWord, opts in pairs(ui_opts.callouts) do
-      local constructed_text = "[!" .. string.lower(calloutWord) .. "]"
+      local constructed_text = "> [!" .. string.lower(calloutWord) .. "]"
       if string.find(lower_line, constructed_text, 1, true) then
         log.debug("Generating callout header for" .. calloutWord)
         generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, calloutWord)
@@ -601,7 +630,7 @@ local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group
       end
 
       for _, alias in ipairs(opts.aliases) do
-        local alias_constructed_text = "[!" .. string.lower(alias) .. "]"
+        local alias_constructed_text = "> [!" .. string.lower(alias) .. "]"
         if string.find(lower_line, alias_constructed_text, 1, true) then
           log.debug("Generating callout header for" .. alias)
           generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, alias)
@@ -709,7 +738,9 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
             end
           end
         end
-        callout_block_highlights[count] = get_callout_hl_group(line, ui_opts)
+        local highlight = get_callout_hl_group(line, ui_opts)
+        callout_block_highlights[count] = highlight
+        log.debug("Inserting callout highlight: " .. highlight .. " into idx: " .. count)
       end
 
       -- Get all marks that should be materialized.
