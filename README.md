@@ -86,8 +86,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianToggleCheckbox` to cycle through checkbox options.
 
-- `:ObsidianNewFromTemplate [PATH] [TEMPLATE]` to create a new note from a template in the templates folder. Selecting from a list using your preferred picker.
-  This command has one optional argument: the path to the new note.
+- `:ObsidianNewFromTemplate [TITLE]` to create a new note from a template in the templates folder. Selecting from a list using your preferred picker.
+  This command has one optional argument: the title of the new note.
 
 - `:ObsidianTOC` to load the table of contents of the current note into a picker list.
 
