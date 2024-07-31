@@ -478,18 +478,8 @@ end
 ---@param lnum integer
 ---@param line string
 ---@param callout_hl_group_stack {}
----@param callout_mark_start integer|nil
----@param callout_mark_end integer|nil
-local function generate_callout_extmarks_body(
-  marks,
-  line,
-  lnum,
-  callout_hl_group_stack,
-  callout_mark_start,
-  callout_mark_end
-)
+local function generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
   local highlight_group_index = 0
-  callout_mark_start = callout_mark_start or #line
 
   log.debug("Checking line:" .. line .. "\nfor callout generation")
   -- Iterate through each character in the line. As long as the next character matches
@@ -552,7 +542,7 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
     log.debug(line)
   end
 
-  generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack, callout_mark_start, callout_mark_end)
+  generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
   -- Ensure callout_mark_start and callout_mark_end are not nil
   if callout_mark_start and callout_mark_end then
     -- Just past the [ character
@@ -581,7 +571,7 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
         conceal = " ",
       }
     )
-    marks[#marks + 1] = callout_mark_header
+    marks[#marks + 1] = callout_mark_header_space
     end_intro_mark = end_intro_mark + 1
 
     -- Generate the rest of the word
@@ -613,7 +603,7 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
         conceal = " ",
       }
     )
-    marks[#marks + 1] = callout_mark_header
+    marks[#marks + 1] = callout_mark_header_space_trail
   end
 end
 
