@@ -559,20 +559,6 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
     )
     marks[#marks + 1] = callout_mark_header
 
-    -- Generate a space
-    local callout_mark_header_space = ExtMark.new(
-      nil,
-      lnum,
-      end_intro_mark,
-      ExtMarkOpts.from_tbl {
-        end_row = lnum,
-        end_col = end_intro_mark + 1,
-        conceal = " ",
-      }
-    )
-    marks[#marks + 1] = callout_mark_header_space
-    end_intro_mark = end_intro_mark + 1
-
     -- Generate the rest of the word
     for i = 1, #callout_word do
       local char = callout_word:sub(i, i)
@@ -590,19 +576,6 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
       marks[#marks + 1] = callout_char_mark
       end_intro_mark = end_intro_mark + 1
     end
-
-    -- Generate a space
-    local callout_mark_header_space_trail = ExtMark.new(
-      nil,
-      lnum,
-      end_intro_mark,
-      ExtMarkOpts.from_tbl {
-        end_row = lnum,
-        end_col = math.min(end_intro_mark + 1, #line),
-        conceal = " ",
-      }
-    )
-    marks[#marks + 1] = callout_mark_header_space_trail
   end
 end
 
