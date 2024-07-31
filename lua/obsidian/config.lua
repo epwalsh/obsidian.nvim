@@ -208,6 +208,9 @@ config.ClientOpts.normalize = function(opts, defaults)
   end
 
   if opts.image_name_func then
+    if opts.attachments == nil then
+      opts.attachments = {}
+    end
     opts.attachments.img_name_func = opts.image_name_func
     opts.image_name_func = nil
   end
