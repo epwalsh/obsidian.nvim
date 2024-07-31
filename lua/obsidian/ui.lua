@@ -608,12 +608,12 @@ local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group
         end
       end
     end
-  elseif string.find(line, ">") and not #callout_hl_group_stack == 0 then
+  elseif string.find(line, ">") and not #callout_hl_group_stack > 0 then
     log.debug "Callout stack available, generating marks for callout body"
     -- If we have a current stack, then we're in a callout group and should treat the lone
     -- > character as part of a callout block
     generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
-  elseif not string.match(line, "%s*>(.+)") and not #callout_hl_group_stack == 0 then
+  elseif not string.match(line, "%s*>(.+)") and not #callout_hl_group_stack > 0 then
     log.debug "Clearing callout stack"
     -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
     -- as this inidcates we've exited the existing callout block
