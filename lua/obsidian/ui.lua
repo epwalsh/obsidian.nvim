@@ -598,7 +598,7 @@ local function generate_callout_extmarks_header(marks, indent, line, lnum, opts,
       end_intro_mark,
       ExtMarkOpts.from_tbl {
         end_row = lnum,
-        end_col = end_intro_mark + 1,
+        end_col = math.min(end_intro_mark + 1, #line),
         conceal = " ",
       }
     )
