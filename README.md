@@ -129,9 +129,10 @@ return {
   -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
   -- event = {
   --   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
-  --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
-  --   "BufReadPre path/to/my-vault/**.md",
-  --   "BufNewFile path/to/my-vault/**.md",
+  --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/*.md"
+  --   -- refer to `:h file-pattern` for more examples
+  --   "BufReadPre path/to/my-vault/*.md",
+  --   "BufNewFile path/to/my-vault/*.md",
   -- },
   dependencies = {
     -- Required.
@@ -391,12 +392,13 @@ This is a complete list of all of the options that can be passed to `require("ob
     vim.fn.jobstart({"open", url})  -- Mac OS
     -- vim.fn.jobstart({"xdg-open", url})  -- linux
     -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
+    -- vim.ui.open(url) -- need Neovim 0.10.0+
   end,
 
   -- Optional, by default when you use `:ObsidianFollowLink` on a link to an image
   -- file it will be ignored but you can customize this behavior here.
   ---@param img string
-  follow_url_func = function(img)
+  follow_img_func = function(img)
     vim.fn.jobstart { "qlmanage", "-p", img }  -- Mac OS quick look preview
     -- vim.fn.jobstart({"xdg-open", url})  -- linux
     -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
