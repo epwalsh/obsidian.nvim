@@ -48,7 +48,7 @@ jobs:
           make api-docs
 
       - name: Generate plugin docs
-        uses: kdheepak/panvimdoc@v4.0.0
+        uses: kdheepak/panvimdoc@v4.0.1
         with:
           vimdoc: obsidian
           description: a plugin for writing and navigating an Obsidian vault
