@@ -473,14 +473,190 @@ local function get_line_highlight_extmarks(marks, line, lnum, ui_opts)
   return marks
 end
 
+---@param marks ExtMark[]
+---@param lnum integer
+---@param line string
+---@param callout_hl_group_stack {}
+local function generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
+  local highlight_group_index = 0
+
+  log.debug("Checking line:" .. line .. "\nfor callout generation")
+  -- Iterate through each character in the line. As long as the next character matches
+  -- either ' ' or '>' create a highlight group
+  for i = 1, #line do
+    local char = line:sub(i, i)
+
+    if char ~= " " and char ~= ">" then
+      log.debug("Char: " .. char .. " is not part of callout group starts")
+      break
+    end
+
+    if char == ">" then
+      highlight_group_index = highlight_group_index + 1
+    end
+
+    if char == " " then
+      -- Don't render spaces before we start other chars since it looks weird
+      local nxt_char = line:sub(i + 1, i + 1)
+      if nxt_char ~= ">" then
+        break
+      end
+    end
+
+    local highlight_group = callout_hl_group_stack[math.min(highlight_group_index, #callout_hl_group_stack)]
+    log.debug("Using highlight group: " .. highlight_group .. " (index: " .. highlight_group_index .. ")")
+    local ext_mark_options = ExtMarkOpts.from_tbl {
+      end_row = lnum,
+      end_col = i,
+      conceal = " ",
+      hl_group = highlight_group,
+    }
+    log.debug("Generated callout mark for char: " .. char)
+
+    marks[#marks + 1] = ExtMark.new(nil, lnum, i - 1, ext_mark_options)
+  end
+end
+
+---@param marks ExtMark[]
+---@param lnum integer
+---@param line string
+---@param opts obsidian.config.CalloutSpec
+---@param callout_hl_group_stack {}
+---@param callout_word string
+local function generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, callout_word)
+  -- Process the > marks leading up to the header
+  local callout_mark_start_pattern = " [!"
+  local callout_mark_end_pattern = "%]"
+
+  -- Conceal the callout mark
+  local callout_mark_start = string.find(line, callout_mark_start_pattern, indent, true)
+  local callout_mark_end = string.find(line, callout_mark_end_pattern, indent)
+
+  if not callout_mark_start then
+    log.debug "Could not find callout start for line: "
+    log.debug(line)
+  end
+  if not callout_mark_end then
+    log.debug "Could not find callout end for line: "
+    log.debug(line)
+  end
+
+  generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
+  -- Ensure callout_mark_start and callout_mark_end are not nil
+  if callout_mark_start and callout_mark_end then
+    -- Just past the [ character
+    local end_intro_mark = callout_mark_start + 2
+    log.debug("Generating callout header for:" .. line)
+    local callout_mark_header = ExtMark.new(
+      nil,
+      lnum,
+      callout_mark_start - 1,
+      ExtMarkOpts.from_tbl {
+        end_row = lnum,
+        end_col = end_intro_mark,
+        conceal = opts.char,
+      }
+    )
+    marks[#marks + 1] = callout_mark_header
+
+    -- Generate the rest of the word
+    for i = 1, #callout_word do
+      local char = callout_word:sub(i, i)
+      local callout_char_mark = ExtMark.new(
+        nil,
+        lnum,
+        end_intro_mark - 1,
+        ExtMarkOpts.from_tbl {
+          end_row = lnum,
+          end_col = end_intro_mark + 1,
+          conceal = char,
+        }
+      )
+
+      marks[#marks + 1] = callout_char_mark
+      end_intro_mark = end_intro_mark + 1
+    end
+  end
+end
+
+---@param marks ExtMark[]
+---@param lnum integer
+---@param line string
+---@param ui_opts obsidian.config.UIOpts
+---@param callout_hl_group_stack {}
+---@return ExtMark[]
+local function get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group_stack)
+  local lower_line = string.lower(line)
+  local indent = util.count_indent(line)
+
+  if string.match(line, search.Patterns.Callout) then
+    -- Process if current line is a callout mark
+    for calloutWord, opts in pairs(ui_opts.callouts) do
+      local constructed_text = "> [!" .. string.lower(calloutWord) .. "]"
+      if string.find(lower_line, constructed_text, 1, true) then
+        log.debug("Generating callout header for" .. calloutWord)
+        generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, calloutWord)
+        break
+      end
+
+      for _, alias in ipairs(opts.aliases) do
+        local alias_constructed_text = "> [!" .. string.lower(alias) .. "]"
+        if string.find(lower_line, alias_constructed_text, 1, true) then
+          log.debug("Generating callout header for" .. alias)
+          generate_callout_extmarks_header(marks, indent, line, lnum, opts, callout_hl_group_stack, alias)
+          break
+        end
+      end
+    end
+  elseif string.find(line, ">") and (#callout_hl_group_stack ~= 0) then
+    log.debug "Callout stack available, generating marks for callout body"
+    -- If we have a current stack, then we're in a callout group and should treat the lone
+    -- > character as part of a callout block
+    generate_callout_extmarks_body(marks, line, lnum, callout_hl_group_stack)
+  -- elseif not string.match(line, "%s*>(.+)") and not (#callout_hl_group_stack == 0) then
+  elseif not string.match(line, "%s*>(.+)") and (#callout_hl_group_stack ~= 0) then
+    log.debug "Clearing callout stack"
+    -- If we have a current stack, but the we don't match the > block, then we should remove all of the items from the stack
+    -- as this inidcates we've exited the existing callout block
+    for k in pairs(callout_hl_group_stack) do
+      callout_hl_group_stack[k] = nil
+    end
+  end
+  return marks
+end
+
+---@param line string
+---@param ui_opts obsidian.config.UIOpts
+---@return string
+local function get_callout_hl_group(line, ui_opts)
+  local lower_line = string.lower(line)
+  local function constructed_text(word)
+    return "[!" .. string.lower(word) .. "]"
+  end
+
+  for calloutWord, opts in pairs(ui_opts.callouts) do
+    if string.find(lower_line, constructed_text(calloutWord), 1, true) then
+      return opts.hl_group
+    end
+    for _, alias in ipairs(opts.aliases) do
+      if string.find(lower_line, constructed_text(alias), 1, true) then
+        return opts.hl_group
+      end
+    end
+  end
+  return ""
+end
+
 ---@param lnum integer
 ---@param ui_opts obsidian.config.UIOpts
+---@param callout_hl_group_stack {}
 ---@return ExtMark[]
-local get_line_marks = function(line, lnum, ui_opts)
+local get_line_marks = function(line, lnum, ui_opts, callout_hl_group_stack)
   local marks = {}
   get_line_check_extmarks(marks, line, lnum, ui_opts)
   get_line_ref_extmarks(marks, line, lnum, ui_opts)
   get_line_highlight_extmarks(marks, line, lnum, ui_opts)
+  get_callout_extmarks(marks, line, lnum, ui_opts, callout_hl_group_stack)
   return marks
 end
 
@@ -500,6 +676,7 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
 
   -- Iterate over lines (skipping code blocks) and update marks.
   local inside_code_block = false
+  local callout_block_highlights = {}
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   for i, line in ipairs(lines) do
     local lnum = i - 1
@@ -519,10 +696,18 @@ local function update_extmarks(bufnr, ns_id, ui_opts)
       -- Remove any existing marks here on the boundary of a code block.
       clear_line()
     elseif not inside_code_block then
+      -- Mark that we have a highlight group now
+      if string.match(line, search.Patterns.Callout) then
+        local count = util.string_count(line, "> ")
+        local highlight = get_callout_hl_group(line, ui_opts)
+        callout_block_highlights[count] = highlight
+        log.debug("Inserting callout highlight: " .. highlight .. " into idx: " .. count)
+      end
+
       -- Get all marks that should be materialized.
       -- Some of these might already be materialized, which we'll check below and avoid re-drawing
       -- if that's the case.
-      local new_line_marks = get_line_marks(line, lnum, ui_opts)
+      local new_line_marks = get_line_marks(line, lnum, ui_opts, callout_block_highlights)
       if #new_line_marks > 0 then
         -- Materialize new marks.
         for mark in iter(new_line_marks) do

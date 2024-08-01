@@ -409,6 +409,7 @@ end
 ---@field enable boolean
 ---@field update_debounce integer
 ---@field max_file_length integer|?
+---@field callouts table<string, obsidian.config.CalloutSpec>
 ---@field checkboxes table<string, obsidian.config.CheckboxSpec>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
@@ -430,6 +431,12 @@ config.UIOpts = {}
 ---@field hl_group string
 ---@field order integer
 
+---@class obsidian.config.CalloutSpec : obsidian.config.UICharSpec
+---
+---@field aliases table<string>
+---@field hl_group string
+---@field char string
+
 ---@class obsidian.config.UIStyleSpec
 ---
 ---@field hl_group string
@@ -440,6 +447,93 @@ config.UIOpts.default = function()
     enable = true,
     update_debounce = 200,
     max_file_length = 5000,
+    callouts = {
+      ["Note"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutNote",
+      },
+      ["Abstract"] = {
+        aliases = {
+          "Summary",
+          "Tldr",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutAbstract",
+      },
+      ["Info"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutInfo",
+      },
+      ["Todo"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutTodo",
+      },
+      ["Tip"] = {
+        aliases = {
+          "Hint",
+          "Important",
+        },
+        char = "󰈸",
+        hl_group = "ObsidianCalloutTip",
+      },
+      ["Success"] = {
+        aliases = {
+          "Check",
+          "Done",
+        },
+        char = "󰄬",
+        hl_group = "ObsidianCalloutSuccess",
+      },
+      ["Question"] = {
+        aliases = {
+          "Help",
+          "FAQ",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutQuestion",
+      },
+      ["Warning"] = {
+        aliases = {
+          "Caution",
+          "Attentition",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutWarning",
+      },
+      ["Failure"] = {
+        aliases = {
+          "Fail",
+          "Missing",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutFailure",
+      },
+      ["Danger"] = {
+        aliases = {
+          "Error",
+        },
+        char = "",
+        hl_group = "ObsidianCalloutDanger",
+      },
+      ["Bug"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutBug",
+      },
+      ["Example"] = {
+        aliases = {},
+        char = "",
+        hl_group = "ObsidianCalloutExample",
+      },
+      ["Quote"] = {
+        aliases = {},
+        char = "󱆨",
+        hl_group = "ObsidianCalloutQuote",
+      },
+    },
     checkboxes = {
       [" "] = { order = 1, char = "󰄱", hl_group = "ObsidianTodo" },
       ["~"] = { order = 2, char = "󰰱", hl_group = "ObsidianTilde" },
@@ -465,6 +559,20 @@ config.UIOpts.default = function()
       ObsidianTag = { italic = true, fg = "#89ddff" },
       ObsidianBlockID = { italic = true, fg = "#89ddff" },
       ObsidianHighlightText = { bg = "#75662e" },
+      -- Callout highlights
+      ObsidianCalloutNote = { bg = "#1072b8" },
+      ObsidianCalloutAbstract = { bg = "#d7e6fa" },
+      ObsidianCalloutInfo = { bg = "#6a93e5" },
+      ObsidianCalloutTodo = { bg = "#6a93e5" },
+      ObsidianCalloutTip = { bg = "#d7e6fa" },
+      ObsidianCalloutSuccess = { bg = "#9fc360" },
+      ObsidianCalloutQuestion = { bg = "#faebd7" },
+      ObsidianCalloutWarning = { bg = "#faebd7" },
+      ObsidianCalloutFailure = { bg = "#ee5d5c" },
+      ObsidianCalloutDanger = { bg = "#ee5d5c" },
+      ObsidianCalloutBug = { bg = "#ee5d5c" },
+      ObsidianCalloutExample = { bg = "#c792ea" },
+      ObsidianCalloutQuote = { bg = "#E9F0FD" },
     },
   }
 end
