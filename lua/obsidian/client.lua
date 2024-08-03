@@ -1760,7 +1760,7 @@ Client.write_note = function(self, note, opts)
   local path = assert(opts.path or note.path, "A path must be provided")
   path = Path.new(path)
 
-  ---@t:pe string
+  ---@type string
   local verb
   if path:is_file() then
     verb = "Updated"
