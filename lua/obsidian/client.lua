@@ -1973,18 +1973,36 @@ Client._daily = function(self, datetime, opts)
   if path:exists() then
     note = Note.from_file(path, opts.load)
   else
+    local update_content
     note = Note.new(id, {}, self.opts.daily_notes.default_tags or {}, path)
 
     if alias then
       note:add_alias(alias)
       note.title = alias
     end
-
     if not opts.no_write then
-      self:write_note(note, { template = self.opts.daily_notes.template })
+      if self.opts.daily_notes.pass_on_todos then
+        --@type obsidian.Note
+        --NOTE: potentially use Client.yesterday() with added props?
+        local yesterday_note = self:daily(-1, { no_write = true }):read_note()
+        local todo_lines = {}
+        local TODO_PATTERN = "^%s*-%s%[%s%]%s.*"
+        if yesterday_note then
+          for _, line in ipairs(yesterday_note) do
+            if line:match(TODO_PATTERN) then
+              table.insert(todo_lines, line)
+            end
+          end
+          update_content = function(contents)
+            -- this is an in-place operation
+            vim.list_extend(contents, todo_lines)
+            return contents
+          end
+        end
+      end
+      self:write_note(note, { template = self.opts.daily_notes.template, update_content = update_content })
     end
   end
-
   return note
 end
 

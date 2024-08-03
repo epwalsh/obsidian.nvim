@@ -820,4 +820,22 @@ Note.resolve_block = function(self, block_id)
   return n:resolve_block(block_id)
 end
 
+--- Returns the content of the note file if exist and nil if it does not
+---
+---@return string[]|?
+Note.read_note = function(self)
+  if self:exists() then
+    local contents = {}
+
+    with(open(tostring(self.path), "r"), function(reader)
+      local line = reader:read()
+      while line ~= nil do
+        line = reader:read()
+        table.insert(contents, line)
+      end
+    end)
+    return contents
+  end
+end
+
 return Note
