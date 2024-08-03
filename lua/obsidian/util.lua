@@ -1,6 +1,7 @@
 local iter = require("obsidian.itertools").iter
 local enumerate = require("obsidian.itertools").enumerate
 local log = require "obsidian.log"
+local compat = require "obsidian.compat"
 
 local util = {}
 
@@ -15,7 +16,7 @@ local util = {}
 ---@return boolean
 util.tbl_contains = function(table, val)
   for i = 1, #table do
-    if table[i] == val then
+    if vim.deep_equal(table[i], val) then
       return true
     end
   end
@@ -44,7 +45,7 @@ util.tbl_is_array = function(t)
     return false
   end
 
-  return vim.tbl_islist(t)
+  return compat.is_list(t)
 end
 
 ---Check if an object is an non-array table.
@@ -184,11 +185,21 @@ util.is_url = function(s)
   if
     string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$")
     or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$")
+    or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.MailtoUrl] .. "$")
   then
     return true
   else
     return false
   end
+end
+
+util.is_img = function(s)
+  for _, suffix in ipairs { ".png", ".jpg", ".jpeg", ".heic", ".gif", ".svg", ".ico" } do
+    if vim.endswith(s, suffix) then
+      return true
+    end
+  end
+  return false
 end
 
 -- This function removes a single backslash within double square brackets
@@ -493,9 +504,10 @@ util.zettel_id = function()
 end
 
 ---Toggle the checkbox on the line that the cursor is on.
-util.toggle_checkbox = function(opts)
-  local line_num = unpack(vim.api.nvim_win_get_cursor(0)) -- 1-indexed
-  local line = vim.api.nvim_get_current_line()
+util.toggle_checkbox = function(opts, line_num)
+  -- Allow line_num to be optional, defaulting to the current line if not provided
+  line_num = line_num or unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_buf_get_lines(0, line_num - 1, line_num, false)[1]
 
   local checkbox_pattern = "^%s*- %[.] "
   local checkboxes = opts or { " ", "x" }
@@ -509,7 +521,7 @@ util.toggle_checkbox = function(opts)
     end
   else
     for i, check_char in enumerate(checkboxes) do
-      if string.match(line, "^%s*- %[" .. check_char .. "%].*") then
+      if string.match(line, "^%s*- %[" .. util.escape_magic_characters(check_char) .. "%].*") then
         if i == #checkboxes then
           i = 0
         end
@@ -876,14 +888,21 @@ end
 
 --- Get the current visual selection of text and exit visual mode.
 ---
+---@param opts { strict: boolean|? }|?
+---
 ---@return { lines: string[], selection: string, csrow: integer, cscol: integer, cerow: integer, cecol: integer }|?
-util.get_visual_selection = function()
+util.get_visual_selection = function(opts)
+  opts = opts or {}
   -- Adapted from fzf-lua:
   -- https://github.com/ibhagwan/fzf-lua/blob/6ee73fdf2a79bbd74ec56d980262e29993b46f2b/lua/fzf-lua/utils.lua#L434-L466
   -- this will exit visual mode
   -- use 'gv' to reselect the text
   local _, csrow, cscol, cerow, cecol
   local mode = vim.fn.mode()
+  if opts.strict and not vim.endswith(string.lower(mode), "v") then
+    return
+  end
+
   if mode == "v" or mode == "V" or mode == "" then
     -- if we are in visual mode use the live position
     _, csrow, cscol, _ = unpack(vim.fn.getpos ".")

@@ -7,12 +7,13 @@ local search = require "obsidian.search"
 local util = require "obsidian.util"
 local enumerate = require("obsidian.itertools").enumerate
 local zip = require("obsidian.itertools").zip
+local compat = require "obsidian.compat"
 
 ---@param client obsidian.Client
 return function(client, data)
   -- Validate args.
   local dry_run = false
-  ---@type string
+  ---@type string|?
   local arg
 
   if data.args == "--dry-run" then
@@ -23,9 +24,7 @@ return function(client, data)
   if data.args ~= nil and string.len(data.args) > 0 then
     arg = util.strip_whitespace(data.args)
   else
-    arg = vim.fn.input {
-      prompt = "Enter new note ID/name/path: ",
-    }
+    arg = util.input("Enter new note ID/name/path: ", { completion = "file" })
     if not arg or string.len(arg) == 0 then
       log.warn "Rename aborted"
       return
@@ -93,7 +92,7 @@ return function(client, data)
   local new_note_path
   if #parts > 1 then
     parts[#parts] = nil
-    new_note_path = client.dir:joinpath(unpack(vim.tbl_flatten { parts, new_note_id })):with_suffix ".md"
+    new_note_path = client.dir:joinpath(unpack(compat.flatten { parts, new_note_id })):with_suffix ".md"
   else
     new_note_path = (dirname / new_note_id):with_suffix ".md"
   end
@@ -156,7 +155,7 @@ return function(client, data)
         end
         vim.fn.delete(tostring(cur_note_path))
       else
-        log.info("Dry run: saving current buffer as '" .. new_note_path .. "' and removing old file")
+        log.info("Dry run: saving current buffer as '" .. tostring(new_note_path) .. "' and removing old file")
       end
     else
       -- For the non-current buffer the best we can do is delete the buffer (we've already saved it above)
@@ -165,7 +164,13 @@ return function(client, data)
         quietly(vim.cmd.bdelete, cur_note_bufnr)
         cur_note_path:rename(new_note_path)
       else
-        log.info("Dry run: removing buffer '" .. cur_note_path .. "' and renaming file to '" .. new_note_path .. "'")
+        log.info(
+          "Dry run: removing buffer '"
+            .. tostring(cur_note_path)
+            .. "' and renaming file to '"
+            .. tostring(new_note_path)
+            .. "'"
+        )
       end
     end
   else
@@ -173,7 +178,7 @@ return function(client, data)
     if not dry_run then
       cur_note_path:rename(new_note_path)
     else
-      log.info("Dry run: renaming file '" .. cur_note_path .. "' to '" .. new_note_path .. "'")
+      log.info("Dry run: renaming file '" .. tostring(cur_note_path) .. "' to '" .. tostring(new_note_path) .. "'")
     end
   end
 
@@ -185,7 +190,7 @@ return function(client, data)
     if not dry_run then
       cur_note:save()
     else
-      log.info("Dry run: updating frontmatter of '" .. new_note_path .. "'")
+      log.info("Dry run: updating frontmatter of '" .. tostring(new_note_path) .. "'")
     end
   end
 
@@ -215,12 +220,12 @@ return function(client, data)
     }
   end
 
-  local reference_forms = vim.tbl_flatten {
+  local reference_forms = compat.flatten {
     get_ref_forms(cur_note_id),
     get_ref_forms(cur_note_rel_path),
     get_ref_forms(string.sub(cur_note_rel_path, 1, -4)),
   }
-  local replace_with = vim.tbl_flatten {
+  local replace_with = compat.flatten {
     get_ref_forms(new_note_id),
     get_ref_forms(new_note_rel_path),
     get_ref_forms(string.sub(new_note_rel_path, 1, -4)),

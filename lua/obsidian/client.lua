@@ -261,17 +261,19 @@ Client.templates_dir = function(self, workspace)
     opts = self:opts_for_workspace(workspace)
   end
 
-  if opts.templates ~= nil and opts.templates.subdir ~= nil then
-    local templates_dir = self:vault_root(workspace) / opts.templates.subdir
-    if not templates_dir:is_dir() then
-      log.err("'%s' is not a valid directory for templates", templates_dir)
-      return nil
-    else
-      return templates_dir
-    end
-  else
+  if opts.templates == nil or opts.templates.folder == nil then
     return nil
   end
+
+  local paths_to_check = { Path.new(opts.templates.folder), self:vault_root(workspace) / opts.templates.folder }
+  for _, path in ipairs(paths_to_check) do
+    if path:is_dir() then
+      return path
+    end
+  end
+
+  log.err("'%s' is not a valid templates directory", opts.templates.folder)
+  return nil
 end
 
 --- Determines whether a note's frontmatter is managed by obsidian.nvim.
@@ -280,6 +282,17 @@ end
 ---
 ---@return boolean
 Client.should_save_frontmatter = function(self, note)
+  -- Check if the note is a template.
+  local templates_dir = self:templates_dir()
+  if templates_dir ~= nil then
+    templates_dir = templates_dir:resolve()
+    for _, parent in ipairs(note.path:parents()) do
+      if parent == templates_dir then
+        return false
+      end
+    end
+  end
+
   if not note:should_save_frontmatter() then
     return false
   elseif type(self.opts.disable_frontmatter) == "boolean" then
@@ -350,8 +363,8 @@ Client._prepare_search_opts = function(self, opts, additional_opts)
     search_opts.sort_reversed = self.opts.sort_reversed
   end
 
-  if not opts.include_templates and self.opts.templates ~= nil and self.opts.templates.subdir ~= nil then
-    search_opts:add_exclude(self.opts.templates.subdir)
+  if not opts.include_templates and self.opts.templates ~= nil and self.opts.templates.folder ~= nil then
+    search_opts:add_exclude(tostring(self.opts.templates.folder))
   end
 
   if opts.ignore_case then
@@ -408,7 +421,13 @@ Client._search_iter_async = function(self, term, search_opts, find_opts)
     on_exit
   )
 
-  search.find_async(self.dir, term, self:_prepare_search_opts(find_opts), on_find_match, on_exit)
+  search.find_async(
+    self.dir,
+    term,
+    self:_prepare_search_opts(find_opts, { ignore_case = true }),
+    on_find_match,
+    on_exit
+  )
 
   return function()
     while cmds_done < 2 do
@@ -443,6 +462,10 @@ end
 ---@param opts { search: obsidian.SearchOpts|?, notes: obsidian.note.LoadOpts|? }|?
 Client.find_notes_async = function(self, term, callback, opts)
   opts = opts or {}
+  opts.notes = opts.notes or {}
+  if not opts.notes.max_lines then
+    opts.notes.max_lines = self.opts.search_max_lines
+  end
 
   local next_path = self:_search_iter_async(term, opts.search)
   local executor = AsyncExecutor.new()
@@ -587,6 +610,10 @@ end
 ---@return obsidian.Note|?
 Client.resolve_note_async = function(self, query, callback, opts)
   opts = opts or {}
+  opts.notes = opts.notes or {}
+  if not opts.notes.max_lines then
+    opts.notes.max_lines = self.opts.search_max_lines
+  end
 
   -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
@@ -784,6 +811,7 @@ Client.resolve_link_async = function(self, link, callback)
   local load_opts = {
     collect_anchor_links = anchor_link and true or false,
     collect_blocks = block_link and true or false,
+    max_lines = self.opts.search_max_lines,
   }
 
   -- Assume 'location' is current buffer path if empty, like for TOCs.
@@ -845,6 +873,15 @@ Client.follow_link_async = function(self, link, opts)
       if res.note ~= nil then
         -- Go to resolved note.
         return self:open_note(res.note, { line = res.line, col = res.col, open_strategy = opts.open_strategy })
+      end
+
+      if util.is_img(res.location) then
+        if self.opts.follow_img_func ~= nil then
+          self.opts.follow_img_func(res.location)
+        else
+          log.warn "This looks like an image path. You can customize the behavior of images with the 'follow_img_func' option."
+        end
+        return
       end
 
       if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
@@ -967,6 +1004,10 @@ Client.current_note = function(self, bufnr, opts)
     return nil
   end
 
+  opts = opts or {}
+  if not opts.max_lines then
+    opts.max_lines = self.opts.search_max_lines
+  end
   return Note.from_buffer(bufnr, opts)
 end
 
@@ -1045,6 +1086,9 @@ Client.find_tags_async = function(self, term, callback, opts)
   ---@param col_start integer|?
   ---@param col_end integer|?
   local add_match = function(tag, path, note, lnum, text, col_start, col_end)
+    if vim.startswith(tag, "#") then
+      tag = string.sub(tag, 2)
+    end
     if not path_to_tag_loc[path] then
       path_to_tag_loc[path] = {}
     end
@@ -1064,7 +1108,7 @@ Client.find_tags_async = function(self, term, callback, opts)
   ---@param path obsidian.Path
   ---@return { [1]: obsidian.Note, [2]: {[1]: integer, [2]: integer}[] }
   local load_note = function(path)
-    local note, contents = Note.from_file_with_contents_async(path)
+    local note, contents = Note.from_file_with_contents_async(path, { max_lines = self.opts.search_max_lines })
     return { note, search.find_code_blocks(contents) }
   end
 
@@ -1266,30 +1310,47 @@ Client.find_backlinks_async = function(self, note, callback, opts)
 
   -- Prepare search terms.
   local search_terms = {}
-  for ref in iter { tostring(note.id), note:fname(), self:vault_relative_path(note.path) } do
-    if ref ~= nil then
-      if anchor == nil and block == nil then
-        -- Wiki links without anchor/block.
-        search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
-        search_terms[#search_terms + 1] = string.format("[[%s|", ref)
-        -- Markdown link without anchor/block.
-        search_terms[#search_terms + 1] = string.format("(%s)", ref)
-        -- Wiki links with anchor/block.
-        search_terms[#search_terms + 1] = string.format("[[%s#", ref)
-        -- Markdown link with anchor/block.
-        search_terms[#search_terms + 1] = string.format("(%s#", ref)
-      elseif anchor then
-        -- Note: Obsidian allow a lot of different forms of anchor links, so we can't assume
-        -- it's the standardized form here.
-        -- Wiki links with anchor.
-        search_terms[#search_terms + 1] = string.format("[[%s#", ref)
-        -- Markdown link with anchor.
-        search_terms[#search_terms + 1] = string.format("(%s#", ref)
-      elseif block then
-        -- Wiki links with block.
-        search_terms[#search_terms + 1] = string.format("[[%s#%s", ref, block)
-        -- Markdown link with block.
-        search_terms[#search_terms + 1] = string.format("(%s#%s", ref, block)
+  local note_path = Path.new(note.path)
+  for raw_ref in iter { tostring(note.id), note_path.name, note_path.stem, self:vault_relative_path(note.path) } do
+    for ref in
+      iter(util.tbl_unique {
+        raw_ref,
+        util.urlencode(tostring(raw_ref)),
+        util.urlencode(tostring(raw_ref), { keep_path_sep = true }),
+      })
+    do
+      if ref ~= nil then
+        if anchor == nil and block == nil then
+          -- Wiki links without anchor/block.
+          search_terms[#search_terms + 1] = string.format("[[%s]]", ref)
+          search_terms[#search_terms + 1] = string.format("[[%s|", ref)
+          -- Markdown link without anchor/block.
+          search_terms[#search_terms + 1] = string.format("(%s)", ref)
+          -- Markdown link without anchor/block and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s)", ref)
+          -- Wiki links with anchor/block.
+          search_terms[#search_terms + 1] = string.format("[[%s#", ref)
+          -- Markdown link with anchor/block.
+          search_terms[#search_terms + 1] = string.format("(%s#", ref)
+          -- Markdown link with anchor/block and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s#", ref)
+        elseif anchor then
+          -- Note: Obsidian allow a lot of different forms of anchor links, so we can't assume
+          -- it's the standardized form here.
+          -- Wiki links with anchor.
+          search_terms[#search_terms + 1] = string.format("[[%s#", ref)
+          -- Markdown link with anchor.
+          search_terms[#search_terms + 1] = string.format("(%s#", ref)
+          -- Markdown link with anchor and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s#", ref)
+        elseif block then
+          -- Wiki links with block.
+          search_terms[#search_terms + 1] = string.format("[[%s#%s", ref, block)
+          -- Markdown link with block.
+          search_terms[#search_terms + 1] = string.format("(%s#%s", ref, block)
+          -- Markdown link with block and is relative to root.
+          search_terms[#search_terms + 1] = string.format("(/%s#%s", ref, block)
+        end
       end
     end
   end
@@ -1309,7 +1370,11 @@ Client.find_backlinks_async = function(self, note, callback, opts)
   end
 
   ---@type obsidian.note.LoadOpts
-  local load_opts = { collect_anchor_links = opts.anchor ~= nil, collect_blocks = opts.block ~= nil }
+  local load_opts = {
+    collect_anchor_links = opts.anchor ~= nil,
+    collect_blocks = opts.block ~= nil,
+    max_lines = self.opts.search_max_lines,
+  }
 
   ---@param match MatchData
   local function on_match(match)
@@ -1706,7 +1771,8 @@ end
 ---  - `title`: A title to assign the note.
 ---  - `id`: An ID to assign the note. If not specified one will be generated.
 ---  - `dir`: An optional directory to place the note in. Relative paths will be interpreted
----    relative to the workspace / vault root.
+---    relative to the workspace / vault root. If the directory doesn't exist it will be created,
+---    regardless of the value of the `no_write` option.
 ---  - `aliases`: Additional aliases to assign to the note.
 ---  - `tags`: Additional tags to assign to the note.
 ---  - `no_write`: Don't write the note to disk.
@@ -1731,6 +1797,11 @@ Client.create_note = function(self, opts)
   if new_title then
     note.title = new_title
   end
+
+  -- Ensure the parent directory exists.
+  local parent = path:parent()
+  assert(parent)
+  parent:mkdir { parents = true, exist_ok = true }
 
   -- Write to disk.
   if not opts.no_write then
@@ -1903,7 +1974,8 @@ Client._daily = function(self, datetime, opts)
     note = Note.from_file(path, opts.load)
   else
     local update_content
-    note = Note.new(id, {}, { "daily-notes" }, path)
+    note = Note.new(id, {}, self.opts.daily_notes.default_tags or {}, path)
+
     if alias then
       note:add_alias(alias)
       note.title = alias

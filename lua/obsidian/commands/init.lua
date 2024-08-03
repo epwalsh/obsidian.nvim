@@ -1,4 +1,3 @@
-local Note = require "obsidian.note"
 local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 
@@ -15,6 +14,7 @@ local command_lookups = {
   ObsidianSearch = "obsidian.commands.search",
   ObsidianTags = "obsidian.commands.tags",
   ObsidianTemplate = "obsidian.commands.template",
+  ObsidianNewFromTemplate = "obsidian.commands.new_from_template",
   ObsidianQuickSwitch = "obsidian.commands.quick_switch",
   ObsidianLinkNew = "obsidian.commands.link_new",
   ObsidianLink = "obsidian.commands.link",
@@ -25,6 +25,7 @@ local command_lookups = {
   ObsidianPasteImg = "obsidian.commands.paste_img",
   ObsidianExtractNote = "obsidian.commands.extract_note",
   ObsidianDebug = "obsidian.commands.debug",
+  ObsidianTOC = "obsidian.commands.toc",
 }
 
 local M = setmetatable({
@@ -127,21 +128,6 @@ M.complete_args_search = function(client, _, cmd_line, _)
   return completions
 end
 
-M.complete_args_id = function(_, _, cmd_line, _)
-  local cmd_arg, _ = util.lstrip_whitespace(string.gsub(cmd_line, "^.*Obsidian[A-Za-z0-9]+", ""))
-  if string.len(cmd_arg) > 0 then
-    return {}
-  else
-    local note_id = util.parse_cursor_link()
-    if note_id == nil then
-      local bufpath = vim.api.nvim_buf_get_name(assert(vim.fn.bufnr()))
-      local note = Note.from_file(bufpath)
-      note_id = tostring(note.id)
-    end
-    return { note_id }
-  end
-end
-
 M.register("ObsidianCheck", { opts = { nargs = 0, desc = "Check for issues in your vault" } })
 
 M.register("ObsidianToday", { opts = { nargs = "?", desc = "Open today's daily note" } })
@@ -167,6 +153,8 @@ M.register("ObsidianSearch", { opts = { nargs = "?", desc = "Search vault" } })
 
 M.register("ObsidianTemplate", { opts = { nargs = "?", desc = "Insert a template" } })
 
+M.register("ObsidianNewFromTemplate", { opts = { nargs = "?", desc = "Create a new note from a template" } })
+
 M.register("ObsidianQuickSwitch", { opts = { nargs = "?", desc = "Switch notes" } })
 
 M.register("ObsidianLinkNew", { opts = { nargs = "?", range = true, desc = "Link selected text to a new note" } })
@@ -186,12 +174,12 @@ M.register("ObsidianWorkspace", { opts = { nargs = "?", desc = "Check or switch 
 
 M.register(
   "ObsidianRename",
-  { opts = { nargs = "?", desc = "Rename note and update all references to it" }, complete = M.complete_args_id }
+  { opts = { nargs = "?", complete = "file", desc = "Rename note and update all references to it" } }
 )
 
 M.register(
   "ObsidianPasteImg",
-  { opts = { nargs = "?", complete = "file", desc = "Paste and image from the clipboard" } }
+  { opts = { nargs = "?", complete = "file", desc = "Paste an image from the clipboard" } }
 )
 
 M.register(
@@ -200,5 +188,7 @@ M.register(
 )
 
 M.register("ObsidianDebug", { opts = { nargs = 0, desc = "Log some information for debugging" } })
+
+M.register("ObsidianTOC", { opts = { nargs = 0, desc = "Load the table of contents into a picker" } })
 
 return M

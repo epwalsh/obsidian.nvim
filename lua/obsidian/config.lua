@@ -16,8 +16,8 @@ local config = {}
 ---@field markdown_link_func (fun(opts: {path: string, label: string, id: string|?}): string)
 ---@field preferred_link_style obsidian.config.LinkStyle
 ---@field follow_url_func fun(url: string)|?
----@field image_name_func (fun(): string)|?
----@field note_frontmatter_func fun(note: obsidian.Note)|?
+---@field follow_img_func fun(img: string)|?
+---@field note_frontmatter_func (fun(note: obsidian.Note): table)|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
@@ -27,6 +27,7 @@ local config = {}
 ---@field open_app_foreground boolean|?
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
+---@field search_max_lines integer
 ---@field open_notes_in obsidian.config.OpenStrategy
 ---@field ui obsidian.config.UIOpts | table<string, any>
 ---@field attachments obsidian.config.AttachmentsOpts
@@ -59,6 +60,7 @@ config.ClientOpts.default = function()
     open_app_foreground = false,
     sort_by = "modified",
     sort_reversed = true,
+    search_max_lines = 1000,
     open_notes_in = "current",
     ui = config.UIOpts.default(),
     attachments = config.AttachmentsOpts.default(),
@@ -198,6 +200,19 @@ config.ClientOpts.normalize = function(opts, defaults)
         opts.ui.checkboxes[char].order = i
       end
     end
+  end
+
+  if opts.templates and opts.templates.subdir then
+    opts.templates.folder = opts.templates.subdir
+    opts.templates.subdir = nil
+  end
+
+  if opts.image_name_func then
+    if opts.attachments == nil then
+      opts.attachments = {}
+    end
+    opts.attachments.img_name_func = opts.image_name_func
+    opts.image_name_func = nil
   end
 
   --------------------------
@@ -355,6 +370,7 @@ end
 ---@field alias_format string|?
 ---@field template string|?
 ---@field pass_on_todos boolean|?
+---@field default_tags string[]|?
 config.DailyNotesOpts = {}
 
 --- Get defaults.
@@ -365,12 +381,13 @@ config.DailyNotesOpts.default = function()
     folder = nil,
     date_format = nil,
     alias_format = nil,
+    default_tags = { "daily-notes" },
   }
 end
 
 ---@class obsidian.config.TemplateOpts
 ---
----@field subdir string
+---@field folder string|obsidian.Path|?
 ---@field date_format string|?
 ---@field time_format string|?
 ---@field substitutions table<string, function|string>|?
@@ -381,7 +398,7 @@ config.TemplateOpts = {}
 ---@return obsidian.config.TemplateOpts
 config.TemplateOpts.default = function()
   return {
-    subdir = nil,
+    folder = nil,
     date_format = nil,
     time_format = nil,
     substitutions = {},
@@ -392,6 +409,7 @@ end
 ---
 ---@field enable boolean
 ---@field update_debounce integer
+---@field max_file_length integer|?
 ---@field checkboxes table<string, obsidian.config.CheckboxSpec>
 ---@field bullets obsidian.config.UICharSpec|?
 ---@field external_link_icon obsidian.config.UICharSpec
@@ -422,11 +440,13 @@ config.UIOpts.default = function()
   return {
     enable = true,
     update_debounce = 200,
+    max_file_length = 5000,
     checkboxes = {
       [" "] = { order = 1, char = "󰄱", hl_group = "ObsidianTodo" },
       ["~"] = { order = 2, char = "󰰱", hl_group = "ObsidianTilde" },
-      [">"] = { order = 3, char = "", hl_group = "ObsidianRightArrow" },
-      ["x"] = { order = 4, char = "", hl_group = "ObsidianDone" },
+      ["!"] = { order = 3, char = "", hl_group = "ObsidianImportant" },
+      [">"] = { order = 4, char = "", hl_group = "ObsidianRightArrow" },
+      ["x"] = { order = 5, char = "", hl_group = "ObsidianDone" },
     },
     bullets = { char = "•", hl_group = "ObsidianBullet" },
     external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
@@ -439,6 +459,7 @@ config.UIOpts.default = function()
       ObsidianDone = { bold = true, fg = "#89ddff" },
       ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
       ObsidianTilde = { bold = true, fg = "#ff5370" },
+      ObsidianImportant = { bold = true, fg = "#d73128" },
       ObsidianBullet = { bold = true, fg = "#89ddff" },
       ObsidianRefText = { underline = true, fg = "#c792ea" },
       ObsidianExtLinkIcon = { fg = "#c792ea" },
@@ -452,6 +473,7 @@ end
 ---@class obsidian.config.AttachmentsOpts
 ---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
+---@field img_name_func (fun(): string)|?
 ---@field img_text_func fun(client: obsidian.Client, path: obsidian.Path): string
 ---@field confirm_img_paste boolean Whether to confirm the paste or not. Defaults to true.
 config.AttachmentsOpts = {}

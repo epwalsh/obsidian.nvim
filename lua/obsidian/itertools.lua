@@ -1,3 +1,5 @@
+local compat = require "obsidian.compat"
+
 local M = {}
 
 ---Create an iterator from an iterable type such as a table/array, or string.
@@ -26,7 +28,7 @@ M.iter = function(iterable)
       return function()
         return nil
       end
-    elseif vim.tbl_islist(iterable) then
+    elseif compat.is_list(iterable) then
       local i = 1
       local n = #iterable
 

@@ -14,7 +14,6 @@ Table of contents
   
   obsidian.Path................................................|obsidian.Path|
   
-
 ------------------------------------------------------------------------------
                                                            *obsidian.SearchOpts*
                                   `SearchOpts`
@@ -506,7 +505,6 @@ Parameters ~
 Return ~
 obsidian.Note
 
-
 ------------------------------------------------------------------------------
 Class ~
 {obsidian.CreateNoteOpts}
@@ -532,7 +530,8 @@ Options:
  - `title`: A title to assign the note.
  - `id`: An ID to assign the note. If not specified one will be generated.
  - `dir`: An optional directory to place the note in. Relative paths will be interpreted
-   relative to the workspace / vault root.
+   relative to the workspace / vault root. If the directory doesn't exist it will be created,
+   regardless of the value of the `no_write` option.
  - `aliases`: Additional aliases to assign to the note.
  - `tags`: Additional tags to assign to the note.
  - `no_write`: Don't write the note to disk.
@@ -1168,7 +1167,6 @@ Return ~
 
 Constructors.
 
-
 ------------------------------------------------------------------------------
                                                            *obsidian.Path.new()*
                                `Path.new`({...})
@@ -1224,7 +1222,6 @@ obsidian.Path
 ------------------------------------------------------------------------------
 
 Pure path methods.
-
 
 ------------------------------------------------------------------------------
                                                    *obsidian.Path.with_suffix()*
@@ -1297,7 +1294,6 @@ Return ~
 ------------------------------------------------------------------------------
 
 Concrete path methods.
-
 
 ------------------------------------------------------------------------------
                                                        *obsidian.Path.resolve()*

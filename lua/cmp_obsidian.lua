@@ -5,6 +5,12 @@ local util = require "obsidian.util"
 local iter = require("obsidian.itertools").iter
 local LinkStyle = require("obsidian.config").LinkStyle
 
+---@class cmp_obsidian.CompletionItem
+---@field label string
+---@field new_text string
+---@field sort_text string
+---@field documentation table|?
+
 ---@class cmp_obsidian.Source : obsidian.ABC
 local source = abc.new_class()
 
@@ -57,15 +63,17 @@ source.complete = function(_, request, callback)
     -- Completion items.
     local items = {}
 
+    ---@type table<string, cmp_obsidian.CompletionItem>
+    local new_text_to_option = {}
+
     for note in iter(results) do
       ---@cast note obsidian.Note
-      assert(note.anchor_links)
-      assert(note.blocks)
 
       -- Collect matching block links.
       ---@type obsidian.note.Block[]|?
       local matching_blocks
       if block_link then
+        assert(note.blocks)
         matching_blocks = {}
         for block_id, block_data in pairs(note.blocks) do
           if vim.startswith("#" .. block_id, block_link) then
@@ -83,6 +91,7 @@ source.complete = function(_, request, callback)
       ---@type obsidian.note.HeaderAnchor[]|?
       local matching_anchors
       if anchor_link then
+        assert(note.anchor_links)
         matching_anchors = {}
         for anchor, anchor_data in pairs(note.anchor_links) do
           if vim.startswith(anchor, anchor_link) then
@@ -99,32 +108,114 @@ source.complete = function(_, request, callback)
         end
       end
 
-      -- Transform aliases into completion options.
-      ---@type { label: string|?, alt_label: string|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }[]
-      local completion_options = {}
-
       ---@param label string|?
       ---@param alt_label string|?
       local function update_completion_options(label, alt_label)
+        ---@type { label: string|?, alt_label: string|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }[]
+        local new_options = {}
         if matching_anchors ~= nil then
           for anchor in iter(matching_anchors) do
-            table.insert(completion_options, { label = label, alt_label = alt_label, anchor = anchor })
+            table.insert(new_options, { label = label, alt_label = alt_label, anchor = anchor })
           end
         elseif matching_blocks ~= nil then
           for block in iter(matching_blocks) do
-            table.insert(completion_options, { label = label, alt_label = alt_label, block = block })
+            table.insert(new_options, { label = label, alt_label = alt_label, block = block })
           end
         else
           if label then
-            table.insert(completion_options, { label = label, alt_label = alt_label })
+            table.insert(new_options, { label = label, alt_label = alt_label })
           end
 
           -- Add all blocks and anchors, let cmp sort it out.
-          for _, anchor_data in pairs(note.anchor_links) do
-            table.insert(completion_options, { label = label, alt_label = alt_label, anchor = anchor_data })
+          for _, anchor_data in pairs(note.anchor_links or {}) do
+            table.insert(new_options, { label = label, alt_label = alt_label, anchor = anchor_data })
           end
-          for _, block_data in pairs(note.blocks) do
-            table.insert(completion_options, { label = label, alt_label = alt_label, block = block_data })
+          for _, block_data in pairs(note.blocks or {}) do
+            table.insert(new_options, { label = label, alt_label = alt_label, block = block_data })
+          end
+        end
+
+        -- De-duplicate options relative to their `new_text`.
+        for _, option in ipairs(new_options) do
+          ---@type obsidian.config.LinkStyle
+          local link_style
+          if ref_type == completion.RefType.Wiki then
+            link_style = LinkStyle.wiki
+          elseif ref_type == completion.RefType.Markdown then
+            link_style = LinkStyle.markdown
+          else
+            error "not implemented"
+          end
+
+          ---@type string, string, string, table|?
+          local final_label, sort_text, new_text, documentation
+          if option.label then
+            new_text = client:format_link(
+              note,
+              { label = option.label, link_style = link_style, anchor = option.anchor, block = option.block }
+            )
+
+            final_label = assert(option.alt_label or option.label)
+            if option.anchor then
+              final_label = final_label .. option.anchor.anchor
+            elseif option.block then
+              final_label = final_label .. "#" .. option.block.id
+            end
+            sort_text = final_label
+
+            documentation = {
+              kind = "markdown",
+              value = note:display_info {
+                label = new_text,
+                anchor = option.anchor,
+                block = option.block,
+              },
+            }
+          elseif option.anchor then
+            -- In buffer anchor link.
+            -- TODO: allow users to customize this?
+            if ref_type == completion.RefType.Wiki then
+              new_text = "[[#" .. option.anchor.header .. "]]"
+            elseif ref_type == completion.RefType.Markdown then
+              new_text = "[#" .. option.anchor.header .. "](" .. option.anchor.anchor .. ")"
+            else
+              error "not implemented"
+            end
+
+            final_label = option.anchor.anchor
+            sort_text = final_label
+
+            documentation = {
+              kind = "markdown",
+              value = string.format("`%s`", new_text),
+            }
+          elseif option.block then
+            -- In buffer block link.
+            -- TODO: allow users to customize this?
+            if ref_type == completion.RefType.Wiki then
+              new_text = "[[#" .. option.block.id .. "]]"
+            elseif ref_type == completion.RefType.Markdown then
+              new_text = "[#" .. option.block.id .. "](#" .. option.block.id .. ")"
+            else
+              error "not implemented"
+            end
+
+            final_label = "#" .. option.block.id
+            sort_text = final_label
+
+            documentation = {
+              kind = "markdown",
+              value = string.format("`%s`", new_text),
+            }
+          else
+            error "should not happen"
+          end
+
+          if new_text_to_option[new_text] then
+            new_text_to_option[new_text].sort_text = new_text_to_option[new_text].sort_text .. " " .. sort_text
+          else
+            new_text_to_option[new_text] =
+              { label = final_label, new_text = new_text, sort_text = sort_text, documentation = documentation }
           end
         end
       end
@@ -159,128 +250,44 @@ source.complete = function(_, request, callback)
           update_completion_options(note:display_name(), note.alt_alias)
         end
       end
+    end
 
-      -- Keep track of completion entries we've added so we don't have duplicates.
-      ---@type table<string, boolean>
-      local new_text_seen = {}
-      ---@type table<string, boolean>
-      local sort_text_seen = {}
-
-      for option in iter(completion_options) do
-        ---@type obsidian.config.LinkStyle
-        local link_style
-        if ref_type == completion.RefType.Wiki then
-          link_style = LinkStyle.wiki
-        elseif ref_type == completion.RefType.Markdown then
-          link_style = LinkStyle.markdown
-        else
-          error "not implemented"
-        end
-
-        ---@type string, string
-        local sort_text, new_text
-        ---@type table|?
-        local documentation = nil
-
-        if option.label then
-          new_text = client:format_link(
-            note,
-            { label = option.label, link_style = link_style, anchor = option.anchor, block = option.block }
-          )
-
-          sort_text = option.alt_label or option.label
-          if option.anchor then
-            sort_text = sort_text .. option.anchor.anchor
-          elseif option.block then
-            sort_text = sort_text .. "#" .. option.block.id
-          end
-
-          documentation = {
-            kind = "markdown",
-            value = note:display_info {
-              label = new_text,
-              anchor = option.anchor,
-              block = option.block,
-            },
-          }
-        elseif option.anchor then
-          -- In buffer anchor link.
-          -- TODO: allow users to customize this?
-          if ref_type == completion.RefType.Wiki then
-            new_text = "[[#" .. option.anchor.header .. "]]"
-          elseif ref_type == completion.RefType.Markdown then
-            new_text = "[#" .. option.anchor.header .. "](" .. option.anchor.anchor .. ")"
-          else
-            error "not implemented"
-          end
-
-          sort_text = option.anchor.anchor
-
-          documentation = {
-            kind = "markdown",
-            value = string.format("`%s`", new_text),
-          }
-        elseif option.block then
-          -- In buffer block link.
-          -- TODO: allow users to customize this?
-          if ref_type == completion.RefType.Wiki then
-            new_text = "[[#" .. option.block.id .. "]]"
-          elseif ref_type == completion.RefType.Markdown then
-            new_text = "[#" .. option.block.id .. "](#" .. option.block.id .. ")"
-          else
-            error "not implemented"
-          end
-
-          sort_text = "#" .. option.block.id
-
-          documentation = {
-            kind = "markdown",
-            value = string.format("`%s`", new_text),
-          }
-        else
-          error "should not happen"
-        end
-
-        if not new_text_seen[new_text] or not sort_text_seen[sort_text] then
-          new_text_seen[new_text] = true
-          sort_text_seen[sort_text] = true
-
-          ---@type string
-          local label
-          if ref_type == completion.RefType.Wiki then
-            label = string.format("[[%s]]", sort_text)
-          elseif ref_type == completion.RefType.Markdown then
-            label = string.format("[%s](…)", sort_text)
-          else
-            error "not implemented"
-          end
-
-          table.insert(items, {
-            documentation = documentation,
-            sortText = sort_text,
-            label = label,
-            kind = 18, -- "Reference"
-            textEdit = {
-              newText = new_text,
-              range = {
-                start = {
-                  line = request.context.cursor.row - 1,
-                  character = insert_start,
-                },
-                ["end"] = {
-                  line = request.context.cursor.row - 1,
-                  character = insert_end,
-                },
-              },
-            },
-          })
-        end
+    for _, option in pairs(new_text_to_option) do
+      -- TODO: need a better label, maybe just the note's display name?
+      ---@type string
+      local label
+      if ref_type == completion.RefType.Wiki then
+        label = string.format("[[%s]]", option.label)
+      elseif ref_type == completion.RefType.Markdown then
+        label = string.format("[%s](…)", option.label)
+      else
+        error "not implemented"
       end
+
+      table.insert(items, {
+        documentation = option.documentation,
+        sortText = option.sort_text,
+        label = label,
+        kind = 18, -- "Reference"
+        textEdit = {
+          newText = option.new_text,
+          range = {
+            start = {
+              line = request.context.cursor.row - 1,
+              character = insert_start,
+            },
+            ["end"] = {
+              line = request.context.cursor.row - 1,
+              character = insert_end,
+            },
+          },
+        },
+      })
     end
 
     callback {
       items = items,
-      isIncomplete = false,
+      isIncomplete = true,
     }
   end
 
@@ -292,11 +299,10 @@ source.complete = function(_, request, callback)
       callback { isIncomplete = true }
     end
   else
-    client:find_notes_async(
-      search,
-      search_callback,
-      { search = { ignore_case = true }, notes = { collect_anchor_links = true, collect_blocks = true } }
-    )
+    client:find_notes_async(search, search_callback, {
+      search = { ignore_case = true },
+      notes = { collect_anchor_links = anchor_link ~= nil, collect_blocks = block_link ~= nil },
+    })
   end
 end
 

@@ -1,4 +1,4 @@
- Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -7,9 +7,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `opts.follow_img_func` option for customizing how to handle image paths.
+- Added better handling for undefined template fields, which will now be prompted for.
+
+### Changed
+
+- Renamed `opts.image_name_func` to `opts.attachments.img_name_func`.
+
+### Fixed
+
+- Fixed an edge case with collecting backlinks.
+- Fixed typo in `ObsidianPasteImg`'s command description
+- Fixed the case when `opts.attachments` is `nil`.
+
+## [v3.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.9.0) - 2024-07-11
+
+### Added
+
+- Added `:ObsidianTOC` command for loading the table of contents of the current note into a picker list.
+- Added `:ObsidianNewFromTemplate` command. This command creates a new note from a template.
+
+### Fixed
+
+- Fixed bug where `opts.search_max_lines` was not propagated through some client methods.
+
+## [v3.8.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.8.1) - 2024-06-26
+
+### Fixed
+
+- Removed duplicate suggestions in completion of references.
+
+## [v3.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.8.0) - 2024-06-21
+
+### Added
+
+- Added relative to root markdown links as search pattern for backlinks.
+- Added configuration option `daily_notes.default_tags` for customizing (or removing) the default tags given to new daily notes.
+
+### Fixed
+
+- Searching for notes by file name is case insensitive.
+
+## [v3.7.14](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.14) - 2024-06-04
+
+### Added
+
+- Added config option `ui.max_file_length` to disable the UI for files with more than this many lines. Defaults to 5000.
+- Added config option `search_max_lines` (defaults to 1000) for controlling the max number of lines read from disk from note files during certain searches.
+- Added FreeBSD support to `ObsidianPasteImg` command.
+
+### Changed
+
+- Optimization: only show completions for blocks/anchors when prompted with `#`.
+
+## [v3.7.13](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.13) - 2024-05-31
+
+### Fixed
+
+- Made workspace detection more robust.
+- Fixed regression where frontmatter is updated in template files.
+- Fixed finding backlinks with URL-encoded path references.
+- Fixed using templates with frontmatter when `disable_frontmatter` is set to true. Previously the frontmatter would be removed when the template was inserted, now it will be kept unchanged.
+- Add compatibility for NVIM 0.11.
+- Fixed warnings when renaming a note using dry-run.
+- Fixed handling check boxes with characters that have a special meaning in regular expressions (e.g. "?").
+- `Client:create_note()` will always ensure the parent directory exists, even when not writing the note itself to disk, to avoid downstream issues (see #600).
+- Identify `mailto:` links as URLs.
+
+## [v3.7.12](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.12) - 2024-05-02
+
+### Changed
+
+- Renamed config field `templates.subdir` to `templates.folder` (`subdir` still supported for backwards compat).
+- You can now use a templates folder outside of your vault.
+
+## [v3.7.11](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.11) - 2024-04-30
+
+### Added
+
+- Added an optional line number argument for `util.toggle_checkbox()`, that defaults to the current line.
+
 ### Fixed
 
 - Ensure toggle checkbox mapping uses checkbox configuration.
+- Don't use last visual selection when in normal mode with `:ObsidianTags`.
+- Fixed a normalization issue with windows paths.
 
 ### Added
 
