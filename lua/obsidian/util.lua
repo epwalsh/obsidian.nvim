@@ -1125,7 +1125,7 @@ util.get_icon = function(path)
 end
 
 -- We are very loose here because obsidian allows pretty much anything
-util.ANCHOR_LINK_PATTERN = "#[%w%d][^#]*"
+util.ANCHOR_LINK_PATTERN = "#[%w%d\u{4e00}-\u{9fff}][^#]*"
 
 util.BLOCK_PATTERN = "%^[%w%d][%w%d-]*"
 
@@ -1238,7 +1238,7 @@ util.standardize_anchor = function(anchor)
   -- Replace whitespace with "-".
   anchor = string.gsub(anchor, "%s", "-")
   -- Remove every non-alphanumeric character.
-  anchor = string.gsub(anchor, "[^#%w_-]", "")
+  anchor = string.gsub(anchor, "[^#%w\u{4e00}-\u{9fff}_-]", "")
   return anchor
 end
 
