@@ -42,6 +42,7 @@ local function gather_tag_picker_list(client, picker, tags)
         callback = function(value)
           util.open_buffer(value.path, { line = value.line, col = value.col })
         end,
+        selection_mappings = picker:_tagged_note_selection_mappings(),
       })
     end)
   end, { search = { sort = true } })

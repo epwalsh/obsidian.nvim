@@ -349,6 +349,27 @@ Picker._note_selection_mappings = function(self)
   return mappings
 end
 
+--- Get selection mappings to use for `pick_tag()`'s callback note selection'.
+---@return obsidian.PickerMappingTable
+Picker._tagged_note_selection_mappings = function(self)
+  ---@type obsidian.PickerMappingTable
+  local mappings = {}
+
+  if self.client.opts.picker.note_mappings and key_is_set(self.client.opts.picker.note_mappings.insert_link) then
+    mappings[self.client.opts.picker.note_mappings.insert_link] = {
+      desc = "insert link",
+      callback = function(value)
+        local note = Note.from_file(value.path)
+        local link = self.client:format_link(note, {})
+        vim.api.nvim_put({ link }, "", false, true)
+        self.client:update_ui()
+      end,
+    }
+  end
+
+  return mappings
+end
+
 --- Get selection mappings to use for `pick_tag()`.
 ---@return obsidian.PickerMappingTable
 Picker._tag_selection_mappings = function(self)
