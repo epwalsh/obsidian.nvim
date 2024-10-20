@@ -618,7 +618,7 @@ Note that in order to trigger completion for tags _within YAML frontmatter_ you 
 
 #### Syntax highlighting
 
-If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) you're configuration should include both "markdown" and "markdown_inline" sources:
+If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) your configuration should include both "markdown" and "markdown_inline" sources:
 
 ```lua
 require("nvim-treesitter.configs").setup({
