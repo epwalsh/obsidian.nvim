@@ -1875,6 +1875,7 @@ Client.write_note_to_buffer = function(self, note, opts)
 
   if opts.template and util.buffer_is_empty(opts.bufnr) then
     note = insert_template {
+      note = note,
       template_name = opts.template,
       client = self,
       location = util.get_active_window_cursor_location(),

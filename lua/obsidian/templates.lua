@@ -151,12 +151,14 @@ end
 
 ---Insert a template at the given location.
 ---
----@param opts { template_name: string|obsidian.Path, client: obsidian.Client, location: { [1]: integer, [2]: integer, [3]: integer, [4]: integer } } Options.
+---@param opts { note: obsidian.Note|?, template_name: string|obsidian.Path, client: obsidian.Client, location: { [1]: integer, [2]: integer, [3]: integer, [4]: integer } } Options.
 ---
 ---@return obsidian.Note
 M.insert_template = function(opts)
   local buf, win, row, _ = unpack(opts.location)
-  local note = Note.from_buffer(buf)
+  if opts.note == nil then
+    opts.note = Note.from_buffer(buf)
+  end
 
   local template_path = resolve_template(opts.template_name, opts.client)
 
@@ -165,7 +167,7 @@ M.insert_template = function(opts)
   if template_file then
     local lines = template_file:lines()
     for line in lines do
-      local new_lines = M.substitute_template_variables(line, opts.client, note)
+      local new_lines = M.substitute_template_variables(line, opts.client, opts.note)
       if string.find(new_lines, "[\r\n]") then
         local line_start = 1
         for line_end in util.gfind(new_lines, "[\r\n]") do
