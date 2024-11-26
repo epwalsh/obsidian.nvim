@@ -625,7 +625,7 @@ M.setup = function(workspace, ui_opts)
     callback = function()
       local conceallevel = vim.opt_local.conceallevel:get()
 
-      if conceallevel < 1 or conceallevel > 2 then
+      if (conceallevel < 1 or conceallevel > 2) and not ui_opts.ignore_conceal_warn then
         log.warn_once(
           "Obsidian additional syntax features require 'conceallevel' to be set to 1 or 2, "
             .. "but you have 'conceallevel' set to '%s'.\n"
