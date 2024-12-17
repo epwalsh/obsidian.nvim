@@ -10,7 +10,7 @@ notes app – but love Neovim too much to stand typing characters into anything
 else.
 
 If you’re new to Obsidian I highly recommend watching this excellent YouTube
-video <https://youtu.be/5ht8NYkU9wQ?si=8nbnNsRVnw0xfX2S> for a great overview.
+video <https://youtu.be/5ht8NYkU9wQ> for a great overview.
 
 _Keep in mind this plugin is not meant to replace Obsidian, but to complement
 it._ The Obsidian app is very powerful in its own way; it comes with a mobile
