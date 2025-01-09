@@ -400,8 +400,8 @@ This is a complete list of all of the options that can be passed to `require("ob
   ---@param img string
   follow_img_func = function(img)
     vim.fn.jobstart { "qlmanage", "-p", img }  -- Mac OS quick look preview
-    -- vim.fn.jobstart({"xdg-open", url})  -- linux
-    -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
+    -- vim.fn.jobstart({"xdg-open", img})  -- linux
+    -- vim.cmd(':silent exec "!start ' .. img .. '"') -- Windows
   end,
 
   -- Optional, set to true if you use the Obsidian Advanced URI plugin.
