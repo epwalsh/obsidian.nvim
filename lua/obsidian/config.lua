@@ -342,6 +342,7 @@ end
 config.Picker = {
   telescope = "telescope.nvim",
   fzf_lua = "fzf-lua",
+  snacks = "snacks.nvim",
   mini = "mini.pick",
 }
 
