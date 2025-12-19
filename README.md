@@ -109,7 +109,7 @@ Specific operating systems also require additional dependencies in order to use 
 - **MacOS** users need [`pngpaste`](https://github.com/jcsalterego/pngpaste) (`brew install pngpaste`) for the `:ObsidianPasteImg` command.
 - **Linux** users need xclip (X11) or wl-clipboard (Wayland) for the `:ObsidianPasteImg` command.
 
-Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires a picker such [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) (see [plugin dependencies](#plugin-dependencies) below).
+Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` commands) also requires a picker such as [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [snacks.nvim](https://github.com/folke/snacks.nvim), [fzf-lua](https://github.com/ibhagwan/fzf-lua), or [mini.pick](https://github.com/echasnovski/mini.pick) (see [plugin dependencies](#plugin-dependencies) below).
 
 ### Install and configure
 
@@ -199,8 +199,9 @@ The only **required** plugin dependency is [plenary.nvim](https://github.com/nvi
 **Pickers:**
 
 - **[recommended]** [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim): for search and quick-switch functionality.
-- [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library: an alternative to telescope for search and quick-switch functionality.
-- [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): another alternative to telescope for search and quick-switch functionality.
+- [folke/snacks.nvim](https://github.com/folke/snacks.nvim): modern picker with fuzzy matching and 40+ built-in sources.
+- [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): fast alternative picker with fzf integration.
+- [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library: lightweight alternative picker.
 
 **Syntax highlighting:**
 
@@ -412,7 +413,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_app_foreground = false,
 
   picker = {
-    -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
+    -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'snacks.nvim', or 'mini.pick'.
     name = "telescope.nvim",
     -- Optional, configure key mappings for the picker. These are the defaults.
     -- Not all pickers support all mappings.
