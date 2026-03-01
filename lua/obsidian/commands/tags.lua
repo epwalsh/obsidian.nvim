@@ -97,11 +97,7 @@ local function open_picker(tag_locations, args)
       end
 
       if match then
-        local display = string.format(
-          "%s [AND: %s]",
-          data.note:display_name(),
-          table.concat(query, ", ")
-        )
+        local display = string.format("%s [AND: %s]", data.note:display_name(), table.concat(query, ", "))
         entries[#entries + 1] = {
           value = { path = data.note.path },
           display = display,
@@ -109,7 +105,6 @@ local function open_picker(tag_locations, args)
           filename = tostring(data.note.path),
         }
       end
-
     else
       if hash_search then
         -- read file from disk
@@ -131,12 +126,7 @@ local function open_picker(tag_locations, args)
             local t = normalize(loc.tag)
             for _, q in ipairs(query) do
               if t == q then
-                local display = string.format(
-                  "%s [%d] %s",
-                  loc.note:display_name(),
-                  loc.line,
-                  loc.text
-                )
+                local display = string.format("%s [%d] %s", loc.note:display_name(), loc.line, loc.text)
                 entries[#entries + 1] = {
                   value = {
                     path = loc.path,
@@ -162,11 +152,7 @@ local function open_picker(tag_locations, args)
           end
         end
         if #matched_tags > 0 then
-          local display = string.format(
-            "%s [OR: %s]",
-            data.note:display_name(),
-            table.concat(matched_tags, ", ")
-          )
+          local display = string.format("%s [OR: %s]", data.note:display_name(), table.concat(matched_tags, ", "))
           entries[#entries + 1] = {
             value = { path = data.note.path },
             display = display,
@@ -185,9 +171,7 @@ local function open_picker(tag_locations, args)
 
   vim.schedule(function()
     Obsidian.picker.pick(entries, {
-      prompt_title =
-        (and_mode and "AND: " or "OR: ")
-        .. table.concat(query, ", "),
+      prompt_title = (and_mode and "AND: " or "OR: ") .. table.concat(query, ", "),
     })
   end)
 end
@@ -213,7 +197,3 @@ return function(data)
     open_picker(tag_locations, args)
   end, { dir = dir })
 end
-
-
-
-
