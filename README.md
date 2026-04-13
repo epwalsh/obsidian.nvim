@@ -280,21 +280,21 @@ This is a complete list of all of the options that can be passed to `require("ob
       action = function()
         return require("obsidian").util.gf_passthrough()
       end,
-      opts = { noremap = false, expr = true, buffer = true },
+      opts = { noremap = false, expr = true, buffer = true, desc = "Go to file" },
     },
     -- Toggle check-boxes.
     ["<leader>ch"] = {
       action = function()
         return require("obsidian").util.toggle_checkbox()
       end,
-      opts = { buffer = true },
+      opts = { buffer = true, desc = "Toggle Checkbox" },
     },
     -- Smart action depending on context, either follow link or toggle checkbox.
     ["<cr>"] = {
       action = function()
         return require("obsidian").util.smart_action()
       end,
-      opts = { buffer = true, expr = true },
+      opts = { buffer = true, expr = true, desc = "Obsidian smart action" },
     }
   },
 
