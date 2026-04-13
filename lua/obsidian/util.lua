@@ -183,9 +183,9 @@ util.is_url = function(s)
   local search = require "obsidian.search"
 
   if
-    string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$")
-    or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$")
-    or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.MailtoUrl] .. "$")
+      string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.NakedUrl] .. "$")
+      or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.FileUrl] .. "$")
+      or string.match(util.strip_whitespace(s), "^" .. search.Patterns[search.RefTypes.MailtoUrl] .. "$")
   then
     return true
   else
@@ -596,11 +596,11 @@ util.cursor_on_markdown_link = function(line, col, include_naked_urls, include_f
   cur_col = col or cur_col + 1 -- nvim_win_get_cursor returns 0-indexed column
 
   for match in
-    iter(search.find_refs(current_line, {
-      include_naked_urls = include_naked_urls,
-      include_file_urls = include_file_urls,
-      include_block_ids = include_block_ids,
-    }))
+  iter(search.find_refs(current_line, {
+    include_naked_urls = include_naked_urls,
+    include_file_urls = include_file_urls,
+    include_block_ids = include_block_ids,
+  }))
   do
     local open, close, m_type = unpack(match)
     if open <= cur_col and cur_col <= close then
@@ -669,11 +669,11 @@ util.parse_link = function(link, opts)
   local link_type = opts.link_type
   if link_type == nil then
     for match in
-      iter(search.find_refs(link, {
-        include_naked_urls = opts.include_naked_urls,
-        include_file_urls = opts.include_file_urls,
-        include_block_ids = opts.include_block_ids,
-      }))
+    iter(search.find_refs(link, {
+      include_naked_urls = opts.include_naked_urls,
+      include_file_urls = opts.include_file_urls,
+      include_block_ids = opts.include_block_ids,
+    }))
     do
       local _, _, m_type = unpack(match)
       if m_type then
@@ -954,10 +954,10 @@ util.get_visual_selection = function(opts)
     selection = string.sub(lines[1], cscol) .. "\n" .. string.sub(lines[n], 1, cecol)
   else
     selection = string.sub(lines[1], cscol)
-      .. "\n"
-      .. table.concat(lines, "\n", 2, n - 1)
-      .. "\n"
-      .. string.sub(lines[n], 1, cecol)
+        .. "\n"
+        .. table.concat(lines, "\n", 2, n - 1)
+        .. "\n"
+        .. string.sub(lines[n], 1, cecol)
   end
 
   return {
@@ -1027,6 +1027,8 @@ end
 util.wiki_link_id_prefix = function(opts)
   local anchor = ""
   local header = ""
+  local base = ""
+  local filepath = opts.path:match("([^/]+)%.%w+$")
   if opts.anchor then
     anchor = opts.anchor.anchor
     header = util.format_anchor_label(opts.anchor)
@@ -1035,12 +1037,16 @@ util.wiki_link_id_prefix = function(opts)
     header = "#" .. opts.block.id
   end
 
-  if opts.id == nil then
-    return string.format("[[%s%s]]", opts.label, anchor)
-  elseif opts.label ~= opts.id then
-    return string.format("[[%s%s|%s%s]]", opts.id, anchor, opts.label, header)
+  if opts.linkContent == "filename" or opts.id == nil then
+    base = filepath
   else
-    return string.format("[[%s%s]]", opts.id, anchor)
+    base = tostring(opts.id)
+  end
+
+  if base ~= opts.label then
+    return string.format("[[%s%s|%s%s]]", base, anchor, opts.label, header)
+  else
+    return string.format("[[%s%s]]", base, anchor)
   end
 end
 

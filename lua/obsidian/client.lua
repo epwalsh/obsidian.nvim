@@ -1183,15 +1183,15 @@ Client.find_tags_async = function(self, term, callback, opts)
       search_terms[#search_terms + 1] = "#" .. search.Patterns.TagCharsOptional .. t .. search.Patterns.TagCharsOptional
       -- frontmatter tag in multiline list
       search_terms[#search_terms + 1] = "\\s*- "
-        .. search.Patterns.TagCharsOptional
-        .. t
-        .. search.Patterns.TagCharsOptional
-        .. "$"
+          .. search.Patterns.TagCharsOptional
+          .. t
+          .. search.Patterns.TagCharsOptional
+          .. "$"
       -- frontmatter tag in inline list
       search_terms[#search_terms + 1] = "tags: .*"
-        .. search.Patterns.TagCharsOptional
-        .. t
-        .. search.Patterns.TagCharsOptional
+          .. search.Patterns.TagCharsOptional
+          .. t
+          .. search.Patterns.TagCharsOptional
     else
       -- tag in the wild
       search_terms[#search_terms + 1] = "#" .. search.Patterns.TagCharsRequired
@@ -1313,11 +1313,11 @@ Client.find_backlinks_async = function(self, note, callback, opts)
   local note_path = Path.new(note.path)
   for raw_ref in iter { tostring(note.id), note_path.name, note_path.stem, self:vault_relative_path(note.path) } do
     for ref in
-      iter(util.tbl_unique {
-        raw_ref,
-        util.urlencode(tostring(raw_ref)),
-        util.urlencode(tostring(raw_ref), { keep_path_sep = true }),
-      })
+    iter(util.tbl_unique {
+      raw_ref,
+      util.urlencode(tostring(raw_ref)),
+      util.urlencode(tostring(raw_ref), { keep_path_sep = true }),
+    })
     do
       if ref ~= nil then
         if anchor == nil and block == nil then
@@ -1708,11 +1708,11 @@ Client.parse_title_id_path = function(self, title, id, dir)
   else
     local bufpath = Path.buffer(0):resolve()
     if
-      self.opts.new_notes_location == config.NewNotesLocation.current_dir
-      -- note is actually in the workspace.
-      and self.dir:is_parent_of(bufpath)
-      -- note is not in dailies folder
-      and (self.opts.daily_notes.folder == nil or not (self.dir / self.opts.daily_notes.folder):is_parent_of(bufpath))
+        self.opts.new_notes_location == config.NewNotesLocation.current_dir
+        -- note is actually in the workspace.
+        and self.dir:is_parent_of(bufpath)
+        -- note is not in dailies folder
+        and (self.opts.daily_notes.folder == nil or not (self.dir / self.opts.daily_notes.folder):is_parent_of(bufpath))
     then
       base_dir = self.buf_dir or assert(bufpath:parent())
     else
@@ -2054,7 +2054,15 @@ Client.format_link = function(self, note, opts)
     link_style = self.opts.preferred_link_style
   end
 
-  local new_opts = { path = rel_path, label = label, id = note_id, anchor = opts.anchor, block = opts.block }
+  local new_opts = {
+    path = rel_path,
+    label = label,
+    id = note_id,
+    anchor = opts.anchor,
+    block = opts.block,
+    linkContent =
+        opts.linkContent
+  }
 
   if link_style == config.LinkStyle.markdown then
     return self.opts.markdown_link_func(new_opts)
