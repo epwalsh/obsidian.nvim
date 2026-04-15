@@ -365,6 +365,24 @@ describe("util.wiki_link_path_only()", function()
   end)
 end)
 
+describe("util.wiki_link_name_only()", function()
+  it("should work without an anchor link", function()
+    assert.equals("[[123-foo|Foo]]", util.wiki_link_name_only { path = "123-foo.md", id = "123-foo", label = "Foo" })
+  end)
+
+  it("should work with an anchor link", function()
+    assert.equals(
+      "[[123-foo#Heading|Foo]]",
+      util.wiki_link_name_only {
+        path = "123-foo.md",
+        id = "123-foo",
+        label = "Foo",
+        anchor = { anchor = "#heading", header = "Heading", level = 1, line = 1 },
+      }
+    )
+  end)
+end)
+
 describe("util.markdown_link()", function()
   it("should work without an anchor link", function()
     assert.equals("[Foo](123-foo.md)", util.markdown_link { path = "123-foo.md", id = "123-foo", label = "Foo" })

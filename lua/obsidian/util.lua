@@ -1024,6 +1024,23 @@ end
 
 ---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }
 ---@return string
+util.wiki_link_name_only = function(opts)
+  local header_or_block = ""
+  if opts.anchor then
+    header_or_block = string.format("#%s", opts.anchor.header)
+  elseif opts.block then
+    header_or_block = string.format("#%s", opts.block.id)
+  end
+  local name = opts.path:gsub("%.md", "")
+  if opts.label ~= name then
+    return string.format("[[%s%s|%s]]", name, header_or_block, opts.label)
+  else
+    return string.format("[[%s%s]]", name, header_or_block)
+  end
+end
+
+---@param opts { path: string, label: string, id: string|integer|?, anchor: obsidian.note.HeaderAnchor|?, block: obsidian.note.Block|? }
+---@return string
 util.wiki_link_id_prefix = function(opts)
   local anchor = ""
   local header = ""

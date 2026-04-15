@@ -148,6 +148,8 @@ config.ClientOpts.normalize = function(opts, defaults)
     opts.wiki_link_func = util.wiki_link_path_only
   elseif opts.wiki_link_func == "use_alias_only" then
     opts.wiki_link_func = util.wiki_link_alias_only
+  elseif opts.wiki_link_func == "use_name_only" then
+    opts.wiki_link_func = util.wiki_link_name_only
   elseif type(opts.wiki_link_func) == "string" then
     error(string.format("invalid option '%s' for 'wiki_link_func'", opts.wiki_link_func))
   end
