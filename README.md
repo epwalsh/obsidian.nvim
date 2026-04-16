@@ -86,6 +86,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianToggleCheckbox` to cycle through checkbox options.
 
+- `:ObsidianToggleCheckboxReverse` to cycle through checkbox options in a reverse order.
+
 - `:ObsidianNewFromTemplate [TITLE]` to create a new note from a template in the templates folder. Selecting from a list using your preferred picker.
   This command has one optional argument: the title of the new note.
 

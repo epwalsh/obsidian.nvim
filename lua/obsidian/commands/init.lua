@@ -4,6 +4,7 @@ local iter = require("obsidian.itertools").iter
 local command_lookups = {
   ObsidianCheck = "obsidian.commands.check",
   ObsidianToggleCheckbox = "obsidian.commands.toggle_checkbox",
+  ObsidianToggleCheckboxReverse = "obsidian.commands.toggle_checkbox_reverse",
   ObsidianToday = "obsidian.commands.today",
   ObsidianYesterday = "obsidian.commands.yesterday",
   ObsidianTomorrow = "obsidian.commands.tomorrow",
@@ -169,6 +170,8 @@ M.register("ObsidianLinks", { opts = { nargs = 0, desc = "Collect all links with
 M.register("ObsidianFollowLink", { opts = { nargs = "?", desc = "Follow reference or link under cursor" } })
 
 M.register("ObsidianToggleCheckbox", { opts = { nargs = 0, desc = "Toggle checkbox" } })
+
+M.register("ObsidianToggleCheckboxReverse", { opts = { nargs = 0, desc = "Toggle checkbox in reverse order" } })
 
 M.register("ObsidianWorkspace", { opts = { nargs = "?", desc = "Check or switch workspace" } })
 
