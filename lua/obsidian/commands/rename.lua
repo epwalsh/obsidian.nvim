@@ -97,8 +97,8 @@ return function(client, data)
     new_note_path = (dirname / new_note_id):with_suffix ".md"
   end
 
-  if new_note_id == cur_note_id then
-    log.warn "New note ID is the same, doing nothing"
+  if new_note_path == cur_note_path then
+    log.warn "New note ID and path are unchanged, doing nothing"
     return
   end
 

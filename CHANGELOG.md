@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ObsidianRename` can be used to move notes.
 - Fixed an edge case with collecting backlinks.
 - Fixed typo in `ObsidianPasteImg`'s command description
 - Fixed the case when `opts.attachments` is `nil`.
