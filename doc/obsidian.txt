@@ -252,6 +252,7 @@ dependencies that enhance the obsidian.nvim experience.
 - **[recommended]** nvim-telescope/telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>: for search and quick-switch functionality.
 - Mini.Pick <https://github.com/echasnovski/mini.pick> from the mini.nvim library: an alternative to telescope for search and quick-switch functionality.
 - ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>: another alternative to telescope for search and quick-switch functionality.
+- Snacks.Pick <https://github.com/folke/snacks.nvim/blob/main/docs/picker.md>: another alternative to telescope for search and quick-switch functionality.
 
 **Syntax highlighting:**
 
@@ -468,7 +469,7 @@ carefully and customize it to your needs:
       open_app_foreground = false,
     
       picker = {
-        -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
+        -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'mini.pick' or 'snacks.pick'.
         name = "telescope.nvim",
         -- Optional, configure key mappings for the picker. These are the defaults.
         -- Not all pickers support all mappings.
