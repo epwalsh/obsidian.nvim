@@ -421,6 +421,20 @@ util.string_count = function(s, pattern)
   return select(2, string.gsub(s, pattern, ""))
 end
 
+--- Check if a string is uppercase.
+---
+---@param s string
+---
+---@return boolean
+util.is_upper = function(s)
+  return string.match(s, "%u") ~= nil
+end
+
+--- Loosely convert a camel case string into snake case.
+util.to_snake_case = function(s)
+  return string.lower(string.gsub(s, "(%l)(%u)", "%1_%2"))
+end
+
 ------------------------------------
 -- Miscellaneous helper functions --
 ------------------------------------
