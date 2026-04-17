@@ -26,6 +26,21 @@ local find_search_start = function(input)
   return nil
 end
 
+---Count the number of non-Latin characters in a string
+---
+---@param str string
+---@return integer
+local function count_non_latin_chars(str)
+  local count = 0
+  for uchar in str:gmatch "[%z\1-\127\194-\244][\128-\191]*" do
+    -- Check that the character is not in the Latin alphabet (A-Z, a-z) and is not an ASCII character
+    if not uchar:match "^[A-Za-z0-9%s%p]$" then
+      count = count + 1
+    end
+  end
+  return count
+end
+
 ---Check if a completion request can/should be carried out. Returns a boolean
 ---and, if true, the search string and the column indices of where the completion
 ---items should be inserted.
@@ -39,19 +54,33 @@ M.can_complete = function(request)
     return false
   end
 
+  local start_col = nil
+  local end_col = nil
+  local ref_type = nil
+  local cursor_col = request.context.cursor.col
+
   if vim.startswith(input, "[[") then
     local suffix = string.sub(request.context.cursor_after_line, 1, 2)
-    local cursor_col = request.context.cursor.col
     local insert_end_offset = suffix == "]]" and 1 or -1
-    return true, search, cursor_col - 1 - #input, cursor_col + insert_end_offset, M.RefType.Wiki
+    start_col = cursor_col - 1 - #input
+    end_col = cursor_col + insert_end_offset
+    ref_type = M.RefType.Wiki
   elseif vim.startswith(input, "[") then
     local suffix = string.sub(request.context.cursor_after_line, 1, 1)
-    local cursor_col = request.context.cursor.col
     local insert_end_offset = suffix == "]" and 0 or -1
-    return true, search, cursor_col - 1 - #input, cursor_col + insert_end_offset, M.RefType.Markdown
+    start_col = cursor_col - 1 - #input
+    end_col = cursor_col + insert_end_offset
+    ref_type = M.RefType.Markdown
   else
     return false
   end
+
+  -- Adjust the column indices to account for non-Latin and non-ASCII characters
+  local non_latin_chars = count_non_latin_chars(request.context.cursor_before_line)
+  start_col = start_col - non_latin_chars
+  end_col = end_col - non_latin_chars
+
+  return true, search, start_col, end_col, ref_type
 end
 
 M.get_trigger_characters = function()
