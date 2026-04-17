@@ -754,6 +754,8 @@ Note.save_to_buffer = function(self, opts)
 
   local cur_buf_note = Note.from_buffer(bufnr)
 
+  local title_as_header = require("obsidian").get_client().opts.title_as_header
+
   ---@type string[]
   local new_lines
   if opts.insert_frontmatter ~= false then
@@ -762,7 +764,7 @@ Note.save_to_buffer = function(self, opts)
     new_lines = {}
   end
 
-  if util.buffer_is_empty(bufnr) and self.title ~= nil then
+  if util.buffer_is_empty(bufnr) and self.title ~= nil and title_as_header then
     table.insert(new_lines, "# " .. self.title)
   end
 

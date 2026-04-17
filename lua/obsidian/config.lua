@@ -18,6 +18,7 @@ local config = {}
 ---@field follow_url_func fun(url: string)|?
 ---@field follow_img_func fun(img: string)|?
 ---@field note_frontmatter_func (fun(note: obsidian.Note): table)|?
+---@field title_as_header boolean|?
 ---@field disable_frontmatter (fun(fname: string?): boolean)|boolean|?
 ---@field completion obsidian.config.CompletionOpts
 ---@field mappings obsidian.config.MappingOpts
@@ -51,6 +52,7 @@ config.ClientOpts.default = function()
     preferred_link_style = config.LinkStyle.wiki,
     follow_url_func = nil,
     note_frontmatter_func = nil,
+    title_as_header = true,
     disable_frontmatter = false,
     completion = config.CompletionOpts.default(),
     mappings = config.MappingOpts.default(),

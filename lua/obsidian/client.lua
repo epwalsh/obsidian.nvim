@@ -1831,6 +1831,8 @@ Client.write_note = function(self, note, opts)
   local path = assert(opts.path or note.path, "A path must be provided")
   path = Path.new(path)
 
+  local title_as_header = require("obsidian").get_client().opts.title_as_header
+
   ---@type string
   local verb
   if path:is_file() then
@@ -1845,6 +1847,10 @@ Client.write_note = function(self, note, opts)
   local frontmatter = nil
   if self.opts.note_frontmatter_func ~= nil then
     frontmatter = self.opts.note_frontmatter_func(note)
+  end
+
+  if not title_as_header then
+    note.title = nil
   end
 
   note:save {
