@@ -31,6 +31,9 @@ local function open_in_app(client, path)
   local run_in_shell = true
   if this_os == util.OSType.Linux or this_os == util.OSType.FreeBSD then
     cmd = "xdg-open"
+    if client.opts.wayland == true then
+      cmd = "obsidian --enable-features=UseOzonePlatform --ozone-platform=wayland"
+    end
     args = { uri }
   elseif this_os == util.OSType.Wsl then
     cmd = "wsl-open"

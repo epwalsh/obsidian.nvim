@@ -32,6 +32,7 @@ local config = {}
 ---@field ui obsidian.config.UIOpts | table<string, any>
 ---@field attachments obsidian.config.AttachmentsOpts
 ---@field callbacks obsidian.config.CallbackConfig
+---@field wayland boolean|?
 config.ClientOpts = {}
 
 --- Get defaults.
@@ -65,6 +66,7 @@ config.ClientOpts.default = function()
     ui = config.UIOpts.default(),
     attachments = config.AttachmentsOpts.default(),
     callbacks = config.CallbackConfig.default(),
+    wayland = false,
   }
 end
 
