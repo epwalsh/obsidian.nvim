@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an edge case with collecting backlinks.
 - Fixed typo in `ObsidianPasteImg`'s command description
 - Fixed the case when `opts.attachments` is `nil`.
+- Fixed frontmatter not updating when inserting template
 
 ## [v3.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.9.0) - 2024-07-11
 

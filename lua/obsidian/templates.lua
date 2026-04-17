@@ -1,7 +1,8 @@
 local Path = require "obsidian.path"
 local Note = require "obsidian.note"
 local util = require "obsidian.util"
-
+local iter = require("obsidian.itertools").iter
+local compat = require "obsidian.compat"
 local M = {}
 
 --- Resolve a template name to a path.
@@ -149,6 +150,66 @@ M.clone_template = function(opts)
   return new_note
 end
 
+--- Reads line from line_iterator and appends the frontmatter to the passed note
+--- Returns remaining content of the line_iterator and the size of frontmatter
+---@param line_iterator fun(): string?
+---@param buf integer -- buffer id of the opened buffer
+---@param opts { template_name: string|obsidian.Path, client: obsidian.Client, location: { [1]: integer, [2]: integer, [3]: integer, [4]: integer } } Options.
+---@return integer -- Total lines of frontmatter
+---@return table -- Remaining content of passed iterator excluding frontmatter
+---
+
+local merge_frontmatter = function(line_iterator, buf, opts)
+  local data = {}
+  local note = Note.from_buffer(buf)
+  local frontmatter_end = 0
+  local manage_frontmatter = opts.client:should_save_frontmatter(note)
+  local content_start
+  local in_frontmatter, has_frontmatter, first_line = false, false, true
+  for line in line_iterator do
+    if line == "---" then
+      if first_line then
+        first_line = false
+        in_frontmatter = true
+      else
+        has_frontmatter = true
+        in_frontmatter = false
+        frontmatter_end = frontmatter_end + 1
+      end
+    end
+    local new_line = M.substitute_template_variables(line, opts.client, note)
+    data[#data + 1] = new_line
+    if in_frontmatter then
+      frontmatter_end = frontmatter_end + 1
+    elseif content_start == nil then
+      content_start = frontmatter_end + 1
+    end
+  end
+  if manage_frontmatter then
+    if has_frontmatter == false and frontmatter_end > 0 then
+      error "Template has invalid frontmatter!"
+    end
+    local template_as_note = Note.from_lines(iter { unpack(data, 1, frontmatter_end) }, note.path, opts)
+    if not note.metadata then
+      note.metadata = {}
+    end
+    for key in iter(template_as_note.metadata) do
+      note.metadata[key] = template_as_note[key]
+    end
+    for key in iter(template_as_note.tags) do
+      note:add_tag(key)
+    end
+    local insert_lines = compat.flatten(note:frontmatter_lines(false))
+    if has_frontmatter then
+      vim.api.nvim_buf_set_lines(buf, 0, frontmatter_end, false, {})
+    end
+    vim.api.nvim_buf_set_lines(buf, 0, 0, false, insert_lines)
+    return content_start, { unpack(data, content_start, #data) }
+  else
+    return nil, data
+  end
+end
+
 ---Insert a template at the given location.
 ---
 ---@param opts { template_name: string|obsidian.Path, client: obsidian.Client, location: { [1]: integer, [2]: integer, [3]: integer, [4]: integer } } Options.
@@ -156,37 +217,34 @@ end
 ---@return obsidian.Note
 M.insert_template = function(opts)
   local buf, win, row, _ = unpack(opts.location)
-  local note = Note.from_buffer(buf)
-
   local template_path = resolve_template(opts.template_name, opts.client)
-
   local insert_lines = {}
   local template_file = io.open(tostring(template_path), "r")
   if template_file then
     local lines = template_file:lines()
-    for line in lines do
-      local new_lines = M.substitute_template_variables(line, opts.client, note)
-      if string.find(new_lines, "[\r\n]") then
+    local content_start, data = merge_frontmatter(lines, buf, opts)
+    row = content_start or row - 1
+    for line in iter(data) do
+      if string.find(line, "[\r\n]") then
         local line_start = 1
-        for line_end in util.gfind(new_lines, "[\r\n]") do
-          local new_line = string.sub(new_lines, line_start, line_end - 1)
+        for line_end in util.gfind(line, "[\r\n]") do
+          local new_line = string.sub(line, line_start, line_end - 1)
           table.insert(insert_lines, new_line)
           line_start = line_end + 1
         end
-        local last_line = string.sub(new_lines, line_start)
+        local last_line = string.sub(line, line_start)
         if string.len(last_line) > 0 then
           table.insert(insert_lines, last_line)
         end
       else
-        table.insert(insert_lines, new_lines)
+        table.insert(insert_lines, line)
       end
     end
     template_file:close()
   else
     error(string.format("Template file '%s' not found", template_path))
   end
-
-  vim.api.nvim_buf_set_lines(buf, row - 1, row - 1, false, insert_lines)
+  vim.api.nvim_buf_set_lines(buf, row, row, false, insert_lines)
   local new_cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
   vim.api.nvim_win_set_cursor(0, { new_cursor_row, 0 })
 
