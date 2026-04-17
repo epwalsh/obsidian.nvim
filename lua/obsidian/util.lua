@@ -513,6 +513,7 @@ util.toggle_checkbox = function(opts, line_num)
   local checkboxes = opts or { " ", "x" }
 
   if not string.match(line, checkbox_pattern) then
+    -- Add an empty checkbox if one is not found.
     local unordered_list_pattern = "^(%s*)[-*+] (.*)"
     if string.match(line, unordered_list_pattern) then
       line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")
@@ -532,6 +533,25 @@ util.toggle_checkbox = function(opts, line_num)
   end
   -- 0-indexed
   vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
+end
+
+---Set the value of a checkbox to a given check_char
+util.set_checkbox = function(check_char, line_num)
+  -- Allow line_num to be optional, defaulting to the current line if not provided
+  line_num = line_num or unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_buf_get_lines(0, line_num - 1, line_num, false)[1]
+
+  local checkbox_pattern = "^(%s*)- %[.%] "
+
+  local indent, rest = string.match(line, checkbox_pattern .. "(.*)")
+
+  if indent and rest then
+    -- Rebuild the line with the new check_char
+    line = indent .. "- [" .. check_char .. "] " .. rest
+
+    -- Update the line in the buffer (0-indexed)
+    vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, true, { line })
+  end
 end
 
 ---Determines if the given date is a working day (not weekend)

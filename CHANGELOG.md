@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `opts.follow_img_func` option for customizing how to handle image paths.
 - Added better handling for undefined template fields, which will now be prompted for.
+- Added `ObsidianSetCheckbox` to set the value of a checkbox to the passed in value. Defaults to `x`.
 
 ### Changed
 
