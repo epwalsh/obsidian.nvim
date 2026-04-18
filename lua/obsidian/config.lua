@@ -295,6 +295,7 @@ config.CompletionOpts.default = function()
 end
 
 ---@class obsidian.config.MappingOpts
+---@field save_on_nav boolean If true, save the file when navigating to a link
 config.MappingOpts = {}
 
 ---Get defaults.
@@ -306,6 +307,7 @@ config.MappingOpts.default = function()
     ["gf"] = mappings.gf_passthrough(),
     ["<leader>ch"] = mappings.toggle_checkbox(),
     ["<cr>"] = mappings.smart_action(),
+    save_on_nav = false, -- Default to false to maintain backward compatibility
   }
 end
 

@@ -1,6 +1,5 @@
 local util = require "obsidian.util"
 local parser = require "obsidian.yaml.parser"
-
 local yaml = {}
 
 ---Deserialize a YAML string.
@@ -9,6 +8,9 @@ local yaml = {}
 yaml.loads = function(str)
   return parser.loads(str)
 end
+
+-- New option to set quote style
+yaml.quote_style = "double" -- Can be "single" or "double"
 
 ---@param s string
 ---@return boolean
@@ -27,6 +29,9 @@ local should_quote = function(s)
   -- Check if it's an empty string.
   elseif s == "" or string.match(s, "^[%s]+$") then
     return true
+  -- NEW: Check if it's an ISO date format (YYYY-MM-DDThh:mm:ss)
+  elseif string.match(s, "^%d%d%d%d%-%d%d%-%d%dT%d%d:%d%d:%d%d") then
+    return true
   else
     return false
   end
@@ -36,27 +41,30 @@ end
 local dumps
 dumps = function(x, indent, order)
   local indent_str = string.rep(" ", indent)
-
   if type(x) == "string" then
     if should_quote(x) then
-      x = string.gsub(x, '"', '\\"')
-      return { indent_str .. [["]] .. x .. [["]] }
+      -- Choose quote style based on configuration
+      if yaml.quote_style == "single" then
+        -- For single quotes, escape single quotes by doubling them
+        x = string.gsub(x, "'", "''")
+        return { indent_str .. [[']] .. x .. [[']] }
+      else
+        -- Default to double quotes (original behavior)
+        x = string.gsub(x, '"', '\\"')
+        return { indent_str .. [["]] .. x .. [["]] }
+      end
     else
       return { indent_str .. x }
     end
   end
-
   if type(x) == "boolean" then
     return { indent_str .. tostring(x) }
   end
-
   if type(x) == "number" then
     return { indent_str .. tostring(x) }
   end
-
   if type(x) == "table" then
     local out = {}
-
     if util.tbl_is_array(x) then
       for _, v in ipairs(x) do
         local item_lines = dumps(v, indent + 2)
@@ -89,16 +97,14 @@ dumps = function(x, indent, order)
         end
       end
     end
-
     return out
   end
-
   error("Can't convert object with type " .. type(x) .. " to YAML")
 end
 
 ---Dump an object to YAML lines.
 ---@param x any
----@param order function
+---@param order function|?
 ---@return string[]
 yaml.dumps_lines = function(x, order)
   return dumps(x, 0, order)

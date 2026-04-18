@@ -745,6 +745,19 @@ end
 
 util.gf_passthrough = function()
   if util.cursor_on_markdown_link(nil, nil, true) then
+    -- Get the client to check settings
+    local client = require("obsidian").get_client()
+    if client and client.opts and client.opts.mappings and client.opts.mappings.save_on_nav then
+      -- Before following the link, save the current buffer
+      -- This ensures any new links in the current file are written to disk
+      if vim.api.nvim_buf_get_option(0, "modified") then
+        -- Schedule the save to avoid BufWritePre issues
+        vim.schedule(function()
+          vim.cmd "write"
+        end)
+      end
+    end
+
     return "<cmd>ObsidianFollowLink<CR>"
   else
     return "gf"
@@ -754,6 +767,19 @@ end
 util.smart_action = function()
   -- follow link if possible
   if util.cursor_on_markdown_link(nil, nil, true) then
+    -- Get the client to check settings
+    local client = require("obsidian").get_client()
+    if client and client.opts and client.opts.mappings and client.opts.mappings.save_on_nav then
+      -- Before following the link, save the current buffer
+      -- This ensures any new links in the current file are written to disk
+      if vim.api.nvim_buf_get_option(0, "modified") then
+        -- Schedule the save to avoid BufWritePre issues
+        vim.schedule(function()
+          vim.cmd "write"
+        end)
+      end
+    end
+
     return "<cmd>ObsidianFollowLink<CR>"
   end
 
