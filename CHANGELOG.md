@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `opts.follow_img_func` option for customizing how to handle image paths.
 - Added better handling for undefined template fields, which will now be prompted for.
+- The follow-link function now marks the current position in the jump list before moving.
 
 ### Changed
 
