@@ -117,7 +117,14 @@ Client.set_workspace = function(self, workspace, opts)
   end
 
   if self.opts.daily_notes.folder ~= nil then
-    local daily_notes_subdir = self.dir / self.opts.daily_notes.folder
+    ---@type string
+    local folder = self.opts.daily_notes.folder
+
+    ---@diagnostic disable-next-line: need-check-nil
+    if folder:find "%%" then
+      folder = tostring(os.date(folder, os.time()))
+    end
+    local daily_notes_subdir = self.dir / folder
     daily_notes_subdir:mkdir { parents = true, exists_ok = true }
   end
 
@@ -1924,9 +1931,16 @@ Client.daily_note_path = function(self, datetime)
   local path = Path:new(self.dir)
 
   if self.opts.daily_notes.folder ~= nil then
-    ---@type obsidian.Path
+    ---@type string
+    local folder = self.opts.daily_notes.folder
+
+    ---@diagnostic disable-next-line: need-check-nil
+    if folder:find "%%" then
+      folder = tostring(os.date(folder, datetime))
+    end
+
     ---@diagnostic disable-next-line: assign-type-mismatch
-    path = path / self.opts.daily_notes.folder
+    path = path / folder
   elseif self.opts.notes_subdir ~= nil then
     ---@type obsidian.Path
     ---@diagnostic disable-next-line: assign-type-mismatch
