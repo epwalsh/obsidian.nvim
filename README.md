@@ -121,7 +121,7 @@ Here are some examples using different plugin managers. The full set of [plugin 
 #### Using [`lazy.nvim`](https://github.com/folke/lazy.nvim)
 
 ```lua
-return {
+{
   "epwalsh/obsidian.nvim",
   version = "*",  -- recommended, use latest release instead of latest commit
   lazy = true,
