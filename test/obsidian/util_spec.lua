@@ -389,3 +389,114 @@ describe("util.markdown_link()", function()
     )
   end)
 end)
+
+describe("util.toggle_checkbox", function()
+  before_each(function()
+    vim.cmd "bwipeout!" -- wipe out the buffer to avoid unsaved changes
+    vim.cmd "enew" -- create a new empty buffer
+    vim.bo.bufhidden = "wipe" -- and wipe it after use
+  end)
+
+  it("should toggle between default states with - lists", function()
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "- [ ] dummy" })
+    local custom_states = nil
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("- [x] dummy", vim.api.nvim_get_current_line())
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("- [ ] dummy", vim.api.nvim_get_current_line())
+  end)
+
+  it("should toggle between default states with * lists", function()
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "* [ ] dummy" })
+    local custom_states = nil
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("* [x] dummy", vim.api.nvim_get_current_line())
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("* [ ] dummy", vim.api.nvim_get_current_line())
+  end)
+
+  it("should toggle between default states with numbered lists with .", function()
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "1. [ ] dummy" })
+    local custom_states = nil
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("1. [x] dummy", vim.api.nvim_get_current_line())
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("1. [ ] dummy", vim.api.nvim_get_current_line())
+  end)
+
+  it("should toggle between default states with numbered lists with )", function()
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "1) [ ] dummy" })
+    local custom_states = nil
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("1) [x] dummy", vim.api.nvim_get_current_line())
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("1) [ ] dummy", vim.api.nvim_get_current_line())
+  end)
+
+  it("should use custom states if provided", function()
+    local custom_states = { " ", "!", "x" }
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "- [ ] dummy" })
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("- [!] dummy", vim.api.nvim_get_current_line())
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("- [x] dummy", vim.api.nvim_get_current_line())
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("- [ ] dummy", vim.api.nvim_get_current_line())
+
+    util.toggle_checkbox(custom_states)
+    assert.equals("- [!] dummy", vim.api.nvim_get_current_line())
+  end)
+end)
+
+describe("util.is_checkbox", function()
+  it("should return true for valid checkbox list items", function()
+    assert.is_true(util.is_checkbox "- [ ] Task 1")
+    assert.is_true(util.is_checkbox "- [x] Task 1")
+    assert.is_true(util.is_checkbox "+ [ ] Task 1")
+    assert.is_true(util.is_checkbox "+ [x] Task 1")
+    assert.is_true(util.is_checkbox "* [ ] Task 2")
+    assert.is_true(util.is_checkbox "* [x] Task 2")
+    assert.is_true(util.is_checkbox "1. [ ] Task 3")
+    assert.is_true(util.is_checkbox "1. [x] Task 3")
+    assert.is_true(util.is_checkbox "2. [ ] Task 3")
+    assert.is_true(util.is_checkbox "10. [ ] Task 3")
+    assert.is_true(util.is_checkbox "1) [ ] Task")
+    assert.is_true(util.is_checkbox "10) [ ] Task")
+  end)
+
+  it("should return false for non-checkbox list items", function()
+    assert.is_false(util.is_checkbox "- Task 1")
+    assert.is_false(util.is_checkbox "-- Task 1")
+    assert.is_false(util.is_checkbox "-- [ ] Task 1")
+    assert.is_false(util.is_checkbox "* Task 2")
+    assert.is_false(util.is_checkbox "++ [ ] Task 2")
+    assert.is_false(util.is_checkbox "1. Task 3")
+    assert.is_false(util.is_checkbox "1.1 Task 3")
+    assert.is_false(util.is_checkbox "1.1 [ ] Task 3")
+    assert.is_false(util.is_checkbox "1)1 Task 3")
+    assert.is_false(util.is_checkbox "Random text")
+  end)
+
+  it("should handle leading spaces correctly", function()
+    -- true
+    assert.is_true(util.is_checkbox "  - [ ] Task 1")
+    assert.is_true(util.is_checkbox "    * [ ] Task 2")
+    assert.is_true(util.is_checkbox "     5. [ ] Task 2")
+
+    -- false
+    assert.is_false(util.is_checkbox "    - Task 1")
+    assert.is_false(util.is_checkbox "    * Task 1")
+    assert.is_false(util.is_checkbox "    1. Task 1")
+  end)
+end)

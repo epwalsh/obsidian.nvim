@@ -99,13 +99,11 @@ obsidian.setup = function(opts)
   -- These will be available across all buffers, not just note buffers in the vault.
   obsidian.commands.install(client)
 
-  -- Register cmp sources.
+  -- Register completion sources, providers
   if opts.completion.nvim_cmp then
-    local cmp = require "cmp"
-
-    cmp.register_source("obsidian", require("cmp_obsidian").new())
-    cmp.register_source("obsidian_new", require("cmp_obsidian_new").new())
-    cmp.register_source("obsidian_tags", require("cmp_obsidian_tags").new())
+    require("obsidian.completion.plugin_initializers.nvim_cmp").register_sources()
+  elseif opts.completion.blink then
+    require("obsidian.completion.plugin_initializers.blink").register_providers()
   end
 
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
@@ -139,22 +137,11 @@ obsidian.setup = function(opts)
         vim.keymap.set("n", mapping_keys, mapping_config.action, mapping_config.opts)
       end
 
-      -- Inject Obsidian as a cmp source.
+      -- Inject completion sources, providers to their plugin configurations
       if opts.completion.nvim_cmp then
-        local cmp = require "cmp"
-
-        local sources = {
-          { name = "obsidian" },
-          { name = "obsidian_new" },
-          { name = "obsidian_tags" },
-        }
-        for _, source in pairs(cmp.get_config().sources) do
-          if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
-            table.insert(sources, source)
-          end
-        end
-        ---@diagnostic disable-next-line: missing-fields
-        cmp.setup.buffer { sources = sources }
+        require("obsidian.completion.plugin_initializers.nvim_cmp").inject_sources()
+      elseif opts.completion.blink then
+        require("obsidian.completion.plugin_initializers.blink").inject_sources()
       end
 
       -- Run enter-note callback.

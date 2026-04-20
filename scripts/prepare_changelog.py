@@ -30,7 +30,7 @@ def main():
     lines.insert(insert_index, "\n")
     lines.insert(
         insert_index + 1,
-        f"## [v{VERSION}](https://github.com/epwalsh/obsidian.nvim/releases/tag/v{VERSION}) - "
+        f"## [v{VERSION}](https://github.com/obsidian-nvim/obsidian.nvim/releases/tag/v{VERSION}) - "
         f"{datetime.now().strftime('%Y-%m-%d')}\n",
     )
 

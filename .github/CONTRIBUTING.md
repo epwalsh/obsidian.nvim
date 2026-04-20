@@ -18,7 +18,7 @@ Make sure that the path there to plenary is correct for you.
 
 ## Keeping the CHANGELOG up-to-date
 
-This project tries hard to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and we maintain a [`CHANGELOG`](https://github.com/epwalsh/obsidian.nvim/blob/main/CHANGELOG.md) with a format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). 
+This project tries hard to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and we maintain a [`CHANGELOG`](https://github.com/obsidian-nvim/obsidian.nvim/blob/main/CHANGELOG.md) with a format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). 
 If your PR addresses a bug or makes any other substantial change, please be sure to add an entry under the "Unreleased" section at the top of `CHANGELOG.md`.
 Entries should always be in the form of a list item under a level-3 header of either "Added", "Fixed", "Changed", or "Removed" for the most part.
 If the corresponding level-3 header for your item does not already exist in the "Unreleased" section, you should add it.
@@ -49,7 +49,7 @@ However you can test how changes to the README will affect the Vim doc by runnin
 To do this you'll need install `pandoc` (e.g. `brew install pandoc` on Mac) and clone [panvimdoc](https://github.com/kdheepak/panvimdoc). Then from the panvimdoc repo root, run:
 
 ```bash
-./panvimdoc.sh --project-name obsidian --input-file ../../epwalsh/obsidian.nvim/README.md --description 'a plugin for writing and navigating an Obsidian vault' --toc 'false' --vim-version 'NVIM v0.8.0' --demojify 'false' --dedup-subheadings 'false' --shift-heading-level-by '-1' && mv doc/obsidian.txt /tmp/
+./panvimdoc.sh --project-name obsidian --input-file ../../obsidian-nvim/obsidian.nvim/README.md --description 'a plugin for writing and navigating an Obsidian vault' --toc 'false' --vim-version 'NVIM v0.8.0' --demojify 'false' --dedup-subheadings 'false' --shift-heading-level-by '-1' && mv doc/obsidian.txt /tmp/
 ```
 
 This will build the Vim documentation to `/tmp/obsidian.txt`.

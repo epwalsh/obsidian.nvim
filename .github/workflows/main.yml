@@ -57,7 +57,7 @@ jobs:
 
         include:
           - os: ubuntu-latest
-            nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
+            nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz
             packages: luarocks ripgrep
             manager: sudo apt-get
 

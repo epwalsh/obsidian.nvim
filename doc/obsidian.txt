@@ -2,15 +2,16 @@
 
 obsidian.nvim
 
-A Neovim plugin for writing and navigating Obsidian <https://obsidian.md>
-vaults, written in Lua.
+A **community fork** of the Neovim plugin for writing and navigating Obsidian
+<https://obsidian.md> vaults, written in Lua, created by epwalsh
+<https://github.com/epwalsh>.
 
 Built for people who love the concept of Obsidian – a simple, markdown-based
 notes app – but love Neovim too much to stand typing characters into anything
 else.
 
-If you’re new to Obsidian I highly recommend watching this excellent YouTube
-video <https://youtu.be/5ht8NYkU9wQ?si=8nbnNsRVnw0xfX2S> for a great overview.
+If you’re new to Obsidian we highly recommend watching this excellent YouTube
+video <https://youtu.be/5ht8NYkU9wQ> for a great overview.
 
 _Keep in mind this plugin is not meant to replace Obsidian, but to complement
 it._ The Obsidian app is very powerful in its own way; it comes with a mobile
@@ -20,7 +21,20 @@ own as well. You don’t necessarily need to use it alongside the Obsidian app.
 
 
 ==============================================================================
-1. Table of contents                              *obsidian-table-of-contents*
+1. About the fork                                    *obsidian-about-the-fork*
+
+The original project has not been actively maintained for quite a while and
+with the ever-changing Neovim ecosystem, new widely used tools such as
+blink.cmp <https://github.com/Saghen/blink.cmp> or snacks.picker
+<https://github.com/folke/snacks.nvim/blob/main/docs/picker.md> were not
+supported. With bugs, issues and pull requests piling up, people from the
+community decided to fork and maintain the project. The fork aims to stay close
+to the original, but fix bugs, include and merge useful improvements, and
+ensure long term robustness.
+
+
+==============================================================================
+2. Table of contents                              *obsidian-table-of-contents*
 
 - 👉 |obsidian-features|
     - |obsidian-commands|
@@ -37,12 +51,13 @@ own as well. You don’t necessarily need to use it alongside the Obsidian app.
 
 
 ==============================================================================
-2. Features                                                *obsidian-features*
+3. Features                                                *obsidian-features*
 
 ▶️ **Completion:** Ultra-fast, asynchronous autocompletion for note
-references and tags via nvim-cmp <https://github.com/hrsh7th/nvim-cmp>
-(triggered by typing `[[` for wiki links, `[` for markdown links, or `#` for
-tags), powered by `ripgrep` <https://github.com/BurntSushi/ripgrep>.
+references and tags via nvim-cmp <https://github.com/hrsh7th/nvim-cmp> or
+blink.cmp <https://github.com/Saghen/blink.cmp> (triggered by typing `[[` for
+wiki links, `[` for markdown links, or `#` for tags), powered by `ripgrep`
+<https://github.com/BurntSushi/ripgrep>.
 
 
 <https://github.com/epwalsh/obsidian.nvim/assets/8812459/90d5f218-06cd-4ebb-b00b-b59c2f5c3cc1>
@@ -129,7 +144,7 @@ DEMO                                                           *obsidian-demo*
 
 
 ==============================================================================
-3. Setup                                                      *obsidian-setup*
+4. Setup                                                      *obsidian-setup*
 
 
 SYSTEM REQUIREMENTS                             *obsidian-system-requirements*
@@ -163,14 +178,20 @@ managers. The full set of |obsidian-plugin-dependencies| and
   stability) instead of `main`, be aware that the README on `main` may reference
   features that haven’t been released yet. For that reason I recommend viewing
   the README on the tag for the latest release
-  <https://github.com/epwalsh/obsidian.nvim/releases> instead of `main`.
+  <https://github.com/obsidian-nvim/obsidian.nvim/releases> instead of `main`.
+
+  [!NOTE] To see you installation status, run `:checkhealth obsidian` To try out
+  or debug this plugin, use `minimal.lua` in the repo to run a clean instance of
+  obsidian.nvim
 
 USING LAZY.NVIM ~
 
+Click for install snippet ~
+
 >lua
     return {
-      "epwalsh/obsidian.nvim",
-      version = "*",  -- recommended, use latest release instead of latest commit
+      "obsidian-nvim/obsidian.nvim",
+      version = "*", -- recommended, use latest release instead of latest commit
       lazy = true,
       ft = "markdown",
       -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
@@ -205,12 +226,25 @@ USING LAZY.NVIM ~
 <
 
 
+USING ROCKS.NVIM ~
+
+Click for install snippet ~
+
+>vim
+    :Rocks install obsidian
+<
+
+
 USING PACKER.NVIM ~
 
+It is not recommended because packer.nvim is currently unmaintained
+
+Click for install snippet ~
+
 >lua
-    use({
-      "epwalsh/obsidian.nvim",
-      tag = "*",  -- recommended, use latest release instead of latest commit
+    use {
+      "obsidian-nvim/obsidian.nvim",
+      tag = "*", -- recommended, use latest release instead of latest commit
       requires = {
         -- Required.
         "nvim-lua/plenary.nvim",
@@ -218,7 +252,7 @@ USING PACKER.NVIM ~
         -- see below for full list of optional dependencies 👇
       },
       config = function()
-        require("obsidian").setup({
+        require("obsidian").setup {
           workspaces = {
             {
               name = "personal",
@@ -231,9 +265,9 @@ USING PACKER.NVIM ~
           },
     
           -- see below for full list of options 👇
-        })
+        }
       end,
-    })
+    }
 <
 
 
@@ -245,18 +279,26 @@ dependencies that enhance the obsidian.nvim experience.
 
 **Completion:**
 
-- **[recommended]** hrsh7th/nvim-cmp <https://github.com/hrsh7th/nvim-cmp>: for completion of note references.
+- **[recommended]** hrsh7th/nvim-cmp <https://github.com/hrsh7th/nvim-cmp>
+- blink.cmp <https://github.com/Saghen/blink.cmp> (new)
 
 **Pickers:**
 
-- **[recommended]** nvim-telescope/telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>: for search and quick-switch functionality.
-- Mini.Pick <https://github.com/echasnovski/mini.pick> from the mini.nvim library: an alternative to telescope for search and quick-switch functionality.
-- ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>: another alternative to telescope for search and quick-switch functionality.
+- **[recommended]** nvim-telescope/telescope.nvim <https://github.com/nvim-telescope/telescope.nvim>
+- ibhagwan/fzf-lua <https://github.com/ibhagwan/fzf-lua>
+- Mini.Pick <https://github.com/echasnovski/mini.pick> from the mini.nvim library
+- Snacks.Picker <https://github.com/folke/snacks.nvim/blob/main/docs/picker.md> from the snacks.nvim library
 
 **Syntax highlighting:**
 
-- **[recommended]** nvim-treesitter <https://github.com/nvim-treesitter/nvim-treesitter>: for base markdown syntax highlighting. See |obsidian-syntax-highlighting| for more details.
-- preservim/vim-markdown <https://github.com/preservim/vim-markdown>: an alternative to nvim-treesitter for syntax highlighting (see |obsidian-syntax-highlighting| for more details), plus other cool features.
+See |obsidian-syntax-highlighting| for more details.
+
+- For base syntax highlighting:
+    - **[recommended]** nvim-treesitter <https://github.com/nvim-treesitter/nvim-treesitter>
+    - preservim/vim-markdown <https://github.com/preservim/vim-markdown>
+- For additional syntax features:
+    - render-markdown.nvim <https://github.com/MeanderingProgrammer/render-markdown.nvim>
+    - markview.nvim <https://github.com/OXY2DEV/markview.nvim>
 
 **Miscellaneous:**
 
@@ -322,8 +364,10 @@ carefully and customize it to your needs:
     
       -- Optional, completion of wiki links, local markdown links, and tags using nvim-cmp.
       completion = {
-        -- Set to false to disable completion.
+        -- Enables completion using nvim_cmp
         nvim_cmp = true,
+        -- Enables completion using blink.cmp
+        blink = false,
         -- Trigger completion at 2 chars.
         min_chars = 2,
       },
@@ -345,7 +389,7 @@ carefully and customize it to your needs:
           end,
           opts = { buffer = true },
         },
-        -- Smart action depending on context, either follow link or toggle checkbox.
+        -- Smart action depending on context: follow link, show notes with tag, or toggle checkbox.
         ["<cr>"] = {
           action = function()
             return require("obsidian").util.smart_action()
@@ -468,7 +512,7 @@ carefully and customize it to your needs:
       open_app_foreground = false,
     
       picker = {
-        -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
+        -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'mini.pick' or 'snacks.pick'.
         name = "telescope.nvim",
         -- Optional, configure key mappings for the picker. These are the defaults.
         -- Not all pickers support all mappings.
@@ -621,7 +665,7 @@ the `workspaces` field in your config would look like this:
           name = "personal",
           path = "~/vaults/personal",
         },
-      }
+      },
     }
 <
 
@@ -653,7 +697,7 @@ example:
             -- ...
           },
         },
-      }
+      },
     }
 <
 
@@ -672,7 +716,7 @@ buffer:
             return assert(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
           end,
         },
-      }
+      },
     }
 <
 
@@ -683,9 +727,11 @@ plugin’s functionality on markdown files outside of your "fixed" vaults. See
 
 COMPLETION ~
 
-obsidian.nvim will set itself up as an nvim-cmp source automatically when you
-enter a markdown buffer within your vault directory, you do **not** need to
-specify this plugin as a cmp source manually.
+obsidian.nvim supports nvim_cmp and blink.cmp completion plugins.
+
+obsidian.nvim will set itself up automatically when you enter a markdown buffer
+within your vault directory, you do **not** need to specify this plugin as a
+cmp source manually.
 
 Note that in order to trigger completion for tags _within YAML frontmatter_ you
 still need to type the "#" at the start of the tag. obsidian.nvim will remove
@@ -700,12 +746,12 @@ you’re configuration should include both "markdown" and "markdown_inline"
 sources:
 
 >lua
-    require("nvim-treesitter.configs").setup({
+    require("nvim-treesitter.configs").setup {
       ensure_installed = { "markdown", "markdown_inline", ... },
       highlight = {
         enable = true,
       },
-    })
+    }
 <
 
 If you use `vim-markdown` you’ll probably want to disable its frontmatter
@@ -882,24 +928,26 @@ option to `nil` you’ll have to use `vim.NIL` there instead of the builtin Lua
 
 
 ==============================================================================
-4. Contributing                                        *obsidian-contributing*
+5. Contributing                                        *obsidian-contributing*
 
 Please read the CONTRIBUTING
-<https://github.com/epwalsh/obsidian.nvim/blob/main/.github/CONTRIBUTING.md>
+<https://github.com/obsidian-nvim/obsidian.nvim/blob/main/.github/CONTRIBUTING.md>
 guide before submitting a pull request.
 
-And if you’re feeling especially generous I always appreciate some coffee
-funds! ❤️
-
-<https://www.buymeacoffee.com/epwalsh>
 
 ==============================================================================
-5. Links                                                      *obsidian-links*
+6. Acknowledgement                                  *obsidian-acknowledgement*
+
+We would like to thank epwalsh <https://github.com/epwalsh> for creating this
+beautiful plugin. If you’re feeling especially generous, he still appreciates
+some coffee funds! ❤️ <https://www.buymeacoffee.com/epwalsh>.
+
+==============================================================================
+7. Links                                                      *obsidian-links*
 
 1. *See this screenshot*: https://github.com/epwalsh/obsidian.nvim/assets/8812459/90d5f218-06cd-4ebb-b00b-b59c2f5c3cc1
 2. *See this screenshot*: https://github.com/epwalsh/obsidian.nvim/assets/8812459/e74f5267-21b5-49bc-a3bb-3b9db5fa6687
 3. *2024-01-31 14 22 52*: https://github.com/epwalsh/obsidian.nvim/assets/8812459/2986e1d2-13e8-40e2-9c9e-75691a3b662e
-4. *BuyMeACoffee*: https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black
 
 Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
 

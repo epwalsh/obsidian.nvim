@@ -555,7 +555,7 @@ end
 ---@diagnostic disable-next-line: unused-local
 Parser._parse_number = function(self, i, text)
   local out = tonumber(text)
-  if out == nil then
+  if out == nil or util.isNan(out) then
     return false, nil, nil
   else
     return true, nil, out

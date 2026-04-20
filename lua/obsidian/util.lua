@@ -176,6 +176,30 @@ util.escape_magic_characters = function(text)
   return text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
 end
 
+---Check if a string is a checkbox list item
+---
+---Supported checboox lists:
+--- - [ ] foo
+--- - [x] foo
+--- + [x] foo
+--- * [ ] foo
+--- 1. [ ] foo
+--- 1) [ ] foo
+---
+---@param s string
+---@return boolean
+util.is_checkbox = function(s)
+  -- - [ ] and * [ ] and + [ ]
+  if string.match(s, "^%s*[-+*]%s+%[.%]") ~= nil then
+    return true
+  end
+  -- 1. [ ] and 1) [ ]
+  if string.match(s, "^%s*%d+[%.%)]%s+%[.%]") ~= nil then
+    return true
+  end
+  return false
+end
+
 ---Check if a string is a valid URL.
 ---@param s string
 ---@return boolean
@@ -193,6 +217,10 @@ util.is_url = function(s)
   end
 end
 
+---Checks if a given string represents an image file based on its suffix.
+---
+---@param s string: The input string to check.
+---@return boolean: Returns true if the string ends with a supported image suffix, false otherwise.
 util.is_img = function(s)
   for _, suffix in ipairs { ".png", ".jpg", ".jpeg", ".heic", ".gif", ".svg", ".ico" } do
     if vim.endswith(s, suffix) then
@@ -503,31 +531,31 @@ util.zettel_id = function()
   return tostring(os.time()) .. "-" .. suffix
 end
 
----Toggle the checkbox on the line that the cursor is on.
+---Toggle the checkbox on the current line.
+---
+---@param opts table|nil Optional table containing checkbox states (e.g., {" ", "x"}).
+---@param line_num number|nil Optional line number to toggle the checkbox on. Defaults to the current line.
 util.toggle_checkbox = function(opts, line_num)
   -- Allow line_num to be optional, defaulting to the current line if not provided
   line_num = line_num or unpack(vim.api.nvim_win_get_cursor(0))
   local line = vim.api.nvim_buf_get_lines(0, line_num - 1, line_num, false)[1]
 
-  local checkbox_pattern = "^%s*- %[.] "
   local checkboxes = opts or { " ", "x" }
 
-  if not string.match(line, checkbox_pattern) then
+  if util.is_checkbox(line) then
+    for i, check_char in enumerate(checkboxes) do
+      if string.match(line, "^.* %[" .. util.escape_magic_characters(check_char) .. "%].*") then
+        i = i % #checkboxes
+        line = util.string_replace(line, "[" .. check_char .. "]", "[" .. checkboxes[i + 1] .. "]", 1)
+        break
+      end
+    end
+  else
     local unordered_list_pattern = "^(%s*)[-*+] (.*)"
     if string.match(line, unordered_list_pattern) then
       line = string.gsub(line, unordered_list_pattern, "%1- [ ] %2")
     else
       line = string.gsub(line, "^(%s*)", "%1- [ ] ")
-    end
-  else
-    for i, check_char in enumerate(checkboxes) do
-      if string.match(line, "^%s*- %[" .. util.escape_magic_characters(check_char) .. "%].*") then
-        if i == #checkboxes then
-          i = 0
-        end
-        line = util.string_replace(line, "- [" .. check_char .. "]", "- [" .. checkboxes[i + 1] .. "]", 1)
-        break
-      end
     end
   end
   -- 0-indexed
@@ -755,6 +783,11 @@ util.smart_action = function()
   -- follow link if possible
   if util.cursor_on_markdown_link(nil, nil, true) then
     return "<cmd>ObsidianFollowLink<CR>"
+  end
+
+  -- show notes with tag if possible
+  if util.cursor_tag(nil, nil) then
+    return "<cmd>ObsidianTag<CR>"
   end
 
   -- toggle task if possible
@@ -1339,6 +1372,14 @@ util.buffer_is_empty = function(bufnr)
       return false
     end
   end
+end
+
+---Check if a string is NaN
+---
+---@param v any
+---@return boolean
+util.isNan = function(v)
+  return tostring(v) == tostring(0 / 0)
 end
 
 return util

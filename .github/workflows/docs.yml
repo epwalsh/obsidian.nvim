@@ -3,7 +3,7 @@ name: Docs
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
   push:
     branches: [main]
   workflow_dispatch:
@@ -14,9 +14,7 @@ concurrency:
 
 env:
   runtime: ~/.local/share/nvim/site/pack/vendor/start
-  minidoc-git: https://github.com/echasnovski/mini.doc
-  minidoc-path: ~/.local/share/nvim/site/pack/vendor/start/mini.doc
-  nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
+  nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz
 
 jobs:
   docs:
@@ -38,7 +36,6 @@ jobs:
           mkdir -p ${{ env.runtime }}
           mkdir -p _neovim
           curl -sL ${{ env.nvim_url }} | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
-          git clone --depth 1 ${{ env.minidoc-git }} ${{ env.minidoc-path }}
           ln -s $(pwd) ${{ env.runtime }}
 
       - name: Generate API docs
@@ -74,5 +71,5 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           commit_user_name: github-actions[bot]
-          commit_message: 'chore(docs): auto generate docs'
+          commit_message: "chore(docs): auto generate docs"
           branch: ${{ github.head_ref }}

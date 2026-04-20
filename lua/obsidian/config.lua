@@ -280,6 +280,7 @@ config.LinkStyle = {
 ---@class obsidian.config.CompletionOpts
 ---
 ---@field nvim_cmp boolean
+---@field blink boolean
 ---@field min_chars integer
 config.CompletionOpts = {}
 
@@ -343,6 +344,7 @@ config.Picker = {
   telescope = "telescope.nvim",
   fzf_lua = "fzf-lua",
   mini = "mini.pick",
+  snacks = "snacks.pick",
 }
 
 ---@class obsidian.config.PickerOpts

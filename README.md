@@ -1,15 +1,21 @@
 <h1 align="center">obsidian.nvim</h1>
-<div><h4 align="center"><a href="#setup">Setup</a> · <a href="#configuration-options">Configure</a> · <a href="#contributing">Contribute</a> · <a href="https://github.com/epwalsh/obsidian.nvim/discussions">Discuss</a></h4></div>
-<div align="center"><a href="https://github.com/epwalsh/obsidian.nvim/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/epwalsh/obsidian.nvim?style=for-the-badge&logo=starship&logoColor=D9E0EE&labelColor=302D41&&color=d9b3ff&include_prerelease&sort=semver" /></a> <a href="https://github.com/epwalsh/obsidian.nvim/pulse"><img alt="Last commit" src="https://img.shields.io/github/last-commit/epwalsh/obsidian.nvim?style=for-the-badge&logo=github&logoColor=D9E0EE&labelColor=302D41&color=9fdf9f"/></a> <a href="https://github.com/neovim/neovim/releases/latest"><img alt="Latest Neovim" src="https://img.shields.io/github/v/release/neovim/neovim?style=for-the-badge&logo=neovim&logoColor=D9E0EE&label=Neovim&labelColor=302D41&color=99d6ff&sort=semver" /></a> <a href="http://www.lua.org/"><img alt="Made with Lua" src="https://img.shields.io/badge/Built%20with%20Lua-grey?style=for-the-badge&logo=lua&logoColor=D9E0EE&label=Lua&labelColor=302D41&color=b3b3ff"></a> <a href="https://www.buymeacoffee.com/epwalsh"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-grey?style=for-the-badge&logo=buymeacoffee&logoColor=D9E0EE&label=Sponsor&labelColor=302D41&color=ffff99" /></a></div>
+<div><h4 align="center"><a href="#setup">Setup</a> · <a href="#configuration-options">Configure</a> · <a href="#contributing">Contribute</a> · <a href="https://github.com/obsidian-nvim/obsidian.nvim/discussions">Discuss</a></h4></div>
+<div align="center"><a href="https://github.com/obsidian-nvim/obsidian.nvim/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/obsidian-nvim/obsidian.nvim?style=for-the-badge&logo=starship&logoColor=D9E0EE&labelColor=302D41&&color=d9b3ff&include_prerelease&sort=semver" /></a> <a href="https://github.com/obsidian-nvim/obsidian.nvim/pulse"><img alt="Last commit" src="https://img.shields.io/github/last-commit/obsidian-nvim/obsidian.nvim?style=for-the-badge&logo=github&logoColor=D9E0EE&labelColor=302D41&color=9fdf9f"/></a> <a href="https://github.com/neovim/neovim/releases/latest"><img alt="Latest Neovim" src="https://img.shields.io/github/v/release/neovim/neovim?style=for-the-badge&logo=neovim&logoColor=D9E0EE&label=Neovim&labelColor=302D41&color=99d6ff&sort=semver" /></a> <a href="http://www.lua.org/"><img alt="Made with Lua" src="https://img.shields.io/badge/Built%20with%20Lua-grey?style=for-the-badge&logo=lua&logoColor=D9E0EE&label=Lua&labelColor=302D41&color=b3b3ff"></a></div>
 <hr>
 
-A Neovim plugin for writing and navigating [Obsidian](https://obsidian.md) vaults, written in Lua.
+A **community fork** of the Neovim plugin for writing and navigating [Obsidian](https://obsidian.md) vaults, written in Lua, created by [epwalsh](https://github.com/epwalsh).
 
 Built for people who love the concept of Obsidian -- a simple, markdown-based notes app -- but love Neovim too much to stand typing characters into anything else.
 
-If you're new to Obsidian I highly recommend watching [this excellent YouTube video](https://youtu.be/5ht8NYkU9wQ?si=8nbnNsRVnw0xfX2S) for a great overview.
+If you're new to Obsidian we highly recommend watching [this excellent YouTube video](https://youtu.be/5ht8NYkU9wQ) for a great overview.
 
 _Keep in mind this plugin is not meant to replace Obsidian, but to complement it._ The Obsidian app is very powerful in its own way; it comes with a mobile app and has a lot of functionality that's not feasible to implement in Neovim, such as the graph explorer view. That said, this plugin stands on its own as well. You don't necessarily need to use it alongside the Obsidian app.
+
+## About the fork
+
+The original project has not been actively maintained for quite a while and with the ever-changing Neovim ecosystem, new widely used tools such as [blink.cmp](https://github.com/Saghen/blink.cmp) or [snacks.picker](https://github.com/folke/snacks.nvim/blob/main/docs/picker.md) were not supported.
+With bugs, issues and pull requests piling up, people from the community decided to fork and maintain the project.
+The fork aims to stay close to the original, but fix bugs, include and merge useful improvements, and ensure long term robustness.
 
 ## Table of contents
 
@@ -28,7 +34,7 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 ## Features
 
-▶️ **Completion:** Ultra-fast, asynchronous autocompletion for note references and tags via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) (triggered by typing `[[` for wiki links, `[` for markdown links, or `#` for tags), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep).
+▶️ **Completion:** Ultra-fast, asynchronous autocompletion for note references and tags via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) or [blink.cmp](https://github.com/Saghen/blink.cmp) (triggered by typing `[[` for wiki links, `[` for markdown links, or `#` for tags), powered by [`ripgrep`](https://github.com/BurntSushi/ripgrep).
 
 [![See this screenshot](https://github.com/epwalsh/obsidian.nvim/assets/8812459/90d5f218-06cd-4ebb-b00b-b59c2f5c3cc1)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/90d5f218-06cd-4ebb-b00b-b59c2f5c3cc1)
 
@@ -116,14 +122,20 @@ Search functionality (e.g. via the `:ObsidianSearch` and `:ObsidianQuickSwitch` 
 To configure obsidian.nvim you just need to call `require("obsidian").setup({ ... })` with the desired options.
 Here are some examples using different plugin managers. The full set of [plugin dependencies](#plugin-dependencies) and [configuration options](#configuration-options) are listed below.
 
-> ⚠️ WARNING: if you install from the latest release (recommended for stability) instead of `main`, be aware that the README on `main` may reference features that haven't been released yet. For that reason I recommend viewing the README on the tag for the [latest release](https://github.com/epwalsh/obsidian.nvim/releases) instead of `main`.
+> ⚠️ WARNING: if you install from the latest release (recommended for stability) instead of `main`, be aware that the README on `main` may reference features that haven't been released yet. For that reason I recommend viewing the README on the tag for the [latest release](https://github.com/obsidian-nvim/obsidian.nvim/releases) instead of `main`.
+
+> [!NOTE]
+> To see you installation status, run `:checkhealth obsidian`
+> To try out or debug this plugin, use `minimal.lua` in the repo to run a clean instance of obsidian.nvim
 
 #### Using [`lazy.nvim`](https://github.com/folke/lazy.nvim)
 
+<details><summary>Click for install snippet</summary>
+
 ```lua
 return {
-  "epwalsh/obsidian.nvim",
-  version = "*",  -- recommended, use latest release instead of latest commit
+  "obsidian-nvim/obsidian.nvim",
+  version = "*", -- recommended, use latest release instead of latest commit
   lazy = true,
   ft = "markdown",
   -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
@@ -157,12 +169,28 @@ return {
 }
 ```
 
+</details>
+
+#### Using [`rocks.nvim`](https://github.com/nvim-neorocks/rocks.nvim)
+
+<details><summary>Click for install snippet</summary>
+
+```vim
+:Rocks install obsidian
+```
+
+</details>
+
 #### Using [`packer.nvim`](https://github.com/wbthomason/packer.nvim)
 
+It is not recommended because packer.nvim is currently unmaintained
+
+<details><summary>Click for install snippet</summary>
+
 ```lua
-use({
-  "epwalsh/obsidian.nvim",
-  tag = "*",  -- recommended, use latest release instead of latest commit
+use {
+  "obsidian-nvim/obsidian.nvim",
+  tag = "*", -- recommended, use latest release instead of latest commit
   requires = {
     -- Required.
     "nvim-lua/plenary.nvim",
@@ -170,7 +198,7 @@ use({
     -- see below for full list of optional dependencies 👇
   },
   config = function()
-    require("obsidian").setup({
+    require("obsidian").setup {
       workspaces = {
         {
           name = "personal",
@@ -183,10 +211,12 @@ use({
       },
 
       -- see below for full list of options 👇
-    })
+    }
   end,
-})
+}
 ```
+
+</details>
 
 ### Plugin dependencies
 
@@ -194,18 +224,26 @@ The only **required** plugin dependency is [plenary.nvim](https://github.com/nvi
 
 **Completion:**
 
-- **[recommended]** [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp): for completion of note references.
+- **[recommended]** [hrsh7th/nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+- [blink.cmp](https://github.com/Saghen/blink.cmp) (new)
 
 **Pickers:**
 
-- **[recommended]** [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim): for search and quick-switch functionality.
-- [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library: an alternative to telescope for search and quick-switch functionality.
-- [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua): another alternative to telescope for search and quick-switch functionality.
+- **[recommended]** [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+- [ibhagwan/fzf-lua](https://github.com/ibhagwan/fzf-lua)
+- [Mini.Pick](https://github.com/echasnovski/mini.pick) from the mini.nvim library
+- [Snacks.Picker](https://github.com/folke/snacks.nvim/blob/main/docs/picker.md) from the snacks.nvim library
 
 **Syntax highlighting:**
 
-- **[recommended]** [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter): for base markdown syntax highlighting. See [syntax highlighting](#syntax-highlighting) for more details.
-- [preservim/vim-markdown](https://github.com/preservim/vim-markdown): an alternative to nvim-treesitter for syntax highlighting (see [syntax highlighting](#syntax-highlighting) for more details), plus other cool features.
+See [syntax highlighting](#syntax-highlighting) for more details.
+
+- For base syntax highlighting:
+  - **[recommended]** [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+  - [preservim/vim-markdown](https://github.com/preservim/vim-markdown)
+- For additional syntax features:
+  - [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim)
+  - [markview.nvim](https://github.com/OXY2DEV/markview.nvim)
 
 **Miscellaneous:**
 
@@ -215,7 +253,7 @@ If you choose to use any of these you should include them in the "dependencies" 
 
 ### Configuration options
 
-This is a complete list of all of the options that can be passed to `require("obsidian").setup()`. The settings below are *not necessarily the defaults, but represent reasonable default settings*. Please read each option carefully and customize it to your needs:
+This is a complete list of all of the options that can be passed to `require("obsidian").setup()`. The settings below are _not necessarily the defaults, but represent reasonable default settings_. Please read each option carefully and customize it to your needs:
 
 ```lua
 {
@@ -266,8 +304,10 @@ This is a complete list of all of the options that can be passed to `require("ob
 
   -- Optional, completion of wiki links, local markdown links, and tags using nvim-cmp.
   completion = {
-    -- Set to false to disable completion.
+    -- Enables completion using nvim_cmp
     nvim_cmp = true,
+    -- Enables completion using blink.cmp
+    blink = false,
     -- Trigger completion at 2 chars.
     min_chars = 2,
   },
@@ -289,7 +329,7 @@ This is a complete list of all of the options that can be passed to `require("ob
       end,
       opts = { buffer = true },
     },
-    -- Smart action depending on context, either follow link or toggle checkbox.
+    -- Smart action depending on context: follow link, show notes with tag, or toggle checkbox.
     ["<cr>"] = {
       action = function()
         return require("obsidian").util.smart_action()
@@ -412,7 +452,7 @@ This is a complete list of all of the options that can be passed to `require("ob
   open_app_foreground = false,
 
   picker = {
-    -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
+    -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'mini.pick' or 'snacks.pick'.
     name = "telescope.nvim",
     -- Optional, configure key mappings for the picker. These are the defaults.
     -- Not all pickers support all mappings.
@@ -560,7 +600,7 @@ config = {
       name = "personal",
       path = "~/vaults/personal",
     },
-  }
+  },
 }
 ```
 
@@ -587,12 +627,11 @@ config = {
         -- ...
       },
     },
-  }
+  },
 }
 ```
 
 obsidian.nvim also supports "dynamic" workspaces. These are simply workspaces where the `path` is set to a Lua function (that returns a path) instead of a hard-coded path. This can be useful in several scenarios, such as when you want a workspace whose `path` is always set to the parent directory of the current buffer:
-
 
 ```lua
 config = {
@@ -603,7 +642,7 @@ config = {
         return assert(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
       end,
     },
-  }
+  },
 }
 ```
 
@@ -612,7 +651,9 @@ See [using obsidian.nvim outside of a workspace / Obsidian vault](#usage-outside
 
 #### Completion
 
-obsidian.nvim will set itself up as an nvim-cmp source automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
+obsidian.nvim supports nvim_cmp and blink.cmp completion plugins.
+
+obsidian.nvim will set itself up automatically when you enter a markdown buffer within your vault directory, you do **not** need to specify this plugin as a cmp source manually.
 
 Note that in order to trigger completion for tags _within YAML frontmatter_ you still need to type the "#" at the start of the tag. obsidian.nvim will remove the "#" when you hit enter on the tag completion item.
 
@@ -621,12 +662,12 @@ Note that in order to trigger completion for tags _within YAML frontmatter_ you 
 If you're using [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/blob/master/README.md) you're configuration should include both "markdown" and "markdown_inline" sources:
 
 ```lua
-require("nvim-treesitter.configs").setup({
+require("nvim-treesitter.configs").setup {
   ensure_installed = { "markdown", "markdown_inline", ... },
   highlight = {
     enable = true,
   },
-})
+}
 ```
 
 If you use `vim-markdown` you'll probably want to disable its frontmatter syntax highlighting (`vim.g.vim_markdown_frontmatter = 1`) which I've found doesn't work very well.
@@ -728,7 +769,7 @@ templates = {
 
 ### Usage outside of a workspace or vault
 
-It's possible to configure obsidian.nvim to work on individual markdown files outside of a regular workspace / Obsidian vault by configuring a "dynamic" workspace. To do so you just need to add a special workspace with a function for the `path` field (instead of a string), which should return a *parent* directory of the current buffer. This tells obsidian.nvim to use that directory as the workspace `path` and `root` (vault root) when the buffer is not located inside another fixed workspace.
+It's possible to configure obsidian.nvim to work on individual markdown files outside of a regular workspace / Obsidian vault by configuring a "dynamic" workspace. To do so you just need to add a special workspace with a function for the `path` field (instead of a string), which should return a _parent_ directory of the current buffer. This tells obsidian.nvim to use that directory as the workspace `path` and `root` (vault root) when the buffer is not located inside another fixed workspace.
 
 For example, to extend the configuration above this way:
 
@@ -768,8 +809,8 @@ And keep in mind that to reset a configuration option to `nil` you'll have to us
 
 ## Contributing
 
-Please read the [CONTRIBUTING](https://github.com/epwalsh/obsidian.nvim/blob/main/.github/CONTRIBUTING.md) guide before submitting a pull request.
+Please read the [CONTRIBUTING](https://github.com/obsidian-nvim/obsidian.nvim/blob/main/.github/CONTRIBUTING.md) guide before submitting a pull request.
 
-And if you're feeling especially generous I always appreciate some coffee funds! ❤️
+## Acknowledgement
 
-[![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/epwalsh)
+We would like to thank [epwalsh](https://github.com/epwalsh) for creating this beautiful plugin. If you're feeling especially generous, [he still appreciates some coffee funds! ❤️](https://www.buymeacoffee.com/epwalsh).
