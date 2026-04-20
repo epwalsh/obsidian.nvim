@@ -189,8 +189,18 @@ end
 Client.path_is_note = function(self, path, workspace)
   path = Path.new(path):resolve()
 
+  local valid_extensions = require("obsidian.patterns").file_extensions
+  local is_valid = false
+
+  for _, suffix in ipairs(valid_extensions) do
+    if path.suffix == suffix then
+      is_valid = true
+      break
+    end
+  end
+
   -- Notes have to be markdown file.
-  if path.suffix ~= ".md" then
+  if not is_valid then
     return false
   end
 

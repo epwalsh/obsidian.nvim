@@ -1,4 +1,5 @@
 local log = require "obsidian.log"
+local patterns = require("obsidian.patterns").file_patterns
 
 local module_lookups = {
   abc = "obsidian.abc",
@@ -113,7 +114,7 @@ obsidian.setup = function(opts)
   -- Complete setup and update workspace (if needed) when entering a markdown buffer.
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,
-    pattern = "*.md",
+    pattern = patterns,
     callback = function(ev)
       -- Set the current directory of the buffer.
       local buf_dir = vim.fs.dirname(ev.match)
@@ -166,7 +167,7 @@ obsidian.setup = function(opts)
 
   vim.api.nvim_create_autocmd({ "BufLeave" }, {
     group = group,
-    pattern = "*.md",
+    pattern = patterns,
     callback = function(ev)
       -- Check if we're in *any* workspace.
       local workspace = obsidian.Workspace.get_workspace_for_dir(vim.fs.dirname(ev.match), client.opts.workspaces)
@@ -189,7 +190,7 @@ obsidian.setup = function(opts)
   -- Add/update frontmatter for notes before writing.
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = group,
-    pattern = "*.md",
+    pattern = patterns,
     callback = function(ev)
       local buf_dir = vim.fs.dirname(ev.match)
 

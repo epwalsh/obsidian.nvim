@@ -617,7 +617,7 @@ M.setup = function(workspace, ui_opts)
 
   install_hl_groups(ui_opts)
 
-  local pattern = tostring(workspace.root) .. "/**.md"
+  local pattern = require("obsidian.patterns").file_patterns
 
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     group = group,

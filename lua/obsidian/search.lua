@@ -396,13 +396,26 @@ M.build_find_cmd = function(path, term, opts)
   local additional_opts = {}
 
   if term ~= nil then
+    local valid_extensions = require("obsidian.patterns").file_extensions
     if opts.include_non_markdown then
       term = "*" .. term .. "*"
-    elseif not vim.endswith(term, ".md") then
-      term = "*" .. term .. "*.md"
     else
-      term = "*" .. term
+      -- Check if term does not already have a valid extension
+      local has_valid_extension = false
+      for _, ext in ipairs(valid_extensions) do
+        if vim.endswith(term, ext) then
+          has_valid_extension = true
+          break
+        end
+      end
+
+      if not has_valid_extension then
+        term = "*" .. term .. table.concat(valid_extensions, ",*") -- Match all valid extensions
+      else
+        term = "*" .. term
+      end
     end
+
     additional_opts[#additional_opts + 1] = "-g"
     additional_opts[#additional_opts + 1] = term
   end
