@@ -850,6 +850,7 @@ end
 ---@param link string|?
 ---@param opts { open_strategy: obsidian.config.OpenStrategy|? }|?
 Client.follow_link_async = function(self, link, opts)
+  print("follow_link_async: ", link)
   opts = opts and opts or {}
 
   self:resolve_link_async(link, function(...)

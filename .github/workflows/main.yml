@@ -7,12 +7,12 @@ concurrency:
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
   push:
     branches:
       - main
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
   style:
@@ -57,7 +57,7 @@ jobs:
 
         include:
           - os: ubuntu-latest
-            nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
+            nvim_url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz
             packages: luarocks ripgrep
             manager: sudo apt-get
 
@@ -136,7 +136,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install requirements
         run: |
