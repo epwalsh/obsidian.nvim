@@ -408,6 +408,9 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- https://github.com/Vinzent03/obsidian-advanced-uri
   use_advanced_uri = false,
 
+  -- Optional, set to the path of Obsidian.app (MacOS only)
+  app_path = "/path/to/Obsidian.app",
+
   -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
   open_app_foreground = false,
 

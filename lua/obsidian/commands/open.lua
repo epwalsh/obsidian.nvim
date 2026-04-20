@@ -42,9 +42,9 @@ local function open_in_app(client, path)
   elseif this_os == util.OSType.Darwin then
     cmd = "open"
     if client.opts.open_app_foreground then
-      args = { "-a", "/Applications/Obsidian.app", uri }
+      args = { "-a", client.opts.app_path ~= nil and "\"" ..client.opts.app_path.."\"" or "/Applications/Obsidian.app", uri }
     else
-      args = { "-a", "/Applications/Obsidian.app", "--background", uri }
+      args = { "-a", client.opts.app_path ~= nil and "\""..client.opts.app_path.."\"" or "/Applications/Obsidian.app", "--background", uri }
     end
   else
     log.err("open command does not support OS type '" .. this_os .. "'")

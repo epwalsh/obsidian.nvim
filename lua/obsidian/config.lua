@@ -24,6 +24,7 @@ local config = {}
 ---@field picker obsidian.config.PickerOpts
 ---@field daily_notes obsidian.config.DailyNotesOpts
 ---@field use_advanced_uri boolean|?
+---@field app_path string|?
 ---@field open_app_foreground boolean|?
 ---@field sort_by obsidian.config.SortBy|?
 ---@field sort_reversed boolean|?
@@ -57,6 +58,7 @@ config.ClientOpts.default = function()
     picker = config.PickerOpts.default(),
     daily_notes = config.DailyNotesOpts.default(),
     use_advanced_uri = nil,
+    app_path = nil,
     open_app_foreground = false,
     sort_by = "modified",
     sort_reversed = true,
