@@ -9,32 +9,45 @@ local enumerate = require("obsidian.itertools").enumerate
 local zip = require("obsidian.itertools").zip
 local compat = require "obsidian.compat"
 
----@param client obsidian.Client
-return function(client, data)
-  -- Validate args.
-  local dry_run = false
-  ---@type string|?
-  local arg
-
-  if data.args == "--dry-run" then
-    dry_run = true
-    data.args = nil
+local function parse_args(arg)
+  if arg == nil then
+    return { arg = nil, dry_run = false, confirm = false }
   end
 
-  if data.args ~= nil and string.len(data.args) > 0 then
-    arg = util.strip_whitespace(data.args)
-  else
-    arg = util.input("Enter new note ID/name/path: ", { completion = "file" })
-    if not arg or string.len(arg) == 0 then
-      log.warn "Rename aborted"
-      return
+  local dry_run = false
+  local confirm = false
+
+  -- insert space at the front so just flags with no new note_id is not a special case
+  arg = " " .. arg
+
+  while true do
+    arg = util.rstrip_whitespace(arg)
+    if vim.endswith(arg, " --dry-run") then
+      dry_run = true
+      arg = string.sub(arg, 1, -string.len " --dry-run" - 1)
+    elseif vim.endswith(arg, " --confirm") then
+      confirm = true
+      arg = string.sub(arg, 1, -string.len " --confirm" - 1)
+    else
+      break
     end
   end
 
-  if vim.endswith(arg, " --dry-run") then
-    dry_run = true
-    arg = util.strip_whitespace(string.sub(arg, 1, -string.len " --dry-run" - 1))
+  arg = util.lstrip_whitespace(arg)
+  if arg == "" then
+    arg = nil
   end
+
+  return { arg = arg, dry_run = dry_run, confirm = confirm }
+end
+
+---@param client obsidian.Client
+return function(client, data)
+  ---@type table
+  local args = parse_args(data.args)
+
+  ---@type string|?
+  local arg = args.arg
 
   -- Resolve the note to rename.
   ---@type boolean
@@ -104,24 +117,28 @@ return function(client, data)
 
   -- Get confirmation before continuing.
   local confirmation
-  if not dry_run then
-    confirmation = util.confirm(
-      "Renaming '"
-        .. cur_note_id
-        .. "' to '"
-        .. new_note_id
-        .. "'...\n"
-        .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
-        .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
-        .. "You can also do a dry run of this by running ':ObsidianRename "
-        .. arg
-        .. " --dry-run'.\n"
-        .. "Do you want to continue?"
-    )
+  if args.confirm then
+    confirmation = true
   else
-    confirmation = util.confirm(
-      "Dry run: renaming '" .. cur_note_id .. "' to '" .. new_note_id .. "'...\n" .. "Do you want to continue?"
-    )
+    if not args.dry_run then
+      confirmation = util.confirm(
+        "Renaming '"
+          .. cur_note_id
+          .. "' to '"
+          .. new_note_id
+          .. "'...\n"
+          .. "This will write all buffers and potentially modify a lot of files. If you're using version control "
+          .. "with your vault it would be a good idea to commit the current state of your vault before running this.\n"
+          .. "You can also do a dry run of this by running ':ObsidianRename "
+          .. arg
+          .. " --dry-run'.\n"
+          .. "Do you want to continue?"
+      )
+    else
+      confirmation = util.confirm(
+        "Dry run: renaming '" .. cur_note_id .. "' to '" .. new_note_id .. "'...\n" .. "Do you want to continue?"
+      )
+    end
   end
 
   if not confirmation then
@@ -146,7 +163,7 @@ return function(client, data)
   if cur_note_bufnr ~= nil then
     if is_current_buf then
       -- If we're renaming the note of a current buffer, save as the new path.
-      if not dry_run then
+      if not args.dry_run then
         quietly(vim.cmd.saveas, tostring(new_note_path))
         for bufnr, bufname in util.get_named_buffers() do
           if bufname == cur_note_path then
@@ -160,7 +177,7 @@ return function(client, data)
     else
       -- For the non-current buffer the best we can do is delete the buffer (we've already saved it above)
       -- and then make a file-system call to rename the file.
-      if not dry_run then
+      if not args.dry_run then
         quietly(vim.cmd.bdelete, cur_note_bufnr)
         cur_note_path:rename(new_note_path)
       else
@@ -175,7 +192,7 @@ return function(client, data)
     end
   else
     -- When the note is not loaded into a buffer we just need to rename the file.
-    if not dry_run then
+    if not args.dry_run then
       cur_note_path:rename(new_note_path)
     else
       log.info("Dry run: renaming file '" .. tostring(cur_note_path) .. "' to '" .. tostring(new_note_path) .. "'")
@@ -187,7 +204,7 @@ return function(client, data)
     -- to account for the rename.
     cur_note.id = new_note_id
     cur_note.path = Path.new(new_note_path)
-    if not dry_run then
+    if not args.dry_run then
       cur_note:save()
     else
       log.info("Dry run: updating frontmatter of '" .. tostring(new_note_path) .. "'")
@@ -248,7 +265,7 @@ return function(client, data)
       for ref, replacement in zip(reference_forms, replace_with) do
         local n
         line, n = util.string_replace(line, ref, replacement)
-        if dry_run and n > 0 then
+        if args.dry_run and n > 0 then
           log.info(
             "Dry run: '"
               .. tostring(path)
@@ -270,7 +287,7 @@ return function(client, data)
     f:close()
 
     --- Write the new lines back.
-    if not dry_run and count > 0 then
+    if not args.dry_run and count > 0 then
       f = File.open(tostring(path), "w")
       f:write_lines(lines)
       f:close()
@@ -305,7 +322,7 @@ return function(client, data)
   -- Then block until all tasks are finished.
   executor:join(2000)
 
-  local prefix = dry_run and "Dry run: replaced " or "Replaced "
+  local prefix = args.dry_run and "Dry run: replaced " or "Replaced "
   log.info(prefix .. replacement_count .. " reference(s) across " .. file_count .. " file(s)")
 
   -- In case the files of any current buffers were changed.
