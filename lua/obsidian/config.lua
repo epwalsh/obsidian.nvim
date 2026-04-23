@@ -279,8 +279,8 @@ config.LinkStyle = {
 
 ---@class obsidian.config.CompletionOpts
 ---
----@field nvim_cmp boolean
----@field min_chars integer
+---@field nvim_cmp boolean|?
+---@field min_chars integer|?
 config.CompletionOpts = {}
 
 --- Get defaults.
