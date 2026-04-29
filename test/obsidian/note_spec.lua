@@ -1,6 +1,8 @@
 ---@diagnostic disable: invisible
 
 local Note = require "obsidian.note"
+local Path = require "obsidian.path"
+local obsidian = require "obsidian"
 local util = require "obsidian.util"
 local async = require "plenary.async"
 
@@ -244,5 +246,43 @@ describe("Note._is_frontmatter_boundary()", function()
   it("should be able to find a frontmatter boundary", function()
     assert.is_true(Note._is_frontmatter_boundary "---")
     assert.is_true(Note._is_frontmatter_boundary "----")
+  end)
+end)
+
+describe("ObsidianMoveNote", function()
+  it("should include the vault root in folder options", function()
+    local vault_dir = Path.temp { suffix = "-obsidian-move" }
+    vault_dir:mkdir { parents = true }
+
+    local ok, err = pcall(function()
+      local note_dir = vault_dir / "notes"
+      note_dir:mkdir { parents = true, exist_ok = true }
+      local note_path = note_dir / "sample.md"
+      vim.fn.writefile({ "# Sample" }, tostring(note_path))
+
+      vim.cmd.edit(vim.fn.fnameescape(tostring(note_path)))
+
+      local client = obsidian.new_from_dir(tostring(vault_dir))
+
+      local selected_options
+      client.picker = function()
+        return {
+          pick = function(_, options, _)
+            selected_options = options
+          end,
+        }
+      end
+
+      require("obsidian.commands.move_note")(client, { args = "" })
+
+      assert.is_not_nil(selected_options)
+      assert.is_true(vim.tbl_contains(selected_options, "/"))
+    end)
+
+    vault_dir:rmtree()
+
+    if not ok then
+      error(err)
+    end
   end)
 end)

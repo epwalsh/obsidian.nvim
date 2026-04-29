@@ -22,6 +22,7 @@ local command_lookups = {
   ObsidianFollowLink = "obsidian.commands.follow_link",
   ObsidianWorkspace = "obsidian.commands.workspace",
   ObsidianRename = "obsidian.commands.rename",
+  ObsidianMoveNote = "obsidian.commands.move_note",
   ObsidianPasteImg = "obsidian.commands.paste_img",
   ObsidianExtractNote = "obsidian.commands.extract_note",
   ObsidianDebug = "obsidian.commands.debug",
@@ -176,6 +177,8 @@ M.register(
   "ObsidianRename",
   { opts = { nargs = "?", complete = "file", desc = "Rename note and update all references to it" } }
 )
+
+M.register("ObsidianMoveNote", { opts = { nargs = 0, desc = "Move current note to another folder" } })
 
 M.register(
   "ObsidianPasteImg",
