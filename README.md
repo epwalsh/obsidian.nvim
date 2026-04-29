@@ -84,6 +84,8 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianRename [NEWNAME] [--dry-run]` to rename the note of the current buffer or reference under the cursor, updating all backlinks across the vault. Since this command is still relatively new and could potentially write a lot of changes to your vault, I highly recommend committing the current state of your vault (if you're using version control) before running it, or doing a dry-run first by appending "--dry-run" to the command, e.g. `:ObsidianRename new-id --dry-run`.
 
+- `:ObsidianMoveNote` to move the current note to another folder in your current vault. The command opens a folder picker (using your configured picker, with `vim.ui.select` fallback) rooted at the vault root, moves the file to the selected folder, and keeps the current buffer synced to the new path.
+
 - `:ObsidianToggleCheckbox` to cycle through checkbox options.
 
 - `:ObsidianNewFromTemplate [TITLE]` to create a new note from a template in the templates folder. Selecting from a list using your preferred picker.
