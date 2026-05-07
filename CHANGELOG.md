@@ -95,6 +95,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Don't use last visual selection when in normal mode with `:ObsidianTags`.
 - Fixed a normalization issue with windows paths.
 
+### Added
+
+- Added new pass_over_todos option to allow for passing any incomplete todos from yesterday to today's DailyNote
+
 ## [v3.7.10](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.7.10) - 2024-04-19
 
 ### Fixed

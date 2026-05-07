@@ -369,6 +369,7 @@ end
 ---@field date_format string|?
 ---@field alias_format string|?
 ---@field template string|?
+---@field pass_on_todos boolean|?
 ---@field default_tags string[]|?
 config.DailyNotesOpts = {}
 
