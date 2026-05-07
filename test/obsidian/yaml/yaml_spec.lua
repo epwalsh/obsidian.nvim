@@ -46,6 +46,13 @@ describe("obsidian.yaml.dumps", function()
   it("should otherwise quote strings with a colon followed by whitespace", function()
     assert.equals(yaml.dumps { a = "2023: a letter" }, [[a: "2023: a letter"]])
   end)
+  it("should quote strings that end with a colon", function()
+    assert.equals(
+      yaml.dumps { aliases = { "Summary:" } },
+      [[aliases:
+- "Summary:"]]
+    )
+  end)
   it("should quote strings that start with special characters", function()
     assert.equals(yaml.dumps { a = "& aaa" }, [[a: "& aaa"]])
     assert.equals(yaml.dumps { a = "! aaa" }, [[a: "! aaa"]])

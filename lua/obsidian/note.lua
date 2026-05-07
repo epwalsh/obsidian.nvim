@@ -523,7 +523,7 @@ Note.from_lines = function(lines, path, opts)
               else
                 log.warn(
                   "Invalid alias value found in frontmatter for "
-                    .. path
+                    .. tostring(path)
                     .. ". Expected string, found "
                     .. type(alias)
                     .. "."

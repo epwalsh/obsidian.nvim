@@ -160,7 +160,7 @@ describe("Client:parse_title_id_path()", function()
     with_tmp_client(function(client)
       client.opts.note_path_func = function(_)
         return "foo-bar-123.md"
-      end
+      end;
 
       (client.dir / "notes"):mkdir { exist_ok = true }
 

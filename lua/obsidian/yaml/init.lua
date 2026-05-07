@@ -24,6 +24,9 @@ local should_quote = function(s)
   -- Check if it has a colon followed by whitespace.
   elseif string.find(s, ": ", 1, true) then
     return true
+  -- Check if it ends with a colon.
+  elseif string.match(s, ":$") then
+    return true
   -- Check if it's an empty string.
   elseif s == "" or string.match(s, "^[%s]+$") then
     return true

@@ -1,8 +1,10 @@
 ---@diagnostic disable: invisible
 
 local Note = require "obsidian.note"
+local Path = require "obsidian.path"
 local util = require "obsidian.util"
 local async = require "plenary.async"
+local iter = require("obsidian.itertools").iter
 
 describe("Note.new()", function()
   it("should be able to be initialize directly", function()
@@ -181,6 +183,21 @@ describe("Note.from_file()", function()
     assert.equals(note.aliases[2], "Detective Green")
     assert.equals(note.aliases[3], "Mandy")
     assert.equals(note.title, "Detective")
+  end)
+
+  it("should not fail to warn when an invalid alias is parsed with a Path object", function()
+    local ok = pcall(
+      Note.from_lines,
+      iter {
+        "---",
+        "id: test",
+        "aliases:",
+        "  - Summary:",
+        "---",
+      },
+      Path.new "test.md"
+    )
+    assert.is_true(ok)
   end)
 end)
 
