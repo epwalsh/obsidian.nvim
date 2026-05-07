@@ -84,11 +84,12 @@ local function save_clipboard_image(path)
   end
 end
 
----@param opts { fname: string|?, default_dir: obsidian.Path|string|?, default_name: string|?, should_confirm: boolean|? }|? Options.
+---@param opts { fname: string|?, default_dir: obsidian.Path|string|?, relative_dir: boolean|?, default_name: string|?, should_confirm: boolean|? }|? Options.
 ---
 --- Options:
 ---  - `fname`: The filename.
 ---  - `default_dir`: The default directory to put the image file in.
+---  - `relative_dir`: Save in a subdirectory under current directory.
 ---  - `default_name`: The default name to assign the image.
 ---  - `should_confirm`: Prompt to confirm before proceeding.
 ---
@@ -139,7 +140,12 @@ M.paste_img = function(opts)
     -- fname is a full path
     path = path:resolve()
   elseif opts.default_dir ~= nil then
-    path = (Path.new(opts.default_dir) / path):resolve()
+    if opts.relative_dir then
+      local opened_file_dir = Path.new(path.buffer()):parent()
+      path = (opened_file_dir / opts.default_dir.name / path):resolve()
+    else
+      path = (Path.new(opts.default_dir) / path):resolve()
+    end
   else
     log.err "'default_dir' must be provided"
     return

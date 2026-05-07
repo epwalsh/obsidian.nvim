@@ -524,6 +524,10 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- You can always override this per image by passing a full path to the command instead of just a filename.
     img_folder = "assets/imgs",  -- This is the default
 
+    -- Set to true if you want newly added images to be saved in a subdirectory under current file's directory.
+    -- If enabled and your current file is under vault/file_dir, newly pasted images will be saved under vault/file_dir/{img_folder}
+    relative_dir = false,  -- This is the default
+
     -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
     ---@return string
     img_name_func = function()

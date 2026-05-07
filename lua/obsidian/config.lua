@@ -472,6 +472,7 @@ end
 ---@class obsidian.config.AttachmentsOpts
 ---
 ---@field img_folder string Default folder to save images to, relative to the vault root.
+---@field relative_dir boolean Whether newly added attachments should be saved in a relative subfolder
 ---@field img_name_func (fun(): string)|?
 ---@field img_text_func fun(client: obsidian.Client, path: obsidian.Path): string
 ---@field confirm_img_paste boolean Whether to confirm the paste or not. Defaults to true.
@@ -481,6 +482,7 @@ config.AttachmentsOpts = {}
 config.AttachmentsOpts.default = function()
   return {
     img_folder = "assets/imgs",
+    relative_dir = false,
     ---@param client obsidian.Client
     ---@param path obsidian.Path the absolute path to the image file
     ---@return string

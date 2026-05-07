@@ -18,6 +18,7 @@ return function(client, data)
   local path = paste_img {
     fname = data.args,
     default_dir = img_folder,
+    relative_dir = client.opts.attachments.relative_dir,
     default_name = default_name,
     should_confirm = client.opts.attachments.confirm_img_paste,
   }

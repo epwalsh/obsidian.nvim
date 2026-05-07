@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `opts.follow_img_func` option for customizing how to handle image paths.
 - Added better handling for undefined template fields, which will now be prompted for.
+- Added Support for saving pasted images to a relative directory based on the currently opened file's path, when attachments.relative_dir is set to true.
 
 ### Changed
 
