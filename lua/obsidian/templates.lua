@@ -83,7 +83,7 @@ M.substitute_template_variables = function(text, client, note)
       if type(subst) == "string" then
         value = subst
       else
-        value = subst()
+        value = subst(note)
         -- cache the result
         methods[key] = value
       end

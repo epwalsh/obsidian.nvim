@@ -712,19 +712,33 @@ Date created: 2023-03-01-Wed
 
 above the cursor position.
 
-You can also define custom template substitutions with the configuration field `templates.substitutions`. For example, to automatically substitute the template variable `{{yesterday}}` when inserting a template, you could add this to your config:
+You can also define custom template substitutions with the configuration field `templates.substitutions`.
+
+For example, to automatically substitute the template variable `{{watermark}}`, `{{yesterday}}`, `{{normalized_title}}`
+when inserting a template, you could add this to your config:
 
 ```lua
 {
 -- other fields ...
 templates = {
   substitutions = {
+    watermark = "Obsidian.nvim",
     yesterday = function()
       return os.date("%Y-%m-%d", os.time() - 86400)
-    end
+    end,
+    ---Format `id` field of `Note` to a more human-readable string.
+    ---For an `id` "17823674-My-note-title", it will returns "My note title"
+    ---@param note obsidian.Note
+    normalized_title = function(note)
+        return note.id:gsub("%d+-?", ""):gsub("-", " ")
+    end,
   }
 }
 ```
+
+> [!NOTE]
+> You could set substitution keys to `string` or `function`.
+> The `function` receives the related `Note` as the first parameter.
 
 ### Usage outside of a workspace or vault
 
