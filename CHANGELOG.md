@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Renamed `opts.image_name_func` to `opts.attachments.img_name_func`.
+- `opts.completion.nvim_cmp` now accepts a table for fine-grained control over which sources to use:
+  ```lua
+  { refs = true, tags = true, new_notes = true }
+  ```
 
 ### Fixed
 

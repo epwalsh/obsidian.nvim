@@ -100,12 +100,18 @@ obsidian.setup = function(opts)
   obsidian.commands.install(client)
 
   -- Register cmp sources.
-  if opts.completion.nvim_cmp then
+  if opts.completion.nvim_cmp ~= nil then
     local cmp = require "cmp"
 
-    cmp.register_source("obsidian", require("cmp_obsidian").new())
-    cmp.register_source("obsidian_new", require("cmp_obsidian_new").new())
-    cmp.register_source("obsidian_tags", require("cmp_obsidian_tags").new())
+    if opts.completion.nvim_cmp.refs then
+      cmp.register_source("obsidian", require("cmp_obsidian").new())
+    end
+    if opts.completion.nvim_cmp.tags then
+      cmp.register_source("obsidian_tags", require("cmp_obsidian_tags").new())
+    end
+    if opts.completion.nvim_cmp.new_notes then
+      cmp.register_source("obsidian_new", require("cmp_obsidian_new").new())
+    end
   end
 
   local group = vim.api.nvim_create_augroup("obsidian_setup", { clear = true })
@@ -140,14 +146,20 @@ obsidian.setup = function(opts)
       end
 
       -- Inject Obsidian as a cmp source.
-      if opts.completion.nvim_cmp then
+      if opts.completion.nvim_cmp ~= nil then
         local cmp = require "cmp"
 
-        local sources = {
-          { name = "obsidian" },
-          { name = "obsidian_new" },
-          { name = "obsidian_tags" },
-        }
+        local sources = {}
+        if opts.completion.nvim_cmp.refs then
+          table.insert(sources, { name = "obsidian" })
+        end
+        if opts.completion.nvim_cmp.tags then
+          table.insert(sources, { name = "obsidian_tags" })
+        end
+        if opts.completion.nvim_cmp.new_notes then
+          table.insert(sources, { name = "obsidian_new" })
+        end
+
         for _, source in pairs(cmp.get_config().sources) do
           if source.name ~= "obsidian" and source.name ~= "obsidian_new" and source.name ~= "obsidian_tags" then
             table.insert(sources, source)

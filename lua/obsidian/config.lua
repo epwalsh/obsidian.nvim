@@ -170,6 +170,18 @@ config.ClientOpts.normalize = function(opts, defaults)
     )
   end
 
+  if opts.completion ~= nil and type(opts.completion.nvim_cmp) == "boolean" then
+    if opts.completion.nvim_cmp then
+      opts.completion.nvim_cmp = {
+        refs = true,
+        tags = true,
+        new_notes = true,
+      }
+    else
+      opts.completion.nvim_cmp = nil
+    end
+  end
+
   if opts.detect_cwd ~= nil then
     opts.detect_cwd = nil
     log.warn_once(
@@ -277,9 +289,15 @@ config.LinkStyle = {
   markdown = "markdown",
 }
 
+---@class obsidian.config.CompletionOptsNvimCmp
+---
+---@field refs boolean
+---@field tags boolean
+---@field new_notes boolean
+
 ---@class obsidian.config.CompletionOpts
 ---
----@field nvim_cmp boolean
+---@field nvim_cmp obsidian.config.CompletionOptsNvimCmp|?
 ---@field min_chars integer
 config.CompletionOpts = {}
 
@@ -288,10 +306,21 @@ config.CompletionOpts = {}
 ---@return obsidian.config.CompletionOpts
 config.CompletionOpts.default = function()
   local has_nvim_cmp, _ = pcall(require, "cmp")
-  return {
-    nvim_cmp = has_nvim_cmp,
-    min_chars = 2,
-  }
+  if has_nvim_cmp then
+    return {
+      nvim_cmp = {
+        refs = true,
+        tags = true,
+        new_notes = true,
+      },
+      min_chars = 2,
+    }
+  else
+    return {
+      nvim_cmp = nil,
+      min_chars = 2,
+    }
+  end
 end
 
 ---@class obsidian.config.MappingOpts

@@ -266,8 +266,12 @@ This is a complete list of all of the options that can be passed to `require("ob
 
   -- Optional, completion of wiki links, local markdown links, and tags using nvim-cmp.
   completion = {
-    -- Set to false to disable completion.
-    nvim_cmp = true,
+    -- Set to nil/false to disable completion.
+    nvim_cmp = {
+      refs = true,
+      tags = true,
+      new_notes = true,
+    },
     -- Trigger completion at 2 chars.
     min_chars = 2,
   },
