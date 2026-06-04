@@ -151,13 +151,13 @@ obsidian.setup = function(opts)
 
         local sources = {}
         if opts.completion.nvim_cmp.refs then
-          table.insert(sources, { name = "obsidian" })
+          table.insert(sources, { name = "obsidian", group_index = 1 })
         end
         if opts.completion.nvim_cmp.tags then
-          table.insert(sources, { name = "obsidian_tags" })
+          table.insert(sources, { name = "obsidian_tags", group_index = 1 })
         end
         if opts.completion.nvim_cmp.new_notes then
-          table.insert(sources, { name = "obsidian_new" })
+          table.insert(sources, { name = "obsidian_new", group_index = 1 })
         end
 
         for _, source in pairs(cmp.get_config().sources) do
