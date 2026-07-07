@@ -138,6 +138,7 @@ TelescopePicker.find_files = function(self, opts)
     prompt_title = prompt_title,
     cwd = opts.dir and tostring(opts.dir) or tostring(self.client.dir),
     find_command = self:_build_find_cmd(),
+    sorter = require("telescope.sorters").fuzzy_with_index_bias(),
     attach_mappings = function(_, map)
       attach_picker_mappings(map, {
         entry_key = "path",

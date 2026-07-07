@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added multibyte character support for visual selection
 - Added `opts.follow_img_func` option for customizing how to handle image paths.
 - Added better handling for undefined template fields, which will now be prompted for.
 
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed Telescope was reordering files previously sorted by 'rg'.
 - Fixed an edge case with collecting backlinks.
 - Fixed typo in `ObsidianPasteImg`'s command description
 - Fixed the case when `opts.attachments` is `nil`.
